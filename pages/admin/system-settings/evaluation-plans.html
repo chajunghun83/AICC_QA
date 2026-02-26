@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>자동 평가 계획 관리 - AICC Quality Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../../../css/styles.css">
+</head>
+<body class="bg-[#F5F5F5] text-[#212121]">
+  <div id="page-content">
+    <!-- 페이지 제목 -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <h1 style="font-size:20px;font-weight:700;margin:0;">자동 평가 계획 관리</h1>
+        <p style="font-size:12px;color:#757575;margin:4px 0 0;">자동 평가 계획 생성 및 관리</p>
+      </div>
+      <button class="btn btn-primary" onclick="openCreateModal()">+ 새 계획 추가</button>
+    </div>
+
+    <!-- 테이블 -->
+    <div class="content-card">
+      <div class="content-card-header">
+        <span style="font-size:14px;font-weight:600;">평가 계획 목록</span>
+        <span id="plan-count" style="font-size:12px;color:#757575;">총 4건</span>
+      </div>
+      <div class="content-card-body" style="padding:0;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width:40px;">No</th>
+              <th>계획명</th>
+              <th>적용 평가표</th>
+              <th>평가기간</th>
+              <th>대상</th>
+              <th>상태</th>
+            </tr>
+          </thead>
+          <tbody id="plan-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../../assets/dummy-data/all-data.js"></script>
+  <script src="../../../js/utils/data-loader.js"></script>
+  <script src="../../../js/utils/auth-simulator.js"></script>
+  <script src="../../../js/utils/formatters.js"></script>
+  <script src="../../../js/components/sidebar.js"></script>
+  <script src="../../../js/components/layout.js"></script>
+  <script src="../../../js/components/modal.js"></script>
+  <script src="../../../js/components/toast.js"></script>
+  <script>
+    let formsData = null;
+    let workspacesData = [
+      { id: 'ws-seoul', name: '서울센터', teams: [
+        { id: 'team-vip', name: 'VIP상담팀' },
+        { id: 'team-general', name: '일반상담팀' },
+        { id: 'team-tech', name: '기술지원팀' }
+      ]},
+      { id: 'ws-busan', name: '부산센터', teams: [
+        { id: 'team-general2', name: '일반상담팀' },
+        { id: 'team-happycall', name: '해피콜팀' }
+      ]}
+    ];
+
+    const plans = [
+      {
+        no: 1,
+        name: '2025년 1월 정기 평가',
+        periodStart: '2025-01-01',
+        periodEnd: '2025-01-31',
+        target: '서울센터 > 전체',
+        targetDetail: { workspace: '서울센터', teams: ['VIP상담팀', '일반상담팀', '기술지원팀'], inbound: true, outbound: true },
+        repeat: '매월',
+        forms: ['표준 QA 평가표 v2.1'],
+        stats: { total: 342, successRate: 96.2, avgTime: '2.3초' }
+      },
+      {
+        no: 2,
+        name: '기술지원팀 집중 점검',
+        periodStart: '2025-01-10',
+        periodEnd: '',
+        target: '서울센터 > 기술지원팀',
+        targetDetail: { workspace: '서울센터', teams: ['기술지원팀'], inbound: true, outbound: false },
+        repeat: '1회성',
+        forms: ['기술지원 전문 평가표'],
+        stats: { total: 87, successRate: 94.8, avgTime: '3.1초' }
+      },
+      {
+        no: 3,
+        name: '2025년 2월 정기 평가',
+        periodStart: '2025-02-01',
+        periodEnd: '2025-02-28',
+        target: '부산센터 > 전체',
+        targetDetail: { workspace: '부산센터', teams: ['일반상담팀', '해피콜팀'], inbound: true, outbound: true },
+        repeat: '매월',
+        forms: ['표준 QA 평가표 v2.1'],
+        stats: { total: 0, successRate: 0, avgTime: '-' }
+      },
+      {
+        no: 4,
+        name: '2024년 12월 정기 평가',
+        periodStart: '2024-12-01',
+        periodEnd: '2024-12-31',
+        target: '서울센터 > 전체',
+        targetDetail: { workspace: '서울센터', teams: ['VIP상담팀', '일반상담팀', '기술지원팀'], inbound: true, outbound: true },
+        repeat: '매월',
+        forms: ['표준 QA 평가표 v2.0'],
+        stats: { total: 512, successRate: 97.1, avgTime: '2.1초' }
+      }
+    ];
+
+    function getNextNo() {
+      return plans.length > 0 ? Math.max(...plans.map(p => p.no)) + 1 : 1;
+    }
+
+    /* ── 상태 자동 계산 (날짜 기반) ── */
+    function computePlanStatus(plan) {
+      const today = new Date().toISOString().slice(0, 10);
+      if (today < plan.periodStart) return { status: 'pending', statusText: '예정' };
+      if (plan.periodEnd && today > plan.periodEnd) return { status: 'completed', statusText: '종료' };
+      if (!plan.periodEnd && plan.repeat === '1회성' && today > plan.periodStart) return { status: 'completed', statusText: '종료' };
+      return { status: 'active', statusText: '진행 중' };
+    }
+
+    function getPlanStatusBadge(status, text) {
+      const map = { 'active': 'badge-active', 'pending': 'badge-pending', 'completed': 'badge-inactive' };
+      return `<span class="badge ${map[status] || 'badge-pending'}">${text}</span>`;
+    }
+
+    function renderFormsBadges(forms) {
+      if (!forms || forms.length === 0) return '<span style="color:#BDBDBD;font-size:11px;">-</span>';
+      return `<span class="badge badge-active" style="font-size:11px;">${forms[0]}</span>`;
+    }
+
+    function buildTargetLabel(workspace, teams) {
+      if (!workspace) return '미지정';
+      const ws = workspacesData.find(w => w.name === workspace);
+      if (ws && teams.length === ws.teams.length) return workspace + ' > 전체';
+      if (teams.length === 0) return workspace;
+      return workspace + ' > ' + teams.join(', ');
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('plan-tbody');
+      const countEl = document.getElementById('plan-count');
+      if (countEl) countEl.textContent = `총 ${plans.length}건`;
+
+      tbody.innerHTML = plans.map(p => {
+        const cs = computePlanStatus(p);
+        const periodDisplay = p.periodEnd ? `${p.periodStart} ~ ${p.periodEnd}` : p.periodStart;
+        return `
+          <tr onclick="openDetail(${p.no})">
+            <td>${p.no}</td>
+            <td style="font-weight:500;">${p.name}</td>
+            <td style="max-width:200px;">${renderFormsBadges(p.forms)}</td>
+            <td style="font-size:12px;color:#757575;">${periodDisplay}</td>
+            <td>${p.target}</td>
+            <td>${getPlanStatusBadge(cs.status, cs.statusText)}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function openDetail(no) {
+      const p = plans.find(x => x.no === no);
+      if (!p) return;
+
+      const td = p.targetDetail;
+      const cs = computePlanStatus(p);
+      const isActive = cs.status === 'active';
+      const isPending = cs.status === 'pending';
+      const periodEndDisplay = p.periodEnd ? AICC_Fmt.date(p.periodEnd) : '-';
+      const teamsDisplay = td.teams.map(t => td.workspace + ' > ' + t).join(', ');
+
+      const content = `
+        <div style="margin-bottom:20px;">
+          <div class="form-label" style="margin-bottom:12px;font-size:13px;font-weight:700;color:#212121;">기본 정보</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div>
+              <div class="form-label">계획명</div>
+              <div style="font-size:13px;">${p.name}</div>
+            </div>
+            <div>
+              <div class="form-label">반복 주기</div>
+              <div style="font-size:13px;">${p.repeat}</div>
+            </div>
+            <div>
+              <div class="form-label">시작일</div>
+              <div style="font-size:13px;">${AICC_Fmt.date(p.periodStart)}</div>
+            </div>
+            <div>
+              <div class="form-label">종료일</div>
+              <div style="font-size:13px;">${periodEndDisplay}</div>
+            </div>
+            <div>
+              <div class="form-label">상태</div>
+              <div style="font-size:13px;">${getPlanStatusBadge(cs.status, cs.statusText)}</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="border-top:1px solid #E0E0E0;padding-top:16px;margin-bottom:20px;">
+          <div class="form-label" style="margin-bottom:12px;font-size:13px;font-weight:700;color:#212121;">대상 설정</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div>
+              <div class="form-label">워크스페이스</div>
+              <div style="font-size:13px;">${td.workspace || '-'}</div>
+            </div>
+            <div>
+              <div class="form-label">팀</div>
+              <div style="font-size:13px;">${teamsDisplay || '-'}</div>
+            </div>
+            <div>
+              <div class="form-label">채널</div>
+              <div style="display:flex;gap:8px;margin-top:4px;">
+                <label style="display:flex;align-items:center;gap:4px;font-size:13px;">
+                  <input type="checkbox" ${td.inbound ? 'checked' : ''} disabled> I/B
+                </label>
+                <label style="display:flex;align-items:center;gap:4px;font-size:13px;">
+                  <input type="checkbox" ${td.outbound ? 'checked' : ''} disabled> O/B
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="border-top:1px solid #E0E0E0;padding-top:16px;margin-bottom:20px;">
+          <div class="form-label" style="margin-bottom:12px;font-size:13px;font-weight:700;color:#212121;">적용 평가표</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;">
+            ${p.forms.length > 0 ? `<span class="badge badge-active">${p.forms[0]}</span>` : '<span style="color:#BDBDBD;font-size:12px;">미지정</span>'}
+          </div>
+        </div>
+
+        <div style="border-top:1px solid #E0E0E0;padding-top:16px;">
+          <div class="form-label" style="margin-bottom:12px;font-size:13px;font-weight:700;color:#212121;">실행 통계</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+            <div style="background:#F9F9F9;border-radius:6px;padding:12px;text-align:center;">
+              <div style="font-size:11px;color:#757575;margin-bottom:4px;">총 평가 건수</div>
+              <div style="font-size:20px;font-weight:700;">${AICC_Fmt.number(p.stats.total)}</div>
+            </div>
+            <div style="background:#F9F9F9;border-radius:6px;padding:12px;text-align:center;">
+              <div style="font-size:11px;color:#757575;margin-bottom:4px;">성공률</div>
+              <div style="font-size:20px;font-weight:700;">${p.stats.successRate > 0 ? p.stats.successRate + '%' : '-'}</div>
+            </div>
+            <div style="background:#F9F9F9;border-radius:6px;padding:12px;text-align:center;">
+              <div style="font-size:11px;color:#757575;margin-bottom:4px;">평균 처리 시간</div>
+              <div style="font-size:20px;font-weight:700;">${p.stats.avgTime}</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      let footerBtns;
+      if (isActive || isPending) {
+        footerBtns = `
+          <button class="btn btn-danger" onclick="handlePlanAction(${p.no}, 'delete')">삭제</button>
+          <button class="btn btn-secondary" onclick="handlePlanAction(${p.no}, 'copy')">복사</button>
+          <button class="btn btn-secondary" onclick="openEditModal(${p.no})">편집</button>
+        `;
+      } else {
+        footerBtns = `
+          <button class="btn btn-secondary" onclick="AICC_Modal.close()">닫기</button>
+          <button class="btn btn-secondary" onclick="handlePlanAction(${p.no}, 'copy')">복사</button>
+        `;
+      }
+
+      AICC_Modal.open({
+        title: p.name,
+        content: content,
+        footer: footerBtns,
+        size: 'lg'
+      });
+    }
+
+    /* ── 폼 HTML 생성 (생성/편집 공용) ── */
+    function buildPlanFormHtml(plan) {
+      const p = plan || {};
+      const td = p.targetDetail || { workspace: '', teams: [], inbound: true, outbound: true };
+      const selectedWs = td.workspace || '';
+      const repeatVal = p.repeat || '1회성';
+      const isOneTime = repeatVal === '1회성';
+
+      const wsOptions = workspacesData.map(ws =>
+        `<option value="${ws.name}"${ws.name === selectedWs ? ' selected' : ''}>${ws.name}</option>`
+      ).join('');
+
+      let teamsHtml = '';
+      if (selectedWs) {
+        const ws = workspacesData.find(w => w.name === selectedWs);
+        if (ws) {
+          teamsHtml = ws.teams.map(t => `
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+              <input type="checkbox" name="pf-team" value="${t.name}" ${td.teams.includes(t.name) ? 'checked' : ''}> ${selectedWs} > ${t.name}
+            </label>
+          `).join('');
+        }
+      }
+
+      const formsSelectHtml = getFormsSelectHtml(p.forms || []);
+
+      return `
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div>
+            <label class="form-label">계획명 *</label>
+            <input type="text" id="pf-name" class="form-input" style="width:100%;" value="${p.name || ''}" placeholder="예: 2025년 3월 정기 평가">
+          </div>
+
+          <div style="display:flex;gap:12px;">
+            <div style="flex:1;">
+              <label class="form-label">시작일 *</label>
+              <input type="date" id="pf-start" class="form-input" style="width:100%;" value="${p.periodStart || ''}">
+            </div>
+            <div style="flex:1;">
+              <label class="form-label">종료일${isOneTime ? '' : ' *'}</label>
+              <input type="date" id="pf-end" class="form-input" style="width:100%;${isOneTime ? 'background:#F5F5F5;color:#BDBDBD;' : ''}" value="${isOneTime ? '' : (p.periodEnd || '')}" ${isOneTime ? 'disabled' : ''}>
+            </div>
+            <div style="flex:1;">
+              <label class="form-label">반복 주기</label>
+              <div style="display:flex;gap:10px;margin-top:6px;">
+                <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+                  <input type="radio" name="pf-repeat" value="1회성" onchange="onRepeatChange()" ${repeatVal === '1회성' ? 'checked' : ''}> 1회성
+                </label>
+                <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+                  <input type="radio" name="pf-repeat" value="매주" onchange="onRepeatChange()" ${repeatVal === '매주' ? 'checked' : ''}> 매주
+                </label>
+                <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+                  <input type="radio" name="pf-repeat" value="매월" onchange="onRepeatChange()" ${repeatVal === '매월' ? 'checked' : ''}> 매월
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div style="border-top:1px solid #E0E0E0;padding-top:14px;">
+            <div class="form-label" style="font-weight:700;margin-bottom:10px;">대상 설정</div>
+            <div style="display:flex;gap:16px;">
+              <div style="flex:1;">
+                <label class="form-label">워크스페이스</label>
+                <select id="pf-ws" class="form-select" style="width:100%;margin-top:4px;" onchange="onWorkspaceChange()">
+                  <option value="">선택하세요</option>
+                  ${wsOptions}
+                </select>
+              </div>
+              <div style="flex:2;">
+                <label class="form-label">팀</label>
+                <div id="pf-teams-area" style="display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:4px;">
+                  ${teamsHtml || '<span style="color:#BDBDBD;font-size:12px;">워크스페이스를 먼저 선택하세요</span>'}
+                </div>
+              </div>
+              <div style="flex:1;">
+                <label class="form-label">채널</label>
+                <div style="display:flex;gap:12px;margin-top:6px;">
+                  <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+                    <input type="checkbox" id="pf-ib" ${td.inbound !== false ? 'checked' : ''}> I/B
+                  </label>
+                  <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+                    <input type="checkbox" id="pf-ob" ${td.outbound !== false ? 'checked' : ''}> O/B
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="border-top:1px solid #E0E0E0;padding-top:14px;">
+            <div class="form-label" style="font-weight:700;margin-bottom:8px;">적용 평가표</div>
+            ${formsSelectHtml}
+          </div>
+        </div>
+      `;
+    }
+
+    /* ── 반복 주기 변경 시 종료일 토글 ── */
+    function onRepeatChange() {
+      const repeat = document.querySelector('input[name="pf-repeat"]:checked')?.value || '1회성';
+      const endInput = document.getElementById('pf-end');
+      if (!endInput) return;
+      if (repeat === '1회성') {
+        endInput.disabled = true;
+        endInput.value = '';
+        endInput.style.background = '#F5F5F5';
+        endInput.style.color = '#BDBDBD';
+      } else {
+        endInput.disabled = false;
+        endInput.style.background = '';
+        endInput.style.color = '';
+      }
+    }
+
+    /* ── 워크스페이스 변경 시 팀 목록 갱신 ── */
+    function onWorkspaceChange() {
+      const wsName = document.getElementById('pf-ws')?.value;
+      const area = document.getElementById('pf-teams-area');
+      if (!area) return;
+      if (!wsName) {
+        area.innerHTML = '<span style="color:#BDBDBD;font-size:12px;">워크스페이스를 먼저 선택하세요</span>';
+        return;
+      }
+      const ws = workspacesData.find(w => w.name === wsName);
+      if (!ws) return;
+      area.innerHTML = ws.teams.map(t => `
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+          <input type="checkbox" name="pf-team" value="${t.name}" checked> ${wsName} > ${t.name}
+        </label>
+      `).join('');
+    }
+
+    function getFormsSelectHtml(selectedForms) {
+      const formNames = [];
+      if (formsData && Array.isArray(formsData)) {
+        formsData.forEach(f => {
+          const label = f.name + (f.version ? ' ' + f.version : '');
+          formNames.push(label);
+        });
+      }
+      if (formNames.length === 0) {
+        formNames.push('표준 QA 평가표 v2.1', '기술지원 전문 평가표', '표준 QA 평가표 v2.0');
+      }
+      const unique = [...new Set(formNames)];
+      const selected = selectedForms.length > 0 ? selectedForms[0] : '';
+      const options = unique.map(fn =>
+        `<option value="${fn}"${fn === selected ? ' selected' : ''}>${fn}</option>`
+      ).join('');
+      return `<select id="pf-form" class="form-select" style="width:100%;"><option value="">평가표를 선택하세요</option>${options}</select>`;
+    }
+
+    function readPlanForm() {
+      const name = document.getElementById('pf-name')?.value?.trim();
+      if (!name) { AICC_Toast.show('계획명을 입력하세요.'); return null; }
+
+      const periodStart = document.getElementById('pf-start')?.value;
+      if (!periodStart) { AICC_Toast.show('시작일을 입력하세요.'); return null; }
+
+      const repeat = document.querySelector('input[name="pf-repeat"]:checked')?.value || '1회성';
+      const periodEnd = repeat === '1회성' ? '' : (document.getElementById('pf-end')?.value || '');
+      if (repeat !== '1회성' && !periodEnd) { AICC_Toast.show('종료일을 입력하세요.'); return null; }
+
+      const workspace = document.getElementById('pf-ws')?.value || '';
+      const teams = [...document.querySelectorAll('input[name="pf-team"]:checked')].map(el => el.value);
+      const inbound = document.getElementById('pf-ib')?.checked ?? true;
+      const outbound = document.getElementById('pf-ob')?.checked ?? true;
+      const selectedForm = document.getElementById('pf-form')?.value;
+      const forms = selectedForm ? [selectedForm] : [];
+
+      const targetLabel = buildTargetLabel(workspace, teams);
+
+      return {
+        name, periodStart, periodEnd, repeat,
+        target: targetLabel,
+        targetDetail: { workspace, teams, inbound, outbound },
+        forms
+      };
+    }
+
+    /* ── 새 계획 추가 ── */
+    function openCreateModal() {
+      const html = buildPlanFormHtml(null);
+      AICC_Modal.open({
+        title: '새 평가 계획 추가',
+        size: 'lg',
+        content: html,
+        footer: `
+          <button class="btn btn-secondary" onclick="AICC_Modal.close()">취소</button>
+          <button class="btn btn-primary" onclick="saveNewPlan()">생성</button>
+        `
+      });
+    }
+
+    function saveNewPlan() {
+      const vals = readPlanForm();
+      if (!vals) return;
+
+      const newPlan = {
+        no: getNextNo(),
+        ...vals,
+        stats: { total: 0, successRate: 0, avgTime: '-' }
+      };
+
+      plans.push(newPlan);
+      renderTable();
+      AICC_Modal.close();
+      AICC_Toast.show('평가 계획이 생성되었습니다.');
+    }
+
+    /* ── 편집 ── */
+    function openEditModal(no) {
+      AICC_Modal.close();
+      const p = plans.find(x => x.no === no);
+      if (!p) return;
+
+      setTimeout(() => {
+        const html = buildPlanFormHtml(p);
+        AICC_Modal.open({
+          title: `평가 계획 편집: "${p.name}"`,
+          size: 'lg',
+          content: html,
+          footer: `
+            <button class="btn btn-secondary" onclick="AICC_Modal.close()">취소</button>
+            <button class="btn btn-primary" onclick="saveEditPlan(${no})">저장</button>
+          `
+        });
+      }, 300);
+    }
+
+    function saveEditPlan(no) {
+      const vals = readPlanForm();
+      if (!vals) return;
+
+      const p = plans.find(x => x.no === no);
+      if (!p) return;
+
+      Object.assign(p, vals);
+      renderTable();
+      AICC_Modal.close();
+      AICC_Toast.show('평가 계획이 수정되었습니다.');
+    }
+
+    /* ── 삭제 / 복사 ── */
+    function handlePlanAction(no, action) {
+      AICC_Modal.close();
+      const idx = plans.findIndex(x => x.no === no);
+      if (idx === -1) return;
+      const p = plans[idx];
+
+      switch (action) {
+        case 'delete':
+          plans.splice(idx, 1);
+          renderTable();
+          AICC_Toast.show(`"${p.name}" 계획이 삭제되었습니다.`);
+          break;
+
+        case 'copy': {
+          const copy = JSON.parse(JSON.stringify(p));
+          copy.no = getNextNo();
+          copy.name = p.name + ' (사본)';
+          copy.stats = { total: 0, successRate: 0, avgTime: '-' };
+          plans.push(copy);
+          renderTable();
+          AICC_Toast.show(`"${p.name}" 계획이 복사되었습니다.`);
+          break;
+        }
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      formsData = await AICC_DataLoader.load('evaluation-forms.json');
+      const wsRaw = await AICC_DataLoader.load('workspaces.json');
+      if (wsRaw) workspacesData = wsRaw;
+      renderTable();
+    });
+  </script>
+</body>
+</html>

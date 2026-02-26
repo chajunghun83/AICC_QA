@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>트렌드 분석 - AICC Quality Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body class="bg-[#F5F5F5] text-[#212121]">
+  <div id="page-content">
+    <!-- 페이지 제목 -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <h1 style="font-size:20px;font-weight:700;margin:0;">트렌드 분석</h1>
+        <p style="font-size:12px;color:#757575;margin:4px 0 0;">기간별 품질 점수 추이 분석</p>
+      </div>
+    </div>
+
+    <!-- 필터 섹션 -->
+    <div class="filter-section">
+      <div class="filter-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'flex':'none'">
+        <span>검색조건</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#757575" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+      <div class="filter-body">
+        <div>
+          <label class="form-label">워크스페이스</label>
+          <select class="form-select" id="ws-filter" onchange="applyFilter()">
+            <option value="all">전체</option>
+            <option value="ws-1">서울센터</option>
+            <option value="ws-2">부산센터</option>
+            <option value="ws-3">대구센터</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">팀 선택</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;" id="team-checkboxes">
+            <!-- JS로 동적 생성 -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 기간 선택 버튼 -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+      <span style="font-size:13px;font-weight:600;color:#424242;margin-right:4px;">기간:</span>
+      <button class="btn btn-secondary btn-sm period-btn" onclick="setPeriod(this, 7)">7일</button>
+      <button class="btn btn-secondary btn-sm period-btn active" onclick="setPeriod(this, 30)" style="background:#0F766E;color:white;border-color:#0F766E;">30일</button>
+      <button class="btn btn-secondary btn-sm period-btn" onclick="setPeriod(this, 90)">90일</button>
+      <button class="btn btn-secondary btn-sm period-btn" onclick="openCustomPeriod()">직접설정</button>
+      <div id="custom-period" style="display:none;margin-left:8px;display:none;align-items:center;gap:6px;">
+        <input type="date" class="form-input" id="date-from" value="2025-01-01" style="font-size:12px;">
+        <span style="color:#757575;">~</span>
+        <input type="date" class="form-input" id="date-to" value="2025-01-15" style="font-size:12px;">
+        <button class="btn btn-primary btn-sm" onclick="applyCustomPeriod()">적용</button>
+      </div>
+    </div>
+
+    <!-- 차트 영역 -->
+    <div class="content-card" style="margin-bottom:16px;">
+      <div class="content-card-header">
+        <span style="font-size:14px;font-weight:600;">품질 점수 추이</span>
+        <span style="font-size:12px;color:#757575;" id="chart-period-label">최근 30일</span>
+      </div>
+      <div class="content-card-body" style="height:360px;">
+        <canvas id="trend-chart"></canvas>
+      </div>
+    </div>
+
+    <!-- 비교 테이블 -->
+    <div class="content-card">
+      <div class="content-card-header">
+        <span style="font-size:14px;font-weight:600;">기간 비교 분석</span>
+        <span style="font-size:12px;color:#757575;">현재 기간 vs 이전 기간</span>
+      </div>
+      <div class="content-card-body" style="padding:0;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>팀</th>
+              <th>워크스페이스</th>
+              <th style="text-align:right">현재 평균</th>
+              <th style="text-align:right">이전 평균</th>
+              <th style="text-align:right">변화</th>
+              <th style="text-align:right">최고점</th>
+              <th style="text-align:right">최저점</th>
+              <th>추세</th>
+            </tr>
+          </thead>
+          <tbody id="comparison-tbody">
+            <!-- JS로 동적 생성 -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../assets/dummy-data/all-data.js"></script>
+  <script src="../../js/utils/data-loader.js"></script>
+  <script src="../../js/utils/auth-simulator.js"></script>
+  <script src="../../js/utils/formatters.js"></script>
+  <script src="../../js/components/sidebar.js"></script>
+  <script src="../../js/components/layout.js"></script>
+  <script src="../../js/components/modal.js"></script>
+  <script src="../../js/components/toast.js"></script>
+  <script>
+    /* ========== 인라인 더미 데이터 ========== */
+    const TEAMS = [
+      { id: 'tm-1', name: 'VIP상담팀', ws: '서울센터', wsId: 'ws-1', color: '#0F766E' },
+      { id: 'tm-2', name: '일반상담팀', ws: '서울센터', wsId: 'ws-1', color: '#2196F3' },
+      { id: 'tm-3', name: '기술지원팀', ws: '서울센터', wsId: 'ws-1', color: '#FF9800' },
+      { id: 'tm-4', name: '아웃바운드팀', ws: '서울센터', wsId: 'ws-1', color: '#9C27B0' },
+      { id: 'tm-5', name: '고객상담1팀', ws: '부산센터', wsId: 'ws-2', color: '#F44336' },
+      { id: 'tm-6', name: '고객상담2팀', ws: '부산센터', wsId: 'ws-2', color: '#4CAF50' },
+      { id: 'tm-7', name: '영업지원팀', ws: '부산센터', wsId: 'ws-2', color: '#795548' },
+      { id: 'tm-8', name: '종합상담팀', ws: '대구센터', wsId: 'ws-3', color: '#607D8B' },
+      { id: 'tm-9', name: '클레임처리팀', ws: '대구센터', wsId: 'ws-3', color: '#E91E63' },
+      { id: 'tm-10', name: '신규고객팀', ws: '대구센터', wsId: 'ws-3', color: '#00BCD4' }
+    ];
+
+    // 베이스 점수와 변동폭으로 트렌드 데이터 생성
+    function generateTrendData(days) {
+      const result = {};
+      const teamBases = {
+        'tm-1': 86, 'tm-2': 79, 'tm-3': 82, 'tm-4': 77,
+        'tm-5': 80, 'tm-6': 76, 'tm-7': 80,
+        'tm-8': 77, 'tm-9': 73, 'tm-10': 76
+      };
+
+      TEAMS.forEach(team => {
+        const base = teamBases[team.id] || 78;
+        const data = [];
+        let current = base;
+        for (let i = days; i >= 1; i--) {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          const dateStr = `${d.getMonth() + 1}/${d.getDate()}`;
+          // 약간의 랜덤 변동 + 상승 추세
+          current = base + (Math.random() * 8 - 3) + ((days - i) / days) * 3;
+          current = Math.max(60, Math.min(98, current));
+          data.push({ date: dateStr, score: parseFloat(current.toFixed(1)) });
+        }
+        result[team.id] = data;
+      });
+      return result;
+    }
+
+    // 비교 데이터 생성
+    function generateComparisonData(teamIds) {
+      return teamIds.map(tid => {
+        const team = TEAMS.find(t => t.id === tid);
+        if (!team) return null;
+
+        const trendData = currentTrendData[tid];
+        if (!trendData || trendData.length === 0) return null;
+
+        const scores = trendData.map(d => d.score);
+        const currentAvg = scores.reduce((a, b) => a + b, 0) / scores.length;
+        const prevAvg = currentAvg - (Math.random() * 4 - 1); // 시뮬레이션
+        const diff = currentAvg - prevAvg;
+        const maxScore = Math.max(...scores);
+        const minScore = Math.min(...scores);
+
+        // 추세 판정: 후반부 평균 vs 전반부 평균
+        const half = Math.floor(scores.length / 2);
+        const firstHalf = scores.slice(0, half);
+        const secondHalf = scores.slice(half);
+        const firstAvg = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
+        const secondAvg = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
+        const trendDirection = secondAvg > firstAvg + 0.5 ? 'up' : secondAvg < firstAvg - 0.5 ? 'down' : 'stable';
+
+        return {
+          teamId: tid,
+          teamName: team.name,
+          ws: team.ws,
+          currentAvg: parseFloat(currentAvg.toFixed(1)),
+          prevAvg: parseFloat(prevAvg.toFixed(1)),
+          diff: parseFloat(diff.toFixed(1)),
+          maxScore: parseFloat(maxScore.toFixed(1)),
+          minScore: parseFloat(minScore.toFixed(1)),
+          trend: trendDirection
+        };
+      }).filter(Boolean);
+    }
+
+    /* ========== 상태 관리 ========== */
+    let currentPeriod = 30;
+    let currentTrendData = {};
+    let selectedTeams = ['tm-1', 'tm-2', 'tm-3']; // 기본 3개 팀
+    let trendChart = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderTeamCheckboxes();
+      loadData();
+    });
+
+    /* ========== 팀 체크박스 렌더링 ========== */
+    function renderTeamCheckboxes() {
+      const container = document.getElementById('team-checkboxes');
+      const wsFilter = document.getElementById('ws-filter').value;
+      const filteredTeams = wsFilter === 'all' ? TEAMS : TEAMS.filter(t => t.wsId === wsFilter);
+
+      container.innerHTML = filteredTeams.map(team => {
+        const checked = selectedTeams.includes(team.id) ? 'checked' : '';
+        return `
+          <label style="display:inline-flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;padding:4px 8px;border:1px solid #E0E0E0;border-radius:4px;background:${selectedTeams.includes(team.id) ? '#E0F2F1' : 'white'};">
+            <input type="checkbox" value="${team.id}" ${checked} onchange="toggleTeam('${team.id}', this.checked)" style="accent-color:${team.color};">
+            <span style="width:8px;height:8px;border-radius:50%;background:${team.color};display:inline-block;"></span>
+            ${team.name}
+          </label>
+        `;
+      }).join('');
+    }
+
+    function toggleTeam(teamId, checked) {
+      if (checked) {
+        if (!selectedTeams.includes(teamId)) selectedTeams.push(teamId);
+      } else {
+        selectedTeams = selectedTeams.filter(id => id !== teamId);
+      }
+      renderTeamCheckboxes();
+      renderChart();
+      renderComparisonTable();
+    }
+
+    /* ========== 기간 선택 ========== */
+    function setPeriod(btn, days) {
+      document.querySelectorAll('.period-btn').forEach(b => {
+        b.style.background = '';
+        b.style.color = '';
+        b.style.borderColor = '';
+      });
+      btn.style.background = '#0F766E';
+      btn.style.color = 'white';
+      btn.style.borderColor = '#0F766E';
+
+      document.getElementById('custom-period').style.display = 'none';
+      currentPeriod = days;
+
+      const labels = { 7: '최근 7일', 30: '최근 30일', 90: '최근 90일' };
+      document.getElementById('chart-period-label').textContent = labels[days] || `최근 ${days}일`;
+
+      loadData();
+    }
+
+    function openCustomPeriod() {
+      document.querySelectorAll('.period-btn').forEach(b => {
+        b.style.background = '';
+        b.style.color = '';
+        b.style.borderColor = '';
+      });
+      // 마지막 버튼(직접설정) 활성화
+      const btns = document.querySelectorAll('.period-btn');
+      const lastBtn = btns[btns.length - 1];
+      lastBtn.style.background = '#0F766E';
+      lastBtn.style.color = 'white';
+      lastBtn.style.borderColor = '#0F766E';
+
+      document.getElementById('custom-period').style.display = 'flex';
+    }
+
+    function applyCustomPeriod() {
+      const from = document.getElementById('date-from').value;
+      const to = document.getElementById('date-to').value;
+      if (!from || !to) {
+        AICC_Toast.show('시작일과 종료일을 모두 선택해주세요.');
+        return;
+      }
+      const diffDays = Math.ceil((new Date(to) - new Date(from)) / (1000 * 60 * 60 * 24));
+      if (diffDays <= 0) {
+        AICC_Toast.show('종료일은 시작일 이후여야 합니다.');
+        return;
+      }
+      currentPeriod = Math.min(diffDays, 180);
+      document.getElementById('chart-period-label').textContent = `${from} ~ ${to} (${diffDays}일)`;
+      loadData();
+      AICC_Toast.show(`직접설정 기간이 적용되었습니다. (${diffDays}일)`);
+    }
+
+    /* ========== 필터 적용 ========== */
+    function applyFilter() {
+      const wsFilter = document.getElementById('ws-filter').value;
+      if (wsFilter !== 'all') {
+        const wsTeams = TEAMS.filter(t => t.wsId === wsFilter);
+        selectedTeams = wsTeams.slice(0, 3).map(t => t.id);
+      } else {
+        selectedTeams = ['tm-1', 'tm-2', 'tm-3'];
+      }
+      renderTeamCheckboxes();
+      loadData();
+      AICC_Toast.show('필터가 적용되었습니다.');
+    }
+
+    /* ========== 데이터 로드 ========== */
+    function loadData() {
+      currentTrendData = generateTrendData(currentPeriod);
+      renderChart();
+      renderComparisonTable();
+    }
+
+    /* ========== 차트 렌더링 ========== */
+    function renderChart() {
+      const ctx = document.getElementById('trend-chart');
+      if (!ctx) return;
+
+      if (trendChart) trendChart.destroy();
+
+      if (selectedTeams.length === 0) {
+        trendChart = null;
+        return;
+      }
+
+      // 라벨은 첫번째 팀 기준
+      const firstTeamData = currentTrendData[selectedTeams[0]];
+      if (!firstTeamData) return;
+      const labels = firstTeamData.map(d => d.date);
+
+      // 간격 조절: 데이터가 많으면 일부만 표시
+      const maxLabels = 20;
+      const step = labels.length > maxLabels ? Math.ceil(labels.length / maxLabels) : 1;
+
+      const datasets = selectedTeams.map(tid => {
+        const team = TEAMS.find(t => t.id === tid);
+        const data = currentTrendData[tid];
+        if (!team || !data) return null;
+        return {
+          label: team.name,
+          data: data.map(d => d.score),
+          borderColor: team.color,
+          backgroundColor: team.color + '20',
+          borderWidth: 2,
+          fill: false,
+          tension: 0.3,
+          pointRadius: currentPeriod <= 14 ? 4 : currentPeriod <= 30 ? 2 : 0,
+          pointHoverRadius: 5
+        };
+      }).filter(Boolean);
+
+      trendChart = new Chart(ctx, {
+        type: 'line',
+        data: { labels, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false
+          },
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: {
+                usePointStyle: true,
+                pointStyle: 'circle',
+                padding: 20,
+                font: { size: 12 }
+              }
+            },
+            tooltip: {
+              backgroundColor: 'rgba(0,0,0,0.8)',
+              titleFont: { size: 12 },
+              bodyFont: { size: 12 },
+              padding: 12,
+              callbacks: {
+                label: function(context) {
+                  return `${context.dataset.label}: ${context.parsed.y.toFixed(1)}점`;
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              min: 60,
+              max: 100,
+              grid: { color: '#F0F0F0' },
+              ticks: {
+                font: { size: 11 },
+                color: '#757575',
+                callback: function(value) { return value + '점'; }
+              }
+            },
+            x: {
+              grid: { display: false },
+              ticks: {
+                font: { size: 11 },
+                color: '#757575',
+                maxTicksLimit: maxLabels,
+                maxRotation: 0
+              }
+            }
+          }
+        }
+      });
+    }
+
+    /* ========== 비교 테이블 렌더링 ========== */
+    function renderComparisonTable() {
+      const tbody = document.getElementById('comparison-tbody');
+      const data = generateComparisonData(selectedTeams);
+
+      if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#9E9E9E;padding:40px;">팀을 선택해주세요.</td></tr>';
+        return;
+      }
+
+      // 점수 높은 순 정렬
+      data.sort((a, b) => b.currentAvg - a.currentAvg);
+
+      tbody.innerHTML = data.map(row => {
+        const team = TEAMS.find(t => t.id === row.teamId);
+        const diffHtml = AICC_Fmt.trend(row.currentAvg, row.prevAvg);
+
+        let trendText, trendColor;
+        if (row.trend === 'up') {
+          trendText = '상승';
+          trendColor = '#4CAF50';
+        } else if (row.trend === 'down') {
+          trendText = '하락';
+          trendColor = '#F44336';
+        } else {
+          trendText = '유지';
+          trendColor = '#757575';
+        }
+
+        return `
+          <tr style="cursor:default;">
+            <td>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="width:10px;height:10px;border-radius:50%;background:${team ? team.color : '#999'};display:inline-block;"></span>
+                <span style="font-weight:500;">${row.teamName}</span>
+              </div>
+            </td>
+            <td style="font-size:12px;color:#757575;">${row.ws}</td>
+            <td style="text-align:right;">${AICC_Fmt.scoreHtml(row.currentAvg)}</td>
+            <td style="text-align:right;font-size:13px;color:#757575;">${AICC_Fmt.score(row.prevAvg)}</td>
+            <td style="text-align:right;">${diffHtml}</td>
+            <td style="text-align:right;font-size:13px;color:#4CAF50;font-weight:500;">${AICC_Fmt.score(row.maxScore)}</td>
+            <td style="text-align:right;font-size:13px;color:#F44336;font-weight:500;">${AICC_Fmt.score(row.minScore)}</td>
+            <td>
+              <span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:500;color:${trendColor};">
+                <span style="width:8px;height:8px;border-radius:50%;background:${trendColor};"></span>
+                ${trendText}
+              </span>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+  </script>
+</body>
+</html>

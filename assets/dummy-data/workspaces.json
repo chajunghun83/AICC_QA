@@ -1,0 +1,27 @@
+[
+  {
+    "id": "ws-seoul",
+    "name": "서울센터",
+    "teams": [
+      { "id": "team-vip", "name": "VIP상담팀", "agent_count": 12 },
+      { "id": "team-general", "name": "일반상담팀", "agent_count": 25 },
+      { "id": "team-tech", "name": "기술지원팀", "agent_count": 18 }
+    ]
+  },
+  {
+    "id": "ws-busan",
+    "name": "부산센터",
+    "teams": [
+      { "id": "team-general2", "name": "일반상담팀", "agent_count": 20 },
+      { "id": "team-happycall", "name": "해피콜팀", "agent_count": 10 }
+    ]
+  },
+  {
+    "id": "ws-daegu",
+    "name": "대구센터",
+    "teams": [
+      { "id": "team-cs", "name": "CS상담팀", "agent_count": 15 },
+      { "id": "team-ob", "name": "아웃바운드팀", "agent_count": 8 }
+    ]
+  }
+]

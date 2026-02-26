@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>수동 평가 계획 관리 - AICC Quality Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../../../css/styles.css">
+</head>
+<body class="bg-[#F5F5F5] text-[#212121]">
+  <div id="page-content">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <h1 style="font-size:20px;font-weight:700;margin:0;">수동 평가 계획 관리</h1>
+        <p style="font-size:12px;color:#757575;margin:4px 0 0;">수동 평가 대상 선정 및 계획 관리</p>
+      </div>
+      <button class="btn btn-primary" onclick="openCreateModal()">+ 새 계획 추가</button>
+    </div>
+
+    <div class="content-card">
+      <div class="content-card-header">
+        <span style="font-size:14px;font-weight:600;">수동 평가 계획 목록</span>
+        <span id="plan-count" style="font-size:12px;color:#757575;">총 4건</span>
+      </div>
+      <div class="content-card-body" style="padding:0;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width:40px;">No</th>
+              <th>계획명</th>
+              <th>적용 평가표</th>
+              <th>평가기간</th>
+              <th>대상</th>
+              <th>평가 기준</th>
+              <th>담당자</th>
+              <th>상태</th>
+            </tr>
+          </thead>
+          <tbody id="plan-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../../assets/dummy-data/all-data.js"></script>
+  <script src="../../../js/utils/data-loader.js"></script>
+  <script src="../../../js/utils/auth-simulator.js"></script>
+  <script src="../../../js/utils/formatters.js"></script>
+  <script src="../../../js/components/sidebar.js"></script>
+  <script src="../../../js/components/layout.js"></script>
+  <script src="../../../js/components/modal.js"></script>
+  <script src="../../../js/components/toast.js"></script>
+  <script>
+    let formsData = null;
+    let workspacesData = [
+      { id: 'ws-seoul', name: '서울센터', teams: [
+        { id: 'team-vip', name: 'VIP상담팀' },
+        { id: 'team-general', name: '일반상담팀' },
+        { id: 'team-tech', name: '기술지원팀' }
+      ]},
+      { id: 'ws-busan', name: '부산센터', teams: [
+        { id: 'team-general2', name: '일반상담팀' },
+        { id: 'team-happycall', name: '해피콜팀' }
+      ]}
+    ];
+    let usersData = [];
+
+    const CRITERIA_MAP = {
+      workingDays:    { label: '근무일수 기준',   format: v => `${v.days}일 미만` },
+      sampling:       { label: '샘플링 비율',     format: v => `${v.rate}%` },
+      scoreThreshold: { label: 'AI 점수 기준',    format: v => `${v.score}점 미만` },
+      confidence:     { label: 'AI 신뢰도 기준',  format: v => `${v.level} 이하` },
+      specificAgents: { label: '특정 상담사 지정', format: v => v.agents.join(', ') }
+    };
+
+    const plans = [
+      {
+        no: 1,
+        name: '2025년 1분기 신입 상담사 수동 평가',
+        periodStart: '2025-01-01',
+        periodEnd: '2025-03-31',
+        repeat: '매월',
+        forms: ['표준 QA 평가표 v2.1'],
+        target: '서울센터 > 전체',
+        targetDetail: { workspace: '서울센터', teams: ['VIP상담팀', '일반상담팀', '기술지원팀'], inbound: true, outbound: true },
+        criteriaType: 'workingDays',
+        criteriaValue: { days: 30 },
+        assignee: '박관리자',
+        stats: { total: 45, completed: 32, pending: 13 }
+      },
+      {
+        no: 2,
+        name: '2025년 2월 품질 샘플링 검증',
+        periodStart: '2025-02-01',
+        periodEnd: '2025-02-28',
+        repeat: '매월',
+        forms: ['표준 QA 평가표 v2.1'],
+        target: '서울센터 > VIP상담팀',
+        targetDetail: { workspace: '서울센터', teams: ['VIP상담팀'], inbound: true, outbound: true },
+        criteriaType: 'sampling',
+        criteriaValue: { rate: 10 },
+        assignee: '김팀장',
+        stats: { total: 28, completed: 15, pending: 13 }
+      },
+      {
+        no: 3,
+        name: '2025년 2월 AI 저점수 재평가',
+        periodStart: '2025-02-01',
+        periodEnd: '2025-02-28',
+        repeat: '1회성',
+        forms: ['표준 QA 평가표 v2.1'],
+        target: '서울센터 > 전체',
+        targetDetail: { workspace: '서울센터', teams: ['VIP상담팀', '일반상담팀', '기술지원팀'], inbound: true, outbound: true },
+        criteriaType: 'scoreThreshold',
+        criteriaValue: { score: 60 },
+        assignee: '이평가',
+        stats: { total: 12, completed: 8, pending: 4 }
+      },
+      {
+        no: 4,
+        name: '특정 상담사 집중 모니터링',
+        periodStart: '2025-01-15',
+        periodEnd: '2025-03-31',
+        repeat: '매월',
+        forms: ['기술지원 전문 평가표'],
+        target: '서울센터 > 기술지원팀',
+        targetDetail: { workspace: '서울센터', teams: ['기술지원팀'], inbound: true, outbound: false },
+        criteriaType: 'specificAgents',
+        criteriaValue: { agents: ['최수진', '박상현'] },
+        assignee: '박관리자',
+        stats: { total: 67, completed: 52, pending: 15 }
+      }
+    ];
+
+    function getNextNo() {
+      return plans.length > 0 ? Math.max(...plans.map(p => p.no)) + 1 : 1;
+    }
+
+    /* ── 상태 자동 계산 ── */
+    function computeStatus(plan) {
+      const today = new Date().toISOString().slice(0, 10);
+      if (today < plan.periodStart) return { status: 'pending', text: '예정' };
+      if (plan.periodEnd && today > plan.periodEnd) return { status: 'completed', text: '종료' };
+      if (!plan.periodEnd && plan.repeat === '1회성' && today > plan.periodStart) return { status: 'completed', text: '종료' };
+      return { status: 'active', text: '진행 중' };
+    }
+
+    function statusBadge(status, text) {
+      const cls = { active: 'badge-active', pending: 'badge-pending', completed: 'badge-inactive' };
+      return `<span class="badge ${cls[status] || 'badge-pending'}">${text}</span>`;
+    }
+
+    function criteriaBadge(type, value) {
+      const c = CRITERIA_MAP[type];
+      if (!c) return '-';
+      return `<span class="badge badge-active" style="font-size:11px;">${c.label}: ${c.format(value)}</span>`;
+    }
+
+    function renderFormsBadge(forms) {
+      if (!forms || forms.length === 0) return '<span style="color:#BDBDBD;font-size:11px;">-</span>';
+      return `<span class="badge badge-active" style="font-size:11px;">${forms[0]}</span>`;
+    }
+
+    function buildTargetLabel(workspace, teams) {
+      if (!workspace) return '미지정';
+      const ws = workspacesData.find(w => w.name === workspace);
+      if (ws && teams.length === ws.teams.length) return workspace + ' > 전체';
+      if (teams.length === 0) return workspace;
+      return workspace + ' > ' + teams.join(', ');
+    }
+
+    /* ── 테이블 렌더링 ── */
+    function renderTable() {
+      const tbody = document.getElementById('plan-tbody');
+      const countEl = document.getElementById('plan-count');
+      if (countEl) countEl.textContent = `총 ${plans.length}건`;
+
+      tbody.innerHTML = plans.map(p => {
+        const cs = computeStatus(p);
+        const period = p.periodEnd ? `${p.periodStart} ~ ${p.periodEnd}` : p.periodStart;
+        return `
+          <tr onclick="openDetail(${p.no})">
+            <td>${p.no}</td>
+            <td style="font-weight:500;">${p.name}</td>
+            <td style="max-width:180px;">${renderFormsBadge(p.forms)}</td>
+            <td style="font-size:12px;color:#757575;">${period}</td>
+            <td>${p.target}</td>
+            <td>${criteriaBadge(p.criteriaType, p.criteriaValue)}</td>
+            <td>${p.assignee || '-'}</td>
+            <td>${statusBadge(cs.status, cs.text)}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    /* ── 상세 모달 ── */
+    function openDetail(no) {
+      const p = plans.find(x => x.no === no);
+      if (!p) return;
+
+      const td = p.targetDetail;
+      const cs = computeStatus(p);
+      const isActive = cs.status === 'active';
+      const isPending = cs.status === 'pending';
+      const periodEndDisplay = p.periodEnd ? AICC_Fmt.date(p.periodEnd) : '-';
+      const teamsDisplay = td.teams.map(t => td.workspace + ' > ' + t).join(', ');
+      const cm = CRITERIA_MAP[p.criteriaType];
+      const criteriaLabel = cm ? cm.label : '-';
+      const criteriaDetail = cm ? cm.format(p.criteriaValue) : '-';
+
+      const content = `
+        <div style="margin-bottom:20px;">
+          <div class="form-label" style="margin-bottom:12px;font-size:13px;font-weight:700;color:#212121;">기본 정보</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div>
+              <div class="form-label">계획명</div>
+              <div style="font-size:13px;">${p.name}</div>
+            </div>
+            <div>
+              <div class="form-label">반복 주기</div>
+              <div style="font-size:13px;">${p.repeat}</div>
+            </div>
+            <div>
+              <div class="form-label">시작일</div>
+              <div style="font-size:13px;">${AICC_Fmt.date(p.periodStart)}</div>
+            </div>
+            <div>
+              <div class="form-label">종료일</div>
+              <div style="font-size:13px;">${periodEndDisplay}</div>
+            </div>
+            <div>
+              <div class="form-label">상태</div>
+              <div style="font-size:13px;">${statusBadge(cs.status, cs.text)}</div>
+            </div>
+            <div>
+              <div class="form-label">평가 담당자</div>
+              <div style="font-size:13px;">${p.assignee || '-'}</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="border-top:1px solid #E0E0E0;padding-top:16px;margin-bottom:20px;">
+          <div class="form-label" style="margin-bottom:12px;font-size:13px;font-weight:700;color:#212121;">대상 설정</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div>
+              <div class="form-label">워크스페이스</div>
+              <div style="font-size:13px;">${td.workspace || '-'}</div>
+            </div>
+            <div>
+              <div class="form-label">팀</div>
+              <div style="font-size:13px;">${teamsDisplay || '-'}</div>
+            </div>
+            <div>
+              <div class="form-label">채널</div>
+              <div style="display:flex;gap:8px;margin-top:4px;">
+                <label style="display:flex;align-items:center;gap:4px;font-size:13px;">
+                  <input type="checkbox" ${td.inbound ? 'checked' : ''} disabled> I/B
+                </label>
+                <label style="display:flex;align-items:center;gap:4px;font-size:13px;">
+                  <input type="checkbox" ${td.outbound ? 'checked' : ''} disabled> O/B
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="border-top:1px solid #E0E0E0;padding-top:16px;margin-bottom:20px;">
+          <div class="form-label" style="margin-bottom:12px;font-size:13px;font-weight:700;color:#212121;">적용 평가표</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;">
+            ${p.forms.length > 0 ? `<span class="badge badge-active">${p.forms[0]}</span>` : '<span style="color:#BDBDBD;font-size:12px;">미지정</span>'}
+          </div>
+        </div>
+
+        <div style="border-top:1px solid #E0E0E0;padding-top:16px;margin-bottom:20px;">
+          <div class="form-label" style="margin-bottom:12px;font-size:13px;font-weight:700;color:#212121;">수동 평가 대상 기준</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div>
+              <div class="form-label">선정 기준</div>
+              <div style="font-size:13px;font-weight:500;">${criteriaLabel}</div>
+            </div>
+            <div>
+              <div class="form-label">세부 조건</div>
+              <div style="font-size:13px;">${criteriaDetail}</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="border-top:1px solid #E0E0E0;padding-top:16px;">
+          <div class="form-label" style="margin-bottom:12px;font-size:13px;font-weight:700;color:#212121;">실행 통계</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+            <div style="background:#F9F9F9;border-radius:6px;padding:12px;text-align:center;">
+              <div style="font-size:11px;color:#757575;margin-bottom:4px;">총 대상 건수</div>
+              <div style="font-size:20px;font-weight:700;">${AICC_Fmt.number(p.stats.total)}</div>
+            </div>
+            <div style="background:#F9F9F9;border-radius:6px;padding:12px;text-align:center;">
+              <div style="font-size:11px;color:#757575;margin-bottom:4px;">완료 건수</div>
+              <div style="font-size:20px;font-weight:700;color:#4CAF50;">${AICC_Fmt.number(p.stats.completed)}</div>
+            </div>
+            <div style="background:#F9F9F9;border-radius:6px;padding:12px;text-align:center;">
+              <div style="font-size:11px;color:#757575;margin-bottom:4px;">미완료 건수</div>
+              <div style="font-size:20px;font-weight:700;color:#FF9800;">${AICC_Fmt.number(p.stats.pending)}</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      let footerBtns;
+      if (isActive || isPending) {
+        footerBtns = `
+          <button class="btn btn-danger" onclick="handleAction(${p.no}, 'delete')">삭제</button>
+          <button class="btn btn-secondary" onclick="handleAction(${p.no}, 'copy')">복사</button>
+          <button class="btn btn-secondary" onclick="openEditModal(${p.no})">편집</button>
+        `;
+      } else {
+        footerBtns = `
+          <button class="btn btn-secondary" onclick="AICC_Modal.close()">닫기</button>
+          <button class="btn btn-secondary" onclick="handleAction(${p.no}, 'copy')">복사</button>
+        `;
+      }
+
+      AICC_Modal.open({ title: p.name, content, footer: footerBtns, size: 'lg' });
+    }
+
+    /* ── 듀얼리스트박스 ── */
+    const _dlb = {};
+
+    function renderDlb(id, all, selected) {
+      _dlb[id] = { all: [...all], selected: [...selected], filter: '' };
+      return buildDlbHtml(id);
+    }
+
+    function buildDlbHtml(id) {
+      const s = _dlb[id];
+      if (!s) return '';
+      const avail = s.all.filter(n => !s.selected.includes(n));
+      const filtered = s.filter ? avail.filter(n => n.toLowerCase().includes(s.filter.toLowerCase())) : avail;
+
+      const leftItems = filtered.length === 0
+        ? '<div style="text-align:center;color:#BDBDBD;font-size:12px;padding:20px;">항목 없음</div>'
+        : filtered.map(n => `<div onclick="dlbMove('${id}',${s.all.indexOf(n)},'right')"
+            style="padding:5px 12px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;"
+            onmouseover="this.style.background='#F5F5F5'" onmouseout="this.style.background=''">
+            <span style="color:#BDBDBD;font-size:11px;">+</span> ${n}</div>`).join('');
+
+      const rightItems = s.selected.length === 0
+        ? '<div style="text-align:center;color:#BDBDBD;font-size:12px;padding:20px;">선택된 항목 없음</div>'
+        : s.selected.map(n => `<div onclick="dlbMove('${id}',${s.all.indexOf(n)},'left')"
+            style="padding:5px 12px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;color:#0F766E;"
+            onmouseover="this.style.background='#F0FDF4'" onmouseout="this.style.background=''">
+            <span style="font-size:11px;">&#10003;</span> ${n}</div>`).join('');
+
+      return `<div style="display:flex;gap:8px;align-items:stretch;" id="${id}">
+        <div style="flex:1;border:1px solid #E0E0E0;border-radius:6px;overflow:hidden;">
+          <div style="padding:6px 8px;background:#FAFAFA;border-bottom:1px solid #E0E0E0;">
+            <input type="text" placeholder="검색..." value="${s.filter || ''}" oninput="dlbFilter('${id}',this.value)"
+              style="width:100%;border:1px solid #E0E0E0;border-radius:4px;padding:4px 8px;font-size:12px;outline:none;">
+          </div>
+          <div style="min-height:120px;max-height:160px;overflow-y:auto;padding:4px 0;">${leftItems}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;justify-content:center;gap:4px;padding:0 2px;">
+          <button type="button" onclick="dlbMoveAll('${id}','right')" title="전체 추가"
+            style="background:#F5F5F5;border:1px solid #E0E0E0;border-radius:4px;cursor:pointer;padding:4px 6px;font-size:11px;color:#757575;">&raquo;</button>
+          <button type="button" onclick="dlbMoveAll('${id}','left')" title="전체 제거"
+            style="background:#F5F5F5;border:1px solid #E0E0E0;border-radius:4px;cursor:pointer;padding:4px 6px;font-size:11px;color:#757575;">&laquo;</button>
+        </div>
+        <div style="flex:1;border:1px solid #E0E0E0;border-radius:6px;overflow:hidden;">
+          <div style="padding:6px 8px;background:#F0FDF4;border-bottom:1px solid #E0E0E0;">
+            <span style="font-size:12px;font-weight:600;color:#0F766E;">선택됨 (${s.selected.length})</span>
+          </div>
+          <div style="min-height:120px;max-height:160px;overflow-y:auto;padding:4px 0;">${rightItems}</div>
+        </div>
+      </div>`;
+    }
+
+    function dlbMove(id, idx, dir) {
+      const s = _dlb[id];
+      if (!s || idx < 0 || idx >= s.all.length) return;
+      const name = s.all[idx];
+      if (dir === 'right' && !s.selected.includes(name)) s.selected.push(name);
+      else if (dir === 'left') s.selected = s.selected.filter(n => n !== name);
+      dlbRefresh(id);
+    }
+    function dlbMoveAll(id, dir) {
+      const s = _dlb[id]; if (!s) return;
+      s.selected = dir === 'right' ? [...s.all] : [];
+      dlbRefresh(id);
+    }
+    function dlbFilter(id, val) {
+      const s = _dlb[id]; if (!s) return;
+      s.filter = val; dlbRefresh(id);
+    }
+    function dlbRefresh(id) {
+      const el = document.getElementById(id);
+      if (el) el.outerHTML = buildDlbHtml(id);
+    }
+    function getDlbSelected(id) {
+      return _dlb[id] ? [..._dlb[id].selected] : [];
+    }
+
+    /* ── 기준별 세부 입력 영역 생성 ── */
+    function buildCriteriaDetail(type, value) {
+      const v = value || {};
+      switch (type) {
+        case 'workingDays':
+          return `<div style="margin-top:8px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <label class="form-label" style="margin:0;white-space:nowrap;">근무일수</label>
+              <input type="number" id="criteria-days" class="form-input" style="width:80px;" value="${v.days || 30}" min="1" max="365">
+              <span style="font-size:13px;color:#757575;">일 미만</span>
+            </div>
+            <div style="font-size:11px;color:#9E9E9E;margin-top:6px;">근무일수가 지정한 일수 미만인 신입 상담사를 수동 평가 대상으로 지정합니다</div>
+          </div>`;
+        case 'sampling':
+          return `<div style="margin-top:8px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <label class="form-label" style="margin:0;white-space:nowrap;">샘플링 비율</label>
+              <input type="number" id="criteria-rate" class="form-input" style="width:80px;" value="${v.rate || 10}" min="1" max="100">
+              <span style="font-size:13px;color:#757575;">%</span>
+            </div>
+            <div style="font-size:11px;color:#9E9E9E;margin-top:6px;">전체 상담 중 지정한 비율을 무작위 추출하여 수동 평가합니다</div>
+          </div>`;
+        case 'scoreThreshold':
+          return `<div style="margin-top:8px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <label class="form-label" style="margin:0;white-space:nowrap;">AI 점수</label>
+              <input type="number" id="criteria-score" class="form-input" style="width:80px;" value="${v.score || 60}" min="0" max="100">
+              <span style="font-size:13px;color:#757575;">점 미만</span>
+            </div>
+            <div style="font-size:11px;color:#9E9E9E;margin-top:6px;">AI 평가 점수가 지정한 점수 미만인 건을 수동 재평가 대상으로 지정합니다</div>
+          </div>`;
+        case 'confidence':
+          return `<div style="margin-top:8px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <label class="form-label" style="margin:0;white-space:nowrap;">신뢰도 수준</label>
+              <select id="criteria-level" class="form-select" style="width:120px;">
+                <option value="High" ${v.level === 'High' ? 'selected' : ''}>High</option>
+                <option value="Medium" ${v.level === 'Medium' || !v.level ? 'selected' : ''}>Medium</option>
+                <option value="Low" ${v.level === 'Low' ? 'selected' : ''}>Low</option>
+              </select>
+              <span style="font-size:13px;color:#757575;">이하</span>
+            </div>
+            <div style="font-size:11px;color:#9E9E9E;margin-top:6px;">AI 신뢰도가 선택한 수준 이하인 건을 수동 확인 대상으로 지정합니다</div>
+          </div>`;
+        case 'specificAgents':
+          return `<div style="margin-top:8px;">
+            <div style="display:flex;gap:12px;margin-bottom:8px;">
+              <div style="flex:1;">
+                <label class="form-label">워크스페이스</label>
+                <select id="criteria-ws" class="form-select" style="width:100%;" onchange="onCriteriaWsChange()">
+                  <option value="">선택하세요</option>
+                  ${workspacesData.map(ws => `<option value="${ws.name}">${ws.name}</option>`).join('')}
+                </select>
+              </div>
+              <div style="flex:1;">
+                <label class="form-label">팀</label>
+                <select id="criteria-team" class="form-select" style="width:100%;" onchange="onCriteriaTeamChange()">
+                  <option value="">팀 선택</option>
+                </select>
+              </div>
+            </div>
+            <div id="criteria-agent-area"></div>
+            <div style="font-size:11px;color:#9E9E9E;margin-top:6px;">지정된 상담사의 모든 상담을 수동 평가 대상으로 지정합니다</div>
+          </div>`;
+        default:
+          return '';
+      }
+    }
+
+    function onCriteriaChange() {
+      const type = document.getElementById('pf-criteria')?.value || '';
+      const area = document.getElementById('criteria-detail');
+      if (area) area.innerHTML = type ? buildCriteriaDetail(type, {}) : '';
+    }
+
+    function onCriteriaWsChange() {
+      const wsName = document.getElementById('criteria-ws')?.value;
+      const teamSel = document.getElementById('criteria-team');
+      if (!teamSel) return;
+      if (!wsName) { teamSel.innerHTML = '<option value="">팀 선택</option>'; return; }
+      const ws = workspacesData.find(w => w.name === wsName);
+      if (!ws) return;
+      teamSel.innerHTML = '<option value="">팀 선택</option>' +
+        ws.teams.map(t => `<option value="${t.name}">${t.name}</option>`).join('');
+      document.getElementById('criteria-agent-area').innerHTML = '';
+    }
+
+    function onCriteriaTeamChange() {
+      const wsName = document.getElementById('criteria-ws')?.value;
+      const teamName = document.getElementById('criteria-team')?.value;
+      const area = document.getElementById('criteria-agent-area');
+      if (!area || !wsName || !teamName) { if (area) area.innerHTML = ''; return; }
+      const agents = usersData.filter(u => u.role === 'AGENT' && u.workspace === wsName && u.team === teamName);
+      if (agents.length === 0) {
+        area.innerHTML = '<span style="color:#BDBDBD;font-size:12px;">해당 팀에 상담사가 없습니다.</span>';
+        return;
+      }
+      area.innerHTML = '<label class="form-label" style="margin-top:4px;">상담사 선택</label>' +
+        renderDlb('dlb-criteria-agents', agents.map(a => a.name), agents.map(a => a.name));
+    }
+
+    /* ── 폼 HTML ── */
+    function buildFormHtml(plan) {
+      const p = plan || {};
+      const td = p.targetDetail || { workspace: '', teams: [], inbound: true, outbound: true };
+      const selectedWs = td.workspace || '';
+      const repeatVal = p.repeat || '1회성';
+      const isOneTime = repeatVal === '1회성';
+
+      const wsOptions = workspacesData.map(ws =>
+        `<option value="${ws.name}"${ws.name === selectedWs ? ' selected' : ''}>${ws.name}</option>`
+      ).join('');
+
+      let teamsHtml = '';
+      if (selectedWs) {
+        const ws = workspacesData.find(w => w.name === selectedWs);
+        if (ws) {
+          teamsHtml = ws.teams.map(t => `
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+              <input type="checkbox" name="pf-team" value="${t.name}" ${td.teams.includes(t.name) ? 'checked' : ''}> ${selectedWs} > ${t.name}
+            </label>
+          `).join('');
+        }
+      }
+
+      const formsSelectHtml = getFormsSelectHtml(p.forms || []);
+
+      const criteriaType = p.criteriaType || '';
+      const criteriaOptions = [
+        { value: 'workingDays', label: '근무일수 기준' },
+        { value: 'sampling', label: '샘플링 비율' },
+        { value: 'scoreThreshold', label: 'AI 점수 기준' },
+        { value: 'confidence', label: 'AI 신뢰도 기준' },
+        { value: 'specificAgents', label: '특정 상담사 지정' }
+      ];
+      const criteriaSelectHtml = criteriaOptions.map(o =>
+        `<option value="${o.value}"${o.value === criteriaType ? ' selected' : ''}>${o.label}</option>`
+      ).join('');
+
+      return `
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div>
+            <label class="form-label">계획명 *</label>
+            <input type="text" id="pf-name" class="form-input" style="width:100%;" value="${p.name || ''}" placeholder="예: 2025년 3월 신입 상담사 수동 평가">
+          </div>
+
+          <div style="display:flex;gap:12px;">
+            <div style="flex:1;">
+              <label class="form-label">시작일 *</label>
+              <input type="date" id="pf-start" class="form-input" style="width:100%;" value="${p.periodStart || ''}">
+            </div>
+            <div style="flex:1;">
+              <label class="form-label">종료일${isOneTime ? '' : ' *'}</label>
+              <input type="date" id="pf-end" class="form-input" style="width:100%;${isOneTime ? 'background:#F5F5F5;color:#BDBDBD;' : ''}" value="${isOneTime ? '' : (p.periodEnd || '')}" ${isOneTime ? 'disabled' : ''}>
+            </div>
+            <div style="flex:1;">
+              <label class="form-label">반복 주기</label>
+              <div style="display:flex;gap:10px;margin-top:6px;">
+                <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+                  <input type="radio" name="pf-repeat" value="1회성" onchange="onRepeatChange()" ${repeatVal === '1회성' ? 'checked' : ''}> 1회성
+                </label>
+                <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+                  <input type="radio" name="pf-repeat" value="매주" onchange="onRepeatChange()" ${repeatVal === '매주' ? 'checked' : ''}> 매주
+                </label>
+                <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+                  <input type="radio" name="pf-repeat" value="매월" onchange="onRepeatChange()" ${repeatVal === '매월' ? 'checked' : ''}> 매월
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div style="border-top:1px solid #E0E0E0;padding-top:14px;">
+            <div class="form-label" style="font-weight:700;margin-bottom:10px;">대상 설정</div>
+            <div style="display:flex;gap:16px;">
+              <div style="flex:1;">
+                <label class="form-label">워크스페이스</label>
+                <select id="pf-ws" class="form-select" style="width:100%;margin-top:4px;" onchange="onWorkspaceChange()">
+                  <option value="">선택하세요</option>
+                  ${wsOptions}
+                </select>
+              </div>
+              <div style="flex:2;">
+                <label class="form-label">팀</label>
+                <div id="pf-teams-area" style="display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:4px;">
+                  ${teamsHtml || '<span style="color:#BDBDBD;font-size:12px;">워크스페이스를 먼저 선택하세요</span>'}
+                </div>
+              </div>
+              <div style="flex:1;">
+                <label class="form-label">채널</label>
+                <div style="display:flex;gap:12px;margin-top:6px;">
+                  <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+                    <input type="checkbox" id="pf-ib" ${td.inbound !== false ? 'checked' : ''}> I/B
+                  </label>
+                  <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+                    <input type="checkbox" id="pf-ob" ${td.outbound !== false ? 'checked' : ''}> O/B
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="border-top:1px solid #E0E0E0;padding-top:14px;">
+            <div class="form-label" style="font-weight:700;margin-bottom:8px;">적용 평가표</div>
+            ${formsSelectHtml}
+          </div>
+
+          <div style="border-top:1px solid #E0E0E0;padding-top:14px;">
+            <div class="form-label" style="font-weight:700;margin-bottom:8px;">수동 평가 대상 기준 *</div>
+            <select id="pf-criteria" class="form-select" style="width:100%;" onchange="onCriteriaChange()">
+              <option value="">기준을 선택하세요</option>
+              ${criteriaSelectHtml}
+            </select>
+            <div id="criteria-detail">
+              ${criteriaType ? buildCriteriaDetail(criteriaType, p.criteriaValue || {}) : ''}
+            </div>
+          </div>
+
+          <div style="border-top:1px solid #E0E0E0;padding-top:14px;">
+            <label class="form-label">평가 담당자</label>
+            <input type="text" id="pf-assignee" class="form-input" style="width:100%;" value="${p.assignee || ''}" placeholder="담당자 이름을 입력하세요">
+          </div>
+        </div>
+      `;
+    }
+
+    function onRepeatChange() {
+      const repeat = document.querySelector('input[name="pf-repeat"]:checked')?.value || '1회성';
+      const endInput = document.getElementById('pf-end');
+      if (!endInput) return;
+      if (repeat === '1회성') {
+        endInput.disabled = true; endInput.value = '';
+        endInput.style.background = '#F5F5F5'; endInput.style.color = '#BDBDBD';
+      } else {
+        endInput.disabled = false; endInput.style.background = ''; endInput.style.color = '';
+      }
+    }
+
+    function onWorkspaceChange() {
+      const wsName = document.getElementById('pf-ws')?.value;
+      const area = document.getElementById('pf-teams-area');
+      if (!area) return;
+      if (!wsName) {
+        area.innerHTML = '<span style="color:#BDBDBD;font-size:12px;">워크스페이스를 먼저 선택하세요</span>';
+        return;
+      }
+      const ws = workspacesData.find(w => w.name === wsName);
+      if (!ws) return;
+      area.innerHTML = ws.teams.map(t => `
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+          <input type="checkbox" name="pf-team" value="${t.name}" checked> ${wsName} > ${t.name}
+        </label>
+      `).join('');
+    }
+
+    function getFormsSelectHtml(selectedForms) {
+      const formNames = [];
+      if (formsData && Array.isArray(formsData)) {
+        formsData.forEach(f => {
+          const label = f.name + (f.version ? ' ' + f.version : '');
+          formNames.push(label);
+        });
+      }
+      if (formNames.length === 0) {
+        formNames.push('표준 QA 평가표 v2.1', '기술지원 전문 평가표', '표준 QA 평가표 v2.0');
+      }
+      const unique = [...new Set(formNames)];
+      const selected = selectedForms.length > 0 ? selectedForms[0] : '';
+      const options = unique.map(fn =>
+        `<option value="${fn}"${fn === selected ? ' selected' : ''}>${fn}</option>`
+      ).join('');
+      return `<select id="pf-form" class="form-select" style="width:100%;"><option value="">평가표를 선택하세요</option>${options}</select>`;
+    }
+
+    /* ── 폼 읽기 ── */
+    function readForm() {
+      const name = document.getElementById('pf-name')?.value?.trim();
+      if (!name) { AICC_Toast.show('계획명을 입력하세요.'); return null; }
+
+      const periodStart = document.getElementById('pf-start')?.value;
+      if (!periodStart) { AICC_Toast.show('시작일을 입력하세요.'); return null; }
+
+      const repeat = document.querySelector('input[name="pf-repeat"]:checked')?.value || '1회성';
+      const periodEnd = repeat === '1회성' ? '' : (document.getElementById('pf-end')?.value || '');
+      if (repeat !== '1회성' && !periodEnd) { AICC_Toast.show('종료일을 입력하세요.'); return null; }
+
+      const workspace = document.getElementById('pf-ws')?.value || '';
+      const teams = [...document.querySelectorAll('input[name="pf-team"]:checked')].map(el => el.value);
+      const inbound = document.getElementById('pf-ib')?.checked ?? true;
+      const outbound = document.getElementById('pf-ob')?.checked ?? true;
+      const selectedForm = document.getElementById('pf-form')?.value;
+      const forms = selectedForm ? [selectedForm] : [];
+
+      const criteriaType = document.getElementById('pf-criteria')?.value;
+      if (!criteriaType) { AICC_Toast.show('수동 평가 대상 기준을 선택하세요.'); return null; }
+
+      let criteriaValue = {};
+      switch (criteriaType) {
+        case 'workingDays': {
+          const d = parseInt(document.getElementById('criteria-days')?.value);
+          if (!d || d <= 0) { AICC_Toast.show('근무일수를 입력하세요.'); return null; }
+          criteriaValue = { days: d };
+          break;
+        }
+        case 'sampling': {
+          const r = parseInt(document.getElementById('criteria-rate')?.value);
+          if (!r || r <= 0 || r > 100) { AICC_Toast.show('샘플링 비율을 1~100% 범위로 입력하세요.'); return null; }
+          criteriaValue = { rate: r };
+          break;
+        }
+        case 'scoreThreshold': {
+          const sc = parseInt(document.getElementById('criteria-score')?.value);
+          if (sc == null || sc < 0 || sc > 100) { AICC_Toast.show('AI 점수를 0~100 범위로 입력하세요.'); return null; }
+          criteriaValue = { score: sc };
+          break;
+        }
+        case 'confidence': {
+          const lv = document.getElementById('criteria-level')?.value || 'Medium';
+          criteriaValue = { level: lv };
+          break;
+        }
+        case 'specificAgents': {
+          const agents = getDlbSelected('dlb-criteria-agents');
+          if (agents.length === 0) { AICC_Toast.show('상담사를 선택하세요.'); return null; }
+          criteriaValue = { agents };
+          break;
+        }
+      }
+
+      const assignee = document.getElementById('pf-assignee')?.value?.trim() || '';
+      const targetLabel = buildTargetLabel(workspace, teams);
+
+      return {
+        name, periodStart, periodEnd, repeat,
+        target: targetLabel,
+        targetDetail: { workspace, teams, inbound, outbound },
+        forms, criteriaType, criteriaValue, assignee
+      };
+    }
+
+    /* ── 새 계획 추가 ── */
+    function openCreateModal() {
+      const html = buildFormHtml(null);
+      AICC_Modal.open({
+        title: '새 수동 평가 계획 추가',
+        size: 'lg',
+        content: html,
+        footer: `
+          <button class="btn btn-secondary" onclick="AICC_Modal.close()">취소</button>
+          <button class="btn btn-primary" onclick="saveNew()">생성</button>
+        `
+      });
+    }
+
+    function saveNew() {
+      const vals = readForm();
+      if (!vals) return;
+
+      plans.push({
+        no: getNextNo(),
+        ...vals,
+        stats: { total: 0, completed: 0, pending: 0 }
+      });
+      renderTable();
+      AICC_Modal.close();
+      AICC_Toast.show('수동 평가 계획이 생성되었습니다. 자동 평가 제외 관리에 연동 규칙이 추가되었습니다.');
+    }
+
+    /* ── 편집 ── */
+    function openEditModal(no) {
+      AICC_Modal.close();
+      const p = plans.find(x => x.no === no);
+      if (!p) return;
+
+      setTimeout(() => {
+        const html = buildFormHtml(p);
+        AICC_Modal.open({
+          title: `수동 평가 계획 편집: "${p.name}"`,
+          size: 'lg',
+          content: html,
+          footer: `
+            <button class="btn btn-secondary" onclick="AICC_Modal.close()">취소</button>
+            <button class="btn btn-primary" onclick="saveEdit(${no})">저장</button>
+          `
+        });
+      }, 300);
+    }
+
+    function saveEdit(no) {
+      const vals = readForm();
+      if (!vals) return;
+
+      const p = plans.find(x => x.no === no);
+      if (!p) return;
+
+      Object.assign(p, vals);
+      renderTable();
+      AICC_Modal.close();
+      AICC_Toast.show('수동 평가 계획이 수정되었습니다.');
+    }
+
+    /* ── 삭제 / 복사 ── */
+    function handleAction(no, action) {
+      AICC_Modal.close();
+      const idx = plans.findIndex(x => x.no === no);
+      if (idx === -1) return;
+      const p = plans[idx];
+
+      switch (action) {
+        case 'delete':
+          plans.splice(idx, 1);
+          renderTable();
+          AICC_Toast.show(`"${p.name}" 계획이 삭제되었습니다. 연동된 자동 평가 제외 규칙도 함께 삭제됩니다.`);
+          break;
+        case 'copy': {
+          const copy = JSON.parse(JSON.stringify(p));
+          copy.no = getNextNo();
+          copy.name = p.name + ' (사본)';
+          copy.stats = { total: 0, completed: 0, pending: 0 };
+          plans.push(copy);
+          renderTable();
+          AICC_Toast.show(`"${p.name}" 계획이 복사되었습니다.`);
+          break;
+        }
+      }
+    }
+
+    /* ── 초기화 ── */
+    document.addEventListener('DOMContentLoaded', async () => {
+      formsData = await AICC_DataLoader.load('evaluation-forms.json');
+      const wsRaw = await AICC_DataLoader.load('workspaces.json');
+      if (wsRaw) workspacesData = wsRaw;
+      const usRaw = await AICC_DataLoader.load('users.json');
+      if (usRaw) usersData = usRaw;
+      renderTable();
+    });
+  </script>
+</body>
+</html>

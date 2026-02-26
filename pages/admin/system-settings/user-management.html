@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>사용자 관리 - AICC Quality Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../../../css/styles.css">
+</head>
+<body class="bg-[#F5F5F5] text-[#212121]">
+  <div id="page-content">
+    <!-- 페이지 제목 -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <h1 style="font-size:20px;font-weight:700;margin:0;">사용자 관리</h1>
+        <p style="font-size:12px;color:#757575;margin:4px 0 0;">시스템 사용자 및 역할 관리</p>
+      </div>
+      <button class="btn btn-primary" onclick="openAddUserModal()">+ 사용자 추가</button>
+    </div>
+
+    <!-- 필터 -->
+    <div class="filter-section">
+      <div class="filter-header">
+        <span>필터</span>
+      </div>
+      <div class="filter-body">
+        <div>
+          <label class="form-label">역할</label>
+          <select class="form-select" id="role-filter" onchange="filterUsers()">
+            <option value="all">전체</option>
+            <option value="ADMIN">관리자</option>
+            <option value="QA_MANAGER">QA 매니저</option>
+            <option value="AGENT">상담사</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">상태</label>
+          <select class="form-select" id="status-filter" onchange="filterUsers()">
+            <option value="all">전체</option>
+            <option value="active">활성</option>
+            <option value="inactive">비활성</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">검색</label>
+          <input type="text" class="form-input" id="search-input" placeholder="이름 검색..." oninput="filterUsers()">
+        </div>
+      </div>
+    </div>
+
+    <!-- 테이블 -->
+    <div class="content-card">
+      <div class="content-card-header">
+        <span style="font-size:14px;font-weight:600;">사용자 목록</span>
+        <span style="font-size:12px;color:#757575;" id="total-count">총 10명</span>
+      </div>
+      <div class="content-card-body" style="padding:0;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width:40px;">No</th>
+              <th>이름</th>
+              <th>역할</th>
+              <th>팀</th>
+              <th>워크스페이스</th>
+              <th>상태</th>
+            </tr>
+          </thead>
+          <tbody id="user-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../../assets/dummy-data/all-data.js"></script>
+  <script src="../../../js/utils/data-loader.js"></script>
+  <script src="../../../js/utils/auth-simulator.js"></script>
+  <script src="../../../js/utils/formatters.js"></script>
+  <script src="../../../js/components/sidebar.js"></script>
+  <script src="../../../js/components/layout.js"></script>
+  <script src="../../../js/components/modal.js"></script>
+  <script src="../../../js/components/toast.js"></script>
+  <script>
+    // 더미 데이터
+    const users = [
+      { no: 1, name: '김철수', email: 'cskim@company.com', role: 'ADMIN', team: '-', workspace: '전체', status: 'active', statusText: '활성', joinDate: '2023-03-15' },
+      { no: 2, name: '박영희', email: 'yhpark@company.com', role: 'ADMIN', team: '-', workspace: '전체', status: 'active', statusText: '활성', joinDate: '2023-05-20' },
+      { no: 3, name: '이준호', email: 'jhlee@company.com', role: 'QA_MANAGER', team: '고객지원1팀', workspace: '서울센터', status: 'active', statusText: '활성', joinDate: '2023-08-01' },
+      { no: 4, name: '김민수', email: 'mskim@company.com', role: 'AGENT', team: '고객지원1팀', workspace: '서울센터', status: 'active', statusText: '활성', joinDate: '2024-01-10' },
+      { no: 5, name: '이서연', email: 'sylee@company.com', role: 'AGENT', team: '고객지원2팀', workspace: '서울센터', status: 'active', statusText: '활성', joinDate: '2024-02-15' },
+      { no: 6, name: '박지훈', email: 'jhpark@company.com', role: 'AGENT', team: '기술지원팀', workspace: '서울센터', status: 'active', statusText: '활성', joinDate: '2024-03-01' },
+      { no: 7, name: '최유진', email: 'yjchoi@company.com', role: 'AGENT', team: '고객지원1팀', workspace: '부산센터', status: 'active', statusText: '활성', joinDate: '2024-04-20' },
+      { no: 8, name: '정다은', email: 'dejung@company.com', role: 'AGENT', team: '영업지원팀', workspace: '부산센터', status: 'active', statusText: '활성', joinDate: '2024-05-10' },
+      { no: 9, name: '한승우', email: 'swhan@company.com', role: 'AGENT', team: '고객지원2팀', workspace: '서울센터', status: 'inactive', statusText: '비활성', joinDate: '2024-06-01' },
+      { no: 10, name: '윤하나', email: 'hnyoon@company.com', role: 'AGENT', team: '기술지원팀', workspace: '부산센터', status: 'inactive', statusText: '비활성', joinDate: '2024-07-15' }
+    ];
+
+    function getRoleBadge(role) {
+      const map = {
+        'ADMIN': '<span class="badge" style="background:#E0F2F1;color:#0F766E;border:1px solid #B2DFDB;">ADMIN</span>',
+        'QA_MANAGER': '<span class="badge" style="background:#E3F2FD;color:#1565C0;border:1px solid #BBDEFB;">QA 매니저</span>',
+        'AGENT': '<span class="badge" style="background:#F5F5F5;color:#757575;border:1px solid #E0E0E0;">상담사</span>'
+      };
+      return map[role] || role;
+    }
+
+    function renderTable(data) {
+      const tbody = document.getElementById('user-tbody');
+      document.getElementById('total-count').textContent = `총 ${data.length}명`;
+      tbody.innerHTML = data.map(u => `
+        <tr onclick="openDetail(${u.no})">
+          <td>${u.no}</td>
+          <td style="font-weight:500;">${u.name}</td>
+          <td>${getRoleBadge(u.role)}</td>
+          <td>${u.team}</td>
+          <td>${u.workspace}</td>
+          <td>${AICC_Fmt.statusBadge(u.status, u.statusText)}</td>
+        </tr>
+      `).join('');
+    }
+
+    function filterUsers() {
+      const roleVal = document.getElementById('role-filter').value;
+      const statusVal = document.getElementById('status-filter').value;
+      const searchVal = document.getElementById('search-input').value.trim().toLowerCase();
+
+      let filtered = users;
+      if (roleVal !== 'all') {
+        filtered = filtered.filter(u => u.role === roleVal);
+      }
+      if (statusVal !== 'all') {
+        filtered = filtered.filter(u => u.status === statusVal);
+      }
+      if (searchVal) {
+        filtered = filtered.filter(u => u.name.toLowerCase().includes(searchVal));
+      }
+      renderTable(filtered);
+    }
+
+    function openDetail(no) {
+      const u = users.find(x => x.no === no);
+      if (!u) return;
+
+      const content = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+          <div>
+            <div class="form-label">이름</div>
+            <input type="text" class="form-input" style="width:100%;" value="${u.name}">
+          </div>
+          <div>
+            <div class="form-label">이메일</div>
+            <input type="email" class="form-input" style="width:100%;" value="${u.email}">
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+          <div>
+            <div class="form-label">역할</div>
+            <select class="form-select" style="width:100%;" id="modal-role-select">
+              <option value="ADMIN" ${u.role === 'ADMIN' ? 'selected' : ''}>ADMIN (관리자)</option>
+              <option value="QA_MANAGER" ${u.role === 'QA_MANAGER' ? 'selected' : ''}>QA 매니저</option>
+              <option value="AGENT" ${u.role === 'AGENT' ? 'selected' : ''}>상담사</option>
+            </select>
+          </div>
+          <div>
+            <div class="form-label">상태</div>
+            <select class="form-select" style="width:100%;" id="modal-status-select">
+              <option value="active" ${u.status === 'active' ? 'selected' : ''}>활성</option>
+              <option value="inactive" ${u.status === 'inactive' ? 'selected' : ''}>비활성</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+          <div>
+            <div class="form-label">워크스페이스</div>
+            <select class="form-select" style="width:100%;">
+              <option ${u.workspace === '전체' ? 'selected' : ''}>전체</option>
+              <option ${u.workspace === '서울센터' ? 'selected' : ''}>서울센터</option>
+              <option ${u.workspace === '부산센터' ? 'selected' : ''}>부산센터</option>
+            </select>
+          </div>
+          <div>
+            <div class="form-label">팀</div>
+            <select class="form-select" style="width:100%;">
+              <option ${u.team === '-' ? 'selected' : ''}>-</option>
+              <option ${u.team === '고객지원1팀' ? 'selected' : ''}>고객지원1팀</option>
+              <option ${u.team === '고객지원2팀' ? 'selected' : ''}>고객지원2팀</option>
+              <option ${u.team === '기술지원팀' ? 'selected' : ''}>기술지원팀</option>
+              <option ${u.team === '영업지원팀' ? 'selected' : ''}>영업지원팀</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="border-top:1px solid #E0E0E0;padding-top:16px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div>
+              <div class="form-label">가입일</div>
+              <div style="font-size:13px;color:#757575;">${AICC_Fmt.date(u.joinDate)}</div>
+            </div>
+            <div>
+              <div class="form-label">현재 역할</div>
+              <div>${getRoleBadge(u.role)}</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const footer = `
+        <button class="btn btn-danger" onclick="handleUserAction(${u.no}, '삭제')">삭제</button>
+        <div style="flex:1;"></div>
+        <button class="btn btn-secondary" onclick="AICC_Modal.close()">취소</button>
+        <button class="btn btn-primary" onclick="handleUserAction(${u.no}, '저장')">저장</button>
+      `;
+
+      AICC_Modal.open({
+        title: `사용자 상세 - ${u.name}`,
+        content: content,
+        footer: footer,
+        size: 'md'
+      });
+    }
+
+    function openAddUserModal() {
+      const content = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+          <div>
+            <div class="form-label">이름</div>
+            <input type="text" class="form-input" style="width:100%;" placeholder="이름 입력">
+          </div>
+          <div>
+            <div class="form-label">이메일</div>
+            <input type="email" class="form-input" style="width:100%;" placeholder="이메일 입력">
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+          <div>
+            <div class="form-label">역할</div>
+            <select class="form-select" style="width:100%;">
+              <option value="AGENT">상담사</option>
+              <option value="QA_MANAGER">QA 매니저</option>
+              <option value="ADMIN">ADMIN (관리자)</option>
+            </select>
+          </div>
+          <div>
+            <div class="form-label">상태</div>
+            <select class="form-select" style="width:100%;">
+              <option value="active">활성</option>
+              <option value="inactive">비활성</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div>
+            <div class="form-label">워크스페이스</div>
+            <select class="form-select" style="width:100%;">
+              <option>서울센터</option>
+              <option>부산센터</option>
+            </select>
+          </div>
+          <div>
+            <div class="form-label">팀</div>
+            <select class="form-select" style="width:100%;">
+              <option>고객지원1팀</option>
+              <option>고객지원2팀</option>
+              <option>기술지원팀</option>
+              <option>영업지원팀</option>
+            </select>
+          </div>
+        </div>
+      `;
+
+      const footer = `
+        <button class="btn btn-secondary" onclick="AICC_Modal.close()">취소</button>
+        <button class="btn btn-primary" onclick="handleUserAction(0, '추가')">추가</button>
+      `;
+
+      AICC_Modal.open({
+        title: '사용자 추가',
+        content: content,
+        footer: footer,
+        size: 'md'
+      });
+    }
+
+    function handleUserAction(no, action) {
+      AICC_Modal.close();
+      AICC_Toast.show(`사용자 ${action}가 완료되었습니다.`);
+    }
+
+    // 초기 렌더링
+    document.addEventListener('DOMContentLoaded', () => {
+      renderTable(users);
+    });
+  </script>
+</body>
+</html>

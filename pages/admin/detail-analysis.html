@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>상세 분석 - AICC Quality Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body class="bg-[#F5F5F5] text-[#212121]">
+  <div id="page-content">
+    <!-- 페이지 제목 -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <h1 style="font-size:20px;font-weight:700;margin:0;">상세 분석</h1>
+        <p style="font-size:12px;color:#757575;margin:4px 0 0;">워크스페이스 / 팀 / 상담사 단위 드릴다운 분석</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <select class="form-select" id="period-filter" onchange="applyPeriodFilter()">
+          <option value="today">오늘</option>
+          <option value="week" selected>최근 7일</option>
+          <option value="month">최근 30일</option>
+        </select>
+        <select class="form-select" id="type-filter" onchange="applyPeriodFilter()">
+          <option value="all">전체 유형</option>
+          <option value="I/B">I/B (인바운드)</option>
+          <option value="O/B">O/B (아웃바운드)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- 브레드크럼 네비게이션 -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;padding:12px 20px;background:white;border:1px solid #E0E0E0;border-radius:8px;">
+      <button class="btn btn-secondary btn-sm" id="back-btn" onclick="goBack()" style="display:none;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+        뒤로
+      </button>
+      <div id="breadcrumb" style="display:flex;align-items:center;gap:6px;font-size:13px;">
+        <span style="font-weight:600;color:#0F766E;">전체</span>
+      </div>
+    </div>
+
+    <!-- KPI 카드 -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px;" id="kpi-cards">
+      <!-- JS로 동적 생성 -->
+    </div>
+
+    <!-- 데이터 테이블 -->
+    <div class="content-card">
+      <div class="content-card-header">
+        <span style="font-size:14px;font-weight:600;" id="table-title">워크스페이스별 현황</span>
+        <span style="font-size:12px;color:#757575;" id="table-count"></span>
+      </div>
+      <div class="content-card-body" style="padding:0;">
+        <table class="data-table">
+          <thead id="table-head">
+            <!-- JS로 동적 생성 -->
+          </thead>
+          <tbody id="table-body">
+            <!-- JS로 동적 생성 -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../assets/dummy-data/all-data.js"></script>
+  <script src="../../js/utils/data-loader.js"></script>
+  <script src="../../js/utils/auth-simulator.js"></script>
+  <script src="../../js/utils/formatters.js"></script>
+  <script src="../../js/components/sidebar.js"></script>
+  <script src="../../js/components/layout.js"></script>
+  <script src="../../js/components/modal.js"></script>
+  <script src="../../js/components/toast.js"></script>
+  <script>
+    /* ========== 인라인 더미 데이터 ========== */
+    const DUMMY = {
+      workspaces: [
+        {
+          id: 'ws-1', name: '서울센터',
+          avgScore: 82.4, totalCalls: 4520, totalEvals: 3980, agentCount: 156, completionRate: 88.1,
+          teams: [
+            {
+              id: 'tm-1', name: 'VIP상담팀',
+              avgScore: 86.3, totalCalls: 1120, totalEvals: 1050, agentCount: 32, completionRate: 93.8,
+              agents: [
+                { id: 'ag-1', name: '홍길동', avgScore: 91.2, totalCalls: 45, totalEvals: 43, rank: 1, callType: 'I/B',
+                  evaluations: [
+                    { id: 'EV-2025-00421', date: '2025-01-15', time: '09:12', duration: '04:32', score: 94.5, type: 'AI', confidence: 'High', issue: null },
+                    { id: 'EV-2025-00422', date: '2025-01-15', time: '10:05', duration: '06:11', score: 88.0, type: 'AI', confidence: 'High', issue: null },
+                    { id: 'EV-2025-00423', date: '2025-01-15', time: '11:30', duration: '03:45', score: 92.3, type: 'NLP', confidence: 'High', issue: null },
+                    { id: 'EV-2025-00424', date: '2025-01-14', time: '14:22', duration: '07:18', score: 89.7, type: 'AI', confidence: 'High', issue: null },
+                    { id: 'EV-2025-00425', date: '2025-01-14', time: '15:41', duration: '05:02', score: 91.8, type: 'AI', confidence: 'High', issue: null }
+                  ]
+                },
+                { id: 'ag-2', name: '김영수', avgScore: 88.7, totalCalls: 38, totalEvals: 36, rank: 2, callType: 'I/B',
+                  evaluations: [
+                    { id: 'EV-2025-00431', date: '2025-01-15', time: '09:30', duration: '05:15', score: 90.1, type: 'AI', confidence: 'High', issue: null },
+                    { id: 'EV-2025-00432', date: '2025-01-15', time: '10:45', duration: '04:22', score: 86.3, type: 'NLP', confidence: 'High', issue: '스크립트 미준수' },
+                    { id: 'EV-2025-00433', date: '2025-01-14', time: '13:10', duration: '08:05', score: 89.8, type: 'AI', confidence: 'High', issue: null }
+                  ]
+                },
+                { id: 'ag-3', name: '이미영', avgScore: 85.1, totalCalls: 42, totalEvals: 40, rank: 3, callType: 'I/B',
+                  evaluations: [
+                    { id: 'EV-2025-00441', date: '2025-01-15', time: '09:05', duration: '06:33', score: 84.2, type: 'AI', confidence: 'High', issue: null },
+                    { id: 'EV-2025-00442', date: '2025-01-14', time: '11:15', duration: '04:50', score: 86.0, type: 'AI', confidence: 'Medium', issue: null }
+                  ]
+                },
+                { id: 'ag-4', name: '박준호', avgScore: 83.9, totalCalls: 35, totalEvals: 33, rank: 4, callType: 'O/B',
+                  evaluations: [
+                    { id: 'EV-2025-00451', date: '2025-01-15', time: '10:20', duration: '05:40', score: 82.5, type: 'AI', confidence: 'High', issue: '인사말 누락' },
+                    { id: 'EV-2025-00452', date: '2025-01-14', time: '14:30', duration: '07:12', score: 85.3, type: 'NLP', confidence: 'High', issue: null }
+                  ]
+                }
+              ]
+            },
+            {
+              id: 'tm-2', name: '일반상담팀',
+              avgScore: 79.8, totalCalls: 1680, totalEvals: 1520, agentCount: 52, completionRate: 90.5,
+              agents: [
+                { id: 'ag-5', name: '정수민', avgScore: 84.6, totalCalls: 40, totalEvals: 38, rank: 1, callType: 'I/B',
+                  evaluations: [
+                    { id: 'EV-2025-00501', date: '2025-01-15', time: '09:22', duration: '04:18', score: 85.3, type: 'AI', confidence: 'High', issue: null },
+                    { id: 'EV-2025-00502', date: '2025-01-15', time: '11:05', duration: '06:44', score: 83.9, type: 'AI', confidence: 'High', issue: null }
+                  ]
+                },
+                { id: 'ag-6', name: '최은지', avgScore: 78.2, totalCalls: 36, totalEvals: 34, rank: 2, callType: 'I/B',
+                  evaluations: [
+                    { id: 'EV-2025-00511', date: '2025-01-15', time: '09:40', duration: '05:55', score: 76.8, type: 'AI', confidence: 'Medium', issue: '고객 불만 처리 미흡' },
+                    { id: 'EV-2025-00512', date: '2025-01-14', time: '15:20', duration: '03:28', score: 79.6, type: 'NLP', confidence: 'High', issue: null }
+                  ]
+                },
+                { id: 'ag-7', name: '한동우', avgScore: 72.5, totalCalls: 33, totalEvals: 30, rank: 3, callType: 'O/B',
+                  evaluations: [
+                    { id: 'EV-2025-00521', date: '2025-01-15', time: '10:10', duration: '07:30', score: 68.4, type: 'AI', confidence: 'High', issue: '필수항목 누락' },
+                    { id: 'EV-2025-00522', date: '2025-01-14', time: '13:50', duration: '04:15', score: 76.6, type: 'AI', confidence: 'Medium', issue: '스크립트 미준수' }
+                  ]
+                }
+              ]
+            },
+            {
+              id: 'tm-3', name: '기술지원팀',
+              avgScore: 81.5, totalCalls: 920, totalEvals: 810, agentCount: 28, completionRate: 88.0,
+              agents: [
+                { id: 'ag-8', name: '오세진', avgScore: 87.3, totalCalls: 28, totalEvals: 26, rank: 1, callType: 'I/B',
+                  evaluations: [
+                    { id: 'EV-2025-00601', date: '2025-01-15', time: '09:50', duration: '08:12', score: 88.1, type: 'AI', confidence: 'High', issue: null },
+                    { id: 'EV-2025-00602', date: '2025-01-14', time: '14:05', duration: '06:30', score: 86.5, type: 'NLP', confidence: 'High', issue: null }
+                  ]
+                },
+                { id: 'ag-9', name: '강지윤', avgScore: 80.1, totalCalls: 31, totalEvals: 28, rank: 2, callType: 'I/B',
+                  evaluations: [
+                    { id: 'EV-2025-00611', date: '2025-01-15', time: '10:35', duration: '05:48', score: 81.2, type: 'AI', confidence: 'Medium', issue: null },
+                    { id: 'EV-2025-00612', date: '2025-01-14', time: '16:00', duration: '04:55', score: 79.0, type: 'AI', confidence: 'Medium', issue: '기술용어 설명 부족' }
+                  ]
+                }
+              ]
+            },
+            {
+              id: 'tm-4', name: '아웃바운드팀',
+              avgScore: 77.6, totalCalls: 800, totalEvals: 600, agentCount: 44, completionRate: 75.0,
+              agents: [
+                { id: 'ag-10', name: '윤석호', avgScore: 82.4, totalCalls: 25, totalEvals: 22, rank: 1, callType: 'O/B',
+                  evaluations: [
+                    { id: 'EV-2025-00701', date: '2025-01-15', time: '09:15', duration: '03:40', score: 83.6, type: 'AI', confidence: 'High', issue: null },
+                    { id: 'EV-2025-00702', date: '2025-01-14', time: '11:20', duration: '04:10', score: 81.2, type: 'AI', confidence: 'Medium', issue: null }
+                  ]
+                },
+                { id: 'ag-11', name: '서다은', avgScore: 74.8, totalCalls: 30, totalEvals: 25, rank: 2, callType: 'O/B',
+                  evaluations: [
+                    { id: 'EV-2025-00711', date: '2025-01-15', time: '10:00', duration: '05:25', score: 72.3, type: 'AI', confidence: 'Medium', issue: '동의 확보 미흡' },
+                    { id: 'EV-2025-00712', date: '2025-01-14', time: '14:40', duration: '06:10', score: 77.3, type: 'NLP', confidence: 'High', issue: null }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          id: 'ws-2', name: '부산센터',
+          avgScore: 78.9, totalCalls: 2810, totalEvals: 2450, agentCount: 98, completionRate: 87.2,
+          teams: [
+            {
+              id: 'tm-5', name: '고객상담1팀',
+              avgScore: 80.5, totalCalls: 980, totalEvals: 870, agentCount: 35, completionRate: 88.8,
+              agents: [
+                { id: 'ag-12', name: '배수현', avgScore: 85.6, totalCalls: 32, totalEvals: 30, rank: 1, callType: 'I/B',
+                  evaluations: [
+                    { id: 'EV-2025-00801', date: '2025-01-15', time: '09:08', duration: '04:50', score: 87.2, type: 'AI', confidence: 'High', issue: null },
+                    { id: 'EV-2025-00802', date: '2025-01-14', time: '10:30', duration: '05:15', score: 84.0, type: 'AI', confidence: 'High', issue: null }
+                  ]
+                },
+                { id: 'ag-13', name: '임재영', avgScore: 77.3, totalCalls: 28, totalEvals: 25, rank: 2, callType: 'I/B',
+                  evaluations: [
+                    { id: 'EV-2025-00811', date: '2025-01-15', time: '09:55', duration: '06:20', score: 75.8, type: 'AI', confidence: 'Medium', issue: '경어 사용 부족' },
+                    { id: 'EV-2025-00812', date: '2025-01-14', time: '13:40', duration: '04:05', score: 78.8, type: 'NLP', confidence: 'High', issue: null }
+                  ]
+                }
+              ]
+            },
+            {
+              id: 'tm-6', name: '고객상담2팀',
+              avgScore: 76.2, totalCalls: 1050, totalEvals: 920, agentCount: 38, completionRate: 87.6,
+              agents: [
+                { id: 'ag-14', name: '조민서', avgScore: 81.9, totalCalls: 34, totalEvals: 32, rank: 1, callType: 'I/B',
+                  evaluations: [
+                    { id: 'EV-2025-00901', date: '2025-01-15', time: '09:18', duration: '05:33', score: 83.4, type: 'AI', confidence: 'High', issue: null },
+                    { id: 'EV-2025-00902', date: '2025-01-14', time: '11:50', duration: '04:40', score: 80.4, type: 'AI', confidence: 'Medium', issue: null }
+                  ]
+                },
+                { id: 'ag-15', name: '김태희', avgScore: 70.5, totalCalls: 29, totalEvals: 26, rank: 2, callType: 'I/B',
+                  evaluations: [
+                    { id: 'EV-2025-00911', date: '2025-01-15', time: '10:25', duration: '07:45', score: 68.2, type: 'AI', confidence: 'High', issue: '고객 불만 처리 미흡' },
+                    { id: 'EV-2025-00912', date: '2025-01-14', time: '15:10', duration: '03:55', score: 72.8, type: 'NLP', confidence: 'High', issue: '필수항목 누락' }
+                  ]
+                }
+              ]
+            },
+            {
+              id: 'tm-7', name: '영업지원팀',
+              avgScore: 79.8, totalCalls: 780, totalEvals: 660, agentCount: 25, completionRate: 84.6,
+              agents: [
+                { id: 'ag-16', name: '이현우', avgScore: 83.7, totalCalls: 36, totalEvals: 33, rank: 1, callType: 'O/B',
+                  evaluations: [
+                    { id: 'EV-2025-01001', date: '2025-01-15', time: '09:35', duration: '04:28', score: 85.1, type: 'AI', confidence: 'High', issue: null },
+                    { id: 'EV-2025-01002', date: '2025-01-14', time: '14:15', duration: '05:50', score: 82.3, type: 'AI', confidence: 'Medium', issue: null }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          id: 'ws-3', name: '대구센터',
+          avgScore: 75.3, totalCalls: 1890, totalEvals: 1580, agentCount: 72, completionRate: 83.6,
+          teams: [
+            {
+              id: 'tm-8', name: '종합상담팀',
+              avgScore: 77.1, totalCalls: 820, totalEvals: 690, agentCount: 30, completionRate: 84.1,
+              agents: [
+                { id: 'ag-17', name: '송민준', avgScore: 81.5, totalCalls: 30, totalEvals: 28, rank: 1, callType: 'I/B',
+                  evaluations: [
+                    { id: 'EV-2025-01101', date: '2025-01-15', time: '09:25', duration: '05:10', score: 82.8, type: 'AI', confidence: 'High', issue: null },
+                    { id: 'EV-2025-01102', date: '2025-01-14', time: '11:40', duration: '06:25', score: 80.2, type: 'NLP', confidence: 'High', issue: null }
+                  ]
+                },
+                { id: 'ag-18', name: '황서연', avgScore: 73.8, totalCalls: 27, totalEvals: 24, rank: 2, callType: 'I/B',
+                  evaluations: [
+                    { id: 'EV-2025-01111', date: '2025-01-15', time: '10:15', duration: '04:35', score: 71.5, type: 'AI', confidence: 'Medium', issue: '고객 확인 절차 누락' },
+                    { id: 'EV-2025-01112', date: '2025-01-14', time: '15:30', duration: '05:50', score: 76.1, type: 'AI', confidence: 'Medium', issue: null }
+                  ]
+                }
+              ]
+            },
+            {
+              id: 'tm-9', name: '클레임처리팀',
+              avgScore: 72.8, totalCalls: 650, totalEvals: 540, agentCount: 22, completionRate: 83.1,
+              agents: [
+                { id: 'ag-19', name: '노재원', avgScore: 78.2, totalCalls: 26, totalEvals: 23, rank: 1, callType: 'I/B',
+                  evaluations: [
+                    { id: 'EV-2025-01201', date: '2025-01-15', time: '09:45', duration: '08:20', score: 79.6, type: 'AI', confidence: 'High', issue: null },
+                    { id: 'EV-2025-01202', date: '2025-01-14', time: '13:25', duration: '06:45', score: 76.8, type: 'AI', confidence: 'Medium', issue: '사과 표현 부족' }
+                  ]
+                },
+                { id: 'ag-20', name: '문지혜', avgScore: 67.4, totalCalls: 24, totalEvals: 20, rank: 2, callType: 'I/B',
+                  evaluations: [
+                    { id: 'EV-2025-01211', date: '2025-01-15', time: '10:50', duration: '09:15', score: 64.2, type: 'AI', confidence: 'High', issue: '과락 - 필수항목 미이행' },
+                    { id: 'EV-2025-01212', date: '2025-01-14', time: '14:55', duration: '05:30', score: 70.6, type: 'NLP', confidence: 'High', issue: '스크립트 미준수' }
+                  ]
+                }
+              ]
+            },
+            {
+              id: 'tm-10', name: '신규고객팀',
+              avgScore: 76.5, totalCalls: 420, totalEvals: 350, agentCount: 20, completionRate: 83.3,
+              agents: [
+                { id: 'ag-21', name: '유하린', avgScore: 80.9, totalCalls: 22, totalEvals: 20, rank: 1, callType: 'O/B',
+                  evaluations: [
+                    { id: 'EV-2025-01301', date: '2025-01-15', time: '09:58', duration: '04:05', score: 82.3, type: 'AI', confidence: 'High', issue: null },
+                    { id: 'EV-2025-01302', date: '2025-01-14', time: '11:10', duration: '05:20', score: 79.5, type: 'AI', confidence: 'Medium', issue: null }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    };
+
+    /* ========== 상태 관리 ========== */
+    let currentLevel = 0; // 0=전체, 1=워크스페이스, 2=팀, 3=상담사
+    let navStack = []; // [{level, label, data}]
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const wsName = params.get('ws');
+      const teamName = params.get('team');
+
+      if (wsName && teamName) {
+        const ws = DUMMY.workspaces.find(w => w.name === wsName);
+        if (ws) {
+          const team = ws.teams.find(t => t.name === teamName);
+          if (team) {
+            drillToTeam(ws.id, team.id);
+            return;
+          }
+        }
+      }
+      renderLevel0();
+    });
+
+    /* ========== 브레드크럼 ========== */
+    function updateBreadcrumb() {
+      const bc = document.getElementById('breadcrumb');
+      const backBtn = document.getElementById('back-btn');
+
+      let parts = ['<span style="cursor:pointer;color:#0F766E;" onclick="goToLevel(0)">전체</span>'];
+      navStack.forEach((item, idx) => {
+        const isLast = idx === navStack.length - 1;
+        if (isLast) {
+          parts.push(`<span style="font-weight:600;">${item.label}</span>`);
+        } else {
+          parts.push(`<span style="cursor:pointer;color:#0F766E;" onclick="goToLevel(${idx + 1})">${item.label}</span>`);
+        }
+      });
+
+      bc.innerHTML = parts.join('<span style="color:#BDBDBD;margin:0 2px;">/</span>');
+      backBtn.style.display = currentLevel > 0 ? '' : 'none';
+    }
+
+    function goToLevel(level) {
+      if (level === 0) {
+        currentLevel = 0;
+        navStack = [];
+        renderLevel0();
+      } else if (level <= navStack.length) {
+        navStack = navStack.slice(0, level);
+        currentLevel = level;
+        const item = navStack[level - 1];
+        if (level === 1) renderLevel1(item.data);
+        else if (level === 2) renderLevel2(item.data);
+        else if (level === 3) renderLevel3(item.data);
+      }
+      updateBreadcrumb();
+    }
+
+    function goBack() {
+      if (currentLevel > 0) {
+        goToLevel(currentLevel - 1);
+      }
+    }
+
+    /* ========== KPI 카드 렌더링 ========== */
+    function renderKPI(items) {
+      const container = document.getElementById('kpi-cards');
+      container.innerHTML = items.map(card => {
+        const scoreStyle = card.isScore ? `color:${AICC_Fmt.scoreColor(card.rawValue)}` : '';
+        return `
+          <div class="kpi-card fade-in">
+            <div style="font-size:12px;color:#757575;margin-bottom:8px;">${card.label}</div>
+            <div style="font-size:28px;font-weight:700;${scoreStyle}">${card.value}</div>
+            ${card.sub ? `<div style="font-size:11px;color:#9E9E9E;margin-top:8px;">${card.sub}</div>` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    /* ========== Level 0: 워크스페이스 목록 ========== */
+    function renderLevel0() {
+      currentLevel = 0;
+      navStack = [];
+      updateBreadcrumb();
+
+      const ws = DUMMY.workspaces;
+      const totalCalls = ws.reduce((s, w) => s + w.totalCalls, 0);
+      const totalEvals = ws.reduce((s, w) => s + w.totalEvals, 0);
+      const avgScore = ws.reduce((s, w) => s + w.avgScore, 0) / ws.length;
+
+      renderKPI([
+        { label: '총 상담 건수', value: AICC_Fmt.number(totalCalls), sub: `${ws.length}개 워크스페이스` },
+        { label: '총 평가 건수', value: AICC_Fmt.number(totalEvals), sub: `완료율 ${((totalEvals / totalCalls) * 100).toFixed(1)}%` },
+        { label: '전체 평균 점수', value: AICC_Fmt.score(avgScore), rawValue: avgScore, isScore: true, sub: '전 워크스페이스 기준' }
+      ]);
+
+      document.getElementById('table-title').textContent = '워크스페이스별 현황';
+      document.getElementById('table-count').textContent = `총 ${ws.length}개`;
+
+      const thead = document.getElementById('table-head');
+      thead.innerHTML = `
+        <tr>
+          <th>워크스페이스</th>
+          <th style="text-align:right">상담사 수</th>
+          <th style="text-align:right">상담 건수</th>
+          <th style="text-align:right">평가 건수</th>
+          <th style="text-align:right">완료율</th>
+          <th style="text-align:right">평균 점수</th>
+        </tr>
+      `;
+
+      const tbody = document.getElementById('table-body');
+      tbody.innerHTML = ws.map(w => `
+        <tr onclick="drillToWorkspace('${w.id}')" class="fade-in">
+          <td style="font-weight:500;">${w.name}</td>
+          <td style="text-align:right;">${AICC_Fmt.number(w.agentCount)}명</td>
+          <td style="text-align:right;">${AICC_Fmt.number(w.totalCalls)}</td>
+          <td style="text-align:right;">${AICC_Fmt.number(w.totalEvals)}</td>
+          <td style="text-align:right;">${AICC_Fmt.percent(w.completionRate)}</td>
+          <td style="text-align:right;">${AICC_Fmt.scoreHtml(w.avgScore)}</td>
+        </tr>
+      `).join('');
+    }
+
+    /* ========== Level 1: 팀 목록 (워크스페이스 내) ========== */
+    function drillToWorkspace(wsId) {
+      const ws = DUMMY.workspaces.find(w => w.id === wsId);
+      if (!ws) return;
+
+      currentLevel = 1;
+      navStack = [{ level: 1, label: ws.name, data: ws }];
+      renderLevel1(ws);
+      updateBreadcrumb();
+    }
+
+    function renderLevel1(ws) {
+      const teams = ws.teams;
+
+      renderKPI([
+        { label: '팀 수', value: teams.length + '개', sub: `상담사 ${AICC_Fmt.number(ws.agentCount)}명` },
+        { label: '상담 건수', value: AICC_Fmt.number(ws.totalCalls), sub: `평가 ${AICC_Fmt.number(ws.totalEvals)}건` },
+        { label: '평균 점수', value: AICC_Fmt.score(ws.avgScore), rawValue: ws.avgScore, isScore: true, sub: ws.name + ' 기준' }
+      ]);
+
+      document.getElementById('table-title').textContent = ws.name + ' - 팀별 현황';
+      document.getElementById('table-count').textContent = `총 ${teams.length}개 팀`;
+
+      const thead = document.getElementById('table-head');
+      thead.innerHTML = `
+        <tr>
+          <th>팀명</th>
+          <th style="text-align:right">상담사 수</th>
+          <th style="text-align:right">상담 건수</th>
+          <th style="text-align:right">평가 건수</th>
+          <th style="text-align:right">완료율</th>
+          <th style="text-align:right">평균 점수</th>
+        </tr>
+      `;
+
+      const tbody = document.getElementById('table-body');
+      tbody.innerHTML = teams.map(t => `
+        <tr onclick="drillToTeam('${ws.id}','${t.id}')" class="fade-in">
+          <td style="font-weight:500;">${t.name}</td>
+          <td style="text-align:right;">${t.agentCount}명</td>
+          <td style="text-align:right;">${AICC_Fmt.number(t.totalCalls)}</td>
+          <td style="text-align:right;">${AICC_Fmt.number(t.totalEvals)}</td>
+          <td style="text-align:right;">${AICC_Fmt.percent(t.completionRate)}</td>
+          <td style="text-align:right;">${AICC_Fmt.scoreHtml(t.avgScore)}</td>
+        </tr>
+      `).join('');
+    }
+
+    /* ========== Level 2: 상담사 목록 (팀 내) ========== */
+    function drillToTeam(wsId, teamId) {
+      const ws = DUMMY.workspaces.find(w => w.id === wsId);
+      if (!ws) return;
+      const team = ws.teams.find(t => t.id === teamId);
+      if (!team) return;
+
+      currentLevel = 2;
+      navStack = [
+        { level: 1, label: ws.name, data: ws },
+        { level: 2, label: team.name, data: { ws, team } }
+      ];
+      renderLevel2({ ws, team });
+      updateBreadcrumb();
+    }
+
+    function renderLevel2(ctx) {
+      const { ws, team } = ctx;
+      const agents = team.agents;
+
+      renderKPI([
+        { label: '상담사 수', value: agents.length + '명', sub: team.name },
+        { label: '상담 건수', value: AICC_Fmt.number(team.totalCalls), sub: `평가 ${AICC_Fmt.number(team.totalEvals)}건` },
+        { label: '팀 평균 점수', value: AICC_Fmt.score(team.avgScore), rawValue: team.avgScore, isScore: true, sub: `완료율 ${AICC_Fmt.percent(team.completionRate)}` }
+      ]);
+
+      document.getElementById('table-title').textContent = team.name + ' - 상담사별 현황';
+      document.getElementById('table-count').textContent = `총 ${agents.length}명`;
+
+      const thead = document.getElementById('table-head');
+      thead.innerHTML = `
+        <tr>
+          <th style="width:40px">순위</th>
+          <th>상담사</th>
+          <th>통화유형</th>
+          <th style="text-align:right">상담 건수</th>
+          <th style="text-align:right">평가 건수</th>
+          <th style="text-align:right">평균 점수</th>
+        </tr>
+      `;
+
+      const tbody = document.getElementById('table-body');
+      tbody.innerHTML = agents.map(a => `
+        <tr onclick="drillToAgent('${ws.id}','${team.id}','${a.id}')" class="fade-in">
+          <td style="font-weight:600;color:#757575;text-align:center;">${a.rank}</td>
+          <td style="font-weight:500;">${a.name}</td>
+          <td>${a.callType === 'I/B' ? '<span class="badge badge-nlp">I/B</span>' : '<span class="badge badge-ai">O/B</span>'}</td>
+          <td style="text-align:right;">${AICC_Fmt.number(a.totalCalls)}</td>
+          <td style="text-align:right;">${AICC_Fmt.number(a.totalEvals)}</td>
+          <td style="text-align:right;">${AICC_Fmt.scoreHtml(a.avgScore)}</td>
+        </tr>
+      `).join('');
+    }
+
+    /* ========== Level 3: 평가 목록 (상담사) ========== */
+    function drillToAgent(wsId, teamId, agentId) {
+      const ws = DUMMY.workspaces.find(w => w.id === wsId);
+      if (!ws) return;
+      const team = ws.teams.find(t => t.id === teamId);
+      if (!team) return;
+      const agent = team.agents.find(a => a.id === agentId);
+      if (!agent) return;
+
+      currentLevel = 3;
+      navStack = [
+        { level: 1, label: ws.name, data: ws },
+        { level: 2, label: team.name, data: { ws, team } },
+        { level: 3, label: agent.name, data: { ws, team, agent } }
+      ];
+      renderLevel3({ ws, team, agent });
+      updateBreadcrumb();
+    }
+
+    function renderLevel3(ctx) {
+      const { ws, team, agent } = ctx;
+      const evals = agent.evaluations;
+      const avgScore = evals.reduce((s, e) => s + e.score, 0) / evals.length;
+
+      renderKPI([
+        { label: '평가 건수', value: evals.length + '건', sub: agent.name + ' (' + team.name + ')' },
+        { label: '평균 점수', value: AICC_Fmt.score(avgScore), rawValue: avgScore, isScore: true, sub: '개인 평균' },
+        { label: '이슈 건수', value: evals.filter(e => e.issue).length + '건', sub: '주의 필요 항목' }
+      ]);
+
+      document.getElementById('table-title').textContent = agent.name + ' - 평가 이력';
+      document.getElementById('table-count').textContent = `총 ${evals.length}건`;
+
+      const thead = document.getElementById('table-head');
+      thead.innerHTML = `
+        <tr>
+          <th>평가 ID</th>
+          <th>일시</th>
+          <th>통화시간</th>
+          <th>평가방식</th>
+          <th>신뢰도</th>
+          <th style="text-align:right">점수</th>
+          <th>이슈</th>
+        </tr>
+      `;
+
+      const tbody = document.getElementById('table-body');
+      tbody.innerHTML = evals.map(ev => {
+        const confBadge = ev.confidence === 'High'
+          ? '<span class="badge badge-active">High</span>'
+          : '<span class="badge badge-pending">Mid</span>';
+
+        const issueHtml = ev.issue
+          ? `<span style="font-size:11px;color:#F57F17;">${ev.issue}</span>`
+          : '<span style="color:#9E9E9E;font-size:11px;">-</span>';
+
+        return `
+          <tr onclick="showEvalDetail('${ev.id}')" class="fade-in">
+            <td style="font-size:12px;font-family:monospace;">${ev.id}</td>
+            <td style="font-size:12px;">${ev.date} ${ev.time}</td>
+            <td style="font-size:12px;">${ev.duration}</td>
+            <td>${AICC_Fmt.typeBadge(ev.type)}</td>
+            <td>${confBadge}</td>
+            <td style="text-align:right;">${AICC_Fmt.scoreHtml(ev.score)}</td>
+            <td style="max-width:150px;">${issueHtml}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    /* ========== 평가 상세 모달 ========== */
+    const SIM_SCORE_ITEMS = [
+      { name: '첫인사', max: 6, type: 'NLP' },
+      { name: '고객 인사 화답', max: 6, type: 'AI' },
+      { name: '긍/부정 공감', max: 5, type: 'AI' },
+      { name: '동시 발화', max: 6, type: 'NLP' },
+      { name: '양해 없는 무응답', max: 5, type: 'NLP' },
+      { name: '욕설/금지어', max: 0, type: 'NLP' },
+      { name: '말끊기', max: 5, type: 'NLP' },
+      { name: '고객향 상담', max: 5, type: 'AI' },
+      { name: '상담 어미', max: 5, type: 'NLP' },
+      { name: '전문적 화법', max: 6, type: 'NLP' },
+      { name: '적극성(회피)', max: 6, type: 'AI' },
+      { name: '편리(재질의)', max: 6, type: 'NLP' },
+      { name: '신속성', max: 6, type: 'NLP' },
+      { name: '어조', max: 6, type: 'AI' },
+      { name: '개인정보 확인', max: 6, type: 'NLP' },
+      { name: '문제 해결', max: 6, type: 'AI' },
+      { name: '쉬운 설명', max: 6, type: 'AI' },
+      { name: '적극적 응대', max: 6, type: 'AI' }
+    ];
+
+    function generateSimScores(totalScore) {
+      const ratio = Math.max(0.6, Math.min(1, totalScore / 100));
+      return SIM_SCORE_ITEMS.map(item => {
+        let score = item.max;
+        if (item.max > 0) {
+          const loss = Math.random() < ratio ? 0 : Math.ceil(Math.random() * 2);
+          score = Math.max(0, item.max - loss);
+        }
+        const diff = item.max - score;
+        const status = diff === 0 ? 'pass' : diff === 1 ? 'warn' : 'fail';
+        const reason = status === 'warn' && item.name === '전문적 화법' ? '비언어 발화 2회' : '';
+        const confidence = item.type === 'AI' ? Math.floor(88 + Math.random() * 10) : null;
+        return { name: item.name, score, max: item.max, type: item.type, status, reason, confidence };
+      });
+    }
+
+    function generateSimTranscript(agentName) {
+      return [
+        { speaker: 'agent', time: '00:01', text: `안녕하세요, ${agentName}입니다. 무엇을 도와드릴까요?` },
+        { speaker: 'customer', time: '00:05', text: '네, 안녕하세요. 주문 건 확인 좀 부탁드릴게요.' },
+        { speaker: 'agent', time: '00:10', text: '네, 주문 확인 도와드리겠습니다. 주문번호 확인 부탁드리겠습니다.' },
+        { speaker: 'customer', time: '00:15', text: '주문번호는 ORD-2025-00382입니다.' },
+        { speaker: 'agent', time: '00:20', text: '확인하겠습니다. 잠시만 기다려주세요. 네, 확인되었습니다. 현재 배송 중이며 내일 오전 도착 예정입니다.' },
+        { speaker: 'customer', time: '00:30', text: '아, 감사합니다. 다른 건 없어요.' },
+        { speaker: 'agent', time: '00:33', text: '감사합니다. 좋은 하루 되세요!' }
+      ];
+    }
+
+    function generateSimFeedback(totalScore) {
+      if (totalScore >= 95) return '전반적으로 매우 우수한 상담입니다. 고객 요구사항을 정확히 파악하고 신속하게 처리하였습니다.';
+      if (totalScore >= 85) return '우수한 상담입니다. 일부 항목에서 소폭 감점이 있으나 전반적으로 양호합니다.';
+      if (totalScore >= 70) return '보통 수준의 상담입니다. 고객 응대 스킬 및 문제 해결 역량 향상이 필요합니다.';
+      return '개선이 필요한 상담입니다. 기본 응대 매뉴얼을 재확인하고 교육에 참여해 주세요.';
+    }
+
+    function showEvalDetail(evalId) {
+      let foundEval = null;
+      if (navStack.length === 3) {
+        const { agent } = navStack[2].data;
+        foundEval = agent.evaluations.find(e => e.id === evalId);
+      }
+      if (!foundEval) return;
+
+      const ev = foundEval;
+      const agentName = navStack[2].data.agent.name;
+      const wsName = navStack[0].label;
+      const teamName = navStack[1].label;
+      const callType = navStack[2].data.agent.callType || 'I/B';
+
+      const simEvalForm = callType === 'O/B' ? 'O/B 텔레마케팅 평가표 v1.3'
+        : teamName.includes('VIP') ? 'I/B VIP 평가표 v1.0' : 'I/B 일반 상담 평가표 v2.1';
+      const simConsultTypes = [
+        '배송 > 배송조회 > 한정판 스니커즈', '결제 > 환불처리 > 환불지연',
+        '교환/반품 > 사이즈교환', '상품문의 > 의류 > 사이즈안내',
+        '기술지원 > 앱오류 > 로그인실패', '기술지원 > 결제오류 > 카드결제',
+        '배송 > 배송비 > 추가배송비 외 2건', '해피콜 > 만족도조사 > 배송완료',
+        'VIP관리 > 프로모션안내 > 시즌할인', '교환/반품 > 반품접수 > 불량상품',
+        '상품문의 > 신발 > 재입고문의', '프로모션 > 쿠폰안내 > 생일쿠폰',
+        '회원 > 정보변경 > 배송지변경', '프로모션 > 멤버십안내 > 등급혜택'
+      ];
+      const simConsultType = simConsultTypes[parseInt(evalId.replace(/\D/g,'')) % simConsultTypes.length];
+
+      const simScores = generateSimScores(ev.score);
+      const simTranscript = generateSimTranscript(agentName);
+      const simFeedback = generateSimFeedback(ev.score);
+
+      const scoreRows = simScores.map(d => {
+        const statusCls = d.status === 'pass' ? 'score-good' : d.status === 'warn' ? 'score-warn' : 'score-danger';
+        const statusText = d.status === 'pass' ? '통과' : d.status === 'warn' ? '주의' : '미달';
+        const confHtml = d.confidence ? `<span style="font-size:11px;color:#757575;">${d.confidence}%</span>` : '';
+        const reasonHtml = d.reason ? `<div style="font-size:10px;color:#F57F17;margin-top:2px;">${d.reason}</div>` : '';
+        return `
+          <tr style="cursor:default;">
+            <td style="font-size:12px;">${d.name}</td>
+            <td>${AICC_Fmt.typeBadge(d.type)}</td>
+            <td style="text-align:right;font-weight:500;">${d.score} / ${d.max}</td>
+            <td><span class="${statusCls}" style="font-size:12px;">${statusText}</span>${reasonHtml}</td>
+            <td>${confHtml}</td>
+          </tr>
+        `;
+      }).join('');
+
+      const transcriptHtml = simTranscript.map(t => {
+        const isAgent = t.speaker === 'agent';
+        const bg = isAgent ? '#E0F2F1' : '#F5F5F5';
+        const hoverBg = isAgent ? '#B2DFDB' : '#EEEEEE';
+        const label = isAgent ? '상담사' : '고객';
+        return `
+          <div class="transcript-line" style="display:flex;gap:12px;padding:8px 0;cursor:pointer;border-radius:6px;transition:background 0.15s;" onclick="playSegment(this, '${t.time}')" onmouseenter="this.style.background='${hoverBg}'" onmouseleave="if(!this.classList.contains('playing'))this.style.background=''">
+            <div style="min-width:50px;font-size:11px;color:#757575;padding-top:2px;">${t.time}</div>
+            <div style="flex:1;">
+              <div style="font-size:11px;font-weight:600;color:${isAgent ? '#0F766E' : '#424242'};margin-bottom:2px;">${label}</div>
+              <div style="background:${bg};padding:8px 12px;border-radius:6px;font-size:13px;line-height:1.5;display:flex;align-items:start;gap:8px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="${isAgent ? '#0F766E' : '#757575'}" style="flex-shrink:0;margin-top:3px;opacity:0.5;"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                <span>${t.text}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const scoreColor = ev.score >= 80 ? 'color:#4CAF50' : ev.score >= 60 ? 'color:#FFC107' : 'color:#F44336';
+
+      AICC_Modal.open({
+        title: `평가 상세 - ${ev.id}`,
+        size: 'xl',
+        content: `
+          <div style="display:flex;gap:32px;margin-bottom:20px;flex-wrap:wrap;padding:16px 20px;background:#FAFAFA;border-radius:8px;border:1px solid #EEEEEE;">
+            <div><span style="font-size:11px;color:#9E9E9E;display:block;margin-bottom:4px;">상담사</span><strong style="font-size:14px;">${agentName}</strong></div>
+            <div><span style="font-size:11px;color:#9E9E9E;display:block;margin-bottom:4px;">팀</span><strong style="font-size:14px;">${wsName} &gt; ${teamName}</strong></div>
+            <div><span style="font-size:11px;color:#9E9E9E;display:block;margin-bottom:4px;">유형</span><span class="badge ${callType === 'I/B' ? 'badge-nlp' : 'badge-ai'}" style="font-size:12px;margin-top:2px;">${callType}</span></div>
+            <div><span style="font-size:11px;color:#9E9E9E;display:block;margin-bottom:4px;">일시</span><strong style="font-size:14px;">${ev.date} ${ev.time}</strong></div>
+            <div><span style="font-size:11px;color:#9E9E9E;display:block;margin-bottom:4px;">통화시간</span><strong style="font-size:14px;">${ev.duration}</strong></div>
+            <div><span style="font-size:11px;color:#9E9E9E;display:block;margin-bottom:4px;">총점</span><strong style="font-size:20px;${scoreColor}">${AICC_Fmt.score(ev.score)}점</strong></div>
+            <div><span style="font-size:11px;color:#9E9E9E;display:block;margin-bottom:4px;">평가표</span><strong style="font-size:13px;">${simEvalForm}</strong></div>
+            <div><span style="font-size:11px;color:#9E9E9E;display:block;margin-bottom:4px;">상담유형</span><strong style="font-size:13px;">${simConsultType}</strong></div>
+          </div>
+
+          <div style="background:#F5F5F5;border-radius:6px;padding:12px 16px;margin-bottom:16px;font-size:13px;line-height:1.6;"><strong>AI 피드백:</strong> ${simFeedback}</div>
+
+          <div class="tab-nav" style="margin-bottom:16px;">
+            <div class="tab-item active" onclick="switchDetailTab(this, 'scores-tab')">항목별 점수</div>
+            <div class="tab-item" onclick="switchDetailTab(this, 'script-tab')">스크립트</div>
+          </div>
+
+          <div id="scores-tab">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>평가 항목</th>
+                  <th>방식</th>
+                  <th style="text-align:right">점수</th>
+                  <th>상태</th>
+                  <th>신뢰도</th>
+                </tr>
+              </thead>
+              <tbody>${scoreRows}</tbody>
+            </table>
+          </div>
+
+          <div id="script-tab" style="display:none;">
+            <div style="background:#FAFAFA;border:1px solid #E0E0E0;border-radius:8px;padding:16px;max-height:350px;overflow-y:auto;">
+              ${transcriptHtml}
+            </div>
+            <div style="margin-top:12px;background:#F5F5F5;border:1px solid #E0E0E0;border-radius:8px;padding:12px 16px;">
+              <div style="display:flex;align-items:center;gap:12px;">
+                <button onclick="togglePlay(this)" style="background:none;border:none;cursor:pointer;padding:0;">
+                  <svg id="play-btn-icon" width="22" height="22" viewBox="0 0 24 24" fill="#424242"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                </button>
+                <div style="flex:1;">
+                  <div style="width:100%;height:4px;background:#BDBDBD;border-radius:2px;position:relative;cursor:pointer;" onclick="seekBar(event)">
+                    <div id="player-progress" style="width:0%;height:100%;background:#0F766E;border-radius:2px;transition:width 0.2s;"></div>
+                  </div>
+                </div>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;padding-left:34px;">
+                <span id="player-time" style="font-size:11px;color:#757575;">0:00</span>
+                <span id="player-segment-label" style="font-size:11px;color:#0F766E;"></span>
+                <span style="font-size:11px;color:#757575;">${ev.duration || '0:00'}</span>
+              </div>
+            </div>
+          </div>
+        `,
+        footer: `
+          <button class="btn btn-primary" onclick="openManualReview('${ev.id}')">수동 검증</button>
+          <button class="btn btn-secondary" onclick="AICC_Modal.close()">닫기</button>
+        `
+      });
+    }
+
+    function switchDetailTab(btn, tabId) {
+      btn.parentElement.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('scores-tab').style.display = tabId === 'scores-tab' ? '' : 'none';
+      document.getElementById('script-tab').style.display = tabId === 'script-tab' ? '' : 'none';
+    }
+
+    function playSegment(el, time) {
+      document.querySelectorAll('.transcript-line').forEach(line => {
+        line.classList.remove('playing');
+        line.style.background = '';
+      });
+      el.classList.add('playing');
+      el.style.background = el.querySelector('[fill="#0F766E"]') ? '#B2DFDB' : '#EEEEEE';
+
+      const label = document.getElementById('player-segment-label');
+      if (label) label.textContent = '\u25B6 ' + time + ' 구간 재생 중';
+
+      const timeEl = document.getElementById('player-time');
+      if (timeEl) timeEl.textContent = time;
+
+      const progress = document.getElementById('player-progress');
+      if (progress) {
+        const pct = Math.min(95, Math.max(5, Math.random() * 80 + 10));
+        progress.style.width = pct + '%';
+      }
+
+      const playIcon = document.getElementById('play-btn-icon');
+      if (playIcon) playIcon.innerHTML = '<rect x="6" y="4" width="4" height="16" fill="#424242"/><rect x="14" y="4" width="4" height="16" fill="#424242"/>';
+
+      AICC_Toast.show(`${time} 구간 재생 (시뮬레이션)`);
+    }
+
+    function togglePlay(btn) {
+      const icon = document.getElementById('play-btn-icon');
+      if (!icon) return;
+      const isPaused = icon.innerHTML.includes('polygon');
+      if (isPaused) {
+        icon.innerHTML = '<rect x="6" y="4" width="4" height="16" fill="#424242"/><rect x="14" y="4" width="4" height="16" fill="#424242"/>';
+        AICC_Toast.show('재생 시작 (시뮬레이션)');
+      } else {
+        icon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
+        AICC_Toast.show('일시 정지 (시뮬레이션)');
+      }
+    }
+
+    function seekBar(e) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const pct = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+      const progress = document.getElementById('player-progress');
+      if (progress) progress.style.width = pct + '%';
+    }
+
+    function openManualReview(evalId) {
+      AICC_Toast.show('수동 검증 화면으로 이동합니다. (시뮬레이션)');
+    }
+
+    /* ========== 필터 ========== */
+    function applyPeriodFilter() {
+      AICC_Toast.show('필터가 적용되었습니다. (시뮬레이션)');
+    }
+  </script>
+</body>
+</html>

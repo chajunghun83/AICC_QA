@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>자동 평가 제외 관리 - AICC Quality Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../../../css/styles.css">
+</head>
+<body class="bg-[#F5F5F5] text-[#212121]">
+  <div id="page-content">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <h1 style="font-size:20px;font-weight:700;margin:0;">자동 평가 제외 관리</h1>
+        <p style="font-size:12px;color:#757575;margin:4px 0 0;">자동 평가 대상에서 제외할 규칙을 관리합니다</p>
+      </div>
+    </div>
+
+    <div class="content-card">
+      <div class="content-card-body" style="padding:0;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px;">
+          <div class="tab-nav" id="exc-tabs" style="border-bottom:none;">
+            <div class="tab-item active" onclick="switchTab('agent')">상담사 제외</div>
+            <div class="tab-item" onclick="switchTab('team')">팀 제외</div>
+            <div class="tab-item" onclick="switchTab('period')">기간 제외</div>
+            <div class="tab-item" onclick="switchTab('duration')">최소 통화시간</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openAddModal()" style="white-space:nowrap;">+ 추가</button>
+        </div>
+        <div style="border-top:2px solid #E0E0E0;">
+          <div id="tab-agent"><table class="data-table"><thead id="thead-agent"></thead><tbody id="tbody-agent"></tbody></table></div>
+          <div id="tab-team" style="display:none;"><table class="data-table"><thead id="thead-team"></thead><tbody id="tbody-team"></tbody></table></div>
+          <div id="tab-period" style="display:none;"><table class="data-table"><thead id="thead-period"></thead><tbody id="tbody-period"></tbody></table></div>
+          <div id="tab-duration" style="display:none;"><table class="data-table"><thead id="thead-duration"></thead><tbody id="tbody-duration"></tbody></table></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../../assets/dummy-data/all-data.js"></script>
+  <script src="../../../js/utils/data-loader.js"></script>
+  <script src="../../../js/utils/auth-simulator.js"></script>
+  <script src="../../../js/utils/formatters.js"></script>
+  <script src="../../../js/components/sidebar.js"></script>
+  <script src="../../../js/components/layout.js"></script>
+  <script src="../../../js/components/modal.js"></script>
+  <script src="../../../js/components/toast.js"></script>
+  <script>
+    let workspacesData = [];
+    let usersData = [];
+    let currentTab = 'agent';
+
+    /* ── 더미 데이터 ── */
+    const agentExclusions = [
+      { no: 1, agents: ['최수진'], workspace: '서울센터', team: '기술지원팀',
+        reason: '신입사원 교육 기간', periodStart: '2025-01-15', periodEnd: '2025-03-31', isActive: true },
+      { no: 2, agents: ['홍길동', '이영희'], workspace: '서울센터', team: 'VIP상담팀',
+        reason: '특별 프로젝트 투입', periodStart: '2025-02-01', periodEnd: '2025-02-28', isActive: true },
+      { no: 3, agents: ['최수진', '박상현'], workspace: '서울센터', team: '일반상담팀',
+        reason: '[수동 평가 전환] 2025년 1분기 신입 상담사 수동 평가', periodStart: '2025-01-01', periodEnd: '2025-03-31', isActive: true }
+    ];
+
+    const teamExclusions = [
+      { no: 1, workspace: '서울센터', team: '기술지원팀',
+        reason: '시스템 마이그레이션', periodStart: '2025-02-01', periodEnd: '2025-02-15', isActive: true },
+      { no: 2, workspace: '부산센터', team: '해피콜팀',
+        reason: '조직 개편 기간', periodStart: '2025-03-01', periodEnd: '2025-03-15', isActive: false }
+    ];
+
+    const periodExclusions = [
+      { no: 1, periodStart: '2025-01-28', periodEnd: '2025-01-30', scope: 'all', scopeLabel: '전체',
+        reason: '설 연휴 시스템 점검', isActive: false },
+      { no: 2, periodStart: '2025-03-01', periodEnd: '2025-03-01', scope: 'specific',
+        scopeLabel: '부산센터 > 일반상담팀', workspace: '부산센터', teams: ['일반상담팀'],
+        reason: '부산센터 네트워크 점검', isActive: true }
+    ];
+
+    const durationExclusions = [
+      { no: 1, channel: 'I/B', seconds: 10, reason: '미스콜 자동 제외', isActive: true },
+      { no: 2, channel: 'O/B', seconds: 30, reason: '부재중/통화 실패 제외', isActive: true }
+    ];
+
+    function getDataByTab(tab) {
+      return { agent: agentExclusions, team: teamExclusions, period: periodExclusions, duration: durationExclusions }[tab];
+    }
+
+    function getNextNo(tab) {
+      const arr = getDataByTab(tab);
+      return arr.length > 0 ? Math.max(...arr.map(r => r.no)) + 1 : 1;
+    }
+
+    function statusBadge(isActive) {
+      return isActive
+        ? '<span class="badge badge-active">활성</span>'
+        : '<span class="badge badge-inactive">비활성</span>';
+    }
+
+    /* ── 탭 전환 ── */
+    function switchTab(tab) {
+      currentTab = tab;
+      ['agent', 'team', 'period', 'duration'].forEach(t => {
+        document.getElementById('tab-' + t).style.display = t === tab ? '' : 'none';
+      });
+      document.querySelectorAll('#exc-tabs .tab-item').forEach((el, i) => {
+        const tabs = ['agent', 'team', 'period', 'duration'];
+        el.classList.toggle('active', tabs[i] === tab);
+      });
+      renderTab(tab);
+    }
+
+    /* ── 렌더링 ── */
+    function renderTab(tab) {
+      const thead = document.getElementById('thead-' + tab);
+      const tbody = document.getElementById('tbody-' + tab);
+      const data = getDataByTab(tab);
+
+      if (tab === 'agent') {
+        thead.innerHTML = '<tr><th style="width:40px;">No</th><th>상담사</th><th>소속</th><th>사유</th><th>적용 기간</th><th>상태</th></tr>';
+        tbody.innerHTML = data.map(r => `
+          <tr onclick="openDetail('agent', ${r.no})">
+            <td>${r.no}</td>
+            <td style="font-weight:500;">${r.agents.join(', ')}</td>
+            <td>${r.workspace} > ${r.team}</td>
+            <td>${r.reason}</td>
+            <td style="font-size:12px;color:#757575;">${r.periodStart} ~ ${r.periodEnd}</td>
+            <td>${statusBadge(r.isActive)}</td>
+          </tr>
+        `).join('');
+      } else if (tab === 'team') {
+        thead.innerHTML = '<tr><th style="width:40px;">No</th><th>팀</th><th>사유</th><th>적용 기간</th><th>상태</th></tr>';
+        tbody.innerHTML = data.map(r => `
+          <tr onclick="openDetail('team', ${r.no})">
+            <td>${r.no}</td>
+            <td style="font-weight:500;">${r.workspace} > ${r.team}</td>
+            <td>${r.reason}</td>
+            <td style="font-size:12px;color:#757575;">${r.periodStart} ~ ${r.periodEnd}</td>
+            <td>${statusBadge(r.isActive)}</td>
+          </tr>
+        `).join('');
+      } else if (tab === 'period') {
+        thead.innerHTML = '<tr><th style="width:40px;">No</th><th>제외 기간</th><th>대상 범위</th><th>사유</th><th>상태</th></tr>';
+        tbody.innerHTML = data.map(r => `
+          <tr onclick="openDetail('period', ${r.no})">
+            <td>${r.no}</td>
+            <td style="font-weight:500;">${r.periodStart} ~ ${r.periodEnd}</td>
+            <td>${r.scopeLabel}</td>
+            <td>${r.reason}</td>
+            <td>${statusBadge(r.isActive)}</td>
+          </tr>
+        `).join('');
+      } else {
+        thead.innerHTML = '<tr><th style="width:40px;">No</th><th>적용 대상</th><th>기준 시간</th><th>사유</th><th>상태</th></tr>';
+        tbody.innerHTML = data.map(r => `
+          <tr onclick="openDetail('duration', ${r.no})">
+            <td>${r.no}</td>
+            <td style="font-weight:500;">${r.channel}</td>
+            <td>${r.seconds}초 미만</td>
+            <td>${r.reason}</td>
+            <td>${statusBadge(r.isActive)}</td>
+          </tr>
+        `).join('');
+      }
+
+      if (data.length === 0) {
+        const colCount = tab === 'agent' ? 6 : 5;
+        tbody.innerHTML = `<tr><td colspan="${colCount}" style="text-align:center;color:#BDBDBD;padding:32px;">등록된 제외 규칙이 없습니다.</td></tr>`;
+      }
+    }
+
+    /* ── 워크스페이스/팀/상담사 연동 헬퍼 ── */
+    function wsOptions(selected) {
+      return '<option value="">선택하세요</option>' +
+        workspacesData.map(ws => `<option value="${ws.name}"${ws.name === selected ? ' selected' : ''}>${ws.name}</option>`).join('');
+    }
+
+    function getTeamsForWs(wsName) {
+      const ws = workspacesData.find(w => w.name === wsName);
+      return ws ? ws.teams : [];
+    }
+
+    function getAgentsForTeam(wsName, teamName) {
+      return usersData.filter(u => u.role === 'AGENT' && u.workspace === wsName && u.team === teamName);
+    }
+
+    /* ── 듀얼리스트박스 공용 ── */
+    const _dlbState = {};
+
+    function renderDualListbox(boxId, allItems, selectedItems) {
+      _dlbState[boxId] = { all: [...allItems], selected: [...selectedItems], filter: '' };
+      return buildDlbHtml(boxId);
+    }
+
+    function buildDlbHtml(boxId) {
+      const st = _dlbState[boxId];
+      if (!st) return '';
+      const available = st.all.filter(n => !st.selected.includes(n));
+      const filtered = st.filter ? available.filter(n => n.toLowerCase().includes(st.filter.toLowerCase())) : available;
+
+      const leftItems = filtered.length === 0
+        ? '<div style="text-align:center;color:#BDBDBD;font-size:12px;padding:20px;">항목 없음</div>'
+        : filtered.map(n => `<div onclick="dlbMove('${boxId}',${st.all.indexOf(n)},'right')"
+            style="padding:5px 12px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;"
+            onmouseover="this.style.background='#F5F5F5'" onmouseout="this.style.background=''">
+            <span style="color:#BDBDBD;font-size:11px;">+</span> ${n}</div>`).join('');
+
+      const rightItems = st.selected.length === 0
+        ? '<div style="text-align:center;color:#BDBDBD;font-size:12px;padding:20px;">선택된 항목 없음</div>'
+        : st.selected.map(n => `<div onclick="dlbMove('${boxId}',${st.all.indexOf(n)},'left')"
+            style="padding:5px 12px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;color:#0F766E;"
+            onmouseover="this.style.background='#F0FDF4'" onmouseout="this.style.background=''">
+            <span style="font-size:11px;">&#10003;</span> ${n}</div>`).join('');
+
+      return `<div style="display:flex;gap:8px;align-items:stretch;" id="${boxId}">
+        <div style="flex:1;border:1px solid #E0E0E0;border-radius:6px;overflow:hidden;">
+          <div style="padding:6px 8px;background:#FAFAFA;border-bottom:1px solid #E0E0E0;">
+            <input type="text" placeholder="검색..." value="${st.filter || ''}" oninput="dlbFilter('${boxId}',this.value)"
+              style="width:100%;border:1px solid #E0E0E0;border-radius:4px;padding:4px 8px;font-size:12px;outline:none;">
+          </div>
+          <div style="min-height:120px;max-height:160px;overflow-y:auto;padding:4px 0;">${leftItems}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;justify-content:center;gap:4px;padding:0 2px;">
+          <button type="button" onclick="dlbMoveAll('${boxId}','right')" title="전체 추가"
+            style="background:#F5F5F5;border:1px solid #E0E0E0;border-radius:4px;cursor:pointer;padding:4px 6px;font-size:11px;color:#757575;">&raquo;</button>
+          <button type="button" onclick="dlbMoveAll('${boxId}','left')" title="전체 제거"
+            style="background:#F5F5F5;border:1px solid #E0E0E0;border-radius:4px;cursor:pointer;padding:4px 6px;font-size:11px;color:#757575;">&laquo;</button>
+        </div>
+        <div style="flex:1;border:1px solid #E0E0E0;border-radius:6px;overflow:hidden;">
+          <div style="padding:6px 8px;background:#F0FDF4;border-bottom:1px solid #E0E0E0;">
+            <span style="font-size:12px;font-weight:600;color:#0F766E;">선택됨 (${st.selected.length})</span>
+          </div>
+          <div style="min-height:120px;max-height:160px;overflow-y:auto;padding:4px 0;">${rightItems}</div>
+        </div>
+      </div>`;
+    }
+
+    function dlbMove(boxId, idx, direction) {
+      const st = _dlbState[boxId];
+      if (!st || idx < 0 || idx >= st.all.length) return;
+      const name = st.all[idx];
+      if (direction === 'right' && !st.selected.includes(name)) st.selected.push(name);
+      else if (direction === 'left') st.selected = st.selected.filter(n => n !== name);
+      dlbRefresh(boxId);
+    }
+
+    function dlbMoveAll(boxId, direction) {
+      const st = _dlbState[boxId];
+      if (!st) return;
+      st.selected = direction === 'right' ? [...st.all] : [];
+      dlbRefresh(boxId);
+    }
+
+    function dlbFilter(boxId, value) {
+      const st = _dlbState[boxId];
+      if (!st) return;
+      st.filter = value;
+      dlbRefresh(boxId);
+    }
+
+    function dlbRefresh(boxId) {
+      const el = document.getElementById(boxId);
+      if (!el) return;
+      el.outerHTML = buildDlbHtml(boxId);
+    }
+
+    function getSelectedItems(boxId) {
+      const st = _dlbState[boxId];
+      return st ? [...st.selected] : [];
+    }
+
+    /* ── 워크스페이스/팀 연동 ── */
+    function onWsChange(wsSelectId, teamAreaId, extra) {
+      const wsName = document.getElementById(wsSelectId)?.value;
+      const area = document.getElementById(teamAreaId);
+      if (!area) return;
+      if (!wsName) { area.innerHTML = '<span style="color:#BDBDBD;font-size:12px;">워크스페이스를 먼저 선택하세요</span>'; return; }
+      const teams = getTeamsForWs(wsName);
+      if (extra === 'team-dlb') {
+        const teamNames = teams.map(t => t.name);
+        area.innerHTML = renderDualListbox('dlb-team', teamNames, teamNames);
+      } else if (extra === 'team-select') {
+        area.innerHTML = `<select id="exc-team-select" class="form-select" style="width:100%;" onchange="onTeamSelectChange()">
+          <option value="">팀 선택</option>
+          ${teams.map(t => `<option value="${t.name}">${t.name}</option>`).join('')}
+        </select><div id="exc-agent-area" style="margin-top:8px;"></div>`;
+      } else if (extra === 'team-checkbox') {
+        area.innerHTML = teams.map(t => `
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+            <input type="checkbox" name="exc-team" value="${t.name}" checked> ${wsName} > ${t.name}
+          </label>`).join('');
+      }
+    }
+
+    function onTeamSelectChange() {
+      const wsName = document.getElementById('exc-ws')?.value;
+      const teamName = document.getElementById('exc-team-select')?.value;
+      const area = document.getElementById('exc-agent-area');
+      if (!area || !wsName || !teamName) { if (area) area.innerHTML = ''; return; }
+      const agents = getAgentsForTeam(wsName, teamName);
+      if (agents.length === 0) {
+        area.innerHTML = '<span style="color:#BDBDBD;font-size:12px;">해당 팀에 상담사가 없습니다.</span>';
+        return;
+      }
+      const agentNames = agents.map(a => a.name);
+      area.innerHTML = '<label class="form-label" style="margin-top:8px;">상담사 선택</label>' +
+        renderDualListbox('dlb-agent', agentNames, agentNames);
+    }
+
+    /* ── 추가 모달 ── */
+    function openAddModal() {
+      const builders = { agent: buildAgentForm, team: buildTeamForm, period: buildPeriodForm, duration: buildDurationForm };
+      const titles = { agent: '상담사 제외 추가', team: '팀 제외 추가', period: '기간 제외 추가', duration: '최소 통화시간 추가' };
+      AICC_Modal.open({
+        title: titles[currentTab],
+        content: builders[currentTab](),
+        footer: `<button class="btn btn-secondary" onclick="AICC_Modal.close()">취소</button>
+                 <button class="btn btn-primary" onclick="saveRule('${currentTab}')">추가</button>`,
+        size: 'md'
+      });
+    }
+
+    function buildAgentForm(data) {
+      const d = data || {};
+      return `<div style="display:flex;flex-direction:column;gap:14px;">
+        <div>
+          <label class="form-label">워크스페이스 *</label>
+          <select id="exc-ws" class="form-select" style="width:100%;" onchange="onWsChange('exc-ws','exc-team-area','team-select')">
+            ${wsOptions(d.workspace || '')}
+          </select>
+        </div>
+        <div id="exc-team-area">${d.workspace ? buildAgentTeamArea(d) : '<span style="color:#BDBDBD;font-size:12px;">워크스페이스를 먼저 선택하세요</span>'}</div>
+        <div style="display:flex;gap:12px;">
+          <div style="flex:1;"><label class="form-label">시작일 *</label><input type="date" id="exc-start" class="form-input" style="width:100%;" value="${d.periodStart || ''}"></div>
+          <div style="flex:1;"><label class="form-label">종료일 *</label><input type="date" id="exc-end" class="form-input" style="width:100%;" value="${d.periodEnd || ''}"></div>
+        </div>
+        <div><label class="form-label">사유</label><input type="text" id="exc-reason" class="form-input" style="width:100%;" value="${d.reason || ''}" placeholder="제외 사유를 입력하세요"></div>
+      </div>`;
+    }
+
+    function buildAgentTeamArea(d) {
+      const teams = getTeamsForWs(d.workspace);
+      const selectedTeam = d.team || '';
+      const agents = selectedTeam ? getAgentsForTeam(d.workspace, selectedTeam) : [];
+      let html = `<select id="exc-team-select" class="form-select" style="width:100%;" onchange="onTeamSelectChange()">
+        <option value="">팀 선택</option>
+        ${teams.map(t => `<option value="${t.name}"${t.name === selectedTeam ? ' selected' : ''}>${t.name}</option>`).join('')}
+      </select><div id="exc-agent-area" style="margin-top:8px;">`;
+      if (agents.length > 0) {
+        const allNames = agents.map(a => a.name);
+        const selected = (d.agents || []).filter(n => allNames.includes(n));
+        html += '<label class="form-label" style="margin-top:8px;">상담사 선택</label>' +
+          renderDualListbox('dlb-agent', allNames, selected.length > 0 ? selected : allNames);
+      }
+      html += '</div>';
+      return html;
+    }
+
+    function buildTeamForm(data) {
+      const d = data || {};
+      const selectedWs = d.workspace || '';
+      const teams = selectedWs ? getTeamsForWs(selectedWs) : [];
+      const selectedTeams = d.team ? [d.team] : (d.teams || []);
+      let teamsHtml = '';
+      if (selectedWs && teams.length > 0) {
+        const allTeamNames = teams.map(t => t.name);
+        const sel = selectedTeams.filter(n => allTeamNames.includes(n));
+        teamsHtml = renderDualListbox('dlb-team', allTeamNames, sel.length > 0 ? sel : allTeamNames);
+      } else {
+        teamsHtml = '<span style="color:#BDBDBD;font-size:12px;">워크스페이스를 먼저 선택하세요</span>';
+      }
+      return `<div style="display:flex;flex-direction:column;gap:14px;">
+        <div>
+          <label class="form-label">워크스페이스 *</label>
+          <select id="exc-ws" class="form-select" style="width:100%;" onchange="onWsChange('exc-ws','exc-team-area','team-dlb')">
+            ${wsOptions(selectedWs)}
+          </select>
+        </div>
+        <div><label class="form-label">팀 선택 *</label><div id="exc-team-area" style="margin-top:4px;">${teamsHtml}</div></div>
+        <div style="display:flex;gap:12px;">
+          <div style="flex:1;"><label class="form-label">시작일 *</label><input type="date" id="exc-start" class="form-input" style="width:100%;" value="${d.periodStart || ''}"></div>
+          <div style="flex:1;"><label class="form-label">종료일 *</label><input type="date" id="exc-end" class="form-input" style="width:100%;" value="${d.periodEnd || ''}"></div>
+        </div>
+        <div><label class="form-label">사유</label><input type="text" id="exc-reason" class="form-input" style="width:100%;" value="${d.reason || ''}" placeholder="제외 사유를 입력하세요"></div>
+      </div>`;
+    }
+
+    function buildPeriodForm(data) {
+      const d = data || {};
+      const scope = d.scope || 'all';
+      const selectedWs = d.workspace || '';
+      const teams = selectedWs ? getTeamsForWs(selectedWs) : [];
+      const selectedTeams = d.teams || [];
+
+      let scopeDetailHtml = '';
+      if (scope === 'specific' && selectedWs) {
+        scopeDetailHtml = `<div id="exc-scope-detail" style="margin-top:8px;">
+          <select id="exc-ws" class="form-select" style="width:100%;margin-bottom:8px;" onchange="onWsChange('exc-ws','exc-scope-teams','team-checkbox')">
+            ${wsOptions(selectedWs)}
+          </select>
+          <div id="exc-scope-teams" style="display:flex;flex-wrap:wrap;gap:4px 16px;">
+            ${teams.map(t => `<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;"><input type="checkbox" name="exc-team" value="${t.name}" ${selectedTeams.includes(t.name) ? 'checked' : ''}> ${selectedWs} > ${t.name}</label>`).join('')}
+          </div>
+        </div>`;
+      } else if (scope === 'specific') {
+        scopeDetailHtml = `<div id="exc-scope-detail" style="margin-top:8px;">
+          <select id="exc-ws" class="form-select" style="width:100%;" onchange="onWsChange('exc-ws','exc-scope-teams','team-checkbox')">${wsOptions('')}</select>
+          <div id="exc-scope-teams" style="margin-top:8px;"><span style="color:#BDBDBD;font-size:12px;">워크스페이스를 먼저 선택하세요</span></div>
+        </div>`;
+      } else {
+        scopeDetailHtml = '<div id="exc-scope-detail"></div>';
+      }
+
+      return `<div style="display:flex;flex-direction:column;gap:14px;">
+        <div style="display:flex;gap:12px;">
+          <div style="flex:1;"><label class="form-label">시작일 *</label><input type="date" id="exc-start" class="form-input" style="width:100%;" value="${d.periodStart || ''}"></div>
+          <div style="flex:1;"><label class="form-label">종료일 *</label><input type="date" id="exc-end" class="form-input" style="width:100%;" value="${d.periodEnd || ''}"></div>
+        </div>
+        <div>
+          <label class="form-label">대상 범위 *</label>
+          <div style="display:flex;gap:12px;margin-top:6px;">
+            <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+              <input type="radio" name="exc-scope" value="all" onchange="onScopeChange()" ${scope === 'all' ? 'checked' : ''}> 전체
+            </label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+              <input type="radio" name="exc-scope" value="specific" onchange="onScopeChange()" ${scope === 'specific' ? 'checked' : ''}> 특정 대상
+            </label>
+          </div>
+          ${scopeDetailHtml}
+        </div>
+        <div><label class="form-label">사유</label><input type="text" id="exc-reason" class="form-input" style="width:100%;" value="${d.reason || ''}" placeholder="제외 사유를 입력하세요"></div>
+      </div>`;
+    }
+
+    function onScopeChange() {
+      const scope = document.querySelector('input[name="exc-scope"]:checked')?.value;
+      const detail = document.getElementById('exc-scope-detail');
+      if (!detail) return;
+      if (scope === 'specific') {
+        detail.innerHTML = `
+          <select id="exc-ws" class="form-select" style="width:100%;margin-bottom:8px;" onchange="onWsChange('exc-ws','exc-scope-teams','team-checkbox')">${wsOptions('')}</select>
+          <div id="exc-scope-teams"><span style="color:#BDBDBD;font-size:12px;">워크스페이스를 먼저 선택하세요</span></div>`;
+      } else {
+        detail.innerHTML = '';
+      }
+    }
+
+    function buildDurationForm(data) {
+      const d = data || {};
+      const ch = d.channel || '';
+      return `<div style="display:flex;flex-direction:column;gap:14px;">
+        <div>
+          <label class="form-label">적용 대상 *</label>
+          <div style="display:flex;gap:12px;margin-top:6px;">
+            <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+              <input type="radio" name="exc-channel" value="전체" ${ch === '전체' ? 'checked' : ''}> 전체
+            </label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+              <input type="radio" name="exc-channel" value="I/B" ${ch === 'I/B' || !ch ? 'checked' : ''}> I/B
+            </label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+              <input type="radio" name="exc-channel" value="O/B" ${ch === 'O/B' ? 'checked' : ''}> O/B
+            </label>
+          </div>
+        </div>
+        <div>
+          <label class="form-label">기준 시간 (초) *</label>
+          <input type="number" id="exc-seconds" class="form-input" style="width:100%;" value="${d.seconds || ''}" min="1" max="300" placeholder="예: 10">
+          <span style="font-size:11px;color:#9E9E9E;margin-top:4px;display:block;">입력한 시간 미만의 통화를 자동 평가에서 제외합니다.</span>
+        </div>
+        <div><label class="form-label">사유</label><input type="text" id="exc-reason" class="form-input" style="width:100%;" value="${d.reason || ''}" placeholder="제외 사유를 입력하세요"></div>
+      </div>`;
+    }
+
+    /* ── 저장 ── */
+    function saveRule(tab, editNo) {
+      const reason = document.getElementById('exc-reason')?.value?.trim() || '';
+      const isEdit = editNo != null;
+      const arr = getDataByTab(tab);
+
+      if (tab === 'agent') {
+        const ws = document.getElementById('exc-ws')?.value;
+        const team = document.getElementById('exc-team-select')?.value;
+        const agents = getSelectedItems('dlb-agent');
+        const s = document.getElementById('exc-start')?.value;
+        const e = document.getElementById('exc-end')?.value;
+        if (!ws || !team || agents.length === 0) { AICC_Toast.show('워크스페이스, 팀, 상담사를 선택하세요.'); return; }
+        if (!s || !e) { AICC_Toast.show('적용 기간을 입력하세요.'); return; }
+        const obj = { workspace: ws, team, agents, reason, periodStart: s, periodEnd: e, isActive: true };
+        if (isEdit) { Object.assign(arr.find(r => r.no === editNo), obj); }
+        else { obj.no = getNextNo(tab); arr.push(obj); }
+      } else if (tab === 'team') {
+        const ws = document.getElementById('exc-ws')?.value;
+        const teams = getSelectedItems('dlb-team');
+        const s = document.getElementById('exc-start')?.value;
+        const e = document.getElementById('exc-end')?.value;
+        if (!ws || teams.length === 0) { AICC_Toast.show('워크스페이스와 팀을 선택하세요.'); return; }
+        if (!s || !e) { AICC_Toast.show('적용 기간을 입력하세요.'); return; }
+        teams.forEach(t => {
+          if (isEdit) {
+            Object.assign(arr.find(r => r.no === editNo), { workspace: ws, team: t, reason, periodStart: s, periodEnd: e });
+          } else {
+            arr.push({ no: getNextNo(tab), workspace: ws, team: t, reason, periodStart: s, periodEnd: e, isActive: true });
+          }
+        });
+      } else if (tab === 'period') {
+        const s = document.getElementById('exc-start')?.value;
+        const e = document.getElementById('exc-end')?.value;
+        if (!s || !e) { AICC_Toast.show('제외 기간을 입력하세요.'); return; }
+        const scope = document.querySelector('input[name="exc-scope"]:checked')?.value || 'all';
+        let scopeLabel = '전체', ws = '', selTeams = [];
+        if (scope === 'specific') {
+          ws = document.getElementById('exc-ws')?.value || '';
+          selTeams = [...document.querySelectorAll('input[name="exc-team"]:checked')].map(el => el.value);
+          if (!ws) { AICC_Toast.show('대상 워크스페이스를 선택하세요.'); return; }
+          scopeLabel = selTeams.length > 0 ? ws + ' > ' + selTeams.join(', ') : ws;
+        }
+        const obj = { periodStart: s, periodEnd: e, scope, scopeLabel, reason, isActive: true, workspace: ws, teams: selTeams };
+        if (isEdit) { Object.assign(arr.find(r => r.no === editNo), obj); }
+        else { obj.no = getNextNo(tab); arr.push(obj); }
+      } else {
+        const channel = document.querySelector('input[name="exc-channel"]:checked')?.value || 'I/B';
+        const seconds = parseInt(document.getElementById('exc-seconds')?.value) || 0;
+        if (seconds <= 0) { AICC_Toast.show('기준 시간을 입력하세요.'); return; }
+        const obj = { channel, seconds, reason, isActive: true };
+        if (isEdit) { Object.assign(arr.find(r => r.no === editNo), obj); }
+        else { obj.no = getNextNo(tab); arr.push(obj); }
+      }
+
+      renderTab(tab);
+      AICC_Modal.close();
+      AICC_Toast.show(isEdit ? '제외 규칙이 수정되었습니다.' : '제외 규칙이 추가되었습니다.');
+    }
+
+    /* ── 상세 모달 ── */
+    function openDetail(tab, no) {
+      const arr = getDataByTab(tab);
+      const r = arr.find(x => x.no === no);
+      if (!r) return;
+
+      let infoHtml = '';
+      if (tab === 'agent') {
+        infoHtml = `
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div><div class="form-label">상담사</div><div style="font-size:13px;font-weight:500;">${r.agents.join(', ')}</div></div>
+            <div><div class="form-label">소속</div><div style="font-size:13px;">${r.workspace} > ${r.team}</div></div>
+            <div><div class="form-label">적용 기간</div><div style="font-size:13px;">${r.periodStart} ~ ${r.periodEnd}</div></div>
+            <div><div class="form-label">상태</div><div style="font-size:13px;">${statusBadge(r.isActive)}</div></div>
+          </div>
+          <div style="margin-top:12px;"><div class="form-label">사유</div><div style="font-size:13px;">${r.reason || '-'}</div></div>`;
+      } else if (tab === 'team') {
+        infoHtml = `
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div><div class="form-label">팀</div><div style="font-size:13px;font-weight:500;">${r.workspace} > ${r.team}</div></div>
+            <div><div class="form-label">적용 기간</div><div style="font-size:13px;">${r.periodStart} ~ ${r.periodEnd}</div></div>
+            <div><div class="form-label">상태</div><div style="font-size:13px;">${statusBadge(r.isActive)}</div></div>
+          </div>
+          <div style="margin-top:12px;"><div class="form-label">사유</div><div style="font-size:13px;">${r.reason || '-'}</div></div>`;
+      } else if (tab === 'period') {
+        infoHtml = `
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div><div class="form-label">제외 기간</div><div style="font-size:13px;font-weight:500;">${r.periodStart} ~ ${r.periodEnd}</div></div>
+            <div><div class="form-label">대상 범위</div><div style="font-size:13px;">${r.scopeLabel}</div></div>
+            <div><div class="form-label">상태</div><div style="font-size:13px;">${statusBadge(r.isActive)}</div></div>
+          </div>
+          <div style="margin-top:12px;"><div class="form-label">사유</div><div style="font-size:13px;">${r.reason || '-'}</div></div>`;
+      } else {
+        infoHtml = `
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div><div class="form-label">적용 대상</div><div style="font-size:13px;font-weight:500;">${r.channel}</div></div>
+            <div><div class="form-label">기준 시간</div><div style="font-size:13px;">${r.seconds}초 미만</div></div>
+            <div><div class="form-label">상태</div><div style="font-size:13px;">${statusBadge(r.isActive)}</div></div>
+          </div>
+          <div style="margin-top:12px;"><div class="form-label">사유</div><div style="font-size:13px;">${r.reason || '-'}</div></div>`;
+      }
+
+      const toggleLabel = r.isActive ? '비활성화' : '활성화';
+      const toggleStyle = r.isActive ? 'border-color:#F57F17;color:#F57F17;' : '';
+      const toggleClass = r.isActive ? 'btn-secondary' : 'btn-primary';
+
+      AICC_Modal.open({
+        title: '제외 규칙 상세',
+        content: infoHtml,
+        footer: `
+          <button class="btn btn-danger" onclick="deleteRule('${tab}', ${no})">삭제</button>
+          <button class="btn ${toggleClass}" style="${toggleStyle}" onclick="toggleRule('${tab}', ${no})">${toggleLabel}</button>
+          <button class="btn btn-secondary" onclick="openEditModal('${tab}', ${no})">편집</button>
+        `,
+        size: 'md'
+      });
+    }
+
+    /* ── 편집 모달 ── */
+    function openEditModal(tab, no) {
+      AICC_Modal.close();
+      const arr = getDataByTab(tab);
+      const r = arr.find(x => x.no === no);
+      if (!r) return;
+
+      const builders = { agent: buildAgentForm, team: buildTeamForm, period: buildPeriodForm, duration: buildDurationForm };
+      const titles = { agent: '상담사 제외 편집', team: '팀 제외 편집', period: '기간 제외 편집', duration: '최소 통화시간 편집' };
+
+      setTimeout(() => {
+        AICC_Modal.open({
+          title: titles[tab],
+          content: builders[tab](r),
+          footer: `<button class="btn btn-secondary" onclick="AICC_Modal.close()">취소</button>
+                   <button class="btn btn-primary" onclick="saveRule('${tab}', ${no})">저장</button>`,
+          size: 'md'
+        });
+      }, 300);
+    }
+
+    /* ── 삭제 ── */
+    function deleteRule(tab, no) {
+      const arr = getDataByTab(tab);
+      const idx = arr.findIndex(r => r.no === no);
+      if (idx === -1) return;
+      arr.splice(idx, 1);
+      renderTab(tab);
+      AICC_Modal.close();
+      AICC_Toast.show('제외 규칙이 삭제되었습니다.');
+    }
+
+    /* ── 활성/비활성 토글 ── */
+    function toggleRule(tab, no) {
+      const arr = getDataByTab(tab);
+      const r = arr.find(x => x.no === no);
+      if (!r) return;
+      r.isActive = !r.isActive;
+      renderTab(tab);
+      AICC_Modal.close();
+      AICC_Toast.show(r.isActive ? '규칙이 활성화되었습니다.' : '규칙이 비활성화되었습니다.');
+    }
+
+    /* ── 초기화 ── */
+    document.addEventListener('DOMContentLoaded', async () => {
+      const wsRaw = await AICC_DataLoader.load('workspaces.json');
+      if (wsRaw) workspacesData = wsRaw;
+      const usRaw = await AICC_DataLoader.load('users.json');
+      if (usRaw) usersData = usRaw;
+      renderTab('agent');
+    });
+  </script>
+</body>
+</html>

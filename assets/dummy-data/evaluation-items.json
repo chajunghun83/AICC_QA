@@ -1,0 +1,107 @@
+{
+  "categories": [
+    {
+      "id": "response-quality",
+      "name": "응대품질",
+      "children": [
+        {
+          "id": "greeting",
+          "name": "인사",
+          "items": [
+            { "id": "first-greeting", "name": "첫인사", "full_name": "스크립트 첫인사 내용대로 발화", "type": "NLP", "default_score": 6, "description": "안녕, 무신사, 서포터 중 포함 여부 확인", "criteria": [{"score": 6, "label": "정상", "desc": "스크립트 인사 발화 포함"}, {"score": 0, "label": "감점", "desc": "첫인사 누락 또는 미흡"}], "used_in": ["I/B 일반 상담 평가표 v2.1", "I/B VIP 평가표 v1.0"] },
+            { "id": "last-greeting", "name": "끝인사", "full_name": "스크립트 끝인사 내용대로 발화", "type": "NLP", "default_score": 6, "description": "마무리 인사 발화 포함 여부 확인", "criteria": [{"score": 6, "label": "정상", "desc": "끝인사 발화 포함"}, {"score": 0, "label": "감점", "desc": "끝인사 누락"}], "used_in": ["I/B 일반 상담 평가표 v2.1"] }
+          ]
+        },
+        {
+          "id": "reply-greeting",
+          "name": "화답인사",
+          "items": [
+            { "id": "customer-greeting-reply", "name": "고객 인사 화답", "full_name": "고객의 인사에 대한 적절한 화답", "type": "AI", "default_score": 6, "description": "고객이 인사했을 때 상담사의 적절한 화답 여부 평가", "criteria": [{"score": 6, "label": "정상", "desc": "의미적 유사 화답 표현 포함"}, {"score": 3, "label": "경미", "desc": "단답형 응대 또는 형식적 반응"}, {"score": 0, "label": "심각", "desc": "인사에 무응답"}], "used_in": ["I/B 일반 상담 평가표 v2.1", "I/B VIP 평가표 v1.0"] },
+            { "id": "customer-discomfort", "name": "고객 불편 공감", "full_name": "고객의 불편에 대한 적절한 공감", "type": "AI", "default_score": 6, "description": "고객이 불편을 표현했을 때 공감 여부 평가", "criteria": [{"score": 6, "label": "정상", "desc": "의미적 유사 공감 표현 포함"}, {"score": 3, "label": "경미", "desc": "단답형 응대"}, {"score": 0, "label": "심각", "desc": "고객 불편 무시"}], "used_in": ["I/B 일반 상담 평가표 v2.1"] }
+          ]
+        },
+        {
+          "id": "empathy",
+          "name": "공감 멘트",
+          "items": [
+            { "id": "pos-neg-empathy", "name": "긍/부정 공감", "full_name": "긍/부정 상황에 대한 충분한 공감", "type": "AI", "default_score": 5, "description": "고객이 긍정 또는 부정의 감정을 표현했을 때 상담사가 충분한 공감과 배려 있는 응대를 했는지 평가", "criteria": [{"score": 5, "label": "정상", "desc": "적절한 공감/호응어 포함"}, {"score": 2, "label": "경미", "desc": "단답형/미미한 수준의 공감"}, {"score": 0, "label": "심각", "desc": "공감 발화 전혀 없음"}], "used_in": ["I/B 일반 상담 평가표 v2.1", "I/B VIP 평가표 v1.0"] }
+          ]
+        },
+        {
+          "id": "overlap",
+          "name": "말겹침",
+          "items": [
+            { "id": "simultaneous-speech", "name": "동시 발화", "full_name": "동시 발화가 이루어지지 않게 함", "type": "NLP", "default_score": 6, "description": "상담사와 고객의 동시 발화 발생 시 대처 방식 평가", "criteria": [{"score": 6, "label": "정상", "desc": "말겹침 후 사과/배려 표현"}, {"score": 4, "label": "경미", "desc": "겹침 후 일시 멈춤"}, {"score": 0, "label": "심각", "desc": "상담사 발화 지속(덮어씀)"}], "used_in": ["I/B 일반 상담 평가표 v2.1"] }
+          ]
+        },
+        {
+          "id": "no-response",
+          "name": "무응답",
+          "items": [
+            { "id": "no-acknowledge", "name": "양해 없는 무응답", "full_name": "고객 양해 없는 무응답 방지", "type": "NLP", "default_score": 5, "description": "15초 이상 무응답 시 양해 멘트 유무 평가", "criteria": [{"score": 5, "label": "정상", "desc": "15초 미만 또는 양해 멘트 3개"}, {"score": 2, "label": "경미", "desc": "15초↑ 무응답, 양해 멘트 ≤1개"}, {"score": 0, "label": "심각", "desc": "15초↑ 무응답, 양해 멘트 없음"}], "used_in": ["I/B 일반 상담 평가표 v2.1"] }
+          ]
+        },
+        {
+          "id": "fail",
+          "name": "FAIL",
+          "items": [
+            { "id": "profanity", "name": "욕설/금지어", "full_name": "욕설, 금지어 표현 일체", "type": "NLP", "default_score": 0, "is_fail": true, "description": "욕설, 금지어, 비속어, 한숨/짜증 표현 탐지 시 전 항목 0점 처리", "criteria": [{"score": 0, "label": "FAIL", "desc": "탐지 시 전 항목 0점"}, {"score": 0, "label": "PASS", "desc": "미검출 - 정상 평가 유지"}], "used_in": ["I/B 일반 상담 평가표 v2.1", "I/B VIP 평가표 v1.0", "O/B 텔레마케팅 평가표 v1.3"] }
+          ]
+        },
+        {
+          "id": "professional-attitude",
+          "name": "전문적 상담 태도",
+          "items": [
+            { "id": "interruption", "name": "말끊기", "full_name": "상담원의 의도적인 말겹침", "type": "NLP", "default_score": 5, "description": "고객 발화 중 상담원 개입으로 인한 발화 중단 평가", "criteria": [{"score": 5, "label": "정상", "desc": "정상 청취"}, {"score": 0, "label": "감점", "desc": "고객 발화 중단 → 5초↑ 무발화"}], "used_in": ["I/B 일반 상담 평가표 v2.1"] },
+            { "id": "customer-focus", "name": "고객향 상담", "full_name": "무시/무관심 발화 금지", "type": "AI", "default_score": 5, "description": "무시/무관심 발화 여부 평가 (됐고요, 그래서요? 등)", "criteria": [{"score": 5, "label": "정상", "desc": "무시/무관심 발화 없음"}, {"score": 0, "label": "감점", "desc": "무시 발화 1회 이상"}], "used_in": ["I/B 일반 상담 평가표 v2.1"] },
+            { "id": "speech-ending", "name": "상담 어미", "full_name": "전문적인 상담 어미", "type": "NLP", "default_score": 5, "description": "공손한 종결 어미 사용 여부 평가 (~습니다, ~세요 등)", "criteria": [{"score": 5, "label": "정상", "desc": "공손한 종결 어미 사용"}, {"score": 0, "label": "감점", "desc": "비격식 발화 ≥3회"}], "used_in": ["I/B 일반 상담 평가표 v2.1"] },
+            { "id": "professional-speech", "name": "전문적 화법", "full_name": "전문적인 상담 화법", "type": "NLP", "default_score": 5, "description": "비언어 발화(어, 음) 및 비전문적 호응(네네네) 빈도 평가", "criteria": [{"score": 5, "label": "정상", "desc": "비언어 <5회 AND 비전문적 <3회"}, {"score": 4, "label": "경미", "desc": "비전문적 호응 ≥3회"}, {"score": 2, "label": "중간", "desc": "비언어 ≥5회"}, {"score": 0, "label": "복합", "desc": "비언어 ≥5회 AND 비전문적 ≥3회"}], "used_in": ["I/B 일반 상담 평가표 v2.1"] },
+            { "id": "proactiveness", "name": "적극성(회피)", "full_name": "회피성/추측성 발화 금지", "type": "AI", "default_score": 5, "description": "회피성 또는 추측성 발화 여부 평가", "criteria": [{"score": 5, "label": "정상", "desc": "회피/추측 발화 없음"}, {"score": 2, "label": "감점", "desc": "회피/추측 발화 1회 이상"}], "used_in": ["I/B 일반 상담 평가표 v2.1"] },
+            { "id": "convenience", "name": "편리(재질의)", "full_name": "고객 정보 재질의 금지", "type": "NLP", "default_score": 5, "description": "이름/연락처/인입사유 중복 질의 여부 평가", "criteria": [{"score": 5, "label": "정상", "desc": "재질의 없음"}, {"score": 0, "label": "감점", "desc": "중복 질의 1회 이상"}], "used_in": ["I/B 일반 상담 평가표 v2.1"] },
+            { "id": "speed", "name": "신속성", "full_name": "신속한 응대", "type": "NLP", "default_score": 5, "description": "상담사 응답 지연 시간 평가", "criteria": [{"score": 5, "label": "정상", "desc": "1.0초 이내 응답"}, {"score": 2, "label": "경미", "desc": "1.0~3.0초 지연"}, {"score": 0, "label": "중대", "desc": "3.0초 이상 지연"}], "used_in": ["I/B 일반 상담 평가표 v2.1"] },
+            { "id": "tone", "name": "어조", "full_name": "불편 어조 금지", "type": "AI", "default_score": 5, "description": "불편 어조 빈도 평가 (하세요, 됩니다 등)", "criteria": [{"score": 5, "label": "정상", "desc": "불편 어조 <3회"}, {"score": 0, "label": "감점", "desc": "불편 어조 ≥3회"}], "used_in": ["I/B 일반 상담 평가표 v2.1"] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "response-content",
+      "name": "응대내용",
+      "children": [
+        {
+          "id": "privacy",
+          "name": "개인정보처리방침",
+          "items": [
+            { "id": "required-privacy", "name": "개인정보 확인", "full_name": "필수 개인 정보 확인", "type": "NLP", "default_score": 5, "description": "구매자명, 연락처, 본인 여부 3가지 확인 수행", "criteria": [{"score": 5, "label": "정상", "desc": "필수 항목 3개 모두 수행"}, {"score": 0, "label": "감점", "desc": "0~2개만 수행"}], "used_in": ["I/B 일반 상담 평가표 v2.1"] }
+          ]
+        },
+        {
+          "id": "resolution",
+          "name": "해결력",
+          "items": [
+            { "id": "problem-solve", "name": "문제 해결", "full_name": "고객의 문의나 궁금증에 대한 해결", "type": "AI", "default_score": 5, "description": "모든 의도에 구체적/정확한 안내 제공 여부", "criteria": [{"score": 5, "label": "완전", "desc": "모든 의도에 안내 제공"}, {"score": 3, "label": "미흡", "desc": "의도 인지, 구체 안내 없이 종료"}, {"score": 0, "label": "미해결", "desc": "안내 전혀 없음"}], "used_in": ["I/B 일반 상담 평가표 v2.1", "I/B VIP 평가표 v1.0"] },
+            { "id": "easy-explanation", "name": "쉬운 설명", "full_name": "고객이 이해할 수 있는 설명", "type": "AI", "default_score": 5, "description": "내부용어 사용 빈도 및 고객 재질의 여부 평가", "criteria": [{"score": 5, "label": "정상", "desc": "재질의 없음, 내부용어 ≤2회"}, {"score": 3, "label": "경미", "desc": "내부용어 ≥3회"}, {"score": 0, "label": "심각", "desc": "고객 재질의 ≥2회"}], "used_in": ["I/B 일반 상담 평가표 v2.1"] },
+            { "id": "active-response", "name": "적극적 응대", "full_name": "고객 편의를 위한 적극적 상담", "type": "AI", "default_score": 6, "description": "고객 요청 시 적극 대응/대안 제시 여부 평가", "criteria": [{"score": 6, "label": "정상", "desc": "적극 대응/대안 제시"}, {"score": 4, "label": "경미", "desc": "규정 외/예외적/셀프 표현 사용"}, {"score": 2, "label": "심각", "desc": "규정상 불가 류 3회 이상"}], "used_in": ["I/B 일반 상담 평가표 v2.1", "I/B VIP 평가표 v1.0"] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "service",
+      "name": "서비스",
+      "status": "추후확장",
+      "children": [
+        {
+          "id": "accuracy",
+          "name": "정확성",
+          "items": [
+            { "id": "cancel-fee", "name": "취소 환불 수수료", "type": "AI", "default_score": 5, "description": "취소 환불 수수료 안내 정확성", "criteria": [], "used_in": [] },
+            { "id": "cancel-amount", "name": "취소 금액 안내", "type": "AI", "default_score": 5, "description": "취소 금액 안내 정확성", "criteria": [], "used_in": [] },
+            { "id": "cancel-timing", "name": "취소 가능 시점", "type": "AI", "default_score": 5, "description": "취소 가능 시점 안내 정확성", "criteria": [], "used_in": [] },
+            { "id": "product-info", "name": "상품정보", "type": "AI", "default_score": 5, "description": "상품정보 안내 정확성", "criteria": [], "used_in": [] }
+          ]
+        }
+      ]
+    }
+  ]
+}

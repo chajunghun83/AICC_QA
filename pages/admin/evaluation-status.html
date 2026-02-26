@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>자동 평가 현황 - AICC Quality Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body class="bg-[#F5F5F5] text-[#212121]">
+  <div id="page-content">
+    <!-- 페이지 제목 -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <h1 style="font-size:20px;font-weight:700;margin:0;">자동 평가 현황</h1>
+        <p style="font-size:12px;color:#757575;margin:4px 0 0;">AI 자동 평가 상세 현황</p>
+      </div>
+    </div>
+
+    <!-- 필터 섹션 -->
+    <div class="filter-section">
+      <div class="filter-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'flex':'none'">
+        <span>검색조건</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#757575" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+      <div class="filter-body">
+        <div>
+          <label class="form-label">워크스페이스</label>
+          <select class="form-select" id="ws-filter" onchange="onWsChange()">
+            <option value="all">전체</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">팀</label>
+          <select class="form-select" id="team-filter" onchange="applyFilter()" disabled>
+            <option value="all">전체</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">기간</label>
+          <select class="form-select" id="period-filter">
+            <option value="today">오늘</option>
+            <option value="week" selected>최근 7일</option>
+            <option value="month">최근 30일</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">통화유형</label>
+          <select class="form-select" id="type-filter">
+            <option value="all">전체</option>
+            <option value="I/B">I/B (인바운드)</option>
+            <option value="O/B">O/B (아웃바운드)</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">이슈 유형</label>
+          <select class="form-select" id="issue-filter" onchange="applyFilter()">
+            <option value="all">전체</option>
+            <option value="fail">FAIL (금지어)</option>
+            <option value="under">과락 (평가표 기준 미만)</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">검증 상태</label>
+          <select class="form-select" id="review-filter" onchange="applyFilter()">
+            <option value="all">전체</option>
+            <option value="reviewed">검증 완료</option>
+            <option value="unreviewed">미검증</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">&nbsp;</label>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-secondary btn-sm" onclick="resetFilter()">초기화</button>
+            <button class="btn btn-primary btn-sm" onclick="applyFilter()">검색</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 상담 건별 평가 결과 리스트 -->
+    <div class="content-card" style="margin-top:16px;">
+      <div class="content-card-header">
+        <span style="font-size:14px;font-weight:600;">상담 건별 평가 결과</span>
+        <span style="font-size:12px;color:#757575;" id="eval-count">총 0건</span>
+      </div>
+      <div class="content-card-body" style="padding:0;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>평가 ID</th>
+              <th>일시</th>
+              <th>팀</th>
+              <th>상담유형</th>
+              <th>유형</th>
+              <th>통화시간</th>
+              <th>상담사</th>
+              <th>평가표</th>
+              <th style="text-align:right">점수</th>
+              <th>신뢰도</th>
+              <th>이슈</th>
+            </tr>
+          </thead>
+          <tbody id="eval-tbody"></tbody>
+        </table>
+        <div class="pagination">
+          <button class="pagination-btn">&laquo;</button>
+          <button class="pagination-btn active">1</button>
+          <button class="pagination-btn">2</button>
+          <button class="pagination-btn">&raquo;</button>
+          <span style="margin-left:16px;font-size:12px;color:#757575;">페이지당:
+            <select class="form-select" style="min-width:60px;padding:2px 24px 2px 8px;">
+              <option>10</option>
+              <option selected>20</option>
+              <option>50</option>
+            </select>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../assets/dummy-data/all-data.js"></script>
+  <script src="../../js/utils/data-loader.js"></script>
+  <script src="../../js/utils/auth-simulator.js"></script>
+  <script src="../../js/utils/formatters.js"></script>
+  <script src="../../js/components/sidebar.js"></script>
+  <script src="../../js/components/layout.js"></script>
+  <script src="../../js/components/modal.js"></script>
+  <script src="../../js/components/toast.js"></script>
+  <script>
+    let allData = {};
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      allData = await AICC_DataLoader.loadAll([
+        'dashboard-stats.json',
+        'evaluations.json',
+        'evaluation-forms.json',
+        'evaluation-items.json',
+        'workspaces.json'
+      ]);
+
+      const ws = allData['workspaces.json'];
+      if (ws) {
+        const select = document.getElementById('ws-filter');
+        ws.forEach(w => {
+          select.innerHTML += `<option value="${w.id}">${w.name}</option>`;
+        });
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      const issueParam = params.get('issue');
+      if (issueParam) {
+        document.getElementById('issue-filter').value = issueParam;
+      }
+      const teamParam = params.get('team');
+      if (teamParam) {
+        document.getElementById('team-filter').value = teamParam;
+      }
+
+      if (issueParam || teamParam) {
+        applyFilter();
+      } else {
+        renderAll();
+      }
+    });
+
+    function buildItemNameMap() {
+      const items = allData['evaluation-items.json'];
+      const map = {};
+      if (!items || !items.categories) return map;
+      items.categories.forEach(cat => {
+        cat.children.forEach(child => {
+          child.items.forEach(item => {
+            map[item.id] = item.name;
+          });
+        });
+      });
+      return map;
+    }
+
+    function getPassThreshold(ev) {
+      const forms = allData['evaluation-forms.json'];
+      if (!forms) return 60;
+      const matched = forms.find(f => {
+        if (f.status !== 'active') return false;
+        if (f.type !== ev.call_type) return false;
+        return f.applied_to && f.applied_to.includes(ev.workspace_id);
+      });
+      return matched && matched.pass_threshold ? matched.pass_threshold : 60;
+    }
+
+    function isUnderThreshold(ev) {
+      return ev.total_score < getPassThreshold(ev);
+    }
+
+    function renderAll() {
+      const stats = allData['dashboard-stats.json'];
+      const evals = allData['evaluations.json'];
+
+      if (evals) {
+        renderEvalTable(evals);
+      }
+    }
+
+    function renderEvalTable(evals) {
+      const tbody = document.getElementById('eval-tbody');
+      document.getElementById('eval-count').textContent = `총 ${evals.length}건`;
+
+      tbody.innerHTML = evals.map(ev => {
+        const confBadge = ev.confidence === 'High'
+          ? '<span class="badge badge-active">High</span>'
+          : ev.confidence === 'Medium'
+          ? '<span class="badge badge-pending">Mid</span>'
+          : '<span class="badge badge-rejected">Low</span>';
+
+        const issueHtml = ev.issues && ev.issues.length > 0
+          ? ev.issues.slice(0, 2).map(i => `<div style="font-size:10px;color:#F57F17;">${i}</div>`).join('')
+          : '<span style="color:#9E9E9E;font-size:11px;">-</span>';
+
+        const reviewBadge = ev.manual_review
+          ? '<span class="badge badge-active" style="font-size:10px;margin-left:4px;" title="수동 검증 완료">검증완료</span>'
+          : '';
+
+        return `
+          <tr onclick="showEvalDetail('${ev.id}')">
+            <td style="font-size:12px;font-family:monospace;">${ev.id}${reviewBadge}</td>
+            <td style="font-size:12px;">${ev.date} ${ev.call_time}</td>
+            <td style="font-size:12px;color:#757575;">${ev.workspace} &gt; ${ev.team}</td>
+            <td style="font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${ev.consultation_type || ''}">${ev.consultation_type || '-'}</td>
+            <td><span class="badge ${ev.call_type === 'I/B' ? 'badge-nlp' : 'badge-ai'}" style="font-size:10px;">${ev.call_type}</span></td>
+            <td style="font-size:12px;">${ev.duration}</td>
+            <td style="font-weight:500;">${ev.agent_name}</td>
+            <td style="font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ev.eval_form || '-'}</td>
+            <td style="text-align:right;">${AICC_Fmt.scoreHtml(ev.total_score)}</td>
+            <td>${confBadge}</td>
+            <td style="max-width:120px;">${issueHtml}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function showEvalDetail(evalId) {
+      const evals = allData['evaluations.json'];
+      const ev = evals.find(e => e.id === evalId);
+      if (!ev) return;
+
+      const itemNameMap = buildItemNameMap();
+      const scoreRows = Object.entries(ev.scores).map(([key, val]) => {
+        const statusCls = val.status === 'pass' ? 'score-good' : val.status === 'warn' ? 'score-warn' : 'score-danger';
+        const statusText = val.status === 'pass' ? '통과' : val.status === 'warn' ? '주의' : '미달';
+        const confHtml = val.confidence ? `<span style="font-size:11px;color:#757575;">${val.confidence}%</span>` : '';
+        const reasonHtml = val.reason ? `<div style="font-size:10px;color:#F57F17;margin-top:2px;">${val.reason}</div>` : '';
+        const itemName = itemNameMap[key] || key;
+
+        return `
+          <tr style="cursor:default;">
+            <td style="font-size:12px;">${itemName}</td>
+            <td>${AICC_Fmt.typeBadge(val.type)}</td>
+            <td style="text-align:right;font-weight:500;">${val.score} / ${val.max}</td>
+            <td><span class="${statusCls}" style="font-size:12px;">${statusText}</span>${reasonHtml}</td>
+            <td>${confHtml}</td>
+          </tr>
+        `;
+      }).join('');
+
+      const transcriptHtml = ev.transcript && ev.transcript.length > 0
+        ? ev.transcript.map((t, idx) => {
+            const isAgent = t.speaker === 'agent';
+            const bg = isAgent ? '#E0F2F1' : '#F5F5F5';
+            const hoverBg = isAgent ? '#B2DFDB' : '#EEEEEE';
+            const label = isAgent ? '상담사' : '고객';
+            return `
+              <div class="transcript-line" style="display:flex;gap:12px;padding:8px 0;cursor:pointer;border-radius:6px;transition:background 0.15s;" onclick="playSegment(this, '${t.time}')" onmouseenter="this.style.background='${hoverBg}'" onmouseleave="if(!this.classList.contains('playing'))this.style.background=''">
+                <div style="min-width:50px;font-size:11px;color:#757575;padding-top:2px;">${t.time}</div>
+                <div style="flex:1;">
+                  <div style="font-size:11px;font-weight:600;color:${isAgent ? '#0F766E' : '#424242'};margin-bottom:2px;">${label}</div>
+                  <div style="background:${bg};padding:8px 12px;border-radius:6px;font-size:13px;line-height:1.5;display:flex;align-items:start;gap:8px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="${isAgent ? '#0F766E' : '#757575'}" style="flex-shrink:0;margin-top:3px;opacity:0.5;"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    <span>${t.text}</span>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('')
+        : '<p style="color:#9E9E9E;font-size:13px;text-align:center;padding:20px;">스크립트 데이터가 없습니다.</p>';
+
+      AICC_Modal.open({
+        title: `평가 상세 - ${ev.id}`,
+        size: 'xl',
+        content: `
+          <div style="display:flex;gap:32px;margin-bottom:20px;flex-wrap:wrap;padding:16px 20px;background:#FAFAFA;border-radius:8px;border:1px solid #EEEEEE;">
+            <div><span style="font-size:11px;color:#9E9E9E;display:block;margin-bottom:4px;">상담사</span><strong style="font-size:14px;">${ev.agent_name}</strong></div>
+            <div><span style="font-size:11px;color:#9E9E9E;display:block;margin-bottom:4px;">팀</span><strong style="font-size:14px;">${ev.workspace} &gt; ${ev.team}</strong></div>
+            <div><span style="font-size:11px;color:#9E9E9E;display:block;margin-bottom:4px;">유형</span><span class="badge ${ev.call_type === 'I/B' ? 'badge-nlp' : 'badge-ai'}" style="font-size:12px;margin-top:2px;">${ev.call_type}</span></div>
+            <div><span style="font-size:11px;color:#9E9E9E;display:block;margin-bottom:4px;">일시</span><strong style="font-size:14px;">${ev.date} ${ev.call_time}</strong></div>
+            <div><span style="font-size:11px;color:#9E9E9E;display:block;margin-bottom:4px;">통화시간</span><strong style="font-size:14px;">${ev.duration}</strong></div>
+            <div><span style="font-size:11px;color:#9E9E9E;display:block;margin-bottom:4px;">총점</span><strong style="font-size:20px;${ev.total_score >= 80 ? 'color:#4CAF50' : ev.total_score >= 60 ? 'color:#FFC107' : 'color:#F44336'}">${ev.total_score}점</strong></div>
+            <div><span style="font-size:11px;color:#9E9E9E;display:block;margin-bottom:4px;">평가표</span><strong style="font-size:13px;">${ev.eval_form || '-'}</strong></div>
+            <div><span style="font-size:11px;color:#9E9E9E;display:block;margin-bottom:4px;">상담유형</span><strong style="font-size:13px;">${ev.consultation_type || '-'}</strong></div>
+          </div>
+
+          ${ev.ai_feedback ? `<div style="background:#F5F5F5;border-radius:6px;padding:12px 16px;margin-bottom:16px;font-size:13px;line-height:1.6;"><strong>AI 피드백:</strong> ${ev.ai_feedback}</div>` : ''}
+
+          <div class="tab-nav" style="margin-bottom:16px;">
+            <div class="tab-item active" onclick="switchDetailTab(this, 'scores-tab')">항목별 점수</div>
+            <div class="tab-item" onclick="switchDetailTab(this, 'script-tab')">스크립트</div>
+          </div>
+
+          <div id="scores-tab">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>평가 항목</th>
+                  <th>방식</th>
+                  <th style="text-align:right">점수</th>
+                  <th>상태</th>
+                  <th>신뢰도</th>
+                </tr>
+              </thead>
+              <tbody>${scoreRows}</tbody>
+            </table>
+          </div>
+
+          <div id="script-tab" style="display:none;">
+            <div style="background:#FAFAFA;border:1px solid #E0E0E0;border-radius:8px;padding:16px;max-height:350px;overflow-y:auto;">
+              ${transcriptHtml}
+            </div>
+            <div style="margin-top:12px;background:#F5F5F5;border:1px solid #E0E0E0;border-radius:8px;padding:12px 16px;">
+              <div style="display:flex;align-items:center;gap:12px;">
+                <button onclick="togglePlay(this)" style="background:none;border:none;cursor:pointer;padding:0;">
+                  <svg id="play-btn-icon" width="22" height="22" viewBox="0 0 24 24" fill="#424242"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                </button>
+                <div style="flex:1;">
+                  <div style="width:100%;height:4px;background:#BDBDBD;border-radius:2px;position:relative;cursor:pointer;" onclick="seekBar(event)">
+                    <div id="player-progress" style="width:0%;height:100%;background:#0F766E;border-radius:2px;transition:width 0.2s;"></div>
+                  </div>
+                </div>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;padding-left:34px;">
+                <span id="player-time" style="font-size:11px;color:#757575;">0:00</span>
+                <span id="player-segment-label" style="font-size:11px;color:#0F766E;"></span>
+                <span style="font-size:11px;color:#757575;">${ev.duration || '0:00'}</span>
+              </div>
+            </div>
+          </div>
+        `,
+        footer: `
+          <button class="btn btn-primary" onclick="openManualReview('${ev.id}')">수동 검증</button>
+          <button class="btn btn-secondary" onclick="AICC_Modal.close()">닫기</button>
+        `
+      });
+    }
+
+    function playSegment(el, time) {
+      document.querySelectorAll('.transcript-line').forEach(line => {
+        line.classList.remove('playing');
+        line.style.background = '';
+      });
+      el.classList.add('playing');
+      el.style.background = el.querySelector('[fill="#0F766E"]') ? '#B2DFDB' : '#EEEEEE';
+
+      const label = document.getElementById('player-segment-label');
+      if (label) label.textContent = '▶ ' + time + ' 구간 재생 중';
+
+      const timeEl = document.getElementById('player-time');
+      if (timeEl) timeEl.textContent = time;
+
+      const progress = document.getElementById('player-progress');
+      if (progress) {
+        const pct = Math.min(95, Math.max(5, Math.random() * 80 + 10));
+        progress.style.width = pct + '%';
+      }
+
+      const playIcon = document.getElementById('play-btn-icon');
+      if (playIcon) playIcon.innerHTML = '<rect x="6" y="4" width="4" height="16" fill="#424242"/><rect x="14" y="4" width="4" height="16" fill="#424242"/>';
+
+      AICC_Toast.show(`${time} 구간 재생 (시뮬레이션)`);
+    }
+
+    function togglePlay(btn) {
+      const icon = document.getElementById('play-btn-icon');
+      if (!icon) return;
+      const isPaused = icon.innerHTML.includes('polygon');
+      if (isPaused) {
+        icon.innerHTML = '<rect x="6" y="4" width="4" height="16" fill="#424242"/><rect x="14" y="4" width="4" height="16" fill="#424242"/>';
+        AICC_Toast.show('재생 시작 (시뮬레이션)');
+      } else {
+        icon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
+        AICC_Toast.show('일시 정지 (시뮬레이션)');
+      }
+    }
+
+    function seekBar(e) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const pct = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+      const progress = document.getElementById('player-progress');
+      if (progress) progress.style.width = pct + '%';
+    }
+
+    let manualReviewEvalId = null;
+
+    function openManualReview(evalId) {
+      AICC_Modal.close();
+      manualReviewEvalId = evalId;
+
+      const evals = allData['evaluations.json'];
+      const ev = evals.find(e => e.id === evalId);
+      if (!ev) return;
+
+      const itemNameMap = buildItemNameMap();
+
+      const transcriptHtml = ev.transcript && ev.transcript.length > 0
+        ? ev.transcript.map((t) => {
+            const isAgent = t.speaker === 'agent';
+            const bg = isAgent ? '#E0F2F1' : '#F5F5F5';
+            const label = isAgent ? '상담사' : '고객';
+            return `
+              <div style="display:flex;gap:10px;padding:6px 0;">
+                <div style="min-width:44px;font-size:11px;color:#757575;padding-top:2px;">${t.time}</div>
+                <div style="flex:1;">
+                  <div style="font-size:10px;font-weight:600;color:${isAgent ? '#0F766E' : '#424242'};margin-bottom:2px;">${label}</div>
+                  <div style="background:${bg};padding:6px 10px;border-radius:6px;font-size:12px;line-height:1.5;">${t.text}</div>
+                </div>
+              </div>
+            `;
+          }).join('')
+        : '<p style="color:#9E9E9E;font-size:13px;text-align:center;padding:20px;">스크립트 데이터가 없습니다.</p>';
+
+      const scoreKeys = Object.keys(ev.scores);
+      const originalTotal = ev.total_score;
+      const scoreRowsHtml = scoreKeys.map((key, idx) => {
+        const val = ev.scores[key];
+        const itemName = itemNameMap[key] || key;
+        const isNlp = val.type === 'NLP';
+        const statusCls = val.status === 'pass' ? 'score-good' : val.status === 'warn' ? 'score-warn' : 'score-danger';
+        const statusText = val.status === 'pass' ? '통과' : val.status === 'warn' ? '주의' : '미달';
+        return `
+          <tr>
+            <td style="font-size:12px;">${itemName}</td>
+            <td>${AICC_Fmt.typeBadge(val.type)}</td>
+            <td style="text-align:center;">
+              <input type="number" class="form-select mr-score-input" data-key="${key}" data-max="${val.max}" data-original="${val.score}"
+                     value="${val.score}" min="0" max="${val.max}" ${isNlp ? 'disabled' : ''}
+                     style="width:56px;text-align:center;padding:2px 4px;font-size:12px;${isNlp ? 'background:#F5F5F5;color:#9E9E9E;' : ''}"
+                     onchange="recalcManualTotal()">
+              <span style="font-size:11px;color:#9E9E9E;"> / ${val.max}</span>
+            </td>
+            <td><span class="${statusCls}" style="font-size:12px;">${statusText}</span></td>
+          </tr>
+        `;
+      }).join('');
+
+      const reviewedInfo = ev.manual_review
+        ? `<div style="margin-bottom:12px;padding:8px 12px;background:#E8F5E9;border-radius:6px;font-size:12px;color:#2E7D32;">
+             이전 검증 완료: ${ev.manual_review.reviewed_at} (${ev.manual_review.reviewer})
+             ${ev.manual_review.modified_items && ev.manual_review.modified_items.length > 0
+               ? ' | 수정 항목 ' + ev.manual_review.modified_items.length + '건'
+               : ''}
+             ${ev.manual_review.comment ? '<div style="margin-top:4px;color:#1B5E20;font-style:italic;">코멘트: ' + ev.manual_review.comment + '</div>' : ''}
+           </div>`
+        : '';
+
+      setTimeout(() => {
+        AICC_Modal.open({
+          title: `수동 검증 - ${ev.id}`,
+          size: 'xl',
+          content: `
+            <div style="display:flex;gap:16px;height:600px;">
+              <!-- 왼쪽: 스크립트 + 플레이어 -->
+              <div style="flex:1;display:flex;flex-direction:column;min-width:0;">
+                <div style="font-size:13px;font-weight:600;margin-bottom:8px;">통화 스크립트</div>
+                <div style="flex:1;overflow-y:auto;border:1px solid #E0E0E0;border-radius:8px;padding:12px;background:#FAFAFA;">
+                  ${transcriptHtml}
+                </div>
+                <div style="margin-top:8px;background:#F5F5F5;border:1px solid #E0E0E0;border-radius:8px;padding:10px 14px;">
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <button onclick="togglePlay(this)" style="background:none;border:none;cursor:pointer;padding:0;">
+                      <svg id="play-btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="#424242"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    </button>
+                    <div style="flex:1;height:4px;background:#BDBDBD;border-radius:2px;cursor:pointer;" onclick="seekBar(event)">
+                      <div id="player-progress" style="width:0%;height:100%;background:#0F766E;border-radius:2px;transition:width 0.2s;"></div>
+                    </div>
+                    <span style="font-size:11px;color:#757575;">${ev.duration || '0:00'}</span>
+                  </div>
+                </div>
+              </div>
+              <!-- 오른쪽: 요약 + 항목별 점수 -->
+              <div style="flex:1;display:flex;flex-direction:column;min-width:0;">
+                <div style="display:flex;gap:16px;margin-bottom:12px;padding:10px 14px;background:#FAFAFA;border-radius:8px;border:1px solid #EEEEEE;flex-wrap:wrap;">
+                  <div><span style="font-size:10px;color:#9E9E9E;display:block;">상담사</span><strong style="font-size:13px;">${ev.agent_name}</strong></div>
+                  <div><span style="font-size:10px;color:#9E9E9E;display:block;">팀</span><strong style="font-size:13px;">${ev.team}</strong></div>
+                  <div><span style="font-size:10px;color:#9E9E9E;display:block;">일시</span><strong style="font-size:13px;">${ev.date} ${ev.call_time}</strong></div>
+                  <div><span style="font-size:10px;color:#9E9E9E;display:block;">AI 총점</span><strong style="font-size:15px;color:#757575;">${originalTotal}점</strong></div>
+                  <div><span style="font-size:10px;color:#9E9E9E;display:block;">검증 총점</span><strong id="mr-total-score" style="font-size:15px;color:#0F766E;">${originalTotal}점</strong></div>
+                </div>
+                ${reviewedInfo}
+                <div style="font-size:13px;font-weight:600;margin-bottom:8px;">항목별 점수 <span style="font-size:11px;font-weight:400;color:#9E9E9E;">(NLP 항목은 수정 불가)</span></div>
+                <div style="flex:1;overflow-y:auto;border:1px solid #E0E0E0;border-radius:8px;">
+                  <table class="data-table" style="margin:0;">
+                    <thead>
+                      <tr>
+                        <th>평가 항목</th>
+                        <th>방식</th>
+                        <th style="text-align:center;">점수</th>
+                        <th>상태</th>
+                      </tr>
+                    </thead>
+                    <tbody>${scoreRowsHtml}</tbody>
+                  </table>
+                </div>
+                <div style="margin-top:10px;">
+                  <label class="form-label">검증 코멘트</label>
+                  <textarea id="mr-comment" class="form-input" style="width:100%;height:72px;resize:vertical;font-size:12px;" placeholder="검증 관련 코멘트를 입력하세요.">${ev.manual_review?.comment || ''}</textarea>
+                </div>
+              </div>
+            </div>
+          `,
+          footer: `
+            <button class="btn btn-primary" onclick="saveManualReview()">검증 완료</button>
+            <button class="btn btn-secondary" onclick="AICC_Modal.close()">취소</button>
+          `
+        });
+      }, 200);
+    }
+
+    function recalcManualTotal() {
+      const inputs = document.querySelectorAll('.mr-score-input');
+      let total = 0;
+      inputs.forEach(inp => {
+        let v = parseInt(inp.value, 10);
+        const max = parseInt(inp.dataset.max, 10);
+        if (isNaN(v) || v < 0) v = 0;
+        if (v > max) v = max;
+        inp.value = v;
+        total += v;
+      });
+      const el = document.getElementById('mr-total-score');
+      if (el) el.textContent = total + '점';
+    }
+
+    function saveManualReview() {
+      if (!manualReviewEvalId) return;
+
+      const evals = allData['evaluations.json'];
+      const ev = evals.find(e => e.id === manualReviewEvalId);
+      if (!ev) return;
+
+      const inputs = document.querySelectorAll('.mr-score-input');
+      const modifiedItems = [];
+      let newTotal = 0;
+
+      inputs.forEach(inp => {
+        const key = inp.dataset.key;
+        const original = parseInt(inp.dataset.original, 10);
+        let v = parseInt(inp.value, 10);
+        const max = parseInt(inp.dataset.max, 10);
+        if (isNaN(v) || v < 0) v = 0;
+        if (v > max) v = max;
+        newTotal += v;
+
+        if (v !== original) {
+          modifiedItems.push({ item_id: key, original_score: original, new_score: v });
+          ev.scores[key].score = v;
+          if (v >= max * 0.8) ev.scores[key].status = 'pass';
+          else if (v >= max * 0.5) ev.scores[key].status = 'warn';
+          else ev.scores[key].status = 'fail';
+        }
+      });
+
+      ev.total_score = newTotal;
+
+      const now = new Date();
+      const dateStr = now.getFullYear() + '-' +
+                      String(now.getMonth() + 1).padStart(2, '0') + '-' +
+                      String(now.getDate()).padStart(2, '0') + ' ' +
+                      String(now.getHours()).padStart(2, '0') + ':' +
+                      String(now.getMinutes()).padStart(2, '0');
+
+      const comment = document.getElementById('mr-comment')?.value?.trim() || '';
+
+      ev.manual_review = {
+        reviewed_at: dateStr,
+        reviewer: '관리자',
+        modified_items: modifiedItems,
+        comment: comment
+      };
+
+      manualReviewEvalId = null;
+      AICC_Modal.close();
+
+      const wsId = document.getElementById('ws-filter').value;
+      const teamId = document.getElementById('team-filter').value;
+      let filtered = evals;
+      if (wsId !== 'all') filtered = filtered.filter(e => e.workspace_id === wsId);
+      if (teamId !== 'all') filtered = filtered.filter(e => e.team_id === teamId);
+      const typeVal = document.getElementById('type-filter').value;
+      if (typeVal !== 'all') filtered = filtered.filter(e => e.call_type === typeVal);
+      const issueVal = document.getElementById('issue-filter').value;
+      if (issueVal === 'fail') filtered = filtered.filter(e => e.fail_items && e.fail_items.length > 0);
+      if (issueVal === 'under') filtered = filtered.filter(e => isUnderThreshold(e));
+      const reviewVal = document.getElementById('review-filter').value;
+      if (reviewVal === 'reviewed') filtered = filtered.filter(e => e.manual_review);
+      if (reviewVal === 'unreviewed') filtered = filtered.filter(e => !e.manual_review);
+      renderEvalTable(filtered);
+
+      AICC_Toast.show(modifiedItems.length > 0
+        ? `수동 검증 완료 (${modifiedItems.length}개 항목 수정, 총점: ${newTotal}점)`
+        : `수동 검증 완료 (수정 없음, 총점: ${newTotal}점)`
+      );
+    }
+
+    function switchDetailTab(btn, tabId) {
+      btn.parentElement.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('scores-tab').style.display = tabId === 'scores-tab' ? '' : 'none';
+      document.getElementById('script-tab').style.display = tabId === 'script-tab' ? '' : 'none';
+    }
+
+    function onWsChange() {
+      const wsId = document.getElementById('ws-filter').value;
+      const teamFilter = document.getElementById('team-filter');
+
+      if (wsId === 'all') {
+        teamFilter.disabled = true;
+        teamFilter.innerHTML = '<option value="all">전체</option>';
+      } else {
+        teamFilter.disabled = false;
+        const ws = allData['workspaces.json'];
+        const found = ws ? ws.find(w => w.id === wsId) : null;
+        teamFilter.innerHTML = '<option value="all">전체</option>';
+        if (found) {
+          found.teams.forEach(t => {
+            teamFilter.innerHTML += `<option value="${t.id}">${t.name}</option>`;
+          });
+        }
+      }
+      applyFilter();
+    }
+
+    function applyFilter() {
+      const wsId = document.getElementById('ws-filter').value;
+      const teamId = document.getElementById('team-filter').value;
+
+      const evals = allData['evaluations.json'];
+      if (evals) {
+        let filtered = evals;
+        if (wsId !== 'all') filtered = filtered.filter(e => e.workspace_id === wsId);
+        if (teamId !== 'all') filtered = filtered.filter(e => e.team_id === teamId);
+        const typeVal = document.getElementById('type-filter').value;
+        if (typeVal !== 'all') filtered = filtered.filter(e => e.call_type === typeVal);
+        const issueVal = document.getElementById('issue-filter').value;
+        if (issueVal === 'fail') filtered = filtered.filter(e => e.fail_items && e.fail_items.length > 0);
+        if (issueVal === 'under') filtered = filtered.filter(e => isUnderThreshold(e));
+        const reviewVal = document.getElementById('review-filter').value;
+        if (reviewVal === 'reviewed') filtered = filtered.filter(e => e.manual_review);
+        if (reviewVal === 'unreviewed') filtered = filtered.filter(e => !e.manual_review);
+        renderEvalTable(filtered);
+      }
+
+      AICC_Toast.show('필터가 적용되었습니다.');
+    }
+
+    function resetFilter() {
+      document.getElementById('ws-filter').value = 'all';
+      document.getElementById('team-filter').value = 'all';
+      document.getElementById('team-filter').disabled = true;
+      document.getElementById('period-filter').value = 'week';
+      document.getElementById('type-filter').value = 'all';
+      document.getElementById('issue-filter').value = 'all';
+      document.getElementById('review-filter').value = 'all';
+      renderAll();
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,169 @@
+[
+  {
+    "id": "form-ib-general",
+    "name": "I/B 일반 상담 평가표",
+    "version": "v2.1",
+    "type": "I/B",
+    "status": "active",
+    "total_score": 100,
+    "created_at": "2024-01-01",
+    "updated_at": "2024-01-14",
+    "created_by": "김관리자",
+    "sections": [
+      {
+        "id": "sec-greeting",
+        "name": "인사 및 안내",
+        "total_score": 24,
+        "fail_threshold": null,
+        "items": [
+          { "item_id": "first-greeting", "name": "첫인사", "score": 6, "type": "NLP" },
+          { "item_id": "last-greeting", "name": "끝인사", "score": 6, "type": "NLP" },
+          { "item_id": "customer-greeting-reply", "name": "고객 인사 화답", "score": 6, "type": "AI" },
+          { "item_id": "customer-discomfort", "name": "고객 불편 공감", "score": 6, "type": "AI" }
+        ]
+      },
+      {
+        "id": "sec-empathy",
+        "name": "고객 공감",
+        "total_score": 11,
+        "fail_threshold": 5,
+        "items": [
+          { "item_id": "pos-neg-empathy", "name": "긍/부정 공감", "score": 5, "type": "AI" },
+          { "item_id": "simultaneous-speech", "name": "동시 발화", "score": 6, "type": "NLP" }
+        ]
+      },
+      {
+        "id": "sec-professional",
+        "name": "전문적 상담 태도",
+        "total_score": 45,
+        "fail_threshold": null,
+        "items": [
+          { "item_id": "no-acknowledge", "name": "양해 없는 무응답", "score": 5, "type": "NLP" },
+          { "item_id": "interruption", "name": "말끊기", "score": 5, "type": "NLP" },
+          { "item_id": "customer-focus", "name": "고객향 상담", "score": 5, "type": "AI" },
+          { "item_id": "speech-ending", "name": "상담 어미", "score": 5, "type": "NLP" },
+          { "item_id": "professional-speech", "name": "전문적 화법", "score": 5, "type": "NLP" },
+          { "item_id": "proactiveness", "name": "적극성(회피)", "score": 5, "type": "AI" },
+          { "item_id": "convenience", "name": "편리(재질의)", "score": 5, "type": "NLP" },
+          { "item_id": "speed", "name": "신속성", "score": 5, "type": "NLP" },
+          { "item_id": "tone", "name": "어조", "score": 5, "type": "AI" }
+        ]
+      },
+      {
+        "id": "sec-content",
+        "name": "응대내용",
+        "total_score": 21,
+        "fail_threshold": null,
+        "items": [
+          { "item_id": "required-privacy", "name": "개인정보 확인", "score": 5, "type": "NLP" },
+          { "item_id": "problem-solve", "name": "문제 해결", "score": 5, "type": "AI" },
+          { "item_id": "easy-explanation", "name": "쉬운 설명", "score": 5, "type": "AI" },
+          { "item_id": "active-response", "name": "적극적 응대", "score": 6, "type": "AI" }
+        ]
+      }
+    ],
+    "fail_rule": { "item_id": "profanity", "name": "욕설/금지어", "description": "탐지 시 전 항목 0점 처리" },
+    "pass_threshold": 60,
+    "applied_to": ["ws-seoul", "ws-busan"],
+    "applied_teams": "전체"
+  },
+  {
+    "id": "form-ib-vip",
+    "name": "I/B VIP 평가표",
+    "version": "v1.0",
+    "type": "I/B",
+    "status": "active",
+    "total_score": 100,
+    "created_at": "2024-01-05",
+    "updated_at": "2024-01-12",
+    "created_by": "김관리자",
+    "sections": [
+      {
+        "id": "sec-greeting-vip",
+        "name": "VIP 인사",
+        "total_score": 30,
+        "fail_threshold": 15,
+        "items": [
+          { "item_id": "first-greeting", "name": "첫인사", "score": 8, "type": "NLP" },
+          { "item_id": "customer-greeting-reply", "name": "고객 인사 화답", "score": 10, "type": "AI" },
+          { "item_id": "pos-neg-empathy", "name": "긍/부정 공감", "score": 12, "type": "AI" }
+        ]
+      },
+      {
+        "id": "sec-resolve-vip",
+        "name": "문제 해결력",
+        "total_score": 40,
+        "fail_threshold": 20,
+        "items": [
+          { "item_id": "problem-solve", "name": "문제 해결", "score": 15, "type": "AI" },
+          { "item_id": "easy-explanation", "name": "쉬운 설명", "score": 10, "type": "AI" },
+          { "item_id": "active-response", "name": "적극적 응대", "score": 15, "type": "AI" }
+        ]
+      },
+      {
+        "id": "sec-manner-vip",
+        "name": "상담 매너",
+        "total_score": 30,
+        "fail_threshold": null,
+        "items": [
+          { "item_id": "customer-focus", "name": "고객향 상담", "score": 10, "type": "AI" },
+          { "item_id": "tone", "name": "어조", "score": 10, "type": "AI" },
+          { "item_id": "professional-speech", "name": "전문적 화법", "score": 10, "type": "NLP" }
+        ]
+      }
+    ],
+    "fail_rule": { "item_id": "profanity", "name": "욕설/금지어", "description": "탐지 시 전 항목 0점 처리" },
+    "pass_threshold": 70,
+    "applied_to": ["ws-seoul"],
+    "applied_teams": "VIP상담팀"
+  },
+  {
+    "id": "form-ob-tele",
+    "name": "O/B 텔레마케팅 평가표",
+    "version": "v1.3",
+    "type": "O/B",
+    "status": "active",
+    "total_score": 100,
+    "created_at": "2023-12-15",
+    "updated_at": "2024-01-10",
+    "created_by": "박팀장",
+    "sections": [
+      {
+        "id": "sec-opening-ob",
+        "name": "오프닝",
+        "total_score": 25,
+        "fail_threshold": null,
+        "items": [
+          { "item_id": "first-greeting", "name": "첫인사", "score": 10, "type": "NLP" },
+          { "item_id": "required-privacy", "name": "개인정보 확인", "score": 15, "type": "NLP" }
+        ]
+      },
+      {
+        "id": "sec-persuasion-ob",
+        "name": "설득력",
+        "total_score": 45,
+        "fail_threshold": null,
+        "items": [
+          { "item_id": "problem-solve", "name": "상품 설명", "score": 15, "type": "AI" },
+          { "item_id": "easy-explanation", "name": "쉬운 설명", "score": 15, "type": "AI" },
+          { "item_id": "active-response", "name": "적극적 제안", "score": 15, "type": "AI" }
+        ]
+      },
+      {
+        "id": "sec-closing-ob",
+        "name": "클로징",
+        "total_score": 30,
+        "fail_threshold": null,
+        "items": [
+          { "item_id": "last-greeting", "name": "끝인사", "score": 10, "type": "NLP" },
+          { "item_id": "customer-focus", "name": "고객향 상담", "score": 10, "type": "AI" },
+          { "item_id": "tone", "name": "어조", "score": 10, "type": "AI" }
+        ]
+      }
+    ],
+    "fail_rule": { "item_id": "profanity", "name": "욕설/금지어", "description": "탐지 시 전 항목 0점 처리" },
+    "pass_threshold": 60,
+    "applied_to": ["ws-busan", "ws-daegu"],
+    "applied_teams": "아웃바운드팀, 해피콜팀"
+  }
+]

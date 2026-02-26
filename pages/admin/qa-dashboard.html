@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QA 대시보드 - AICC Quality Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body class="bg-[#F5F5F5] text-[#212121]">
+  <div id="page-content">
+    <!-- 페이지 제목 -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <h1 style="font-size:20px;font-weight:700;margin:0;">QA 대시보드</h1>
+        <p style="font-size:12px;color:#757575;margin:4px 0 0;">실시간 품질 모니터링</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <select class="form-select" id="period-filter" onchange="onPeriodChange()">
+          <option value="daily">일간</option>
+          <option value="weekly">주간</option>
+          <option value="monthly" selected>월간</option>
+          <option value="yearly">년간</option>
+          <option value="custom">사용자 지정</option>
+        </select>
+        <div id="custom-range" style="display:none;align-items:center;gap:6px;">
+          <input type="date" class="form-select" id="date-from" value="2024-01-01" style="min-width:130px;">
+          <span style="color:#757575;">~</span>
+          <input type="date" class="form-select" id="date-to" value="2024-01-31" style="min-width:130px;">
+          <button class="btn btn-primary btn-sm" onclick="applyCustomRange()">적용</button>
+        </div>
+        <select class="form-select" id="ws-filter" onchange="filterDashboard()">
+          <option value="all">전체 워크스페이스</option>
+        </select>
+        <select class="form-select" id="team-filter" onchange="filterDashboard()" disabled>
+          <option value="all">전체 팀</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- KPI 카드 4개 -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px;" id="kpi-cards">
+      <!-- JS로 동적 생성 -->
+    </div>
+
+    <!-- 차트 영역 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+      <!-- 품질 추세 차트 -->
+      <div class="content-card">
+        <div class="content-card-header">
+          <span style="font-size:14px;font-weight:600;" id="trend-title">품질 추세 (최근 30일)</span>
+        </div>
+        <div class="content-card-body" style="height:280px;">
+          <canvas id="trend-chart"></canvas>
+        </div>
+      </div>
+      <!-- 팀/채널 비중 -->
+      <div class="content-card">
+        <div class="content-card-header">
+          <span style="font-size:14px;font-weight:600;">팀별 평균 점수</span>
+          <div style="display:flex;gap:4px;">
+            <button class="btn btn-sm btn-secondary channel-btn active" onclick="setChannel(this,'all')">전체</button>
+            <button class="btn btn-sm btn-secondary channel-btn" onclick="setChannel(this,'IB')">I/B</button>
+            <button class="btn btn-sm btn-secondary channel-btn" onclick="setChannel(this,'OB')">O/B</button>
+          </div>
+        </div>
+        <div class="content-card-body" style="height:280px;">
+          <canvas id="team-chart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- 하단: 이슈카드 + 평가현황 + 개선필요 Top5 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <!-- 이슈 알림 -->
+      <div class="content-card">
+        <div class="content-card-header">
+          <span style="font-size:14px;font-weight:600;">긴급 이슈</span>
+          <span class="badge badge-pending" id="issue-count">0건</span>
+        </div>
+        <div class="content-card-body" id="issue-list" style="min-height:150px;">
+          <!-- JS로 동적 생성 -->
+        </div>
+      </div>
+
+      <!-- 점수 분포도 -->
+      <div class="content-card">
+        <div class="content-card-header">
+          <span style="font-size:14px;font-weight:600;">점수 분포</span>
+        </div>
+        <div class="content-card-body" style="display:flex;align-items:center;gap:16px;">
+          <div style="width:180px;height:180px;flex-shrink:0;">
+            <canvas id="distribution-chart"></canvas>
+          </div>
+          <div id="distribution-legend" style="flex:1;font-size:13px;">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 팀별 평가 현황 간소 테이블 -->
+    <div class="content-card" style="margin-top:16px;">
+      <div class="content-card-header">
+        <span style="font-size:14px;font-weight:600;">팀별 평가 현황</span>
+        <a href="evaluation-status.html" style="font-size:12px;color:#0F766E;text-decoration:none;">상세 보기 &rarr;</a>
+      </div>
+      <div class="content-card-body" style="padding:0;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>워크스페이스</th>
+              <th>팀</th>
+              <th style="text-align:right">상담 건수</th>
+              <th style="text-align:right">평가 건수</th>
+              <th style="text-align:right">평균 점수</th>
+              <th>이슈</th>
+            </tr>
+          </thead>
+          <tbody id="team-tbody">
+            <!-- JS로 동적 생성 -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="../../assets/dummy-data/all-data.js"></script>
+  <script src="../../js/utils/data-loader.js"></script>
+  <script src="../../js/utils/auth-simulator.js"></script>
+  <script src="../../js/utils/formatters.js"></script>
+  <script src="../../js/components/sidebar.js"></script>
+  <script src="../../js/components/layout.js"></script>
+  <script src="../../js/components/modal.js"></script>
+  <script src="../../js/components/toast.js"></script>
+  <script>
+    let dashboardData = null;
+    let trendChart = null;
+    let teamChart = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      // 레이아웃이 init된 후 데이터 로드
+      await loadDashboard();
+    });
+
+    async function loadDashboard() {
+      const data = await AICC_DataLoader.loadAll([
+        'dashboard-stats.json',
+        'workspaces.json'
+      ]);
+
+      dashboardData = data['dashboard-stats.json'];
+      const workspaces = data['workspaces.json'];
+
+      if (!dashboardData) {
+        document.getElementById('kpi-cards').innerHTML = '<p style="color:#757575;grid-column:span 4;text-align:center;padding:40px;">데이터를 불러올 수 없습니다.</p>';
+        return;
+      }
+
+      // 워크스페이스 필터 옵션 생성
+      if (workspaces) {
+        const wsSelect = document.getElementById('ws-filter');
+        workspaces.forEach(ws => {
+          wsSelect.innerHTML += `<option value="${ws.id}">${ws.name}</option>`;
+        });
+      }
+
+      const initPeriod = document.getElementById('period-filter').value;
+      const initCfg = periodConfig[initPeriod];
+      renderKPICards(dashboardData.summary, initCfg);
+      renderTrendChart(dashboardData.quality_trend_30days);
+      renderTeamChart(dashboardData.team_scores);
+      renderIssues(dashboardData.urgent_issues);
+      renderDistribution();
+      renderTeamTable(dashboardData.teams);
+    }
+
+    function renderKPICards(summary, cfg) {
+      const prefix = cfg ? cfg.kpiPrefix : '금일';
+      const prevLabel = cfg ? cfg.prevLabel : '전일';
+      const cards = [
+        { label: `${prefix} 평가 상담사 수`, value: AICC_Fmt.number(summary.total_agents), prev: summary.total_agents_prev, current: summary.total_agents, unit: '명', prevLabel },
+        { label: `${prefix} 상담 건수`, value: AICC_Fmt.number(summary.total_calls), prev: summary.total_calls_prev, current: summary.total_calls, unit: '건', prevLabel },
+        { label: '평균 QA 점수', value: AICC_Fmt.score(summary.avg_score), prev: summary.avg_score_prev, current: summary.avg_score, unit: '점', isScore: true, prevLabel },
+        { label: '상담사 평균 통화시간', value: summary.avg_duration, prev: summary.avg_duration_prev, current: summary.avg_duration, unit: '', isDuration: true, prevLabel }
+      ];
+
+      const container = document.getElementById('kpi-cards');
+      container.innerHTML = cards.map(card => {
+        let trendHtml = '';
+        if (card.isDuration) {
+          const toSec = (s) => { const p = s.split(':'); return parseInt(p[0])*60 + parseInt(p[1]); };
+          const cur = toSec(card.current), prev = toSec(card.prev);
+          const diffSec = cur - prev;
+          if (diffSec !== 0) {
+            const arrow = diffSec < 0 ? '↓' : '↑';
+            const color = diffSec < 0 ? '#4CAF50' : '#F44336';
+            const absDiff = Math.abs(diffSec);
+            const m = Math.floor(absDiff / 60), s = absDiff % 60;
+            trendHtml = `<span style="font-size:12px;color:${color};">${arrow} ${m > 0 ? m + '분 ' : ''}${s}초</span>`;
+          }
+        } else {
+          trendHtml = AICC_Fmt.trend(card.current, card.prev);
+        }
+        const scoreColor = card.isScore ? `color:${AICC_Fmt.scoreColor(card.current)}` : '';
+
+        return `
+          <div class="kpi-card">
+            <div style="font-size:12px;color:#757575;margin-bottom:8px;">${card.label}</div>
+            <div style="display:flex;align-items:baseline;gap:8px;">
+              <span style="font-size:28px;font-weight:700;${scoreColor}">${card.value}</span>
+              ${trendHtml}
+            </div>
+            <div style="font-size:11px;color:#9E9E9E;margin-top:8px;">${card.prevLabel || '전일'}: ${typeof card.prev === 'number' ? AICC_Fmt.number(card.prev) : card.prev}${card.unit}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderTrendChart(trendData) {
+      const ctx = document.getElementById('trend-chart');
+      if (!ctx) return;
+
+      if (trendChart) trendChart.destroy();
+      trendChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: trendData.map(d => d.date),
+          datasets: [{
+            label: '평균 QA 점수',
+            data: trendData.map(d => d.score),
+            borderColor: '#0F766E',
+            backgroundColor: 'rgba(15,118,110,0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.3,
+            pointRadius: 3,
+            pointHoverRadius: 5
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              min: 70,
+              max: 95,
+              grid: { color: '#F0F0F0' },
+              ticks: { font: { size: 11 }, color: '#757575' }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { font: { size: 11 }, color: '#757575' }
+            }
+          }
+        }
+      });
+    }
+
+    function renderTeamChart(teamScores) {
+      const ctx = document.getElementById('team-chart');
+      if (!ctx) return;
+
+      if (teamChart) teamChart.destroy();
+      teamChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: teamScores.map(t => t.team),
+          datasets: [{
+            label: '평균 점수',
+            data: teamScores.map(t => t.score),
+            backgroundColor: teamScores.map(t => t.score >= 80 ? 'rgba(76,175,80,0.7)' : t.score >= 60 ? 'rgba(255,193,7,0.7)' : 'rgba(244,67,54,0.7)'),
+            borderColor: teamScores.map(t => t.score >= 80 ? '#4CAF50' : t.score >= 60 ? '#FFC107' : '#F44336'),
+            borderWidth: 1,
+            borderRadius: 4,
+            barThickness: 40
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              min: 0,
+              max: 100,
+              grid: { color: '#F0F0F0' },
+              ticks: { font: { size: 11 }, color: '#757575' }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { font: { size: 11 }, color: '#757575' }
+            }
+          }
+        }
+      });
+    }
+
+    function getIssueLink(issue) {
+      if (issue.type.includes('FAIL')) return 'evaluation-status.html?issue=fail';
+      if (issue.type.includes('과락')) return 'evaluation-status.html?issue=under';
+      if (issue.type.includes('이의 제기')) return 'dispute-inbox.html';
+      return 'evaluation-status.html';
+    }
+
+    function renderIssues(issues) {
+      const container = document.getElementById('issue-list');
+      const countEl = document.getElementById('issue-count');
+
+      let totalCount = issues.reduce((sum, i) => sum + (i.count || 1), 0);
+      countEl.textContent = totalCount + '건';
+
+      container.innerHTML = issues.map(issue => {
+        const isUrgent = issue.type.includes('FAIL');
+        const textColor = isUrgent ? '#C62828' : '#F57F17';
+        const dotColor = isUrgent ? '#F44336' : '#FFC107';
+        const href = getIssueLink(issue);
+
+        let detail = '';
+        if (issue.agent) detail = `${issue.team} / ${issue.agent}`;
+        else if (issue.team) detail = issue.team;
+        else detail = `${issue.count}건 처리 대기`;
+
+        return `
+          <a href="${href}" style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #F0F0F0;text-decoration:none;cursor:pointer;transition:background 0.15s;" onmouseenter="this.style.background='#FAFAFA'" onmouseleave="this.style.background=''">
+            <span style="width:8px;height:8px;border-radius:50%;background:${dotColor};flex-shrink:0;"></span>
+            <div style="flex:1;">
+              <div style="font-size:13px;font-weight:500;color:${textColor};">${issue.type} ${issue.count || ''}건</div>
+              <div style="font-size:11px;color:#757575;">${detail}</div>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#BDBDBD" stroke-width="2" style="flex-shrink:0;"><path d="m9 18 6-6-6-6"/></svg>
+          </a>
+        `;
+      }).join('');
+    }
+
+    let distChart = null;
+    function renderDistribution(customDist) {
+      const dist = customDist || { excellent: 32, good: 41, caution: 18, poor: 9 };
+      const total = dist.excellent + dist.good + dist.caution + dist.poor;
+
+      const segments = [
+        { label: '우수 (90점 이상)',  value: dist.excellent, color: '#4CAF50', pct: Math.round(dist.excellent / total * 100) },
+        { label: '양호 (80~89점)',   value: dist.good,      color: '#2196F3', pct: Math.round(dist.good / total * 100) },
+        { label: '주의 (70~79점)',   value: dist.caution,   color: '#FFC107', pct: Math.round(dist.caution / total * 100) },
+        { label: '미달 (70점 미만)', value: dist.poor,      color: '#F44336', pct: Math.round(dist.poor / total * 100) }
+      ];
+
+      const ctx = document.getElementById('distribution-chart');
+      if (!ctx) return;
+      if (distChart) distChart.destroy();
+      distChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: segments.map(s => s.label),
+          datasets: [{
+            data: segments.map(s => s.value),
+            backgroundColor: segments.map(s => s.color),
+            borderWidth: 2,
+            borderColor: '#fff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          cutout: '60%',
+          plugins: { legend: { display: false } }
+        }
+      });
+
+      document.getElementById('distribution-legend').innerHTML = segments.map(s => `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid #F0F0F0;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="width:10px;height:10px;border-radius:2px;background:${s.color};flex-shrink:0;"></span>
+            <span>${s.label}</span>
+          </div>
+          <div style="font-weight:600;">${s.pct}% <span style="font-weight:400;color:#9E9E9E;font-size:11px;">(${s.value}건)</span></div>
+        </div>
+      `).join('');
+    }
+
+    function renderTeamTable(teams) {
+      const tbody = document.getElementById('team-tbody');
+      tbody.innerHTML = teams.map(team => {
+        const issueHtml = team.issues.length > 0
+          ? team.issues.map(i => `<span class="badge ${i.type.includes('FAIL') || i.type.includes('과락') ? 'badge-rejected' : 'badge-pending'}" style="font-size:11px;">${i.type} ${i.count}건</span>`).join(' ')
+          : '<span style="color:#9E9E9E;font-size:12px;">-</span>';
+
+        return `
+          <tr style="cursor:pointer;" onclick="location.href='detail-analysis.html?ws=${encodeURIComponent(team.workspace)}&team=${encodeURIComponent(team.team)}'">
+            <td>${team.workspace}</td>
+            <td style="font-weight:500;">${team.team}</td>
+            <td style="text-align:right;">${AICC_Fmt.number(team.calls)}</td>
+            <td style="text-align:right;">${AICC_Fmt.number(team.evaluations)}</td>
+            <td style="text-align:right;">${AICC_Fmt.scoreHtml(team.avg_score)}</td>
+            <td>${issueHtml}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function setChannel(btn, channel) {
+      document.querySelectorAll('.channel-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      // 채널 필터링 시뮬레이션 (같은 차트, 살짝 다른 데이터)
+      if (dashboardData) {
+        const scores = dashboardData.team_scores.map(t => ({
+          ...t,
+          score: channel === 'all' ? t.score : t.score + (Math.random() * 4 - 2)
+        }));
+        renderTeamChart(scores);
+      }
+    }
+
+    const periodConfig = {
+      daily:   { trendTitle: '품질 추세 (시간대별)',   kpiPrefix: '금일',    prevLabel: '전일' },
+      weekly:  { trendTitle: '품질 추세 (최근 7일)',   kpiPrefix: '금주',    prevLabel: '전주' },
+      monthly: { trendTitle: '품질 추세 (최근 30일)',  kpiPrefix: '금월',    prevLabel: '전월' },
+      yearly:  { trendTitle: '품질 추세 (최근 12개월)', kpiPrefix: '금년',   prevLabel: '전년' },
+      custom:  { trendTitle: '품질 추세 (사용자 지정)', kpiPrefix: '기간 내', prevLabel: '이전 기간' }
+    };
+
+    function generateTrendData(period) {
+      const base = 82;
+      const variance = () => (Math.random() * 6 - 3);
+      switch (period) {
+        case 'daily':
+          return Array.from({ length: 12 }, (_, i) => ({
+            date: `${(8 + i).toString().padStart(2, '0')}:00`,
+            score: Math.round((base + variance()) * 10) / 10
+          }));
+        case 'weekly':
+          const days = ['월', '화', '수', '목', '금', '토', '일'];
+          return days.map(d => ({ date: d, score: Math.round((base + variance()) * 10) / 10 }));
+        case 'monthly':
+          return dashboardData.quality_trend_30days;
+        case 'yearly':
+          const months = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
+          return months.map(m => ({ date: m, score: Math.round((base + variance()) * 10) / 10 }));
+        case 'custom':
+          return Array.from({ length: 10 }, (_, i) => ({
+            date: `D+${i + 1}`,
+            score: Math.round((base + variance()) * 10) / 10
+          }));
+        default:
+          return dashboardData.quality_trend_30days;
+      }
+    }
+
+    function generateKPIVariation(period) {
+      const s = dashboardData.summary;
+      const factor = { daily: 1, weekly: 7, monthly: 30, yearly: 365, custom: 15 };
+      const f = factor[period] || 1;
+      const agentBase = period === 'daily' ? s.total_agents : Math.round(s.total_agents * (1 + Math.random() * 0.2));
+      const callBase = period === 'daily' ? s.total_calls : Math.round(s.total_calls * f * (0.9 + Math.random() * 0.2));
+      const agentPrev = period === 'daily' ? s.total_agents_prev : Math.round(agentBase * (0.93 + Math.random() * 0.1));
+      const callPrev = period === 'daily' ? s.total_calls_prev : Math.round(callBase * (0.93 + Math.random() * 0.1));
+      return {
+        total_agents: agentBase, total_agents_prev: agentPrev,
+        total_calls: callBase, total_calls_prev: callPrev,
+        avg_score: s.avg_score, avg_score_prev: s.avg_score_prev,
+        avg_duration: s.avg_duration, avg_duration_prev: s.avg_duration_prev
+      };
+    }
+
+    function onPeriodChange() {
+      const period = document.getElementById('period-filter').value;
+      const customRange = document.getElementById('custom-range');
+      customRange.style.display = period === 'custom' ? 'flex' : 'none';
+
+      if (period === 'custom') return;
+      applyPeriod(period);
+    }
+
+    function applyCustomRange() {
+      applyPeriod('custom');
+      AICC_Toast.show('사용자 지정 기간이 적용되었습니다.');
+    }
+
+    function generateDistribution() {
+      const e = () => Math.round(10 + Math.random() * 40);
+      const dist = { excellent: e(), good: e(), caution: Math.round(5 + Math.random() * 25), poor: Math.round(2 + Math.random() * 12) };
+      return dist;
+    }
+
+    function applyPeriod(period) {
+      if (!dashboardData) return;
+      const cfg = periodConfig[period];
+
+      document.getElementById('trend-title').textContent = cfg.trendTitle;
+
+      const kpiData = generateKPIVariation(period);
+      renderKPICards(kpiData, cfg);
+
+      const trendData = generateTrendData(period);
+      renderTrendChart(trendData);
+
+      renderDistribution(generateDistribution());
+
+      AICC_Toast.show(`${cfg.kpiPrefix} 데이터로 전환되었습니다.`);
+    }
+
+    function filterDashboard() {
+      const wsId = document.getElementById('ws-filter').value;
+      const teamFilter = document.getElementById('team-filter');
+
+      if (wsId === 'all') {
+        teamFilter.disabled = true;
+        teamFilter.innerHTML = '<option value="all">전체 팀</option>';
+      } else {
+        teamFilter.disabled = false;
+        // 워크스페이스에 해당하는 팀만 필터
+        const teams = dashboardData.teams.filter(t => t.workspace_id === wsId);
+        teamFilter.innerHTML = '<option value="all">전체 팀</option>';
+        teams.forEach(t => {
+          teamFilter.innerHTML += `<option value="${t.team_id}">${t.team}</option>`;
+        });
+      }
+
+      // 테이블 필터링
+      const teamId = teamFilter.value;
+      let filtered = dashboardData.teams;
+      if (wsId !== 'all') {
+        filtered = filtered.filter(t => t.workspace_id === wsId);
+      }
+      if (teamId !== 'all') {
+        filtered = filtered.filter(t => t.team_id === teamId);
+      }
+      renderTeamTable(filtered);
+
+      AICC_Toast.show('필터가 적용되었습니다.');
+    }
+  </script>
+</body>
+</html>

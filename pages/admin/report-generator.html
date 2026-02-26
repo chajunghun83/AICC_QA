@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>리포트 생성기 - AICC Quality Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body class="bg-[#F5F5F5] text-[#212121]">
+  <div id="page-content">
+    <!-- 페이지 제목 -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <h1 style="font-size:20px;font-weight:700;margin:0;">리포트 생성기</h1>
+        <p style="font-size:12px;color:#757575;margin:4px 0 0;">품질 분석 리포트 설정 및 생성</p>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:400px 1fr;gap:16px;align-items:start;">
+      <!-- 좌측: 설정 폼 -->
+      <div>
+        <!-- 리포트 유형 -->
+        <div class="content-card" style="margin-bottom:16px;">
+          <div class="content-card-header">
+            <span style="font-size:14px;font-weight:600;">리포트 유형</span>
+          </div>
+          <div class="content-card-body">
+            <div style="display:flex;flex-direction:column;gap:8px;" id="report-type-group">
+              <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #E0E0E0;border-radius:6px;cursor:pointer;transition:all 0.15s;" class="report-type-option" onclick="selectReportType(this, 'daily')">
+                <input type="radio" name="reportType" value="daily" checked style="accent-color:#0F766E;">
+                <div>
+                  <div style="font-size:13px;font-weight:500;">일간 리포트</div>
+                  <div style="font-size:11px;color:#757575;">일별 품질 평가 요약</div>
+                </div>
+              </label>
+              <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #E0E0E0;border-radius:6px;cursor:pointer;transition:all 0.15s;" class="report-type-option" onclick="selectReportType(this, 'weekly')">
+                <input type="radio" name="reportType" value="weekly" style="accent-color:#0F766E;">
+                <div>
+                  <div style="font-size:13px;font-weight:500;">주간 리포트</div>
+                  <div style="font-size:11px;color:#757575;">주간 추이 및 비교 분석</div>
+                </div>
+              </label>
+              <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #E0E0E0;border-radius:6px;cursor:pointer;transition:all 0.15s;" class="report-type-option" onclick="selectReportType(this, 'monthly')">
+                <input type="radio" name="reportType" value="monthly" style="accent-color:#0F766E;">
+                <div>
+                  <div style="font-size:13px;font-weight:500;">월간 리포트</div>
+                  <div style="font-size:11px;color:#757575;">월간 종합 분석 및 개선 제안</div>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- 기간 및 범위 -->
+        <div class="content-card" style="margin-bottom:16px;">
+          <div class="content-card-header">
+            <span style="font-size:14px;font-weight:600;">기간 및 범위</span>
+          </div>
+          <div class="content-card-body">
+            <div style="margin-bottom:12px;">
+              <label class="form-label">리포트 기간</label>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <input type="date" class="form-input" id="report-from" value="2025-01-13" style="flex:1;">
+                <span style="color:#757575;">~</span>
+                <input type="date" class="form-input" id="report-to" value="2025-01-19" style="flex:1;">
+              </div>
+            </div>
+            <div style="margin-bottom:12px;">
+              <label class="form-label">범위</label>
+              <select class="form-select" id="scope-select" onchange="onScopeChange()" style="width:100%;">
+                <option value="all">전체 (모든 워크스페이스)</option>
+                <option value="workspace">워크스페이스 단위</option>
+                <option value="team">팀 단위</option>
+                <option value="individual">개인 단위</option>
+              </select>
+            </div>
+            <div id="scope-detail" style="display:none;">
+              <label class="form-label" id="scope-detail-label">워크스페이스</label>
+              <select class="form-select" id="scope-detail-select" style="width:100%;">
+                <option value="ws-1">서울센터</option>
+                <option value="ws-2">부산센터</option>
+                <option value="ws-3">대구센터</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 템플릿 선택 -->
+        <div class="content-card" style="margin-bottom:16px;">
+          <div class="content-card-header">
+            <span style="font-size:14px;font-weight:600;">템플릿</span>
+          </div>
+          <div class="content-card-body">
+            <div style="margin-bottom:12px;">
+              <label class="form-label">리포트 템플릿</label>
+              <select class="form-select" id="template-select" onchange="updatePreview()" style="width:100%;">
+                <option value="standard">표준 리포트</option>
+                <option value="executive">경영진 요약 리포트</option>
+                <option value="detailed">상세 분석 리포트</option>
+                <option value="improvement">개선 과제 리포트</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 포함 섹션 선택 -->
+        <div class="content-card" style="margin-bottom:16px;">
+          <div class="content-card-header">
+            <span style="font-size:14px;font-weight:600;">포함 섹션</span>
+          </div>
+          <div class="content-card-body">
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+                <input type="checkbox" id="sec-summary" checked onchange="updatePreview()" style="accent-color:#0F766E;">
+                요약 (KPI 현황)
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+                <input type="checkbox" id="sec-trend" checked onchange="updatePreview()" style="accent-color:#0F766E;">
+                품질 추이 차트
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+                <input type="checkbox" id="sec-team" checked onchange="updatePreview()" style="accent-color:#0F766E;">
+                팀별 비교 분석
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+                <input type="checkbox" id="sec-agent" checked onchange="updatePreview()" style="accent-color:#0F766E;">
+                상담사별 분석
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+                <input type="checkbox" id="sec-issue" checked onchange="updatePreview()" style="accent-color:#0F766E;">
+                이슈 현황
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+                <input type="checkbox" id="sec-improvement" onchange="updatePreview()" style="accent-color:#0F766E;">
+                개선 제안
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+                <input type="checkbox" id="sec-appendix" onchange="updatePreview()" style="accent-color:#0F766E;">
+                부록 (상세 데이터)
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- 액션 버튼 -->
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-primary" onclick="generateReport()" style="flex:1;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            리포트 생성
+          </button>
+          <button class="btn btn-secondary" onclick="downloadReport()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            다운로드
+          </button>
+        </div>
+      </div>
+
+      <!-- 우측: 미리보기 -->
+      <div class="content-card" style="position:sticky;top:72px;">
+        <div class="content-card-header">
+          <span style="font-size:14px;font-weight:600;">미리보기</span>
+          <span class="badge badge-pending" id="preview-status">미생성</span>
+        </div>
+        <div class="content-card-body" id="preview-area" style="min-height:600px;max-height:calc(100vh - 180px);overflow-y:auto;">
+          <!-- 초기 안내 -->
+          <div id="preview-placeholder" style="text-align:center;padding:60px 20px;color:#9E9E9E;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#BDBDBD" stroke-width="1.5" style="margin:0 auto 16px;display:block;">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+            <div style="font-size:14px;font-weight:500;margin-bottom:4px;">리포트 미리보기</div>
+            <div style="font-size:12px;">좌측에서 설정을 완료한 후 "리포트 생성" 버튼을 클릭하세요.</div>
+          </div>
+
+          <!-- 생성된 리포트 미리보기 (숨김) -->
+          <div id="preview-content" style="display:none;">
+            <!-- JS로 동적 생성 -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../assets/dummy-data/all-data.js"></script>
+  <script src="../../js/utils/data-loader.js"></script>
+  <script src="../../js/utils/auth-simulator.js"></script>
+  <script src="../../js/utils/formatters.js"></script>
+  <script src="../../js/components/sidebar.js"></script>
+  <script src="../../js/components/layout.js"></script>
+  <script src="../../js/components/modal.js"></script>
+  <script src="../../js/components/toast.js"></script>
+  <script>
+    /* ========== 더미 리포트 데이터 ========== */
+    const REPORT_DATA = {
+      summary: {
+        totalCalls: 9220,
+        totalEvals: 8010,
+        avgScore: 79.2,
+        prevAvgScore: 77.8,
+        completionRate: 86.9,
+        issueCount: 23,
+        agentCount: 326
+      },
+      teams: [
+        { name: 'VIP상담팀', ws: '서울센터', score: 86.3, prev: 84.1, calls: 1120, evals: 1050, issues: 2 },
+        { name: '일반상담팀', ws: '서울센터', score: 79.8, prev: 78.5, calls: 1680, evals: 1520, issues: 5 },
+        { name: '기술지원팀', ws: '서울센터', score: 81.5, prev: 80.2, calls: 920, evals: 810, issues: 3 },
+        { name: '아웃바운드팀', ws: '서울센터', score: 77.6, prev: 76.0, calls: 800, evals: 600, issues: 4 },
+        { name: '고객상담1팀', ws: '부산센터', score: 80.5, prev: 79.8, calls: 980, evals: 870, issues: 2 },
+        { name: '고객상담2팀', ws: '부산센터', score: 76.2, prev: 75.0, calls: 1050, evals: 920, issues: 3 },
+        { name: '영업지원팀', ws: '부산센터', score: 79.8, prev: 78.3, calls: 780, evals: 660, issues: 1 },
+        { name: '종합상담팀', ws: '대구센터', score: 77.1, prev: 76.5, calls: 820, evals: 690, issues: 2 },
+        { name: '클레임처리팀', ws: '대구센터', score: 72.8, prev: 71.2, calls: 650, evals: 540, issues: 5 },
+        { name: '신규고객팀', ws: '대구센터', score: 76.5, prev: 75.9, calls: 420, evals: 350, issues: 1 }
+      ],
+      topAgents: [
+        { name: '홍길동', team: 'VIP상담팀', score: 91.2 },
+        { name: '김영수', team: 'VIP상담팀', score: 88.7 },
+        { name: '오세진', team: '기술지원팀', score: 87.3 },
+        { name: '배수현', team: '고객상담1팀', score: 85.6 },
+        { name: '이미영', team: 'VIP상담팀', score: 85.1 }
+      ],
+      bottomAgents: [
+        { name: '문지혜', team: '클레임처리팀', score: 67.4 },
+        { name: '김태희', team: '고객상담2팀', score: 70.5 },
+        { name: '한동우', team: '일반상담팀', score: 72.5 },
+        { name: '황서연', team: '종합상담팀', score: 73.8 },
+        { name: '서다은', team: '아웃바운드팀', score: 74.8 }
+      ],
+      issues: [
+        { type: '과락', count: 8, desc: '필수항목 미이행으로 인한 과락 발생' },
+        { type: '스크립트 미준수', count: 12, desc: '필수 스크립트 누락 또는 순서 오류' },
+        { type: '인사말 누락', count: 5, desc: '오프닝/클로징 인사 미이행' },
+        { type: '고객확인 미흡', count: 6, desc: '고객 본인확인 절차 불충분' }
+      ],
+      improvements: [
+        '클레임처리팀 대상 "고객 응대 스킬" 재교육 권장 (평균 72.8점)',
+        '필수 스크립트 준수율 향상을 위한 모니터링 강화 필요',
+        '아웃바운드팀 "동의 확보" 관련 프로세스 재정비 필요',
+        '신규 입사자 대상 품질 기준 안내 교육 실시 권장'
+      ]
+    };
+
+    let reportGenerated = false;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      updatePreview();
+    });
+
+    /* ========== 리포트 유형 선택 ========== */
+    function selectReportType(el, type) {
+      document.querySelectorAll('.report-type-option').forEach(opt => {
+        opt.style.borderColor = '#E0E0E0';
+        opt.style.background = 'white';
+      });
+      el.style.borderColor = '#0F766E';
+      el.style.background = '#E0F2F1';
+
+      // 기간 자동 설정
+      const today = new Date('2025-01-19');
+      const fromInput = document.getElementById('report-from');
+      const toInput = document.getElementById('report-to');
+      toInput.value = '2025-01-19';
+
+      if (type === 'daily') {
+        fromInput.value = '2025-01-19';
+      } else if (type === 'weekly') {
+        fromInput.value = '2025-01-13';
+      } else {
+        fromInput.value = '2025-01-01';
+      }
+
+      if (reportGenerated) updatePreview();
+    }
+
+    /* ========== 범위 변경 ========== */
+    function onScopeChange() {
+      const scope = document.getElementById('scope-select').value;
+      const detail = document.getElementById('scope-detail');
+      const label = document.getElementById('scope-detail-label');
+      const select = document.getElementById('scope-detail-select');
+
+      if (scope === 'all') {
+        detail.style.display = 'none';
+      } else {
+        detail.style.display = 'block';
+        detail.style.marginTop = '12px';
+
+        if (scope === 'workspace') {
+          label.textContent = '워크스페이스';
+          select.innerHTML = `
+            <option value="ws-1">서울센터</option>
+            <option value="ws-2">부산센터</option>
+            <option value="ws-3">대구센터</option>
+          `;
+        } else if (scope === 'team') {
+          label.textContent = '팀';
+          select.innerHTML = `
+            <option value="tm-1">서울센터 / VIP상담팀</option>
+            <option value="tm-2">서울센터 / 일반상담팀</option>
+            <option value="tm-3">서울센터 / 기술지원팀</option>
+            <option value="tm-5">부산센터 / 고객상담1팀</option>
+            <option value="tm-6">부산센터 / 고객상담2팀</option>
+            <option value="tm-8">대구센터 / 종합상담팀</option>
+            <option value="tm-9">대구센터 / 클레임처리팀</option>
+          `;
+        } else {
+          label.textContent = '상담사';
+          select.innerHTML = `
+            <option value="ag-1">홍길동 (VIP상담팀)</option>
+            <option value="ag-2">김영수 (VIP상담팀)</option>
+            <option value="ag-5">정수민 (일반상담팀)</option>
+            <option value="ag-8">오세진 (기술지원팀)</option>
+            <option value="ag-12">배수현 (고객상담1팀)</option>
+          `;
+        }
+      }
+    }
+
+    /* ========== 미리보기 업데이트 ========== */
+    function updatePreview() {
+      // 아직 생성하지 않았으면 placeholder 유지
+      if (!reportGenerated) return;
+      renderPreviewContent();
+    }
+
+    /* ========== 리포트 생성 ========== */
+    function generateReport() {
+      reportGenerated = true;
+      document.getElementById('preview-status').className = 'badge badge-active';
+      document.getElementById('preview-status').textContent = '생성 완료';
+
+      renderPreviewContent();
+      AICC_Toast.show('리포트가 생성되었습니다.');
+    }
+
+    function renderPreviewContent() {
+      const placeholder = document.getElementById('preview-placeholder');
+      const content = document.getElementById('preview-content');
+      placeholder.style.display = 'none';
+      content.style.display = 'block';
+
+      const reportType = document.querySelector('input[name="reportType"]:checked').value;
+      const fromDate = document.getElementById('report-from').value;
+      const toDate = document.getElementById('report-to').value;
+      const template = document.getElementById('template-select').value;
+      const scope = document.getElementById('scope-select').value;
+
+      const typeNames = { daily: '일간', weekly: '주간', monthly: '월간' };
+      const templateNames = { standard: '표준', executive: '경영진 요약', detailed: '상세 분석', improvement: '개선 과제' };
+      const scopeNames = { all: '전체', workspace: '워크스페이스', team: '팀', individual: '개인' };
+
+      const secSummary = document.getElementById('sec-summary').checked;
+      const secTrend = document.getElementById('sec-trend').checked;
+      const secTeam = document.getElementById('sec-team').checked;
+      const secAgent = document.getElementById('sec-agent').checked;
+      const secIssue = document.getElementById('sec-issue').checked;
+      const secImprovement = document.getElementById('sec-improvement').checked;
+      const secAppendix = document.getElementById('sec-appendix').checked;
+
+      const s = REPORT_DATA.summary;
+
+      let html = '';
+
+      // 리포트 헤더
+      html += `
+        <div style="border-bottom:2px solid #0F766E;padding-bottom:16px;margin-bottom:20px;">
+          <div style="font-size:18px;font-weight:700;color:#0F766E;">AICC 품질 관리 ${typeNames[reportType]} 리포트</div>
+          <div style="font-size:12px;color:#757575;margin-top:4px;">
+            ${templateNames[template]} | ${fromDate} ~ ${toDate} | 범위: ${scopeNames[scope]}
+          </div>
+          <div style="font-size:11px;color:#9E9E9E;margin-top:2px;">생성일시: ${new Date().toLocaleString('ko-KR')}</div>
+        </div>
+      `;
+
+      // 요약 섹션
+      if (secSummary) {
+        html += `
+          <div style="margin-bottom:24px;">
+            <div style="font-size:14px;font-weight:700;color:#212121;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid #E0E0E0;">1. 요약 (KPI 현황)</div>
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">
+              <div style="background:#F5F5F5;border-radius:6px;padding:12px;">
+                <div style="font-size:11px;color:#757575;">총 상담 건수</div>
+                <div style="font-size:20px;font-weight:700;">${AICC_Fmt.number(s.totalCalls)}<span style="font-size:12px;color:#757575;font-weight:400;"> 건</span></div>
+              </div>
+              <div style="background:#F5F5F5;border-radius:6px;padding:12px;">
+                <div style="font-size:11px;color:#757575;">총 평가 건수</div>
+                <div style="font-size:20px;font-weight:700;">${AICC_Fmt.number(s.totalEvals)}<span style="font-size:12px;color:#757575;font-weight:400;"> 건</span></div>
+              </div>
+              <div style="background:#F5F5F5;border-radius:6px;padding:12px;">
+                <div style="font-size:11px;color:#757575;">평균 QA 점수</div>
+                <div style="font-size:20px;font-weight:700;color:${AICC_Fmt.scoreColor(s.avgScore)}">${AICC_Fmt.score(s.avgScore)}
+                  <span style="font-size:12px;font-weight:400;">${AICC_Fmt.trend(s.avgScore, s.prevAvgScore)}</span>
+                </div>
+              </div>
+              <div style="background:#F5F5F5;border-radius:6px;padding:12px;">
+                <div style="font-size:11px;color:#757575;">이슈 건수</div>
+                <div style="font-size:20px;font-weight:700;color:#F57F17;">${s.issueCount}<span style="font-size:12px;color:#757575;font-weight:400;"> 건</span></div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // 품질 추이 차트 섹션
+      if (secTrend) {
+        html += `
+          <div style="margin-bottom:24px;">
+            <div style="font-size:14px;font-weight:700;color:#212121;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid #E0E0E0;">2. 품질 추이</div>
+            <div style="background:#F9F9F9;border:1px solid #E0E0E0;border-radius:6px;padding:16px;height:200px;">
+              <canvas id="preview-trend-chart"></canvas>
+            </div>
+          </div>
+        `;
+      }
+
+      // 팀별 비교 분석
+      if (secTeam) {
+        const sectionNum = 1 + (secSummary ? 1 : 0) + (secTrend ? 1 : 0);
+        const teamRows = REPORT_DATA.teams.map(t => {
+          const diffHtml = AICC_Fmt.trend(t.score, t.prev);
+          return `
+            <tr style="cursor:default;">
+              <td style="font-weight:500;">${t.name}</td>
+              <td style="font-size:12px;color:#757575;">${t.ws}</td>
+              <td style="text-align:right;">${AICC_Fmt.scoreHtml(t.score)}</td>
+              <td style="text-align:right;font-size:12px;color:#757575;">${AICC_Fmt.score(t.prev)}</td>
+              <td style="text-align:right;">${diffHtml}</td>
+              <td style="text-align:right;">${AICC_Fmt.number(t.evals)}</td>
+              <td style="text-align:right;">${t.issues > 0 ? '<span style="color:#F57F17;">' + t.issues + '건</span>' : '<span style="color:#9E9E9E;">-</span>'}</td>
+            </tr>
+          `;
+        }).join('');
+
+        html += `
+          <div style="margin-bottom:24px;">
+            <div style="font-size:14px;font-weight:700;color:#212121;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid #E0E0E0;">${sectionNum}. 팀별 비교 분석</div>
+            <div style="overflow-x:auto;">
+              <table class="data-table" style="font-size:12px;">
+                <thead>
+                  <tr>
+                    <th>팀</th>
+                    <th>센터</th>
+                    <th style="text-align:right">현재 점수</th>
+                    <th style="text-align:right">이전 점수</th>
+                    <th style="text-align:right">변화</th>
+                    <th style="text-align:right">평가 건수</th>
+                    <th style="text-align:right">이슈</th>
+                  </tr>
+                </thead>
+                <tbody>${teamRows}</tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      }
+
+      // 상담사별 분석
+      if (secAgent) {
+        const sectionNum = 1 + (secSummary ? 1 : 0) + (secTrend ? 1 : 0) + (secTeam ? 1 : 0);
+        const topRows = REPORT_DATA.topAgents.map((a, i) => `
+          <tr style="cursor:default;">
+            <td style="font-weight:600;color:#757575;">${i + 1}</td>
+            <td style="font-weight:500;">${a.name}</td>
+            <td style="font-size:12px;color:#757575;">${a.team}</td>
+            <td style="text-align:right;">${AICC_Fmt.scoreHtml(a.score)}</td>
+          </tr>
+        `).join('');
+
+        const bottomRows = REPORT_DATA.bottomAgents.map((a, i) => `
+          <tr style="cursor:default;">
+            <td style="font-weight:600;color:#757575;">${i + 1}</td>
+            <td style="font-weight:500;">${a.name}</td>
+            <td style="font-size:12px;color:#757575;">${a.team}</td>
+            <td style="text-align:right;">${AICC_Fmt.scoreHtml(a.score)}</td>
+          </tr>
+        `).join('');
+
+        html += `
+          <div style="margin-bottom:24px;">
+            <div style="font-size:14px;font-weight:700;color:#212121;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid #E0E0E0;">${sectionNum}. 상담사별 분석</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div>
+                <div style="font-size:12px;font-weight:600;color:#4CAF50;margin-bottom:8px;">우수 상담사 Top 5</div>
+                <table class="data-table" style="font-size:12px;">
+                  <thead><tr><th>#</th><th>상담사</th><th>팀</th><th style="text-align:right">점수</th></tr></thead>
+                  <tbody>${topRows}</tbody>
+                </table>
+              </div>
+              <div>
+                <div style="font-size:12px;font-weight:600;color:#F44336;margin-bottom:8px;">개선 필요 상담사 Top 5</div>
+                <table class="data-table" style="font-size:12px;">
+                  <thead><tr><th>#</th><th>상담사</th><th>팀</th><th style="text-align:right">점수</th></tr></thead>
+                  <tbody>${bottomRows}</tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // 이슈 현황
+      if (secIssue) {
+        const sectionNum = 1 + (secSummary ? 1 : 0) + (secTrend ? 1 : 0) + (secTeam ? 1 : 0) + (secAgent ? 1 : 0);
+        const issueRows = REPORT_DATA.issues.map(iss => `
+          <tr style="cursor:default;">
+            <td><span class="badge badge-rejected" style="font-size:11px;">${iss.type}</span></td>
+            <td style="text-align:right;font-weight:500;">${iss.count}건</td>
+            <td style="font-size:12px;color:#757575;">${iss.desc}</td>
+          </tr>
+        `).join('');
+
+        html += `
+          <div style="margin-bottom:24px;">
+            <div style="font-size:14px;font-weight:700;color:#212121;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid #E0E0E0;">${sectionNum}. 이슈 현황</div>
+            <table class="data-table" style="font-size:12px;">
+              <thead><tr><th>이슈 유형</th><th style="text-align:right">건수</th><th>설명</th></tr></thead>
+              <tbody>${issueRows}</tbody>
+            </table>
+          </div>
+        `;
+      }
+
+      // 개선 제안
+      if (secImprovement) {
+        const sectionNum = 1 + (secSummary ? 1 : 0) + (secTrend ? 1 : 0) + (secTeam ? 1 : 0) + (secAgent ? 1 : 0) + (secIssue ? 1 : 0);
+        const impList = REPORT_DATA.improvements.map((item, i) => `
+          <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #F0F0F0;">
+            <span style="min-width:24px;height:24px;border-radius:50%;background:#E0F2F1;color:#0F766E;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;">${i + 1}</span>
+            <span style="font-size:13px;line-height:1.5;">${item}</span>
+          </div>
+        `).join('');
+
+        html += `
+          <div style="margin-bottom:24px;">
+            <div style="font-size:14px;font-weight:700;color:#212121;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid #E0E0E0;">${sectionNum}. 개선 제안</div>
+            ${impList}
+          </div>
+        `;
+      }
+
+      // 부록
+      if (secAppendix) {
+        const sectionNum = 1 + (secSummary ? 1 : 0) + (secTrend ? 1 : 0) + (secTeam ? 1 : 0) + (secAgent ? 1 : 0) + (secIssue ? 1 : 0) + (secImprovement ? 1 : 0);
+        html += `
+          <div style="margin-bottom:24px;">
+            <div style="font-size:14px;font-weight:700;color:#212121;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid #E0E0E0;">${sectionNum}. 부록</div>
+            <div style="background:#F9F9F9;border:1px solid #E0E0E0;border-radius:6px;padding:16px;font-size:12px;color:#757575;">
+              <div style="margin-bottom:8px;">- 총 상담사 수: ${AICC_Fmt.number(s.agentCount)}명</div>
+              <div style="margin-bottom:8px;">- 평가 완료율: ${AICC_Fmt.percent(s.completionRate)}</div>
+              <div style="margin-bottom:8px;">- 리포트 기간: ${fromDate} ~ ${toDate}</div>
+              <div style="margin-bottom:8px;">- 데이터 기준: AI 자동 평가 + NLP 분석 결과</div>
+              <div>- 본 리포트는 시스템 자동 생성 리포트입니다.</div>
+            </div>
+          </div>
+        `;
+      }
+
+      // 푸터
+      html += `
+        <div style="border-top:1px solid #E0E0E0;padding-top:12px;margin-top:20px;text-align:center;">
+          <div style="font-size:11px;color:#9E9E9E;">AICC Quality Hub - 자동 생성 리포트</div>
+        </div>
+      `;
+
+      content.innerHTML = html;
+
+      // 차트 렌더링 (추이 섹션이 있을 때)
+      if (secTrend) {
+        setTimeout(() => renderPreviewChart(), 100);
+      }
+    }
+
+    /* ========== 미리보기 차트 ========== */
+    function renderPreviewChart() {
+      const ctx = document.getElementById('preview-trend-chart');
+      if (!ctx) return;
+
+      const labels = [];
+      const data = [];
+      for (let i = 14; i >= 1; i--) {
+        const d = new Date('2025-01-19');
+        d.setDate(d.getDate() - i);
+        labels.push(`${d.getMonth() + 1}/${d.getDate()}`);
+        data.push(parseFloat((77 + Math.random() * 6).toFixed(1)));
+      }
+
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: '평균 QA 점수',
+            data: data,
+            borderColor: '#0F766E',
+            backgroundColor: 'rgba(15,118,110,0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.3,
+            pointRadius: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              min: 70,
+              max: 90,
+              grid: { color: '#EEEEEE' },
+              ticks: { font: { size: 10 }, color: '#9E9E9E' }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { font: { size: 10 }, color: '#9E9E9E', maxTicksLimit: 7 }
+            }
+          }
+        }
+      });
+    }
+
+    /* ========== 다운로드 시뮬레이션 ========== */
+    function downloadReport() {
+      if (!reportGenerated) {
+        AICC_Toast.show('먼저 리포트를 생성해주세요.');
+        return;
+      }
+
+      const reportType = document.querySelector('input[name="reportType"]:checked').value;
+      const typeNames = { daily: '일간', weekly: '주간', monthly: '월간' };
+      const fromDate = document.getElementById('report-from').value;
+
+      AICC_Modal.open({
+        title: '리포트 다운로드',
+        content: `
+          <div style="text-align:center;padding:20px;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#0F766E" stroke-width="1.5" style="margin:0 auto 16px;display:block;">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <div style="font-size:14px;font-weight:500;margin-bottom:4px;">다운로드 형식 선택</div>
+            <div style="font-size:12px;color:#757575;margin-bottom:20px;">${typeNames[reportType]} 리포트 (${fromDate})</div>
+            <div style="display:flex;gap:8px;justify-content:center;">
+              <button class="btn btn-primary" onclick="doDownload('PDF')">PDF 다운로드</button>
+              <button class="btn btn-secondary" onclick="doDownload('Excel')">Excel 다운로드</button>
+            </div>
+          </div>
+        `,
+        footer: `<button class="btn btn-secondary" onclick="AICC_Modal.close()">취소</button>`
+      });
+    }
+
+    function doDownload(format) {
+      AICC_Modal.close();
+      AICC_Toast.show(`${format} 파일 다운로드를 시작합니다. (시뮬레이션)`);
+    }
+
+    // 초기 선택 스타일 설정
+    document.addEventListener('DOMContentLoaded', () => {
+      const firstOption = document.querySelector('.report-type-option');
+      if (firstOption) {
+        firstOption.style.borderColor = '#0F766E';
+        firstOption.style.background = '#E0F2F1';
+      }
+    });
+  </script>
+</body>
+</html>

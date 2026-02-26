@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>프롬프트 템플릿 라이브러리 - AICC Quality Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../../../css/styles.css">
+</head>
+<body class="bg-[#F5F5F5] text-[#212121]">
+  <div id="page-content">
+    <!-- 페이지 제목 -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <h1 style="font-size:20px;font-weight:700;margin:0;">프롬프트 템플릿 라이브러리</h1>
+        <p style="font-size:12px;color:#757575;margin:4px 0 0;">AI 평가용 프롬프트 템플릿 관리</p>
+      </div>
+      <button class="btn btn-primary" onclick="openCreateModal()">+ 새 템플릿</button>
+    </div>
+
+    <!-- 테이블 -->
+    <div class="content-card">
+      <div class="content-card-header">
+        <span style="font-size:14px;font-weight:600;">템플릿 목록</span>
+        <span style="font-size:12px;color:#757575;">총 6건</span>
+      </div>
+      <div class="content-card-body" style="padding:0;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width:40px;">No</th>
+              <th>템플릿명</th>
+              <th>카테고리</th>
+              <th>유형</th>
+              <th style="text-align:right;">사용횟수</th>
+              <th>수정일</th>
+            </tr>
+          </thead>
+          <tbody id="template-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../../assets/dummy-data/all-data.js"></script>
+  <script src="../../../js/utils/data-loader.js"></script>
+  <script src="../../../js/utils/auth-simulator.js"></script>
+  <script src="../../../js/utils/formatters.js"></script>
+  <script src="../../../js/components/sidebar.js"></script>
+  <script src="../../../js/components/layout.js"></script>
+  <script src="../../../js/components/modal.js"></script>
+  <script src="../../../js/components/toast.js"></script>
+  <script>
+    // 더미 데이터
+    const templates = [
+      {
+        no: 1,
+        name: '표준 상담 품질 평가 프롬프트',
+        category: '품질 평가',
+        type: 'AI',
+        usageCount: 1842,
+        modifiedDate: '2025-01-14',
+        tone: '표준',
+        prompt: `당신은 콜센터 상담 품질을 평가하는 전문 QA 평가사입니다.
+
+아래 상담 내용을 분석하여 다음 기준에 따라 평가해 주세요.
+
+[평가 기준]
+1. 인사 및 소개 (10점): 적절한 인사말과 본인 소개 여부
+2. 고객 요구 파악 (20점): 고객의 문제를 정확히 파악했는지
+3. 응대 태도 (20점): 친절하고 전문적인 태도
+4. 문제 해결 (30점): 정확하고 신속한 문제 해결
+5. 종료 인사 (10점): 추가 문의 확인 및 마무리 인사
+6. 규정 준수 (10점): 필수 고지사항 안내 여부
+
+[상담 내용]
+{{conversation}}
+
+[출력 형식]
+각 항목별 점수와 상세 코멘트를 JSON 형식으로 출력하세요.`,
+        versions: [
+          { version: 'v1.2', date: '2025-01-14', author: '관리자A', note: '문제 해결 항목 배점 조정 (25점 -> 30점)' },
+          { version: 'v1.1', date: '2025-01-02', author: '관리자A', note: '종료 인사 기준 상세화' },
+          { version: 'v1.0', date: '2024-12-15', author: '관리자B', note: '초기 버전 생성' }
+        ]
+      },
+      {
+        no: 2,
+        name: '기술 상담 전문 평가 프롬프트',
+        category: '품질 평가',
+        type: 'AI',
+        usageCount: 523,
+        modifiedDate: '2025-01-12',
+        tone: '표준',
+        prompt: `당신은 기술 지원 상담의 품질을 평가하는 전문가입니다.
+
+다음 기술 상담 내용을 분석하여 평가해 주세요.
+
+[평가 기준]
+1. 기술 정확성 (30점): 제공된 기술 정보의 정확도
+2. 문제 진단 (25점): 체계적인 문제 진단 프로세스
+3. 해결 방안 제시 (25점): 적절한 해결책 안내
+4. 고객 눈높이 소통 (20점): 비전문가도 이해할 수 있는 설명
+
+{{conversation}}`,
+        versions: [
+          { version: 'v1.1', date: '2025-01-12', author: '관리자B', note: '기술 정확성 기준 보완' },
+          { version: 'v1.0', date: '2024-12-20', author: '관리자B', note: '초기 버전 생성' }
+        ]
+      },
+      {
+        no: 3,
+        name: '감정 분석 프롬프트',
+        category: '감정 분석',
+        type: 'NLP',
+        usageCount: 3210,
+        modifiedDate: '2025-01-10',
+        tone: '표준',
+        prompt: `다음 상담 대화에서 고객과 상담사의 감정 상태를 분석해 주세요.
+
+[분석 항목]
+- 고객 감정 변화 (시작/중간/종료)
+- 상담사 감정 안정도
+- 부정적 감정 키워드 탐지
+- 전체 상담 톤 분류: 긍정/중립/부정
+
+{{conversation}}
+
+JSON 형식으로 결과를 출력하세요.`,
+        versions: [
+          { version: 'v1.2', date: '2025-01-10', author: '관리자A', note: '감정 변화 추적 구간 세분화' },
+          { version: 'v1.1', date: '2024-12-28', author: '관리자A', note: '키워드 탐지 기능 추가' },
+          { version: 'v1.0', date: '2024-12-01', author: '관리자B', note: '초기 버전 생성' }
+        ]
+      },
+      {
+        no: 4,
+        name: '스크립트 준수율 분석 프롬프트',
+        category: '스크립트 검증',
+        type: 'NLP',
+        usageCount: 1567,
+        modifiedDate: '2025-01-08',
+        tone: '엄격',
+        prompt: `다음 상담 내용에서 필수 스크립트 항목의 준수 여부를 확인해 주세요.
+
+[필수 스크립트 항목]
+1. 본인 확인 절차
+2. 상품 설명 고지
+3. 약관 동의 안내
+4. 해지/취소 규정 안내
+5. 녹취 동의 확인
+
+각 항목에 대해 "준수/미준수" 판정과 해당 구간을 표시하세요.
+
+{{conversation}}`,
+        versions: [
+          { version: 'v1.1', date: '2025-01-08', author: '관리자A', note: '필수 항목 5번 추가' },
+          { version: 'v1.0', date: '2024-11-15', author: '관리자A', note: '초기 버전 생성' }
+        ]
+      },
+      {
+        no: 5,
+        name: '상담 요약 생성 프롬프트',
+        category: '요약',
+        type: 'AI',
+        usageCount: 4580,
+        modifiedDate: '2025-01-06',
+        tone: '관대',
+        prompt: `다음 상담 대화 내용을 간결하게 요약해 주세요.
+
+[요약 형식]
+- 상담 유형: (문의/불만/요청/기타)
+- 고객 요청 사항: (1-2문장)
+- 상담사 처리 내용: (1-2문장)
+- 처리 결과: (완료/미완료/에스컬레이션)
+- 후속 조치 필요 여부: (예/아니오)
+
+{{conversation}}`,
+        versions: [
+          { version: 'v1.2', date: '2025-01-06', author: '관리자B', note: '후속 조치 항목 추가' },
+          { version: 'v1.1', date: '2024-12-20', author: '관리자A', note: '처리 결과 분류 확대' },
+          { version: 'v1.0', date: '2024-11-01', author: '관리자B', note: '초기 버전 생성' }
+        ]
+      },
+      {
+        no: 6,
+        name: '엄격 평가 모드 프롬프트',
+        category: '품질 평가',
+        type: 'AI',
+        usageCount: 298,
+        modifiedDate: '2025-01-04',
+        tone: '엄격',
+        prompt: `당신은 매우 엄격한 품질 관리 감독관입니다.
+
+다음 상담 내용을 가장 높은 기준으로 평가하세요.
+사소한 실수도 감점 대상이며, 완벽한 상담만이 만점을 받을 수 있습니다.
+
+[엄격 평가 기준]
+- 모든 필수 문구를 정확히 사용했는지 확인
+- 고객 대기 시간이 3초를 초과하면 감점
+- 불필요한 추임새나 반복 표현 사용 시 감점
+- 전문 용어 사용 시 즉시 쉬운 표현으로 재안내 필요
+
+{{conversation}}`,
+        versions: [
+          { version: 'v1.0', date: '2025-01-04', author: '관리자A', note: '초기 버전 생성' }
+        ]
+      }
+    ];
+
+    function getTypeBadge(type) {
+      const map = {
+        'AI': '<span class="badge badge-ai">AI</span>',
+        'NLP': '<span class="badge badge-nlp">NLP</span>'
+      };
+      return map[type] || type;
+    }
+
+    function getToneBadge(tone) {
+      const map = {
+        '엄격': '<span class="badge badge-rejected">엄격</span>',
+        '표준': '<span class="badge badge-active">표준</span>',
+        '관대': '<span class="badge badge-pending">관대</span>'
+      };
+      return map[tone] || tone;
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('template-tbody');
+      tbody.innerHTML = templates.map(t => `
+        <tr onclick="openDetail(${t.no})">
+          <td>${t.no}</td>
+          <td style="font-weight:500;">${t.name}</td>
+          <td>${t.category}</td>
+          <td>${getTypeBadge(t.type)}</td>
+          <td style="text-align:right;">${AICC_Fmt.number(t.usageCount)}</td>
+          <td style="color:#757575;">${AICC_Fmt.date(t.modifiedDate)}</td>
+        </tr>
+      `).join('');
+    }
+
+    function openDetail(no) {
+      const t = templates.find(x => x.no === no);
+      if (!t) return;
+
+      const content = `
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px;">
+          <div>
+            <div class="form-label">템플릿명</div>
+            <div style="font-size:13px;font-weight:500;">${t.name}</div>
+          </div>
+          <div>
+            <div class="form-label">카테고리</div>
+            <div style="font-size:13px;">${t.category}</div>
+          </div>
+          <div>
+            <div class="form-label">유형</div>
+            <div>${getTypeBadge(t.type)}</div>
+          </div>
+        </div>
+
+        <div style="border-top:1px solid #E0E0E0;padding-top:16px;margin-bottom:20px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <div class="form-label" style="margin-bottom:0;">프롬프트 내용</div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="form-label" style="margin-bottom:0;">톤 설정:</span>
+              ${getToneBadge(t.tone)}
+            </div>
+          </div>
+          <div style="background:#1E1E1E;color:#D4D4D4;border-radius:6px;padding:16px;font-size:12px;font-family:'Consolas','Courier New',monospace;line-height:1.7;max-height:280px;overflow-y:auto;white-space:pre-wrap;">${t.prompt}</div>
+        </div>
+
+        <div style="border-top:1px solid #E0E0E0;padding-top:16px;margin-bottom:20px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <div class="form-label" style="margin-bottom:0;">사용 통계</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div style="background:#F9F9F9;border-radius:6px;padding:10px;text-align:center;">
+              <div style="font-size:11px;color:#757575;">총 사용횟수</div>
+              <div style="font-size:18px;font-weight:700;margin-top:4px;">${AICC_Fmt.number(t.usageCount)}</div>
+            </div>
+            <div style="background:#F9F9F9;border-radius:6px;padding:10px;text-align:center;">
+              <div style="font-size:11px;color:#757575;">최종 수정일</div>
+              <div style="font-size:18px;font-weight:700;margin-top:4px;">${AICC_Fmt.date(t.modifiedDate)}</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="border-top:1px solid #E0E0E0;padding-top:16px;">
+          <div class="form-label" style="margin-bottom:8px;">버전 이력</div>
+          <table class="data-table" style="font-size:12px;">
+            <thead>
+              <tr>
+                <th>버전</th>
+                <th>수정일</th>
+                <th>수정자</th>
+                <th>변경 내용</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${t.versions.map(v => `
+                <tr style="cursor:default;">
+                  <td><span class="badge badge-active">${v.version}</span></td>
+                  <td style="color:#757575;">${AICC_Fmt.date(v.date)}</td>
+                  <td>${v.author}</td>
+                  <td style="color:#424242;">${v.note}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      const footer = `
+        <button class="btn btn-danger" onclick="handleTemplateAction(${t.no}, '삭제')">삭제</button>
+        <button class="btn btn-secondary" onclick="handleTemplateAction(${t.no}, '복사')">복사</button>
+        <button class="btn btn-primary" onclick="handleTemplateAction(${t.no}, '편집')">편집</button>
+      `;
+
+      AICC_Modal.open({
+        title: t.name,
+        content: content,
+        footer: footer,
+        size: 'lg'
+      });
+    }
+
+    function openCreateModal() {
+      AICC_Toast.show('새 템플릿 생성 모달은 개발 중입니다.');
+    }
+
+    function handleTemplateAction(no, action) {
+      AICC_Modal.close();
+      AICC_Toast.show(`"${action}" 처리가 완료되었습니다.`);
+    }
+
+    // 초기 렌더링
+    document.addEventListener('DOMContentLoaded', () => {
+      renderTable();
+    });
+  </script>
+</body>
+</html>

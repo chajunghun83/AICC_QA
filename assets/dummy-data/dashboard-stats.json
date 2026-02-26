@@ -1,0 +1,186 @@
+{
+  "summary": {
+    "total_agents": 48,
+    "total_agents_prev": 45,
+    "total_calls": 1523,
+    "total_calls_prev": 1487,
+    "avg_score": 82.5,
+    "avg_score_prev": 81.2,
+    "avg_duration": "6:32",
+    "avg_duration_prev": "6:48"
+  },
+  "channel_distribution": {
+    "IB": 890,
+    "OB": 357
+  },
+  "quality_trend_30days": [
+    { "date": "01/01", "score": 79.2 },
+    { "date": "01/03", "score": 80.1 },
+    { "date": "01/05", "score": 79.8 },
+    { "date": "01/07", "score": 81.5 },
+    { "date": "01/09", "score": 80.8 },
+    { "date": "01/11", "score": 82.1 },
+    { "date": "01/13", "score": 81.5 },
+    { "date": "01/15", "score": 83.0 },
+    { "date": "01/17", "score": 82.5 },
+    { "date": "01/19", "score": 82.8 },
+    { "date": "01/21", "score": 81.9 },
+    { "date": "01/23", "score": 83.2 },
+    { "date": "01/25", "score": 82.7 },
+    { "date": "01/27", "score": 83.5 },
+    { "date": "01/29", "score": 82.5 }
+  ],
+  "team_scores": [
+    { "team": "VIP상담팀", "score": 85.2, "color": "#0F766E" },
+    { "team": "일반상담팀", "score": 84.8, "color": "#2196F3" },
+    { "team": "기술지원팀", "score": 69.8, "color": "#FF9800" },
+    { "team": "해피콜팀", "score": 88.1, "color": "#9C27B0" },
+    { "team": "CS상담팀", "score": 81.5, "color": "#4CAF50" }
+  ],
+  "urgent_issues": [
+    { "type": "FAIL(금지어)", "count": 1, "team": "VIP상담팀", "agent": "이영희" },
+    { "type": "과락", "count": 3, "team": "기술지원팀" },
+    { "type": "이의 제기 대기", "count": 5, "status": "pending" }
+  ],
+  "fail_agents": [
+    { "name": "최수진", "team": "기술지원팀", "score": 45.2, "reason": "공감 부족 + 과락" },
+    { "name": "정민호", "team": "기술지원팀", "score": 52.1, "reason": "신속성 미달" },
+    { "name": "이영희", "team": "VIP상담팀", "score": 58.0, "reason": "FAIL(금지어)" }
+  ],
+  "improvement_needed_top5": [
+    {
+      "rank": 1,
+      "workspace": "서울센터",
+      "team": "기술지원팀",
+      "team_id": "team-tech",
+      "item": "긍/부정 공감",
+      "item_id": "pos-neg-empathy",
+      "category": "응대품질 > 공감 멘트",
+      "score": 55,
+      "status": "danger"
+    },
+    {
+      "rank": 2,
+      "workspace": "서울센터",
+      "team": "VIP상담팀",
+      "team_id": "team-vip",
+      "item": "전문적 상담 화법",
+      "item_id": "professional-speech",
+      "category": "응대품질 > 전문적 상담 태도",
+      "score": 58,
+      "status": "danger"
+    },
+    {
+      "rank": 3,
+      "workspace": "서울센터",
+      "team": "기술지원팀",
+      "team_id": "team-tech",
+      "item": "신속한 응대",
+      "item_id": "speed",
+      "category": "응대품질 > 전문적 상담 태도",
+      "score": 72,
+      "status": "warning"
+    },
+    {
+      "rank": 4,
+      "workspace": "서울센터",
+      "team": "일반상담팀",
+      "team_id": "team-general",
+      "item": "고객 불편 공감",
+      "item_id": "customer-discomfort",
+      "category": "응대품질 > 화답인사",
+      "score": 78,
+      "status": "warning"
+    },
+    {
+      "rank": 5,
+      "workspace": "서울센터",
+      "team": "VIP상담팀",
+      "team_id": "team-vip",
+      "item": "쉬운 설명",
+      "item_id": "easy-explanation",
+      "category": "응대내용 > 해결력",
+      "score": 79,
+      "status": "warning"
+    }
+  ],
+  "teams": [
+    {
+      "workspace": "서울센터",
+      "workspace_id": "ws-seoul",
+      "team": "VIP상담팀",
+      "team_id": "team-vip",
+      "calls": 380,
+      "evaluations": 312,
+      "avg_score": 85.2,
+      "agent_count": 12,
+      "issues": [{ "type": "FAIL(금지어)", "count": 1 }]
+    },
+    {
+      "workspace": "서울센터",
+      "workspace_id": "ws-seoul",
+      "team": "일반상담팀",
+      "team_id": "team-general",
+      "calls": 702,
+      "evaluations": 580,
+      "avg_score": 84.8,
+      "agent_count": 25,
+      "issues": [{ "type": "공감 부족", "count": 2 }]
+    },
+    {
+      "workspace": "서울센터",
+      "workspace_id": "ws-seoul",
+      "team": "기술지원팀",
+      "team_id": "team-tech",
+      "calls": 268,
+      "evaluations": 215,
+      "avg_score": 69.8,
+      "agent_count": 18,
+      "issues": [{ "type": "과락", "count": 3 }]
+    },
+    {
+      "workspace": "부산센터",
+      "workspace_id": "ws-busan",
+      "team": "일반상담팀",
+      "team_id": "team-general2",
+      "calls": 520,
+      "evaluations": 438,
+      "avg_score": 83.1,
+      "agent_count": 20,
+      "issues": []
+    },
+    {
+      "workspace": "부산센터",
+      "workspace_id": "ws-busan",
+      "team": "해피콜팀",
+      "team_id": "team-happycall",
+      "calls": 185,
+      "evaluations": 172,
+      "avg_score": 88.1,
+      "agent_count": 10,
+      "issues": []
+    },
+    {
+      "workspace": "대구센터",
+      "workspace_id": "ws-daegu",
+      "team": "CS상담팀",
+      "team_id": "team-cs",
+      "calls": 310,
+      "evaluations": 265,
+      "avg_score": 81.5,
+      "agent_count": 15,
+      "issues": [{ "type": "공감 부족", "count": 1 }]
+    },
+    {
+      "workspace": "대구센터",
+      "workspace_id": "ws-daegu",
+      "team": "아웃바운드팀",
+      "team_id": "team-ob",
+      "calls": 158,
+      "evaluations": 132,
+      "avg_score": 79.3,
+      "agent_count": 8,
+      "issues": []
+    }
+  ]
+}

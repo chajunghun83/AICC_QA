@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>나의 이의 제기 현황 - AICC Quality Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body class="bg-[#F5F5F5] text-[#212121]">
+  <div id="page-content">
+    <!-- 페이지 제목 -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <h1 style="font-size:20px;font-weight:700;margin:0;">나의 이의 제기 현황</h1>
+        <p style="font-size:12px;color:#757575;margin:4px 0 0;">홍길동 | VIP상담팀 | 서울센터</p>
+      </div>
+      
+    </div>
+
+    <!-- 요약 통계 -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px;">
+      <div class="kpi-card">
+        <div style="font-size:12px;color:#757575;margin-bottom:8px;">총 제출</div>
+        <div style="font-size:28px;font-weight:700;color:#212121;">5<span style="font-size:14px;color:#757575;margin-left:4px;">건</span></div>
+      </div>
+      <div class="kpi-card">
+        <div style="font-size:12px;color:#757575;margin-bottom:8px;">처리 완료</div>
+        <div style="font-size:28px;font-weight:700;color:#4CAF50;">3<span style="font-size:14px;color:#757575;margin-left:4px;">건</span></div>
+      </div>
+      <div class="kpi-card">
+        <div style="font-size:12px;color:#757575;margin-bottom:8px;">대기 / 검토 중</div>
+        <div style="font-size:28px;font-weight:700;color:#F57F17;">2<span style="font-size:14px;color:#757575;margin-left:4px;">건</span></div>
+      </div>
+    </div>
+
+    <!-- 이의 제기 테이블 -->
+    <div class="content-card">
+      <div class="content-card-header">
+        <span style="font-size:14px;font-weight:600;">이의 제기 목록</span>
+        <span style="font-size:12px;color:#757575;">총 5건</span>
+      </div>
+      <div class="content-card-body" style="padding:0;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width:40px">No</th>
+              <th>제출일</th>
+              <th>평가 ID</th>
+              <th>이의 항목</th>
+              <th style="text-align:right">원 점수</th>
+              <th style="text-align:right">요청 점수</th>
+              <th>사유</th>
+              <th>상태</th>
+              <th>처리 결과</th>
+            </tr>
+          </thead>
+          <tbody id="dispute-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../assets/dummy-data/all-data.js"></script>
+  <script src="../../js/utils/data-loader.js"></script>
+  <script src="../../js/utils/auth-simulator.js"></script>
+  <script src="../../js/utils/formatters.js"></script>
+  <script src="../../js/components/sidebar.js"></script>
+  <script src="../../js/components/layout.js"></script>
+  <script src="../../js/components/modal.js"></script>
+  <script src="../../js/components/toast.js"></script>
+  <script>
+    // 인라인 더미 데이터 - 홍길동 이의제기 5건
+    const disputes = [
+      {
+        no: 1,
+        submitDate: '2025-01-20',
+        evalId: 'EV-2025-04180',
+        evalDate: '2025-01-24',
+        evalScore: 55.0,
+        item: '인사 멘트',
+        originalScore: 3,
+        maxScore: 10,
+        requestedScore: 8,
+        reason: '해당 통화 시작 시 "안녕하세요, VIP상담팀 홍길동입니다"라고 인사하였으나, 배경 소음으로 인해 STT 인식이 정확하지 않았습니다. 녹취록 0:01~0:04 구간을 확인해 주시기 바랍니다.',
+        status: '승인',
+        statusKey: 'completed',
+        adminResponse: '녹취록 확인 결과, 인사 멘트가 정상적으로 발화된 것으로 확인되었습니다. STT 인식 오류로 판단하여 점수를 수정합니다.',
+        adminName: '김관리',
+        processDate: '2025-01-22',
+        finalScore: 8
+      },
+      {
+        no: 2,
+        submitDate: '2025-01-21',
+        evalId: 'EV-2025-04203',
+        evalDate: '2025-01-25',
+        evalScore: 72.0,
+        item: '경청/공감',
+        originalScore: 14,
+        maxScore: 20,
+        requestedScore: 18,
+        reason: '고객 불만 상황에서 "정말 불편하셨겠습니다", "충분히 이해합니다" 등의 공감 표현을 3회 이상 사용하였습니다. AI가 해당 표현을 공감 표현으로 분류하지 못한 것으로 보입니다.',
+        status: '반려',
+        statusKey: 'rejected',
+        adminResponse: '녹취록 검토 결과, 공감 표현 사용은 확인되나 타이밍이 적절하지 않았습니다. 고객 발언 직후가 아닌 상담사 설명 중에 사용되어 자연스러운 공감으로 보기 어렵습니다. 원 점수를 유지합니다.',
+        adminName: '이평가',
+        processDate: '2025-01-23',
+        finalScore: null
+      },
+      {
+        no: 3,
+        submitDate: '2025-01-25',
+        evalId: 'EV-2025-04253',
+        evalDate: '2025-01-27',
+        evalScore: 78.5,
+        item: '경청/공감',
+        originalScore: 12,
+        maxScore: 20,
+        requestedScore: 16,
+        reason: '고객이 장시간 설명하는 동안 적절한 추임새와 호응 표현을 사용하였으나, 통화 중간 시스템 조회 시간이 공감 부재 구간으로 잘못 판정된 것으로 보입니다.',
+        status: '대기',
+        statusKey: 'pending',
+        adminResponse: null,
+        adminName: null,
+        processDate: null,
+        finalScore: null
+      },
+      {
+        no: 4,
+        submitDate: '2025-01-26',
+        evalId: 'EV-2025-04224',
+        evalDate: '2025-01-26',
+        evalScore: 84.0,
+        item: '정확성',
+        originalScore: 10,
+        maxScore: 15,
+        requestedScore: 14,
+        reason: '상품 약관 안내 시 2025년 1월 개정된 최신 약관을 기준으로 설명하였습니다. AI 평가 기준이 구 약관(2024년 버전)으로 설정되어 있어 부정확으로 판정된 것으로 추정됩니다.',
+        status: '검토 중',
+        statusKey: 'pending',
+        adminResponse: null,
+        adminName: null,
+        processDate: null,
+        finalScore: null
+      },
+      {
+        no: 5,
+        submitDate: '2025-01-23',
+        evalId: 'EV-2025-04180',
+        evalDate: '2025-01-24',
+        evalScore: 55.0,
+        item: '정확성',
+        originalScore: 7,
+        maxScore: 15,
+        requestedScore: 12,
+        reason: '상품 설명 시 안내한 내용이 부정확하다고 평가되었으나, 당시 안내한 내용은 내부 매뉴얼 v3.2 기준으로 정확한 정보였습니다. 평가 시스템의 기준 데이터가 구 버전(v3.0)인 것으로 보입니다.',
+        status: '수정 승인',
+        statusKey: 'active',
+        adminResponse: '확인 결과 매뉴얼 v3.2 기준으로 안내 내용이 정확합니다. 다만 일부 표현이 고객 오해를 유발할 수 있어 요청 점수(12)가 아닌 10점으로 수정 승인합니다.',
+        adminName: '김관리',
+        processDate: '2025-01-25',
+        finalScore: 10
+      }
+    ];
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderDisputeTable();
+    });
+
+    function renderDisputeTable() {
+      const tbody = document.getElementById('dispute-tbody');
+
+      const statusBadgeMap = {
+        '대기': '<span class="badge badge-pending">대기</span>',
+        '검토 중': '<span class="badge badge-pending">검토 중</span>',
+        '승인': '<span class="badge badge-completed">승인</span>',
+        '반려': '<span class="badge badge-rejected">반려</span>',
+        '수정 승인': '<span class="badge badge-active">수정 승인</span>'
+      };
+
+      tbody.innerHTML = disputes.map(d => {
+        const resultText = d.status === '승인'
+          ? '<span style="font-size:12px;color:#4CAF50;">' + d.finalScore + '점으로 변경</span>'
+          : d.status === '수정 승인'
+          ? '<span style="font-size:12px;color:#0F766E;">' + d.finalScore + '점으로 수정</span>'
+          : d.status === '반려'
+          ? '<span style="font-size:12px;color:#F44336;">원 점수 유지</span>'
+          : '<span style="font-size:12px;color:#9E9E9E;">-</span>';
+
+        return `
+          <tr onclick="showDisputeDetail(${d.no})">
+            <td style="font-weight:600;color:#757575;">${d.no}</td>
+            <td style="font-size:12px;">${d.submitDate}</td>
+            <td style="font-size:12px;font-family:monospace;">${d.evalId}</td>
+            <td style="font-size:12px;">${d.item}</td>
+            <td style="text-align:right;font-size:12px;">${d.originalScore} / ${d.maxScore}</td>
+            <td style="text-align:right;font-size:12px;font-weight:500;">${d.requestedScore}</td>
+            <td style="max-width:180px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.reason}</td>
+            <td>${statusBadgeMap[d.status]}</td>
+            <td>${resultText}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function showDisputeDetail(no) {
+      const d = disputes.find(item => item.no === no);
+      if (!d) return;
+
+      const statusBadgeMap = {
+        '대기': '<span class="badge badge-pending">대기</span>',
+        '검토 중': '<span class="badge badge-pending">검토 중</span>',
+        '승인': '<span class="badge badge-completed">승인</span>',
+        '반려': '<span class="badge badge-rejected">반려</span>',
+        '수정 승인': '<span class="badge badge-active">수정 승인</span>'
+      };
+
+      const scoreColor = d.evalScore >= 80 ? '#4CAF50' : d.evalScore >= 60 ? '#FFC107' : '#F44336';
+
+      let adminSection = '';
+      if (d.adminResponse) {
+        const resultColor = d.status === '승인' ? '#4CAF50' : d.status === '수정 승인' ? '#0F766E' : '#F44336';
+        const resultText = d.status === '승인'
+          ? d.finalScore + '점으로 변경 승인'
+          : d.status === '수정 승인'
+          ? d.finalScore + '점으로 수정 승인 (요청: ' + d.requestedScore + '점)'
+          : '원 점수 유지 (반려)';
+
+        adminSection = `
+          <div style="border-top:1px solid #E0E0E0;padding-top:16px;margin-top:16px;">
+            <div style="font-size:14px;font-weight:600;margin-bottom:12px;">관리자 처리 결과</div>
+            <div style="display:flex;gap:20px;margin-bottom:12px;flex-wrap:wrap;">
+              <div><span style="font-size:12px;color:#757575;">처리자</span><br><strong>${d.adminName}</strong></div>
+              <div><span style="font-size:12px;color:#757575;">처리일</span><br><strong>${d.processDate}</strong></div>
+              <div><span style="font-size:12px;color:#757575;">결과</span><br><strong style="color:${resultColor}">${resultText}</strong></div>
+            </div>
+            <div style="background:#F5F5F5;border-radius:6px;padding:12px 16px;font-size:13px;line-height:1.6;">
+              <strong>관리자 의견:</strong> ${d.adminResponse}
+            </div>
+          </div>
+        `;
+      } else {
+        adminSection = `
+          <div style="border-top:1px solid #E0E0E0;padding-top:16px;margin-top:16px;">
+            <div style="font-size:14px;font-weight:600;margin-bottom:12px;">관리자 처리 결과</div>
+            <div style="background:#FFF8E1;border-radius:6px;padding:16px;text-align:center;">
+              <div style="font-size:13px;color:#F57F17;">아직 처리되지 않았습니다. 관리자 검토 후 결과가 반영됩니다.</div>
+            </div>
+          </div>
+        `;
+      }
+
+      AICC_Modal.open({
+        title: '이의 제기 상세 - #' + d.no,
+        size: 'lg',
+        content: `
+          <div style="display:flex;gap:20px;margin-bottom:16px;flex-wrap:wrap;">
+            <div><span style="font-size:12px;color:#757575;">제출일</span><br><strong>${d.submitDate}</strong></div>
+            <div><span style="font-size:12px;color:#757575;">평가 ID</span><br><strong style="font-family:monospace;">${d.evalId}</strong></div>
+            <div><span style="font-size:12px;color:#757575;">평가 총점</span><br><strong style="color:${scoreColor}">${d.evalScore}점</strong></div>
+            <div><span style="font-size:12px;color:#757575;">상태</span><br>${statusBadgeMap[d.status]}</div>
+          </div>
+
+          <div style="background:#FAFAFA;border:1px solid #E0E0E0;border-radius:8px;padding:16px;margin-bottom:16px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:12px;">
+              <div>
+                <span style="font-size:12px;color:#757575;">이의 항목</span>
+                <div style="font-weight:600;margin-top:4px;">${d.item}</div>
+              </div>
+              <div>
+                <span style="font-size:12px;color:#757575;">원 점수</span>
+                <div style="font-weight:600;margin-top:4px;">${d.originalScore} / ${d.maxScore}</div>
+              </div>
+              <div>
+                <span style="font-size:12px;color:#757575;">요청 점수</span>
+                <div style="font-weight:600;margin-top:4px;color:#0F766E;">${d.requestedScore}</div>
+              </div>
+            </div>
+            <div>
+              <span style="font-size:12px;color:#757575;">이의 제기 사유</span>
+              <div style="font-size:13px;line-height:1.6;margin-top:4px;">${d.reason}</div>
+            </div>
+          </div>
+
+          ${adminSection}
+        `,
+        footer: `
+          <button class="btn btn-secondary" onclick="AICC_Modal.close()">닫기</button>
+        `
+      });
+    }
+
+    function openNewDisputeForm() {
+      AICC_Modal.open({
+        title: '새 이의 제기',
+        size: 'md',
+        content: `
+          <div style="margin-bottom:16px;">
+            <div style="margin-bottom:12px;">
+              <label class="form-label">평가 선택</label>
+              <select class="form-select" style="width:100%;" id="new-dispute-eval">
+                <option value="">평가를 선택하세요</option>
+                <option value="EV-2025-04281">EV-2025-04281 (2025-01-27, 92.0점)</option>
+                <option value="EV-2025-04275">EV-2025-04275 (2025-01-27, 89.5점)</option>
+                <option value="EV-2025-04268">EV-2025-04268 (2025-01-27, 85.0점)</option>
+                <option value="EV-2025-04260">EV-2025-04260 (2025-01-27, 91.0점)</option>
+                <option value="EV-2025-04253">EV-2025-04253 (2025-01-27, 78.5점)</option>
+                <option value="EV-2025-04247">EV-2025-04247 (2025-01-27, 93.0점)</option>
+                <option value="EV-2025-04238">EV-2025-04238 (2025-01-26, 86.5점)</option>
+                <option value="EV-2025-04231">EV-2025-04231 (2025-01-26, 90.0점)</option>
+                <option value="EV-2025-04224">EV-2025-04224 (2025-01-26, 84.0점)</option>
+                <option value="EV-2025-04218">EV-2025-04218 (2025-01-26, 95.0점)</option>
+              </select>
+            </div>
+
+            <div style="margin-bottom:12px;">
+              <label class="form-label">이의 제기 항목</label>
+              <select class="form-select" style="width:100%;" id="new-dispute-item">
+                <option value="">항목을 선택하세요</option>
+                <option value="인사 멘트">인사 멘트</option>
+                <option value="고객 확인">고객 확인</option>
+                <option value="경청/공감">경청/공감</option>
+                <option value="문제 파악">문제 파악</option>
+                <option value="해결 제시">해결 제시</option>
+                <option value="정확성">정확성</option>
+                <option value="종결 멘트">종결 멘트</option>
+              </select>
+            </div>
+
+            <div style="margin-bottom:12px;">
+              <label class="form-label">요청 점수</label>
+              <input type="number" class="form-input" style="width:100%;" id="new-dispute-score" placeholder="변경 요청할 점수를 입력하세요" min="0" max="100" step="0.5">
+            </div>
+
+            <div>
+              <label class="form-label">이의 제기 사유</label>
+              <textarea class="form-input" style="width:100%;height:140px;resize:vertical;" id="new-dispute-reason" placeholder="이의 제기 사유를 상세히 작성해 주세요.&#10;&#10;예시:&#10;- 해당 통화에서 인사 멘트를 정상적으로 발화하였으나 STT 인식 오류로 누락 처리되었습니다.&#10;- 녹취록 00:01~00:05 구간에서 확인 가능합니다."></textarea>
+            </div>
+          </div>
+        `,
+        footer: `
+          <button class="btn btn-secondary" onclick="AICC_Modal.close()">취소</button>
+          <button class="btn btn-primary" onclick="submitNewDispute()">이의 제기 제출</button>
+        `
+      });
+    }
+
+    function submitNewDispute() {
+      const evalId = document.getElementById('new-dispute-eval').value;
+      const item = document.getElementById('new-dispute-item').value;
+      const score = document.getElementById('new-dispute-score').value;
+      const reason = document.getElementById('new-dispute-reason').value;
+
+      if (!evalId) {
+        AICC_Toast.show('평가를 선택해 주세요.');
+        return;
+      }
+      if (!item) {
+        AICC_Toast.show('이의 제기 항목을 선택해 주세요.');
+        return;
+      }
+      if (!score) {
+        AICC_Toast.show('요청 점수를 입력해 주세요.');
+        return;
+      }
+      if (!reason.trim()) {
+        AICC_Toast.show('이의 제기 사유를 입력해 주세요.');
+        return;
+      }
+
+      AICC_Modal.close();
+      AICC_Toast.show('이의 제기가 제출되었습니다. (시뮬레이션)');
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>평가 항목 관리 - AICC Quality Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body class="bg-[#F5F5F5] text-[#212121]">
+  <div id="page-content">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <h1 style="font-size:20px;font-weight:700;margin:0;">평가 항목 라이브러리</h1>
+        <p style="font-size:12px;color:#757575;margin:4px 0 0;">평가 항목 트리 구조 관리</p>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-primary" onclick="showAddItemModal()">+ 항목</button>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:2fr 3fr;gap:16px;">
+      <!-- 트리 뷰 -->
+      <div class="content-card">
+        <div class="content-card-header">
+          <span style="font-size:14px;font-weight:600;">항목 트리</span>
+          <span style="font-size:12px;color:#757575;" id="item-count"></span>
+        </div>
+        <div class="content-card-body" id="tree-container" style="max-height:calc(100vh - 220px);overflow-y:auto;">
+          <!-- JS로 동적 생성 -->
+        </div>
+      </div>
+
+      <!-- 상세 패널 -->
+      <div class="content-card">
+        <div class="content-card-header">
+          <span style="font-size:14px;font-weight:600;" id="detail-title">항목을 선택하세요</span>
+        </div>
+        <div class="content-card-body" id="detail-panel">
+          <div style="text-align:center;padding:60px 0;color:#9E9E9E;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#BDBDBD" stroke-width="1.5" style="margin:0 auto 12px;display:block;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <p>왼쪽 트리에서 항목을 선택하면<br>상세 정보가 표시됩니다.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../assets/dummy-data/all-data.js"></script>
+  <script src="../../js/utils/data-loader.js"></script>
+  <script src="../../js/utils/auth-simulator.js"></script>
+  <script src="../../js/utils/formatters.js"></script>
+  <script src="../../js/components/sidebar.js"></script>
+  <script src="../../js/components/layout.js"></script>
+  <script src="../../js/components/modal.js"></script>
+  <script src="../../js/components/toast.js"></script>
+  <script>
+    let itemsData = null;
+    let selectedItem = null;
+    let catModalSelection = { value: '__root__', label: '최상위 (새 대분류 추가)' };
+    let inlineAddParent = null;
+    let modalEditingItem = null;
+    let inlineNewItem = null;
+    let pendingNewItemId = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      itemsData = await AICC_DataLoader.load('evaluation-items.json');
+      if (itemsData) renderTree(itemsData.categories);
+    });
+
+    function renderTree(categories) {
+      const container = document.getElementById('tree-container');
+      let totalItems = 0;
+
+      let html = categories.map(cat => {
+        const catItems = cat.children.reduce((sum, sub) => sum + sub.items.length, 0);
+        totalItems += catItems;
+        const statusLabel = cat.status ? `<span style="font-size:10px;color:#9E9E9E;margin-left:4px;">(${cat.status})</span>` : '';
+
+        const subHtml = cat.children.map(sub => {
+          const itemsHtml = sub.items.map(item => {
+            const failMark = item.is_fail ? '<span style="color:#F44336;font-weight:700;margin-left:4px;">!</span>' : '';
+            const inactiveStyle = item.is_active === false ? 'opacity:0.45;' : '';
+            const inactiveBadge = item.is_active === false ? '<span style="font-size:9px;color:#9E9E9E;margin-left:2px;">OFF</span>' : '';
+            return `
+              <div class="tree-item" onclick="selectItem('${item.id}')" id="tree-item-${item.id}" style="${inactiveStyle}">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#757575" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/></svg>
+                <span style="flex:1;" class="text-truncate">${item.name}</span>
+                ${AICC_Fmt.typeBadge(item.type)}${failMark}${inactiveBadge}
+              </div>
+            `;
+          }).join('');
+
+          return `
+            <div style="margin-left:16px;">
+              <div class="tree-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('.chevron').style.transform=this.nextElementSibling.style.display==='none'?'rotate(-90deg)':'rotate(0)'">
+                <svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#757575" stroke-width="2" style="transition:transform 0.15s;"><path d="m6 9 6 6 6-6"/></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF9800" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                <span style="font-weight:500;font-size:13px;">${sub.name}</span>
+                <span style="font-size:11px;color:#9E9E9E;">(${sub.items.length})</span>
+              </div>
+              <div style="margin-left:12px;">
+                ${itemsHtml}
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        return `
+          <div class="tree-node">
+            <div class="tree-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('.chevron').style.transform=this.nextElementSibling.style.display==='none'?'rotate(-90deg)':'rotate(0)'" style="font-weight:600;">
+              <svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#757575" stroke-width="2" style="transition:transform 0.15s;"><path d="m6 9 6 6 6-6"/></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F766E" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              <span>${cat.name}</span>
+              <span style="font-size:11px;color:#9E9E9E;font-weight:400;">(${catItems}개)</span>
+              ${statusLabel}
+            </div>
+            <div>
+              ${subHtml}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = html;
+      document.getElementById('item-count').textContent = `총 ${totalItems}개 항목`;
+    }
+
+    function selectItem(itemId) {
+      // 이전 선택 해제
+      document.querySelectorAll('.tree-item.selected').forEach(el => el.classList.remove('selected'));
+      document.getElementById('tree-item-' + itemId)?.classList.add('selected');
+
+      // 항목 찾기
+      let found = null;
+      let catPath = '';
+      for (const cat of itemsData.categories) {
+        for (const sub of cat.children) {
+          for (const item of sub.items) {
+            if (item.id === itemId) {
+              found = item;
+              catPath = `${cat.name} > ${sub.name}`;
+              break;
+            }
+          }
+          if (found) break;
+        }
+        if (found) break;
+      }
+
+      if (!found) return;
+      selectedItem = found;
+
+      const panel = document.getElementById('detail-panel');
+      document.getElementById('detail-title').textContent = found.full_name || found.name;
+
+      const criteriaHtml = found.criteria && found.criteria.length > 0
+        ? found.criteria.map(c => `
+            <div style="display:flex;gap:12px;padding:6px 0;border-bottom:1px solid #F5F5F5;">
+              <span style="font-weight:600;color:${c.score > 0 ? '#4CAF50' : c.label === 'FAIL' ? '#F44336' : '#757575'};min-width:40px;">${c.score}점</span>
+              <span style="font-weight:500;min-width:40px;">${c.label}</span>
+              <span style="color:#757575;">${c.desc}</span>
+            </div>
+          `).join('')
+        : '<p style="color:#9E9E9E;font-size:12px;">기준 미정의</p>';
+
+      const usedInHtml = found.used_in && found.used_in.length > 0
+        ? found.used_in.map(u => `<div style="font-size:12px;color:#424242;padding:3px 0;">- ${u}</div>`).join('')
+        : '<p style="color:#9E9E9E;font-size:12px;">사용 중인 평가표 없음</p>';
+
+      const scoreTypeLabel = found.score_type === 'addition' ? '가점' : '감점';
+      const scoreTypeColor = found.score_type === 'addition' ? '#2196F3' : '#FF9800';
+      const activeLabel = found.is_active === false ? '미사용' : '사용';
+      const activeColor = found.is_active === false ? '#9E9E9E' : '#4CAF50';
+
+      panel.innerHTML = `
+        <div class="fade-in">
+          <div style="display:flex;gap:24px;margin-bottom:20px;flex-wrap:wrap;">
+            <div>
+              <div class="form-label">카테고리</div>
+              <div style="font-size:13px;">${catPath}</div>
+            </div>
+            <div>
+              <div class="form-label">평가 방식</div>
+              <div>${AICC_Fmt.typeBadge(found.type)}</div>
+            </div>
+            <div>
+              <div class="form-label">기본 배점</div>
+              <div style="font-size:13px;font-weight:600;">${found.is_fail ? 'FAIL (0점 처리)' : found.default_score + '점'}</div>
+            </div>
+            <div>
+              <div class="form-label">평가종류</div>
+              <div><span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;color:white;background:${scoreTypeColor};">${scoreTypeLabel}</span></div>
+            </div>
+            <div>
+              <div class="form-label">사용여부</div>
+              <div><span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;color:white;background:${activeColor};">${activeLabel}</span></div>
+            </div>
+          </div>
+
+          ${found.description ? `
+          <div style="margin-bottom:20px;">
+            <div class="form-label">설명</div>
+            <div style="font-size:13px;color:#424242;line-height:1.6;">${found.description}</div>
+          </div>` : ''}
+
+          <div style="margin-bottom:20px;">
+            <div class="form-label">평가 기준</div>
+            <div style="background:#FAFAFA;border:1px solid #F0F0F0;border-radius:6px;padding:12px;">
+              ${criteriaHtml}
+            </div>
+          </div>
+
+          ${found.type === 'AI' ? `
+          <div style="margin-bottom:20px;">
+            <div class="form-label">AI 프롬프트</div>
+            ${found.ai_prompt ? '<div style="background:#FFF8E1;border:1px solid #FFE0B2;border-radius:6px;padding:12px;font-size:12px;color:#424242;white-space:pre-wrap;line-height:1.5;max-height:120px;overflow-y:auto;">' + found.ai_prompt + '</div>' : ''}
+          </div>` : ''}
+
+          <div style="margin-bottom:20px;">
+            <div class="form-label">사용 중인 평가표</div>
+            ${usedInHtml}
+          </div>
+
+          <div style="display:flex;gap:8px;padding-top:16px;border-top:1px solid #F0F0F0;">
+            <button class="btn btn-primary btn-sm" onclick="showEditItemModal()">편집</button>
+            <button class="btn btn-secondary btn-sm" onclick="AICC_Toast.show('항목이 복사되었습니다. (시뮬레이션)')">복사</button>
+            <button class="btn btn-danger btn-sm" onclick="AICC_Modal.confirm('이 항목을 삭제하시겠습니까?', function(){AICC_Toast.show('삭제되었습니다. (시뮬레이션)')})">삭제</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderCategoryMiniTree(mode, selectedVal) {
+      if (!itemsData) return '';
+      let html = '';
+
+      if (mode === 'parent') {
+        const rootSel = (!selectedVal || selectedVal === '__root__') ? ' cat-tree-selected' : '';
+        html += `<div class="cat-tree-node${rootSel}" data-value="__root__" data-label="최상위 (새 대분류 추가)" data-mode="parent" onclick="onCatTreeSelect(this)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0F766E" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+          <span>최상위 (새 대분류 추가)</span>
+        </div>`;
+      }
+
+      for (const cat of itemsData.categories) {
+        if (mode === 'parent') {
+          const catSel = selectedVal === cat.id ? ' cat-tree-selected' : '';
+          html += `<div class="cat-tree-node${catSel}" data-value="${cat.id}" data-label="${cat.name}" data-mode="parent" onclick="onCatTreeSelect(this)" style="margin-top:2px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0F766E" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            <span style="flex:1;">${cat.name}</span>
+            <span style="font-size:11px;color:#9E9E9E;">(${cat.children.length} 하위)</span>
+          </div>`;
+          for (const sub of cat.children) {
+            html += `<div style="margin-left:28px;padding:3px 0;font-size:12px;color:#9E9E9E;display:flex;align-items:center;gap:6px;">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#BDBDBD" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              ${sub.name} <span style="font-size:11px;">(${sub.items.length})</span>
+            </div>`;
+          }
+        } else {
+          html += `<div style="padding:6px 8px;font-size:12px;font-weight:600;color:#0F766E;display:flex;align-items:center;gap:6px;margin-top:${html ? '4px' : '0'};">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0F766E" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            ${cat.name}
+          </div>`;
+          for (const sub of cat.children) {
+            const val = cat.id + '/' + sub.id;
+            const label = cat.name + ' > ' + sub.name;
+            const subSel = selectedVal === val ? ' cat-tree-selected' : '';
+            html += `<div class="cat-tree-node${subSel}" style="margin-left:16px;" data-value="${val}" data-label="${label}" data-mode="sub" onclick="onCatTreeSelect(this)">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FF9800" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              <span style="flex:1;">${sub.name}</span>
+              <span style="font-size:11px;color:#9E9E9E;">(${sub.items.length})</span>
+            </div>`;
+          }
+        }
+      }
+      return html;
+    }
+
+    function onCatTreeSelect(el) {
+      const value = el.dataset.value;
+      const label = el.dataset.label;
+      const mode = el.dataset.mode;
+
+      const container = el.closest('.cat-tree-container');
+      container.querySelectorAll('.cat-tree-selected').forEach(n => n.classList.remove('cat-tree-selected'));
+      el.classList.add('cat-tree-selected');
+
+      if (mode === 'parent') {
+        catModalSelection = { value, label };
+        const loc = document.getElementById('cat-modal-location');
+        if (loc) {
+          loc.textContent = value === '__root__' ? '최상위에 새 대분류를 추가합니다.' : `"${label}" 아래에 새 중분류를 추가합니다.`;
+          loc.style.color = '#0F766E';
+        }
+      } else {
+        const hidden = document.getElementById('form-category');
+        if (hidden) hidden.value = value;
+        const display = document.getElementById('cat-selector-display');
+        if (display) { display.textContent = label; display.style.color = '#212121'; }
+        const dropdown = document.getElementById('cat-selector-dropdown');
+        if (dropdown) dropdown.style.display = 'none';
+      }
+    }
+
+    function toggleCatSelector() {
+      const dd = document.getElementById('cat-selector-dropdown');
+      if (dd) dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function renderItemModalTree(selectedVal) {
+      if (!itemsData) return '';
+      let html = '';
+
+      html += `<div style="margin-bottom:8px;">
+        <button type="button" class="btn btn-sm btn-secondary" onclick="startInlineCatAdd('__root__')" style="font-size:11px;width:100%;padding:5px 8px;display:flex;align-items:center;justify-content:center;gap:4px;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          새 대분류 추가
+        </button>
+      </div>`;
+
+      if (inlineAddParent === '__root__') {
+        html += `<div style="display:flex;gap:4px;margin-bottom:8px;padding:4px;background:#F5F5F5;border-radius:4px;">
+          <input type="text" id="inline-cat-name" class="form-input" style="flex:1;font-size:12px;padding:4px 8px;" placeholder="대분류명 입력">
+          <button type="button" class="btn btn-sm btn-primary" onclick="confirmInlineCatAdd('__root__')" style="font-size:11px;padding:2px 10px;">확인</button>
+          <button type="button" class="btn btn-sm btn-secondary" onclick="cancelInlineCatAdd()" style="font-size:11px;padding:2px 8px;">취소</button>
+        </div>`;
+      }
+
+      for (const cat of itemsData.categories) {
+        const catNodeId = 'cat-' + cat.id;
+        html += `<div style="display:flex;align-items:center;gap:4px;padding:7px 8px;font-weight:600;color:#0F766E;font-size:13px;border-bottom:1px solid #F5F5F5;">
+          <svg id="itree-chevron-${catNodeId}" onclick="toggleItemTreeNode('${catNodeId}')" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0F766E" stroke-width="2" style="cursor:pointer;transition:transform 0.15s;flex-shrink:0;"><path d="m6 9 6 6 6-6"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0F766E" stroke-width="2" style="flex-shrink:0;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          <span style="flex:1;">${cat.name}</span>
+          <span style="font-size:11px;color:#9E9E9E;font-weight:400;">(${cat.children.length})</span>
+          <button type="button" onclick="startInlineCatAdd('${cat.id}')" style="background:none;border:none;cursor:pointer;color:#0F766E;padding:2px;display:flex;align-items:center;" title="중분류 추가">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+        </div>`;
+
+        html += `<div id="itree-children-${catNodeId}">`;
+
+        for (const sub of cat.children) {
+          const val = cat.id + '/' + sub.id;
+          const subSel = selectedVal === val ? ' cat-tree-selected' : '';
+          const subNodeId = 'sub-' + sub.id;
+
+          html += `<div style="margin-left:16px;">`;
+          html += `<div style="display:flex;align-items:center;gap:4px;">
+            <svg id="itree-chevron-${subNodeId}" onclick="toggleItemTreeNode('${subNodeId}')" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#9E9E9E" stroke-width="2" style="cursor:pointer;transition:transform 0.15s;flex-shrink:0;${sub.items.length === 0 && !(inlineNewItem && inlineNewItem.catId === cat.id && inlineNewItem.subId === sub.id) ? 'visibility:hidden;' : ''}"><path d="m6 9 6 6 6-6"/></svg>
+            <div class="cat-tree-node${subSel}" style="flex:1;margin:0;" data-value="${val}" data-label="${cat.name} > ${sub.name}" onclick="onItemTreeSelect(this)">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FF9800" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              <span style="flex:1;">${sub.name}</span>
+              <span style="font-size:11px;color:#9E9E9E;">(${sub.items.length})</span>
+            </div>
+            <button type="button" onclick="event.stopPropagation();startNewItemInSub('${cat.id}','${sub.id}')" style="background:none;border:none;cursor:pointer;color:#FF9800;padding:2px;display:flex;align-items:center;" title="항목 추가">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+            </button>
+          </div>`;
+
+          html += `<div id="itree-children-${subNodeId}" style="display:none;">`;
+          for (const item of sub.items) {
+            const isPending = pendingNewItemId === item.id;
+            const inactiveStyle = item.is_active === false && !isPending ? 'opacity:0.45;' : '';
+            const itemSelected = modalEditingItem && modalEditingItem.id === item.id ? 'background:#FFF3E0;border-left:2px solid #0F766E;' : '';
+            const pendingStyle = isPending ? 'font-style:italic;color:#FF9800;' : '';
+            html += `<div onclick="onItemTreeItemClick('${item.id}')" style="display:flex;align-items:center;gap:6px;padding:3px 8px 3px 28px;font-size:11px;color:#757575;cursor:pointer;border-left:2px solid transparent;transition:background 0.15s;${inactiveStyle}${itemSelected}${pendingStyle}" onmouseover="if(!this.style.background.includes('FFF3E0'))this.style.background='#F5F5F5'" onmouseout="if(!this.style.background.includes('FFF3E0'))this.style.background=''">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="${isPending ? '#FF9800' : '#BDBDBD'}" stroke-width="2" style="flex-shrink:0;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/></svg>
+              <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.name}${isPending ? ' (편집 중)' : ''}</span>
+              ${AICC_Fmt.typeBadge(item.type)}
+            </div>`;
+          }
+          if (inlineNewItem && inlineNewItem.catId === cat.id && inlineNewItem.subId === sub.id) {
+            html += `<div style="display:flex;gap:4px;padding:4px 8px 4px 28px;align-items:center;">
+              <input type="text" id="inline-item-name" class="form-input" style="flex:1;font-size:12px;padding:4px 8px;" placeholder="항목명 입력" oninput="const fn=document.getElementById('form-name');if(fn)fn.value=this.value;" onkeydown="if(event.key==='Enter')confirmInlineItemAdd();if(event.key==='Escape')cancelInlineItemAdd();">
+              <button type="button" class="btn btn-sm btn-primary" onclick="confirmInlineItemAdd()" style="font-size:11px;padding:2px 10px;white-space:nowrap;">확인</button>
+              <button type="button" class="btn btn-sm btn-secondary" onclick="cancelInlineItemAdd()" style="font-size:11px;padding:2px 8px;white-space:nowrap;">취소</button>
+            </div>`;
+          }
+          html += `</div>`;
+          html += `</div>`;
+        }
+
+        if (inlineAddParent === cat.id) {
+          html += `<div style="display:flex;gap:4px;margin-left:20px;margin-top:2px;margin-bottom:4px;padding:4px;background:#F5F5F5;border-radius:4px;">
+            <input type="text" id="inline-cat-name" class="form-input" style="flex:1;font-size:12px;padding:4px 8px;" placeholder="중분류명 입력">
+            <button type="button" class="btn btn-sm btn-primary" onclick="confirmInlineCatAdd('${cat.id}')" style="font-size:11px;padding:2px 10px;">확인</button>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="cancelInlineCatAdd()" style="font-size:11px;padding:2px 8px;">취소</button>
+          </div>`;
+        }
+
+        html += `</div>`;
+      }
+      return html;
+    }
+
+    function toggleItemTreeNode(nodeId) {
+      const container = document.getElementById('itree-children-' + nodeId);
+      const chevron = document.getElementById('itree-chevron-' + nodeId);
+      if (!container) return;
+      const hidden = container.style.display === 'none';
+      container.style.display = hidden ? 'block' : 'none';
+      if (chevron) chevron.style.transform = hidden ? 'rotate(0)' : 'rotate(-90deg)';
+    }
+
+    function onItemTreeSelect(el) {
+      const value = el.dataset.value;
+      const label = el.dataset.label;
+      const container = el.closest('.cat-tree-container');
+      container.querySelectorAll('.cat-tree-selected').forEach(n => n.classList.remove('cat-tree-selected'));
+      el.classList.add('cat-tree-selected');
+      const hidden = document.getElementById('form-category');
+      if (hidden) hidden.value = value;
+      const subId = value.split('/')[1];
+      if (subId) toggleItemTreeNode('sub-' + subId);
+    }
+
+    function refreshItemModalTree() {
+      const container = document.getElementById('item-modal-tree');
+      if (!container) return;
+      const currentVal = document.getElementById('form-category')?.value || '';
+      container.innerHTML = renderItemModalTree(currentVal);
+      setTimeout(() => {
+        const input = document.getElementById('inline-cat-name');
+        if (input) input.focus();
+      }, 50);
+    }
+
+    function startInlineCatAdd(parentId) {
+      inlineAddParent = parentId;
+      refreshItemModalTree();
+    }
+
+    function confirmInlineCatAdd(parentId) {
+      const input = document.getElementById('inline-cat-name');
+      const name = input?.value?.trim();
+      if (!name) { AICC_Toast.show('카테고리명을 입력하세요.'); return; }
+
+      const newId = 'cat-' + Date.now();
+
+      if (parentId === '__root__') {
+        itemsData.categories.push({ id: newId, name: name, children: [] });
+      } else {
+        const parentCat = itemsData.categories.find(c => c.id === parentId);
+        if (!parentCat) { AICC_Toast.show('상위 카테고리를 찾을 수 없습니다.'); return; }
+        parentCat.children.push({ id: newId, name: name, items: [] });
+        const hidden = document.getElementById('form-category');
+        if (hidden) hidden.value = parentId + '/' + newId;
+      }
+
+      inlineAddParent = null;
+      refreshItemModalTree();
+      renderTree(itemsData.categories);
+      AICC_Toast.show('카테고리가 추가되었습니다.');
+    }
+
+    function cancelInlineCatAdd() {
+      inlineAddParent = null;
+      refreshItemModalTree();
+    }
+
+    function showAddCategoryModal() {
+      catModalSelection = { value: '__root__', label: '최상위 (새 대분류 추가)' };
+      const treeHtml = renderCategoryMiniTree('parent', '__root__');
+
+      AICC_Modal.open({
+        title: '카테고리 추가',
+        size: 'lg',
+        content: `
+          <div style="display:flex;gap:0;min-height:340px;">
+            <div style="width:45%;border-right:1px solid #E0E0E0;padding-right:16px;">
+              <div style="font-size:12px;font-weight:600;color:#757575;margin-bottom:10px;">추가할 위치 선택</div>
+              <div class="cat-tree-container" style="max-height:300px;overflow-y:auto;">
+                ${treeHtml}
+              </div>
+            </div>
+            <div style="width:55%;padding-left:20px;display:flex;flex-direction:column;gap:16px;">
+              <div>
+                <label class="form-label">추가 위치</label>
+                <div id="cat-modal-location" style="font-size:13px;font-weight:500;color:#0F766E;padding:4px 0;">최상위에 새 대분류를 추가합니다.</div>
+              </div>
+              <div>
+                <label class="form-label">카테고리명 *</label>
+                <input type="text" id="cat-modal-name" class="form-input" style="width:100%;" placeholder="카테고리명 입력">
+              </div>
+              <div>
+                <label class="form-label">설명</label>
+                <textarea id="cat-modal-desc" class="form-input" style="width:100%;height:80px;" placeholder="카테고리 설명 입력"></textarea>
+              </div>
+            </div>
+          </div>
+        `,
+        footer: `
+          <button class="btn btn-secondary" onclick="AICC_Modal.close()">취소</button>
+          <button class="btn btn-primary" onclick="saveNewCategory()">저장</button>
+        `
+      });
+    }
+
+    function saveNewCategory() {
+      const name = document.getElementById('cat-modal-name')?.value?.trim();
+      if (!name) { AICC_Toast.show('카테고리명을 입력하세요.'); return; }
+
+      const val = catModalSelection.value;
+      const newId = 'cat-' + Date.now();
+
+      if (val === '__root__') {
+        itemsData.categories.push({ id: newId, name: name, children: [] });
+      } else {
+        const parentCat = itemsData.categories.find(c => c.id === val);
+        if (!parentCat) { AICC_Toast.show('상위 카테고리를 찾을 수 없습니다.'); return; }
+        parentCat.children.push({ id: newId, name: name, items: [] });
+      }
+
+      renderTree(itemsData.categories);
+      AICC_Modal.close();
+      AICC_Toast.show('카테고리가 추가되었습니다.');
+    }
+
+    function showAddItemModal() {
+      inlineAddParent = null;
+      modalEditingItem = null;
+      inlineNewItem = null;
+      pendingNewItemId = null;
+      const treeHtml = renderItemModalTree('');
+
+      AICC_Modal.open({
+        title: '평가 항목 추가',
+        size: 'xl',
+        content: `
+          <div style="display:flex;gap:0;min-height:420px;">
+            <div style="width:38%;border-right:1px solid #E0E0E0;padding-right:16px;display:flex;flex-direction:column;">
+              <div style="font-size:12px;font-weight:600;color:#757575;margin-bottom:8px;">카테고리 선택</div>
+              <input type="hidden" id="form-category" value="">
+              <div id="item-modal-tree" class="cat-tree-container" style="flex:1;overflow-y:auto;max-height:420px;">
+                ${treeHtml}
+              </div>
+            </div>
+            <div id="item-form-panel" style="width:62%;padding-left:20px;overflow-y:auto;max-height:460px;">
+              ${getItemFormHtml(null, true)}
+            </div>
+          </div>
+        `,
+        footer: `
+          <button class="btn btn-secondary" onclick="AICC_Modal.close()">취소</button>
+          <button class="btn btn-primary" id="item-modal-save-btn" onclick="saveItemModalAction()">저장</button>
+        `,
+        onClose: () => {
+          removePendingItem();
+        }
+      });
+    }
+
+    function showEditItemModal() {
+      if (!selectedItem) return;
+      AICC_Modal.open({
+        title: `평가 항목 편집: "${selectedItem.name}"`,
+        size: 'lg',
+        content: getItemFormHtml(selectedItem),
+        footer: `
+          <button class="btn btn-secondary" onclick="AICC_Modal.close()">취소</button>
+          <button class="btn btn-primary" onclick="saveEditItem()">저장</button>
+        `
+      });
+    }
+
+    function readFormValues() {
+      const catVal = document.getElementById('form-category')?.value || '';
+      const inlineName = document.getElementById('inline-item-name')?.value?.trim() || '';
+      const formName = document.getElementById('form-name')?.value?.trim() || '';
+      const name = inlineNewItem ? inlineName : formName;
+      const score = parseInt(document.getElementById('form-score')?.value) || 5;
+      const scoreType = document.querySelector('input[name="score-type"]:checked')?.value || 'deduction';
+      const evalType = document.querySelector('input[name="eval-type"]:checked')?.value || 'Manual';
+      const isActive = document.querySelector('input[name="item-active"]:checked')?.value === 'true';
+      const criteria = document.getElementById('form-criteria')?.value?.trim() || '';
+      const desc = document.getElementById('form-desc')?.value?.trim() || '';
+      const prompt = document.getElementById('form-prompt')?.value?.trim() || '';
+      return { catVal, name, score, scoreType, evalType, isActive, criteria, desc, prompt };
+    }
+
+    function saveNewItem() {
+      const v = readFormValues();
+      if (!v.name) { AICC_Toast.show('항목명을 입력하세요.'); return; }
+      if (!v.catVal) { AICC_Toast.show('소속 카테고리를 선택하세요.'); return; }
+
+      const [catId, subId] = v.catVal.split('/');
+      let targetSub = null;
+      for (const cat of itemsData.categories) {
+        if (cat.id === catId) {
+          for (const sub of cat.children) {
+            if (sub.id === subId) { targetSub = sub; break; }
+          }
+          break;
+        }
+      }
+      if (!targetSub) { AICC_Toast.show('카테고리를 찾을 수 없습니다.'); return; }
+
+      const newId = 'item-' + Date.now();
+      const shortName = v.name.length > 10 ? v.name.substring(0, 10) : v.name;
+      const newItem = {
+        id: newId,
+        name: shortName,
+        full_name: v.name,
+        type: v.evalType,
+        default_score: v.score,
+        score_type: v.scoreType,
+        is_active: v.isActive,
+        description: v.desc,
+        criteria: [],
+        used_in: [],
+        is_fail: false
+      };
+      if (v.evalType === 'AI' && v.prompt) newItem.ai_prompt = v.prompt;
+
+      targetSub.items.push(newItem);
+      inlineNewItem = null;
+      pendingNewItemId = null;
+      renderTree(itemsData.categories);
+      AICC_Modal.close();
+      AICC_Toast.show('항목이 추가되었습니다.');
+
+      setTimeout(() => selectItem(newId), 100);
+    }
+
+    function saveEditItem() {
+      if (!selectedItem) return;
+      const v = readFormValues();
+      if (!v.name) { AICC_Toast.show('항목명을 입력하세요.'); return; }
+
+      selectedItem.full_name = v.name;
+      if (v.name.length <= 10) selectedItem.name = v.name;
+      selectedItem.type = v.evalType;
+      selectedItem.default_score = v.score;
+      selectedItem.score_type = v.scoreType;
+      selectedItem.is_active = v.isActive;
+      selectedItem.description = v.desc;
+      if (v.evalType === 'AI' && v.prompt) selectedItem.ai_prompt = v.prompt;
+
+      renderTree(itemsData.categories);
+      AICC_Modal.close();
+      AICC_Toast.show('항목이 수정되었습니다.');
+
+      setTimeout(() => selectItem(selectedItem.id), 100);
+    }
+
+    function saveItemModalAction() {
+      if (modalEditingItem) {
+        const v = readFormValues();
+        if (!v.name) { AICC_Toast.show('항목명을 입력하세요.'); return; }
+        modalEditingItem.full_name = v.name;
+        if (v.name.length <= 10) modalEditingItem.name = v.name;
+        modalEditingItem.type = v.evalType;
+        modalEditingItem.default_score = v.score;
+        modalEditingItem.score_type = v.scoreType;
+        modalEditingItem.is_active = v.isActive;
+        modalEditingItem.description = v.desc;
+        if (v.evalType === 'AI' && v.prompt) modalEditingItem.ai_prompt = v.prompt;
+        else delete modalEditingItem.ai_prompt;
+        const wasPending = pendingNewItemId === modalEditingItem.id;
+        pendingNewItemId = null;
+        renderTree(itemsData.categories);
+        AICC_Modal.close();
+        AICC_Toast.show(wasPending ? '항목이 저장되었습니다.' : '항목이 수정되었습니다.');
+      } else {
+        saveNewItem();
+      }
+    }
+
+    function removePendingItem() {
+      if (!pendingNewItemId) return;
+      for (const cat of itemsData.categories) {
+        for (const sub of cat.children) {
+          const idx = sub.items.findIndex(it => it.id === pendingNewItemId);
+          if (idx !== -1) {
+            sub.items.splice(idx, 1);
+            renderTree(itemsData.categories);
+            break;
+          }
+        }
+      }
+      pendingNewItemId = null;
+      modalEditingItem = null;
+    }
+
+    function findItemContext(itemId) {
+      for (const cat of itemsData.categories) {
+        for (const sub of cat.children) {
+          for (const item of sub.items) {
+            if (item.id === itemId) return { cat, sub, item };
+          }
+        }
+      }
+      return null;
+    }
+
+    function startNewItemInSub(catId, subId) {
+      modalEditingItem = null;
+      inlineNewItem = { catId, subId };
+      const hidden = document.getElementById('form-category');
+      if (hidden) hidden.value = catId + '/' + subId;
+      refreshItemFormPanel(null, true);
+      refreshItemModalTree();
+      expandTreeTo(catId, subId);
+      setTimeout(() => {
+        const nameInput = document.getElementById('inline-item-name');
+        if (nameInput) nameInput.focus();
+      }, 100);
+    }
+
+    function onItemTreeItemClick(itemId) {
+      const ctx = findItemContext(itemId);
+      if (!ctx) return;
+      if (pendingNewItemId && pendingNewItemId !== itemId) {
+        removePendingItem();
+      }
+      inlineNewItem = null;
+      modalEditingItem = ctx.item;
+      const hidden = document.getElementById('form-category');
+      if (hidden) hidden.value = ctx.cat.id + '/' + ctx.sub.id;
+      refreshItemFormPanel(ctx.item);
+      refreshItemModalTree();
+      expandTreeTo(ctx.cat.id, ctx.sub.id);
+    }
+
+    function expandTreeTo(catId, subId) {
+      const catContainer = document.getElementById('itree-children-cat-' + catId);
+      const catChevron = document.getElementById('itree-chevron-cat-' + catId);
+      if (catContainer) { catContainer.style.display = 'block'; }
+      if (catChevron) { catChevron.style.transform = 'rotate(0)'; }
+      if (subId) {
+        const subContainer = document.getElementById('itree-children-sub-' + subId);
+        const subChevron = document.getElementById('itree-chevron-sub-' + subId);
+        if (subContainer) { subContainer.style.display = 'block'; }
+        if (subChevron) { subChevron.style.transform = 'rotate(0)'; }
+      }
+    }
+
+    function confirmInlineItemAdd() {
+      const nameInput = document.getElementById('inline-item-name');
+      const name = nameInput?.value?.trim();
+      if (!name) { AICC_Toast.show('항목명을 입력하세요.'); if (nameInput) nameInput.focus(); return; }
+      const catId = inlineNewItem?.catId;
+      const subId = inlineNewItem?.subId;
+      if (!catId || !subId) return;
+
+      let targetSub = null;
+      for (const cat of itemsData.categories) {
+        if (cat.id === catId) {
+          for (const sub of cat.children) {
+            if (sub.id === subId) { targetSub = sub; break; }
+          }
+          break;
+        }
+      }
+      if (!targetSub) return;
+
+      const newId = 'item-' + Date.now();
+      const shortName = name.length > 10 ? name.substring(0, 10) : name;
+      const newItem = {
+        id: newId, name: shortName, full_name: name,
+        type: 'Manual', default_score: 5, score_type: 'deduction',
+        is_active: true, description: '', criteria: [], used_in: [], is_fail: false
+      };
+      targetSub.items.push(newItem);
+
+      inlineNewItem = null;
+      pendingNewItemId = newId;
+      modalEditingItem = newItem;
+      const hidden = document.getElementById('form-category');
+      if (hidden) hidden.value = catId + '/' + subId;
+      refreshItemFormPanel(newItem);
+      refreshItemModalTree();
+      expandTreeTo(catId, subId);
+      renderTree(itemsData.categories);
+    }
+
+    function cancelInlineItemAdd() {
+      inlineNewItem = null;
+      refreshItemFormPanel(null);
+      refreshItemModalTree();
+    }
+
+    function refreshItemFormPanel(item, hideItemName) {
+      const panel = document.getElementById('item-form-panel');
+      if (panel) panel.innerHTML = getItemFormHtml(item, true, hideItemName);
+      const btn = document.getElementById('item-modal-save-btn');
+      if (btn) btn.textContent = (item && !pendingNewItemId) ? '수정' : '저장';
+    }
+
+    function getItemFormHtml(item, isEmbedded, hideItemName) {
+      const isAI = item ? item.type === 'AI' : false;
+      const scoreType = item && item.score_type ? item.score_type : 'deduction';
+      const isActive = item ? (item.is_active !== false) : true;
+      const prompt = item && item.ai_prompt ? item.ai_prompt : '당신은 AICC 품질 관리 전문가입니다.\n상담사의 해당 항목을 평가해주세요.\n\n평가 기준:\n1. ...\n\n반드시 근거를 명시하여 응답하세요.';
+
+      let catPath = '';
+      let catVal = '';
+      if (item) {
+        for (const cat of itemsData.categories) {
+          for (const sub of cat.children) {
+            if (sub.items.some(i => i.id === item.id)) {
+              catPath = cat.name + ' > ' + sub.name;
+              catVal = cat.id + '/' + sub.id;
+              break;
+            }
+          }
+          if (catPath) break;
+        }
+      }
+
+      let topRowHtml = '';
+      if (isEmbedded) {
+        topRowHtml = `
+          <div style="display:flex;gap:16px;">
+            <div style="flex:1;">
+              <label class="form-label">항목명 *</label>
+              <input type="text" id="form-name" class="form-input" style="width:100%;${hideItemName ? 'background:#f0f0f0;' : ''}" value="${item ? item.full_name || item.name : ''}" placeholder="${hideItemName ? '왼쪽 트리에서 입력 중...' : '평가 항목명 입력'}" ${hideItemName ? 'disabled' : ''}>
+            </div>
+            <div style="min-width:140px;">
+              <label class="form-label">사용여부</label>
+              <div style="display:flex;gap:12px;padding-top:6px;">
+                <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+                  <input type="radio" name="item-active" value="true" ${isActive ? 'checked' : ''}> 사용
+                </label>
+                <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+                  <input type="radio" name="item-active" value="false" ${!isActive ? 'checked' : ''}> 미사용
+                </label>
+              </div>
+            </div>
+          </div>`;
+      } else {
+        topRowHtml = `
+          <div style="display:flex;gap:16px;">
+            <div style="flex:1;">
+              <label class="form-label">소속 카테고리 *</label>
+              <input type="hidden" id="form-category" value="${catVal}">
+              <div style="position:relative;">
+                <div class="form-input" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;" onclick="toggleCatSelector()">
+                  <span id="cat-selector-display" style="${catPath ? '' : 'color:#9E9E9E;'}">${catPath || '카테고리를 선택하세요'}</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#757575" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                </div>
+                <div id="cat-selector-dropdown" class="cat-tree-container" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:white;border:1px solid #E0E0E0;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,0.15);max-height:240px;overflow-y:auto;z-index:10;padding:8px;">
+                  ${renderCategoryMiniTree('sub', catVal)}
+                </div>
+              </div>
+            </div>
+            <div style="min-width:140px;">
+              <label class="form-label">사용여부</label>
+              <div style="display:flex;gap:12px;padding-top:6px;">
+                <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+                  <input type="radio" name="item-active" value="true" ${isActive ? 'checked' : ''}> 사용
+                </label>
+                <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+                  <input type="radio" name="item-active" value="false" ${!isActive ? 'checked' : ''}> 미사용
+                </label>
+              </div>
+            </div>
+          </div>
+          <div>
+            <label class="form-label">항목명 *</label>
+            <input type="text" id="form-name" class="form-input" style="width:100%;" value="${item ? item.full_name || item.name : ''}" placeholder="평가 항목명 입력">
+          </div>`;
+      }
+
+      return `
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          ${topRowHtml}
+          <div style="display:flex;gap:16px;">
+            <div style="flex:1;">
+              <label class="form-label">기본 배점</label>
+              <input type="number" id="form-score" class="form-input" style="width:100%;" value="${item ? item.default_score : 5}" min="0" max="100">
+            </div>
+            <div style="flex:1;">
+              <label class="form-label">평가종류</label>
+              <div style="display:flex;gap:12px;padding-top:6px;">
+                <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+                  <input type="radio" name="score-type" value="deduction" ${scoreType === 'deduction' ? 'checked' : ''}> 감점
+                </label>
+                <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+                  <input type="radio" name="score-type" value="addition" ${scoreType === 'addition' ? 'checked' : ''}> 가점
+                </label>
+              </div>
+            </div>
+            <div style="flex:2;">
+              <label class="form-label">평가 방식 *</label>
+              <div style="display:flex;gap:12px;padding-top:6px;">
+                <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+                  <input type="radio" name="eval-type" value="NLP" onchange="togglePromptSection()" ${!item ? 'checked' : item.type === 'NLP' ? 'checked' : ''}> Auto-NLP
+                </label>
+                <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+                  <input type="radio" name="eval-type" value="AI" onchange="togglePromptSection()" ${item && item.type === 'AI' ? 'checked' : ''}> Auto-AI
+                </label>
+              </div>
+            </div>
+          </div>
+          <div>
+            <label class="form-label">평가 기준</label>
+            <textarea id="form-criteria" class="form-input" style="width:100%;height:100px;" placeholder="점수별 평가 기준을 입력하세요">${item && item.criteria ? item.criteria.map(c => c.score + '점: ' + c.desc).join('\n') : ''}</textarea>
+          </div>
+          <div>
+            <label class="form-label">설명</label>
+            <textarea id="form-desc" class="form-input" style="width:100%;height:60px;" placeholder="항목에 대한 상세 설명">${item ? item.description || '' : ''}</textarea>
+          </div>
+          <div id="ai-prompt-section" style="display:${isAI ? 'block' : 'none'};">
+            <div style="background:#FFF8E1;border:1px solid #FFE0B2;border-radius:6px;padding:16px;">
+              <div style="font-size:13px;font-weight:600;color:#E65100;margin-bottom:8px;">AI 평가 프롬프트 설정</div>
+              <div style="display:flex;gap:8px;margin-bottom:8px;">
+                <button type="button" class="btn btn-sm btn-secondary" onclick="AICC_Toast.show('템플릿 불러오기 (시뮬레이션)')">템플릿 불러오기</button>
+                <button type="button" class="btn btn-sm btn-secondary" onclick="AICC_Toast.show('프롬프트 테스트 (시뮬레이션)')">테스트</button>
+              </div>
+              <textarea id="form-prompt" class="form-input" style="width:100%;height:120px;" placeholder="AI 평가 기준 프롬프트를 작성하세요">${prompt}</textarea>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function togglePromptSection() {
+      const sel = document.querySelector('input[name="eval-type"]:checked');
+      const section = document.getElementById('ai-prompt-section');
+      if (section) section.style.display = (sel && sel.value === 'AI') ? 'block' : 'none';
+    }
+  </script>
+</body>
+</html>

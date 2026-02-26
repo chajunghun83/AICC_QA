@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>시스템 로그 - AICC Quality Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../../../css/styles.css">
+</head>
+<body class="bg-[#F5F5F5] text-[#212121]">
+  <div id="page-content">
+    <!-- 페이지 제목 -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <h1 style="font-size:20px;font-weight:700;margin:0;">시스템 로그</h1>
+        <p style="font-size:12px;color:#757575;margin:4px 0 0;">시스템 활동 기록 조회 (읽기 전용)</p>
+      </div>
+    </div>
+
+    <!-- 필터 -->
+    <div class="filter-section">
+      <div class="filter-header">
+        <span>필터</span>
+      </div>
+      <div class="filter-body">
+        <div>
+          <label class="form-label">시작일</label>
+          <input type="date" class="form-input" id="date-start" value="2025-01-01" onchange="filterLogs()">
+        </div>
+        <div>
+          <label class="form-label">종료일</label>
+          <input type="date" class="form-input" id="date-end" value="2025-01-15" onchange="filterLogs()">
+        </div>
+        <div>
+          <label class="form-label">사용자</label>
+          <input type="text" class="form-input" id="user-search" placeholder="사용자명 검색..." oninput="filterLogs()">
+        </div>
+        <div>
+          <label class="form-label">액션 유형</label>
+          <select class="form-select" id="action-filter" onchange="filterLogs()">
+            <option value="all">전체</option>
+            <option value="로그인">로그인</option>
+            <option value="설정 변경">설정 변경</option>
+            <option value="평가 계획">평가 계획</option>
+            <option value="템플릿">템플릿</option>
+            <option value="역할 변경">역할 변경</option>
+            <option value="사용자 관리">사용자 관리</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- 테이블 -->
+    <div class="content-card">
+      <div class="content-card-header">
+        <span style="font-size:14px;font-weight:600;">로그 목록</span>
+        <span style="font-size:12px;color:#757575;" id="total-count">총 15건</span>
+      </div>
+      <div class="content-card-body" style="padding:0;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width:40px;">No</th>
+              <th>일시</th>
+              <th>사용자</th>
+              <th>역할</th>
+              <th>액션</th>
+              <th>상세 내용</th>
+              <th>IP</th>
+            </tr>
+          </thead>
+          <tbody id="log-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../../assets/dummy-data/all-data.js"></script>
+  <script src="../../../js/utils/data-loader.js"></script>
+  <script src="../../../js/utils/auth-simulator.js"></script>
+  <script src="../../../js/utils/formatters.js"></script>
+  <script src="../../../js/components/sidebar.js"></script>
+  <script src="../../../js/components/layout.js"></script>
+  <script src="../../../js/components/modal.js"></script>
+  <script src="../../../js/components/toast.js"></script>
+  <script>
+    // 더미 데이터
+    const logs = [
+      { no: 1, datetime: '2025-01-15 14:32:10', user: '김철수', role: 'ADMIN', action: '설정 변경', detail: '시스템 알림 설정 변경: 이메일 알림 활성화', ip: '192.168.1.101', fullDetail: '시스템 설정 > 알림 설정에서 이메일 알림을 비활성에서 활성으로 변경하였습니다. 대상: 전체 관리자 그룹.' },
+      { no: 2, datetime: '2025-01-15 13:15:45', user: '박영희', role: 'ADMIN', action: '평가 계획', detail: '2025년 2월 정기 평가 계획 생성', ip: '192.168.1.102', fullDetail: '"2025년 2월 정기 평가" 계획을 새로 생성하였습니다. 대상: 전체 워크스페이스, 비율: 15%, 기간: 2025-02-01 ~ 2025-02-28.' },
+      { no: 3, datetime: '2025-01-15 11:42:30', user: '김철수', role: 'ADMIN', action: '템플릿', detail: '표준 상담 품질 평가 프롬프트 v1.2 수정', ip: '192.168.1.101', fullDetail: '"표준 상담 품질 평가 프롬프트"를 v1.1에서 v1.2로 업데이트하였습니다. 변경 내용: 문제 해결 항목 배점을 25점에서 30점으로 조정.' },
+      { no: 4, datetime: '2025-01-15 10:05:22', user: '이준호', role: 'QA_MANAGER', action: '로그인', detail: '시스템 로그인 성공', ip: '192.168.1.150', fullDetail: '이준호(QA 매니저)가 시스템에 로그인하였습니다. 브라우저: Chrome 120, OS: Windows 11.' },
+      { no: 5, datetime: '2025-01-15 09:30:11', user: '김철수', role: 'ADMIN', action: '로그인', detail: '시스템 로그인 성공', ip: '192.168.1.101', fullDetail: '김철수(관리자)가 시스템에 로그인하였습니다. 브라우저: Chrome 120, OS: macOS 14.' },
+      { no: 6, datetime: '2025-01-14 16:48:33', user: '박영희', role: 'ADMIN', action: '역할 변경', detail: '한승우 상담사 계정 비활성화', ip: '192.168.1.102', fullDetail: '한승우 사용자의 계정 상태를 "활성"에서 "비활성"으로 변경하였습니다. 사유: 퇴사 처리.' },
+      { no: 7, datetime: '2025-01-14 15:20:55', user: '김철수', role: 'ADMIN', action: '평가 계획', detail: '기술지원팀 집중 점검 계획 수정', ip: '192.168.1.101', fullDetail: '"기술지원팀 집중 점검" 계획의 샘플링 비율을 20%에서 30%로 변경하였습니다.' },
+      { no: 8, datetime: '2025-01-14 14:05:40', user: '박영희', role: 'ADMIN', action: '사용자 관리', detail: '윤하나 상담사 계정 비활성화', ip: '192.168.1.102', fullDetail: '윤하나 사용자의 계정 상태를 "활성"에서 "비활성"으로 변경하였습니다. 사유: 휴직 처리.' },
+      { no: 9, datetime: '2025-01-13 11:30:28', user: '김철수', role: 'ADMIN', action: '템플릿', detail: '감정 분석 프롬프트 v1.2 수정', ip: '192.168.1.101', fullDetail: '"감정 분석 프롬프트"를 v1.1에서 v1.2로 업데이트하였습니다. 변경 내용: 감정 변화 추적 구간을 3단계에서 시작/중간/종료로 세분화.' },
+      { no: 10, datetime: '2025-01-12 09:15:50', user: '박영희', role: 'ADMIN', action: '로그인', detail: '시스템 로그인 성공', ip: '192.168.1.102', fullDetail: '박영희(관리자)가 시스템에 로그인하였습니다. 브라우저: Firefox 121, OS: Windows 11.' },
+      { no: 11, datetime: '2025-01-11 17:22:14', user: '김철수', role: 'ADMIN', action: '설정 변경', detail: '평가 자동 배정 규칙 변경', ip: '192.168.1.101', fullDetail: '평가 자동 배정 규칙을 "순차 배정"에서 "균등 배정"으로 변경하였습니다. 적용 범위: 전체 워크스페이스.' },
+      { no: 12, datetime: '2025-01-10 13:45:33', user: '박영희', role: 'ADMIN', action: '역할 변경', detail: '이준호 역할 변경: AGENT -> QA_MANAGER', ip: '192.168.1.102', fullDetail: '이준호 사용자의 역할을 "상담사(AGENT)"에서 "QA 매니저(QA_MANAGER)"로 변경하였습니다.' },
+      { no: 13, datetime: '2025-01-08 10:10:05', user: '김철수', role: 'ADMIN', action: '평가 계획', detail: '2025년 1월 정기 평가 계획 활성화', ip: '192.168.1.101', fullDetail: '"2025년 1월 정기 평가" 계획을 "예정" 상태에서 "진행 중"으로 변경하였습니다.' },
+      { no: 14, datetime: '2025-01-05 15:55:42', user: '박영희', role: 'ADMIN', action: '템플릿', detail: '스크립트 준수율 분석 프롬프트 v1.1 수정', ip: '192.168.1.102', fullDetail: '"스크립트 준수율 분석 프롬프트"를 v1.0에서 v1.1로 업데이트하였습니다. 변경 내용: 필수 항목 5번(녹취 동의 확인) 추가.' },
+      { no: 15, datetime: '2025-01-03 09:00:18', user: '김철수', role: 'ADMIN', action: '사용자 관리', detail: '정다은 상담사 계정 생성', ip: '192.168.1.101', fullDetail: '정다은 사용자를 신규 등록하였습니다. 역할: 상담사, 팀: 영업지원팀, 워크스페이스: 부산센터.' }
+    ];
+
+    function getActionBadge(action) {
+      const map = {
+        '로그인': { bg: '#E3F2FD', color: '#1565C0', border: '#BBDEFB' },
+        '설정 변경': { bg: '#FFF3E0', color: '#E65100', border: '#FFE0B2' },
+        '평가 계획': { bg: '#E8F5E9', color: '#2E7D32', border: '#C8E6C9' },
+        '템플릿': { bg: '#F3E5F5', color: '#7B1FA2', border: '#E1BEE7' },
+        '역할 변경': { bg: '#FFEBEE', color: '#C62828', border: '#FFCDD2' },
+        '사용자 관리': { bg: '#FFF8E1', color: '#F57F17', border: '#FFF9C4' }
+      };
+      const style = map[action] || { bg: '#F5F5F5', color: '#757575', border: '#E0E0E0' };
+      return `<span class="badge" style="background:${style.bg};color:${style.color};border:1px solid ${style.border};">${action}</span>`;
+    }
+
+    function getRoleBadgeSmall(role) {
+      const map = {
+        'ADMIN': '<span style="font-size:11px;color:#0F766E;font-weight:600;">ADMIN</span>',
+        'QA_MANAGER': '<span style="font-size:11px;color:#1565C0;font-weight:600;">QA 매니저</span>',
+        'AGENT': '<span style="font-size:11px;color:#757575;font-weight:600;">상담사</span>'
+      };
+      return map[role] || role;
+    }
+
+    function renderTable(data) {
+      const tbody = document.getElementById('log-tbody');
+      document.getElementById('total-count').textContent = `총 ${data.length}건`;
+      tbody.innerHTML = data.map(l => `
+        <tr onclick="openDetail(${l.no})">
+          <td>${l.no}</td>
+          <td style="font-size:12px;color:#757575;white-space:nowrap;">${l.datetime}</td>
+          <td style="font-weight:500;">${l.user}</td>
+          <td>${getRoleBadgeSmall(l.role)}</td>
+          <td>${getActionBadge(l.action)}</td>
+          <td class="text-truncate" style="max-width:280px;">${l.detail}</td>
+          <td style="font-size:12px;color:#9E9E9E;font-family:monospace;">${l.ip}</td>
+        </tr>
+      `).join('');
+    }
+
+    function filterLogs() {
+      const dateStart = document.getElementById('date-start').value;
+      const dateEnd = document.getElementById('date-end').value;
+      const userSearch = document.getElementById('user-search').value.trim().toLowerCase();
+      const actionVal = document.getElementById('action-filter').value;
+
+      let filtered = logs;
+
+      if (dateStart) {
+        filtered = filtered.filter(l => l.datetime >= dateStart);
+      }
+      if (dateEnd) {
+        filtered = filtered.filter(l => l.datetime <= dateEnd + ' 23:59:59');
+      }
+      if (userSearch) {
+        filtered = filtered.filter(l => l.user.toLowerCase().includes(userSearch));
+      }
+      if (actionVal !== 'all') {
+        filtered = filtered.filter(l => l.action === actionVal);
+      }
+
+      renderTable(filtered);
+    }
+
+    function openDetail(no) {
+      const l = logs.find(x => x.no === no);
+      if (!l) return;
+
+      const content = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+          <div>
+            <div class="form-label">일시</div>
+            <div style="font-size:13px;">${l.datetime}</div>
+          </div>
+          <div>
+            <div class="form-label">IP 주소</div>
+            <div style="font-size:13px;font-family:monospace;">${l.ip}</div>
+          </div>
+          <div>
+            <div class="form-label">사용자</div>
+            <div style="font-size:13px;font-weight:500;">${l.user}</div>
+          </div>
+          <div>
+            <div class="form-label">역할</div>
+            <div>${getRoleBadgeSmall(l.role)}</div>
+          </div>
+          <div>
+            <div class="form-label">액션 유형</div>
+            <div>${getActionBadge(l.action)}</div>
+          </div>
+        </div>
+
+        <div style="border-top:1px solid #E0E0E0;padding-top:16px;">
+          <div class="form-label" style="margin-bottom:8px;">상세 내용</div>
+          <div style="background:#F9F9F9;border:1px solid #E0E0E0;border-radius:6px;padding:14px;font-size:13px;line-height:1.7;color:#424242;">
+            ${l.fullDetail}
+          </div>
+        </div>
+      `;
+
+      const footer = `
+        <button class="btn btn-secondary" onclick="AICC_Modal.close()">닫기</button>
+      `;
+
+      AICC_Modal.open({
+        title: `로그 상세 - #${l.no}`,
+        content: content,
+        footer: footer,
+        size: 'sm'
+      });
+    }
+
+    // 초기 렌더링
+    document.addEventListener('DOMContentLoaded', () => {
+      renderTable(logs);
+    });
+  </script>
+</body>
+</html>

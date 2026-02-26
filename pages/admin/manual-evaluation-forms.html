@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>수동 평가표 관리 - AICC Quality Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body class="bg-[#F5F5F5] text-[#212121]">
+  <div id="page-content">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <h1 style="font-size:20px;font-weight:700;margin:0;">수동 평가표 관리</h1>
+        <p style="font-size:12px;color:#757575;margin:4px 0 0;">수동 평가 전용 평가표 생성 및 관리</p>
+      </div>
+      <button class="btn btn-primary" onclick="showNewFormModal()">+ 새 평가표</button>
+    </div>
+
+    <div class="filter-section">
+      <div class="filter-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'flex':'none'">
+        <span>검색조건</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#757575" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+      <div class="filter-body">
+        <div>
+          <label class="form-label">평가 유형</label>
+          <select class="form-select" id="type-filter" onchange="applyFilter()">
+            <option value="all">전체</option>
+            <option value="I/B">I/B (인바운드)</option>
+            <option value="O/B">O/B (아웃바운드)</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">상태</label>
+          <select class="form-select" id="status-filter" onchange="applyFilter()">
+            <option value="all">전체</option>
+            <option value="active">사용 중</option>
+            <option value="inactive">미사용</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="content-card">
+      <div class="content-card-header">
+        <span style="font-size:14px;font-weight:600;">수동 평가표 목록</span>
+        <span style="font-size:12px;color:#757575;" id="form-count"></span>
+      </div>
+      <div class="content-card-body" style="padding:0;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>평가표명</th>
+              <th>유형</th>
+              <th>버전</th>
+              <th style="text-align:right">총점</th>
+              <th style="text-align:right">과락 기준</th>
+              <th>항목 수</th>
+              <th>적용 대상</th>
+              <th>상태</th>
+              <th>수정일</th>
+            </tr>
+          </thead>
+          <tbody id="forms-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../assets/dummy-data/all-data.js"></script>
+  <script src="../../js/utils/data-loader.js"></script>
+  <script src="../../js/utils/auth-simulator.js"></script>
+  <script src="../../js/utils/formatters.js"></script>
+  <script src="../../js/components/sidebar.js"></script>
+  <script src="../../js/components/layout.js"></script>
+  <script src="../../js/components/modal.js"></script>
+  <script src="../../js/components/toast.js"></script>
+  <script>
+    let itemsData = null;
+    let pickerSelected = {};
+
+    const manualFormsData = [
+      {
+        id: 'mf-ib-standard',
+        name: 'I/B 수동 평가표',
+        version: 'v1.0',
+        type: 'I/B',
+        status: 'active',
+        total_score: 100,
+        created_at: '2025-01-01',
+        updated_at: '2025-01-20',
+        created_by: '김관리자',
+        sections: [
+          {
+            id: 'ms-greeting', name: '인사 및 응대', total_score: 30, fail_threshold: 15,
+            items: [
+              { item_id: 'first-greeting', name: '첫인사', score: 8, score_type: 'deduction', guide: '스크립트에 따른 첫인사 여부 확인', commentable: true },
+              { item_id: 'last-greeting', name: '끝인사', score: 8, score_type: 'deduction', guide: '마무리 인사 및 추가 문의 안내 여부', commentable: true },
+              { item_id: 'customer-greeting-reply', name: '고객 인사 화답', score: 7, score_type: 'deduction', guide: '고객 인사에 대한 적절한 화답 여부', commentable: false },
+              { item_id: 'customer-discomfort', name: '고객 불편 공감', score: 7, score_type: 'deduction', guide: '불만 고객 응대 시 공감 표현 적절성', commentable: true }
+            ]
+          },
+          {
+            id: 'ms-quality', name: '상담 품질', total_score: 40, fail_threshold: 20,
+            items: [
+              { item_id: 'problem-solve', name: '문제 해결', score: 10, score_type: 'deduction', guide: '고객 문의에 대한 정확한 해결 여부', commentable: true },
+              { item_id: 'easy-explanation', name: '쉬운 설명', score: 8, score_type: 'deduction', guide: '전문 용어 사용 자제, 고객 눈높이 설명', commentable: true },
+              { item_id: 'active-response', name: '적극적 응대', score: 8, score_type: 'deduction', guide: '추가 안내 및 선제적 정보 제공 여부', commentable: false },
+              { item_id: 'customer-focus', name: '고객향 상담', score: 7, score_type: 'deduction', guide: '고객 입장에서의 상담 진행 여부', commentable: true },
+              { item_id: 'tone', name: '어조', score: 7, score_type: 'deduction', guide: '친절하고 안정적인 어조 유지 여부', commentable: false }
+            ]
+          },
+          {
+            id: 'ms-compliance', name: '규정 준수', total_score: 30, fail_threshold: null,
+            items: [
+              { item_id: 'required-privacy', name: '개인정보 확인', score: 10, score_type: 'deduction', guide: '본인 확인 절차 준수 여부', commentable: true },
+              { item_id: 'professional-speech', name: '전문적 화법', score: 5, score_type: 'deduction', guide: '비속어/반말 사용 없이 전문적 화법 유지', commentable: false },
+              { item_id: 'speed', name: '신속성', score: 5, score_type: 'deduction', guide: '불필요한 대기 시간 없이 신속 처리', commentable: false },
+              { item_id: 'profanity', name: '욕설/금지어', score: 10, score_type: 'deduction', guide: '금지어 사용 시 해당 항목 0점 처리', commentable: true }
+            ]
+          }
+        ],
+        pass_threshold: 60,
+        applied_to: ['ws-seoul', 'ws-busan'],
+        applied_teams: '전체'
+      },
+      {
+        id: 'mf-ob-standard',
+        name: 'O/B 수동 평가표',
+        version: 'v1.0',
+        type: 'O/B',
+        status: 'active',
+        total_score: 80,
+        created_at: '2025-01-05',
+        updated_at: '2025-01-18',
+        created_by: '박팀장',
+        sections: [
+          {
+            id: 'ms-ob-opening', name: '오프닝', total_score: 25, fail_threshold: null,
+            items: [
+              { item_id: 'first-greeting', name: '첫인사', score: 10, score_type: 'deduction', guide: '소속/이름 밝히며 인사 여부', commentable: true },
+              { item_id: 'required-privacy', name: '개인정보 확인', score: 15, score_type: 'deduction', guide: '통화 목적 안내 및 본인 확인', commentable: true }
+            ]
+          },
+          {
+            id: 'ms-ob-content', name: '상담 내용', total_score: 35, fail_threshold: 15,
+            items: [
+              { item_id: 'problem-solve', name: '상품 설명', score: 12, score_type: 'deduction', guide: '상품/서비스 정확한 설명 여부', commentable: true },
+              { item_id: 'easy-explanation', name: '쉬운 설명', score: 12, score_type: 'deduction', guide: '고객 이해 수준에 맞는 설명', commentable: true },
+              { item_id: 'active-response', name: '적극적 제안', score: 11, score_type: 'deduction', guide: '고객 니즈에 맞는 추가 제안', commentable: false }
+            ]
+          },
+          {
+            id: 'ms-ob-closing', name: '클로징', total_score: 20, fail_threshold: null,
+            items: [
+              { item_id: 'last-greeting', name: '끝인사', score: 10, score_type: 'deduction', guide: '마무리 인사 및 감사 표현', commentable: false },
+              { item_id: 'customer-focus', name: '고객향 상담', score: 10, score_type: 'deduction', guide: '고객 편의 중심의 상담 마무리', commentable: true }
+            ]
+          }
+        ],
+        pass_threshold: 50,
+        applied_to: ['ws-busan'],
+        applied_teams: '아웃바운드팀, 해피콜팀'
+      },
+      {
+        id: 'mf-vip',
+        name: 'VIP 수동 평가표',
+        version: 'v1.0',
+        type: 'I/B',
+        status: 'inactive',
+        total_score: 100,
+        created_at: '2025-01-10',
+        updated_at: '2025-01-15',
+        created_by: '김관리자',
+        sections: [
+          {
+            id: 'ms-vip-greeting', name: 'VIP 인사', total_score: 35, fail_threshold: 18,
+            items: [
+              { item_id: 'first-greeting', name: '첫인사', score: 12, score_type: 'deduction', guide: 'VIP 고객 전용 인사 스크립트 준수', commentable: true },
+              { item_id: 'customer-greeting-reply', name: '고객 인사 화답', score: 12, score_type: 'deduction', guide: '고객 인사에 대한 격식 있는 화답', commentable: true },
+              { item_id: 'pos-neg-empathy', name: '긍/부정 공감', score: 11, score_type: 'deduction', guide: '고객 감정에 대한 적절한 공감 표현', commentable: true }
+            ]
+          },
+          {
+            id: 'ms-vip-resolve', name: '문제 해결력', total_score: 40, fail_threshold: 20,
+            items: [
+              { item_id: 'problem-solve', name: '문제 해결', score: 15, score_type: 'deduction', guide: 'VIP 고객 문의의 완전한 해결 여부', commentable: true },
+              { item_id: 'easy-explanation', name: '쉬운 설명', score: 10, score_type: 'deduction', guide: '전문 용어 없이 명확한 안내', commentable: true },
+              { item_id: 'active-response', name: '적극적 응대', score: 15, score_type: 'deduction', guide: 'VIP 혜택 안내 등 부가 서비스 제안', commentable: true }
+            ]
+          },
+          {
+            id: 'ms-vip-manner', name: '상담 매너', total_score: 25, fail_threshold: null,
+            items: [
+              { item_id: 'tone', name: '어조', score: 10, score_type: 'deduction', guide: 'VIP 고객에 맞는 격식 있는 어조', commentable: false },
+              { item_id: 'professional-speech', name: '전문적 화법', score: 8, score_type: 'deduction', guide: '격식체 사용 및 전문적 표현', commentable: false },
+              { item_id: 'convenience', name: '편리(재질의)', score: 7, score_type: 'addition', guide: '고객 편의를 위한 선제적 안내 시 가점', commentable: true }
+            ]
+          }
+        ],
+        pass_threshold: 70,
+        applied_to: ['ws-seoul'],
+        applied_teams: 'VIP상담팀'
+      }
+    ];
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      itemsData = await AICC_DataLoader.load('evaluation-items.json');
+      renderForms(manualFormsData);
+    });
+
+    function renderForms(forms) {
+      const tbody = document.getElementById('forms-tbody');
+      document.getElementById('form-count').textContent = `총 ${forms.length}개`;
+
+      tbody.innerHTML = forms.map(f => {
+        const itemCount = f.sections.reduce((sum, s) => sum + s.items.length, 0);
+        const typeBadge = f.type === 'I/B'
+          ? '<span class="badge badge-nlp">I/B</span>'
+          : '<span class="badge badge-ai">O/B</span>';
+        const statusBadge = f.status === 'active'
+          ? '<span class="badge badge-active">사용 중</span>'
+          : '<span class="badge badge-inactive">미사용</span>';
+
+        return `
+          <tr onclick="showFormDetail('${f.id}')">
+            <td style="font-weight:500;">${f.name}</td>
+            <td>${typeBadge}</td>
+            <td style="font-size:12px;color:#757575;">${f.version}</td>
+            <td style="text-align:right;font-weight:600;">${f.total_score}점</td>
+            <td style="text-align:right;">${f.pass_threshold ? `<span style="color:#E65100;font-weight:600;">${f.pass_threshold}점</span> <span style="font-size:11px;color:#9E9E9E;">미만</span>` : '<span style="color:#9E9E9E;font-size:12px;">-</span>'}</td>
+            <td style="text-align:center;">${itemCount}개</td>
+            <td style="font-size:12px;color:#757575;">${f.applied_teams}</td>
+            <td>${statusBadge}</td>
+            <td style="font-size:12px;color:#757575;">${AICC_Fmt.date(f.updated_at)}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    /* ── 새 수동 평가표 생성 모달 ── */
+    function showNewFormModal() {
+      if (!itemsData) { AICC_Toast.show('항목 데이터를 불러오는 중입니다.'); return; }
+      pickerSelected = {};
+
+      const treeHtml = buildManualLibraryTreeHtml(new Set());
+
+      AICC_Modal.open({
+        title: '새 수동 평가표 생성',
+        size: 'xl',
+        content: `
+          <div style="display:flex;gap:0;min-height:380px;">
+            <div style="width:50%;border-right:1px solid #E0E0E0;padding-right:16px;overflow-y:auto;max-height:400px;">
+              <div style="font-size:12px;font-weight:600;color:#757575;margin-bottom:8px;">항목 라이브러리</div>
+              ${treeHtml}
+            </div>
+            <div style="width:50%;padding-left:16px;">
+              <div style="font-size:12px;font-weight:600;color:#757575;margin-bottom:8px;">선택한 항목 <span id="picker-count" style="color:#0F766E;">0</span>개</div>
+              <div id="picker-selected-list" style="overflow-y:auto;max-height:360px;">
+                <div style="padding:40px 16px;text-align:center;color:#BDBDBD;font-size:13px;">왼쪽 라이브러리에서 항목을 선택하세요</div>
+              </div>
+            </div>
+          </div>
+          <hr style="border:none;border-top:1px solid #E0E0E0;margin:16px 0 12px;">
+          <div style="font-size:12px;font-weight:600;color:#757575;margin-bottom:10px;">세부 내용</div>
+          <div style="display:flex;gap:12px;margin-bottom:10px;">
+            <div style="flex:2;">
+              <label class="form-label">평가표명 *</label>
+              <input type="text" id="nf-name" class="form-input" style="width:100%;" placeholder="예: I/B 수동 평가표">
+            </div>
+            <div style="flex:1;">
+              <label class="form-label">유형 *</label>
+              <div style="display:flex;gap:8px;margin-top:4px;">
+                <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+                  <input type="radio" name="nf-type" value="I/B" checked> I/B
+                </label>
+                <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+                  <input type="radio" name="nf-type" value="O/B"> O/B
+                </label>
+              </div>
+            </div>
+            <div style="flex:1;">
+              <label class="form-label">상태</label>
+              <div style="display:flex;gap:8px;margin-top:4px;">
+                <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+                  <input type="radio" name="nf-status" value="active" checked> 사용 중
+                </label>
+                <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+                  <input type="radio" name="nf-status" value="inactive"> 미사용
+                </label>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;">
+            <div style="flex:1;">
+              <label class="form-label">총점</label>
+              <input type="number" id="nf-total" class="form-input" style="width:100%;background:#F5F5F5;" value="0" readonly>
+            </div>
+            <div style="flex:1;">
+              <label class="form-label">과락 기준 (점 미만)</label>
+              <input type="number" id="nf-pass" class="form-input" style="width:100%;" placeholder="예: 60">
+            </div>
+            <div style="flex:1;">
+              <label class="form-label">적용 대상</label>
+              <select id="nf-teams" class="form-select" style="width:100%;">
+                <option value="전체">전체</option>
+                <option value="VIP상담팀">VIP상담팀</option>
+                <option value="아웃바운드팀">아웃바운드팀</option>
+                <option value="해피콜팀">해피콜팀</option>
+              </select>
+            </div>
+          </div>
+        `,
+        footer: `
+          <button class="btn btn-secondary" onclick="AICC_Modal.close()">취소</button>
+          <button class="btn btn-primary" onclick="saveNewForm()">생성</button>
+        `
+      });
+    }
+
+    function saveNewForm() {
+      const name = document.getElementById('nf-name')?.value?.trim();
+      if (!name) { AICC_Toast.show('평가표명을 입력하세요.'); return; }
+      const type = document.querySelector('input[name="nf-type"]:checked')?.value || 'I/B';
+      const status = document.querySelector('input[name="nf-status"]:checked')?.value || 'active';
+      const total = parseInt(document.getElementById('nf-total')?.value) || 100;
+      const pass = parseInt(document.getElementById('nf-pass')?.value) || null;
+      const teams = document.getElementById('nf-teams')?.value || '전체';
+
+      const selectedItems = Object.values(pickerSelected);
+      const sections = [];
+      if (selectedItems.length > 0) {
+        sections.push({
+          id: 'ms-' + Date.now(),
+          name: '평가 항목',
+          total_score: selectedItems.reduce((s, i) => s + i.score, 0),
+          fail_threshold: null,
+          items: selectedItems.map(it => ({
+            item_id: it.id,
+            name: it.name,
+            score: it.score,
+            score_type: it.score_type || 'deduction',
+            guide: it.guide || '',
+            commentable: it.commentable || false
+          }))
+        });
+      }
+
+      const calcTotal = sections.length > 0 ? sections[0].total_score : total;
+
+      const newForm = {
+        id: 'mf-' + Date.now(),
+        name,
+        version: 'v1.0',
+        type,
+        status,
+        total_score: calcTotal,
+        created_at: new Date().toISOString().slice(0, 10),
+        updated_at: new Date().toISOString().slice(0, 10),
+        created_by: '관리자',
+        sections,
+        pass_threshold: pass,
+        applied_to: [],
+        applied_teams: teams
+      };
+
+      manualFormsData.push(newForm);
+      pickerSelected = {};
+      renderForms(manualFormsData);
+      AICC_Modal.close();
+      AICC_Toast.show('수동 평가표가 생성되었습니다.');
+    }
+
+    /* ── 평가표 상세 모달 ── */
+    function showFormDetail(formId) {
+      const form = manualFormsData.find(f => f.id === formId);
+      if (!form) return;
+
+      const sectionsHtml = form.sections.map((section, si) => {
+        const itemsHtml = section.items.map((item, ii) => `
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 16px;border-bottom:1px solid #F5F5F5;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#757575" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/></svg>
+            <span style="flex:1;font-size:13px;">${item.name}</span>
+            <span style="font-weight:600;min-width:40px;text-align:right;">${item.score}점</span>
+            <span style="font-size:10px;padding:1px 6px;border-radius:3px;${(item.score_type || 'deduction') === 'deduction' ? 'color:#E65100;background:#FFF3E0;' : 'color:#1B5E20;background:#E8F5E9;'}">${(item.score_type || 'deduction') === 'deduction' ? '감점' : '가점'}</span>
+            ${item.commentable ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0F766E" stroke-width="2" title="코멘트 가능"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' : '<span style="width:14px;display:inline-block;"></span>'}
+            <span style="font-size:11px;color:#9E9E9E;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${item.guide || ''}">${item.guide || ''}</span>
+            <button class="btn-icon" style="background:none;border:none;cursor:pointer;color:#757575;" title="설정" onclick="event.stopPropagation();showItemSettingModal('${formId}',${si},${ii})">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        `).join('');
+
+        const failThreshold = section.fail_threshold
+          ? `<span class="badge badge-rejected" style="font-size:10px;">과락: ${section.fail_threshold}점 미만</span>`
+          : '';
+
+        return `
+          <div style="border:1px solid #E0E0E0;border-radius:6px;margin-bottom:12px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#F9F9F9;border-bottom:1px solid #E0E0E0;cursor:pointer;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#757575" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                <span style="font-weight:600;font-size:13px;">${si + 1}. ${section.name}</span>
+                <span style="font-size:12px;color:#757575;">(${section.total_score}점)</span>
+                ${failThreshold}
+              </div>
+              <span style="font-size:12px;color:#9E9E9E;">${section.items.length}개 항목</span>
+            </div>
+            <div>
+              ${itemsHtml}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const totalItems = form.sections.reduce((s, sec) => s + sec.items.length, 0);
+
+      AICC_Modal.open({
+        title: `${form.name} ${form.version}`,
+        size: 'xl',
+        content: `
+          <div style="display:flex;gap:20px;margin-bottom:20px;flex-wrap:wrap;">
+            <div><span class="form-label">유형</span><br>${form.type === 'I/B' ? '<span class="badge badge-nlp">I/B</span>' : '<span class="badge badge-ai">O/B</span>'}</div>
+            <div><span class="form-label">총점</span><br><strong>${form.total_score}점</strong></div>
+            <div><span class="form-label">항목 수</span><br><strong>${totalItems}개</strong></div>
+            <div><span class="form-label">적용 대상</span><br><span style="font-size:13px;">${form.applied_teams}</span></div>
+            <div><span class="form-label">작성자</span><br><span style="font-size:13px;">${form.created_by}</span></div>
+            <div><span class="form-label">수정일</span><br><span style="font-size:13px;">${AICC_Fmt.date(form.updated_at)}</span></div>
+          </div>
+
+          <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+            <div style="flex:1;min-width:200px;background:${form.pass_threshold ? '#FFF3E0' : '#F5F5F5'};border:1px solid ${form.pass_threshold ? '#FFE0B2' : '#E0E0E0'};border-radius:6px;padding:12px 16px;font-size:13px;">
+              <strong style="color:${form.pass_threshold ? '#E65100' : '#757575'};">총점 과락 기준</strong>
+              <div style="margin-top:4px;color:#424242;">${form.pass_threshold ? `<strong style="font-size:16px;color:#E65100;">${form.pass_threshold}점</strong> 미만 시 과락 처리` : '설정 안 됨'}</div>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <span style="font-size:14px;font-weight:600;">평가 항목 구성</span>
+              <span style="font-size:11px;color:#9E9E9E;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0F766E" stroke-width="2" style="vertical-align:middle;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                = 코멘트 작성 가능
+              </span>
+            </div>
+            <button class="btn btn-sm btn-secondary" onclick="showItemLibraryPicker('${form.id}')">+ 항목 라이브러리에서 추가</button>
+          </div>
+
+          ${sectionsHtml.length > 0 ? sectionsHtml : '<div style="padding:24px;text-align:center;color:#9E9E9E;font-size:13px;">등록된 항목이 없습니다. 항목 라이브러리에서 추가해 주세요.</div>'}
+        `,
+        footer: `
+          <button class="btn btn-secondary" onclick="AICC_Modal.close()">닫기</button>
+        `
+      });
+    }
+
+    /* ── 항목 라이브러리 트리 (NLP/AI 뱃지 없이) ── */
+    function buildManualLibraryTreeHtml(existingIds) {
+      let html = '';
+      for (const cat of itemsData.categories) {
+        html += `<div style="margin-bottom:8px;">`;
+        html += `<div onclick="togglePickerCat(this)" style="display:flex;align-items:center;gap:6px;padding:6px 8px;cursor:pointer;font-weight:600;font-size:13px;color:#0F766E;border-radius:4px;" onmouseover="this.style.background='#E0F2F1'" onmouseout="this.style.background=''">
+          <svg class="picker-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#9E9E9E" stroke-width="2" style="transition:transform 0.15s;transform:rotate(-90deg);flex-shrink:0;"><path d="m6 9 6 6 6-6"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0F766E" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          ${cat.name}
+        </div>`;
+        html += `<div style="display:none;">`;
+        for (const sub of cat.children) {
+          html += `<div style="margin-left:20px;margin-bottom:4px;">`;
+          html += `<div style="font-size:12px;font-weight:600;color:#757575;padding:4px 6px;">${sub.name}</div>`;
+          for (const item of sub.items) {
+            const already = existingIds.has(item.id);
+            const disabledStyle = already ? 'opacity:0.45;' : '';
+            const checkedAttr = already ? 'checked disabled' : '';
+            html += `
+              <label style="display:flex;align-items:center;gap:8px;padding:4px 8px 4px 12px;font-size:12px;cursor:${already ? 'default' : 'pointer'};${disabledStyle}" ${already ? '' : `onmouseover="this.style.background='#F5F5F5'" onmouseout="this.style.background=''"`}>
+                <input type="checkbox" ${checkedAttr} ${already ? '' : `onchange="togglePickerItem('${item.id}','${item.name}',${item.default_score},'${item.score_type || 'deduction'}',this.checked)"`}>
+                <span style="flex:1;">${item.name}</span>
+                <span style="color:#757575;font-size:11px;margin:0 6px;">${item.default_score}점</span>
+                <span style="font-size:10px;padding:1px 6px;border-radius:3px;${(item.score_type || 'deduction') === 'deduction' ? 'color:#E65100;background:#FFF3E0;' : 'color:#1B5E20;background:#E8F5E9;'}">${(item.score_type || 'deduction') === 'deduction' ? '감점' : '가점'}</span>
+                ${already ? '<span style="font-size:10px;color:#9E9E9E;">(추가됨)</span>' : ''}
+              </label>`;
+          }
+          html += `</div>`;
+        }
+        html += `</div></div>`;
+      }
+      return html;
+    }
+
+    /* ── 항목 라이브러리 피커 (상세 모달에서 추가) ── */
+    function showItemLibraryPicker(formId) {
+      if (!itemsData) { AICC_Toast.show('항목 데이터를 불러오는 중입니다.'); return; }
+      pickerSelected = {};
+
+      const form = manualFormsData.find(f => f.id === formId);
+      const existingIds = new Set();
+      if (form) form.sections.forEach(s => s.items.forEach(it => existingIds.add(it.item_id)));
+
+      const treeHtml = buildManualLibraryTreeHtml(existingIds);
+
+      AICC_Modal.open({
+        title: '항목 라이브러리에서 추가',
+        size: 'xl',
+        content: `
+          <div style="display:flex;gap:0;min-height:400px;">
+            <div style="width:50%;border-right:1px solid #E0E0E0;padding-right:16px;overflow-y:auto;max-height:450px;">
+              <div style="font-size:12px;font-weight:600;color:#757575;margin-bottom:8px;">항목 라이브러리</div>
+              ${treeHtml}
+            </div>
+            <div style="width:50%;padding-left:16px;">
+              <div style="font-size:12px;font-weight:600;color:#757575;margin-bottom:8px;">선택한 항목 <span id="picker-count" style="color:#0F766E;">0</span>개</div>
+              <div id="picker-selected-list" style="overflow-y:auto;max-height:380px;">
+                <div style="padding:40px 16px;text-align:center;color:#BDBDBD;font-size:13px;">왼쪽에서 항목을 선택하세요</div>
+              </div>
+            </div>
+          </div>
+        `,
+        footer: `
+          <button class="btn btn-secondary" onclick="AICC_Modal.close();showFormDetail('${formId}')">취소</button>
+          <button class="btn btn-primary" onclick="applyPickerItems('${formId}')">추가</button>
+        `
+      });
+    }
+
+    function togglePickerCat(el) {
+      const body = el.nextElementSibling;
+      const chevron = el.querySelector('.picker-chevron');
+      if (body.style.display === 'none') {
+        body.style.display = 'block';
+        chevron.style.transform = 'rotate(0)';
+      } else {
+        body.style.display = 'none';
+        chevron.style.transform = 'rotate(-90deg)';
+      }
+    }
+
+    function togglePickerItem(itemId, name, score, scoreType, checked) {
+      if (checked) {
+        pickerSelected[itemId] = { id: itemId, name, score, score_type: scoreType || 'deduction', guide: '', commentable: false };
+      } else {
+        delete pickerSelected[itemId];
+      }
+      renderPickerSelected();
+    }
+
+    function updatePickerTotal() {
+      const totalInput = document.getElementById('nf-total');
+      if (!totalInput) return;
+      const sum = Object.values(pickerSelected).reduce((s, it) => s + (it.score || 0), 0);
+      totalInput.value = sum;
+    }
+
+    function renderPickerSelected() {
+      const list = document.getElementById('picker-selected-list');
+      const count = document.getElementById('picker-count');
+      const items = Object.values(pickerSelected);
+      count.textContent = items.length;
+
+      if (items.length === 0) {
+        list.innerHTML = '<div style="padding:40px 16px;text-align:center;color:#BDBDBD;font-size:13px;">왼쪽에서 항목을 선택하세요</div>';
+        updatePickerTotal();
+        return;
+      }
+
+      list.innerHTML = items.map(it => `
+        <div style="padding:8px 10px;border-bottom:1px solid #F0F0F0;font-size:12px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#757575" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/></svg>
+            <span style="flex:1;font-weight:500;">${it.name}</span>
+            <input type="number" value="${it.score}" min="0" max="100" style="width:50px;padding:2px 4px;border:1px solid #E0E0E0;border-radius:3px;text-align:center;font-size:12px;" onchange="pickerSelected['${it.id}'].score=parseInt(this.value)||0;updatePickerTotal()">
+            <span style="color:#757575;">점</span>
+            <select style="font-size:11px;padding:2px 4px;border:1px solid #E0E0E0;border-radius:3px;" onchange="pickerSelected['${it.id}'].score_type=this.value">
+              <option value="deduction"${it.score_type === 'deduction' ? ' selected' : ''}>감점</option>
+              <option value="addition"${it.score_type === 'addition' ? ' selected' : ''}>가점</option>
+            </select>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+            <input type="text" placeholder="평가 가이드 입력" value="${it.guide || ''}" style="flex:1;padding:3px 6px;border:1px solid #E0E0E0;border-radius:3px;font-size:11px;" onchange="pickerSelected['${it.id}'].guide=this.value">
+          </div>
+          <div style="display:flex;align-items:center;gap:4px;">
+            <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#757575;cursor:pointer;">
+              <input type="checkbox" ${it.commentable ? 'checked' : ''} onchange="pickerSelected['${it.id}'].commentable=this.checked"> 코멘트 작성 가능
+            </label>
+          </div>
+        </div>
+      `).join('');
+      updatePickerTotal();
+    }
+
+    function applyPickerItems(formId) {
+      const items = Object.values(pickerSelected);
+      if (items.length === 0) { AICC_Toast.show('항목을 선택하세요.'); return; }
+
+      const form = manualFormsData.find(f => f.id === formId);
+      if (!form) return;
+
+      if (form.sections.length === 0) {
+        form.sections.push({
+          id: 'ms-' + Date.now(),
+          name: '추가된 항목',
+          total_score: 0,
+          fail_threshold: null,
+          items: []
+        });
+      }
+
+      const targetSection = form.sections[0];
+      for (const it of items) {
+        targetSection.items.push({
+          item_id: it.id,
+          name: it.name,
+          score: it.score,
+          score_type: it.score_type || 'deduction',
+          guide: it.guide || '',
+          commentable: it.commentable || false
+        });
+      }
+      targetSection.total_score = targetSection.items.reduce((s, i) => s + i.score, 0);
+      form.total_score = form.sections.reduce((s, sec) => s + sec.total_score, 0);
+      form.updated_at = new Date().toISOString().slice(0, 10);
+
+      pickerSelected = {};
+      renderForms(manualFormsData);
+      AICC_Modal.close();
+      AICC_Toast.show(`${items.length}개 항목이 추가되었습니다.`);
+      setTimeout(() => showFormDetail(formId), 300);
+    }
+
+    /* ── 항목 설정 모달 ── */
+    function showItemSettingModal(formId, sectionIdx, itemIdx) {
+      const form = manualFormsData.find(f => f.id === formId);
+      if (!form) return;
+      const section = form.sections[sectionIdx];
+      if (!section) return;
+      const item = section.items[itemIdx];
+      if (!item) return;
+
+      AICC_Modal.open({
+        title: '항목 설정',
+        size: 'md',
+        content: `
+          <div style="display:flex;flex-direction:column;gap:16px;">
+            <div>
+              <label class="form-label">항목명</label>
+              <div style="padding:8px 12px;background:#F5F5F5;border-radius:6px;font-size:14px;font-weight:500;">${item.name}</div>
+            </div>
+            <div style="display:flex;gap:16px;">
+              <div style="flex:1;">
+                <label class="form-label">배점</label>
+                <input type="number" id="is-score" class="form-input" style="width:100%;" value="${item.score}" min="0" max="100">
+              </div>
+              <div style="flex:1;">
+                <label class="form-label">가점/감점</label>
+                <select id="is-score-type" class="form-select" style="width:100%;">
+                  <option value="deduction"${(item.score_type || 'deduction') === 'deduction' ? ' selected' : ''}>감점</option>
+                  <option value="addition"${item.score_type === 'addition' ? ' selected' : ''}>가점</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label class="form-label">평가 가이드</label>
+              <textarea id="is-guide" class="form-input" style="width:100%;height:60px;resize:vertical;font-size:12px;" placeholder="평가자가 참고할 채점 기준을 입력하세요.">${item.guide || ''}</textarea>
+            </div>
+            <div>
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+                <input type="checkbox" id="is-commentable" ${item.commentable ? 'checked' : ''}>
+                코멘트 작성 가능 (평가 시 해당 항목에 코멘트 입력란 활성화)
+              </label>
+            </div>
+            <div>
+              <label class="form-label">소속 섹션</label>
+              <div style="padding:8px 12px;background:#F5F5F5;border-radius:6px;font-size:13px;color:#757575;">${sectionIdx + 1}. ${section.name}</div>
+            </div>
+          </div>
+        `,
+        footer: `
+          <button class="btn btn-danger" onclick="deleteFormItem('${formId}',${sectionIdx},${itemIdx})">삭제</button>
+          <button class="btn btn-secondary" onclick="AICC_Modal.close();showFormDetail('${formId}')">취소</button>
+          <button class="btn btn-primary" onclick="saveFormItemSetting('${formId}',${sectionIdx},${itemIdx})">저장</button>
+        `
+      });
+    }
+
+    function saveFormItemSetting(formId, sectionIdx, itemIdx) {
+      const form = manualFormsData.find(f => f.id === formId);
+      if (!form) return;
+      const section = form.sections[sectionIdx];
+      const item = section.items[itemIdx];
+
+      item.score = parseInt(document.getElementById('is-score')?.value) || 0;
+      item.score_type = document.getElementById('is-score-type')?.value || 'deduction';
+      item.guide = document.getElementById('is-guide')?.value?.trim() || '';
+      item.commentable = document.getElementById('is-commentable')?.checked || false;
+
+      section.total_score = section.items.reduce((s, i) => s + i.score, 0);
+      form.total_score = form.sections.reduce((s, sec) => s + sec.total_score, 0);
+      form.updated_at = new Date().toISOString().slice(0, 10);
+
+      renderForms(manualFormsData);
+      AICC_Modal.close();
+      AICC_Toast.show('항목 설정이 저장되었습니다.');
+      setTimeout(() => showFormDetail(formId), 300);
+    }
+
+    function deleteFormItem(formId, sectionIdx, itemIdx) {
+      const form = manualFormsData.find(f => f.id === formId);
+      if (!form) return;
+      const section = form.sections[sectionIdx];
+      const itemName = section.items[itemIdx]?.name;
+
+      section.items.splice(itemIdx, 1);
+      section.total_score = section.items.reduce((s, i) => s + i.score, 0);
+      form.total_score = form.sections.reduce((s, sec) => s + sec.total_score, 0);
+      form.updated_at = new Date().toISOString().slice(0, 10);
+
+      if (section.items.length === 0) {
+        form.sections.splice(sectionIdx, 1);
+      }
+
+      renderForms(manualFormsData);
+      AICC_Modal.close();
+      AICC_Toast.show(`"${itemName}" 항목이 삭제되었습니다.`);
+      setTimeout(() => showFormDetail(formId), 300);
+    }
+
+    function applyFilter() {
+      let filtered = [...manualFormsData];
+      const type = document.getElementById('type-filter').value;
+      const status = document.getElementById('status-filter').value;
+      if (type !== 'all') filtered = filtered.filter(f => f.type === type);
+      if (status !== 'all') filtered = filtered.filter(f => f.status === status);
+      renderForms(filtered);
+    }
+  </script>
+</body>
+</html>

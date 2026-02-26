@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>나의 성과 대시보드 - AICC Quality Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body class="bg-[#F5F5F5] text-[#212121]">
+  <div id="page-content">
+    <!-- 페이지 제목 -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <h1 style="font-size:20px;font-weight:700;margin:0;">나의 성과 대시보드</h1>
+        <p style="font-size:12px;color:#757575;margin:4px 0 0;">홍길동 | VIP상담팀 | 서울센터</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="realtime-dot"></span>
+        <span style="font-size:12px;color:#757575;">실시간 업데이트</span>
+      </div>
+    </div>
+
+    <!-- KPI 카드 3개 -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px;">
+      <!-- 오늘의 평균 점수 -->
+      <div class="kpi-card">
+        <div style="font-size:12px;color:#757575;margin-bottom:8px;">오늘의 평균 점수</div>
+        <div style="display:flex;align-items:baseline;gap:8px;">
+          <span style="font-size:28px;font-weight:700;color:#4CAF50;">88.5</span>
+          <span style="font-size:14px;color:#757575;">점</span>
+          <span style="color:#4CAF50">&#9650; 2.3</span>
+        </div>
+        <div style="font-size:11px;color:#9E9E9E;margin-top:8px;">전일: 86.2점</div>
+      </div>
+      <!-- 팀 내 순위 -->
+      <div class="kpi-card">
+        <div style="font-size:12px;color:#757575;margin-bottom:8px;">팀 내 순위</div>
+        <div style="display:flex;align-items:baseline;gap:8px;">
+          <span style="font-size:28px;font-weight:700;color:#0F766E;">2</span>
+          <span style="font-size:14px;color:#757575;">위</span>
+          <span style="font-size:13px;color:#757575;">/ 12명</span>
+        </div>
+        <div style="font-size:11px;color:#9E9E9E;margin-top:8px;">상위 16.7%</div>
+      </div>
+      <!-- 오늘 상담 건수 -->
+      <div class="kpi-card">
+        <div style="font-size:12px;color:#757575;margin-bottom:8px;">오늘 상담 건수</div>
+        <div style="display:flex;align-items:baseline;gap:8px;">
+          <span style="font-size:28px;font-weight:700;color:#212121;">23</span>
+          <span style="font-size:14px;color:#757575;">건</span>
+          <span style="color:#4CAF50">&#9650; 2</span>
+        </div>
+        <div style="font-size:11px;color:#9E9E9E;margin-top:8px;">전일: 21건</div>
+      </div>
+    </div>
+
+    <!-- 성장 추세 차트 -->
+    <div class="content-card" style="margin-bottom:20px;">
+      <div class="content-card-header">
+        <span style="font-size:14px;font-weight:600;">월별 평균 점수 추이 (최근 6개월)</span>
+      </div>
+      <div class="content-card-body" style="height:280px;">
+        <canvas id="growth-chart"></canvas>
+      </div>
+    </div>
+
+    <!-- 최근 평가 테이블 -->
+    <div class="content-card" style="margin-bottom:20px;">
+      <div class="content-card-header">
+        <span style="font-size:14px;font-weight:600;">최근 평가 결과</span>
+        <a href="my-evaluations.html" style="font-size:12px;color:#0F766E;text-decoration:none;">전체 보기 &rarr;</a>
+      </div>
+      <div class="content-card-body" style="padding:0;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>평가 ID</th>
+              <th>일시</th>
+              <th>유형</th>
+              <th>통화시간</th>
+              <th style="text-align:right">점수</th>
+              <th>주요 이슈</th>
+            </tr>
+          </thead>
+          <tbody id="eval-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 격려 메시지 -->
+    <div class="content-card">
+      <div class="content-card-body" style="display:flex;align-items:center;gap:16px;">
+        <div style="width:48px;height:48px;border-radius:50%;background:#E0F2F1;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0F766E" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        </div>
+        <div>
+          <div style="font-size:14px;font-weight:600;color:#0F766E;margin-bottom:4px;">AI 코칭 피드백</div>
+          <div style="font-size:13px;color:#424242;line-height:1.6;">
+            이번 주 공감 표현이 크게 향상되었습니다! 특히 고객 감정 인식 후 적절한 호응 표현 사용 빈도가 전주 대비 35% 증가했습니다.
+            인사 멘트 준수율도 98%로 팀 내 최고 수준입니다. 다만, 상담 종료 시 추가 문의 확인 멘트가 간헐적으로 누락되고 있으니 이 부분에 유의해 주세요.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../assets/dummy-data/all-data.js"></script>
+  <script src="../../js/utils/data-loader.js"></script>
+  <script src="../../js/utils/auth-simulator.js"></script>
+  <script src="../../js/utils/formatters.js"></script>
+  <script src="../../js/components/sidebar.js"></script>
+  <script src="../../js/components/layout.js"></script>
+  <script src="../../js/components/modal.js"></script>
+  <script src="../../js/components/toast.js"></script>
+  <script>
+    // 인라인 더미 데이터 - 최근 평가 10건
+    const recentEvals = [
+      { id: 'EV-2025-04281', date: '2025-01-27', time: '16:42', type: 'I/B', duration: '08:32', score: 92.0, issue: '-', eval_form: 'I/B VIP 평가표 v1.0', consultation_type: '상품문의 > 의류 > 사이즈안내', feedback: '인사 멘트, 공감 표현 모두 우수합니다. 상담 종결 시 요약 정리가 명확했습니다.', items: [{name:'인사 멘트',score:10,max:10,type:'NLP',status:'pass'},{name:'고객 확인',score:9,max:10,type:'AI',status:'pass'},{name:'경청/공감',score:18,max:20,type:'AI',status:'pass'},{name:'문제 파악',score:14,max:15,type:'AI',status:'pass'},{name:'해결 제시',score:17,max:20,type:'AI',status:'pass'},{name:'정확성',score:14,max:15,type:'NLP',status:'pass'},{name:'종결 멘트',score:10,max:10,type:'NLP',status:'pass'}] },
+      { id: 'EV-2025-04275', date: '2025-01-27', time: '15:18', type: 'O/B', duration: '05:15', score: 89.5, issue: '-', eval_form: 'O/B 텔레마케팅 평가표 v1.3', consultation_type: 'VIP관리 > 프로모션안내 > 시즌할인', feedback: '아웃바운드 안내 절차를 정확히 준수했습니다. 고객 동의 확인이 잘 이루어졌습니다.', items: [{name:'인사 멘트',score:10,max:10,type:'NLP',status:'pass'},{name:'고객 확인',score:10,max:10,type:'AI',status:'pass'},{name:'경청/공감',score:16,max:20,type:'AI',status:'pass'},{name:'문제 파악',score:13,max:15,type:'AI',status:'pass'},{name:'해결 제시',score:17,max:20,type:'AI',status:'pass'},{name:'정확성',score:14,max:15,type:'NLP',status:'pass'},{name:'종결 멘트',score:9.5,max:10,type:'NLP',status:'pass'}] },
+      { id: 'EV-2025-04268', date: '2025-01-27', time: '14:05', type: 'I/B', duration: '12:48', score: 85.0, issue: '종결 멘트 미흡', eval_form: 'I/B VIP 평가표 v1.0', consultation_type: '결제 > 환불처리 > 환불지연', feedback: '상담 내용은 정확했으나, 종료 시 추가 문의 확인 멘트가 누락되었습니다.', items: [{name:'인사 멘트',score:10,max:10,type:'NLP',status:'pass'},{name:'고객 확인',score:9,max:10,type:'AI',status:'pass'},{name:'경청/공감',score:17,max:20,type:'AI',status:'pass'},{name:'문제 파악',score:13,max:15,type:'AI',status:'pass'},{name:'해결 제시',score:16,max:20,type:'AI',status:'pass'},{name:'정확성',score:14,max:15,type:'NLP',status:'pass'},{name:'종결 멘트',score:6,max:10,type:'NLP',status:'warn'}] },
+      { id: 'EV-2025-04260', date: '2025-01-27', time: '11:33', type: 'I/B', duration: '06:22', score: 91.0, issue: '-', eval_form: 'I/B VIP 평가표 v1.0', consultation_type: '회원 > 정보변경 > 비밀번호재설정', feedback: '짧은 통화 시간 내에 효율적으로 문제를 해결했습니다. 공감 표현 사용이 자연스럽습니다.', items: [{name:'인사 멘트',score:10,max:10,type:'NLP',status:'pass'},{name:'고객 확인',score:10,max:10,type:'AI',status:'pass'},{name:'경청/공감',score:18,max:20,type:'AI',status:'pass'},{name:'문제 파악',score:14,max:15,type:'AI',status:'pass'},{name:'해결 제시',score:17,max:20,type:'AI',status:'pass'},{name:'정확성',score:12,max:15,type:'NLP',status:'pass'},{name:'종결 멘트',score:10,max:10,type:'NLP',status:'pass'}] },
+      { id: 'EV-2025-04253', date: '2025-01-27', time: '10:07', type: 'I/B', duration: '15:44', score: 78.5, issue: '경청/공감 부족', eval_form: 'I/B VIP 평가표 v1.0', consultation_type: '교환/반품 > 반품접수 > 불량상품', feedback: '장시간 통화에서 고객 불만 대응 시 공감 표현이 부족했습니다. 해결책은 정확히 제시되었습니다.', items: [{name:'인사 멘트',score:9,max:10,type:'NLP',status:'pass'},{name:'고객 확인',score:8,max:10,type:'AI',status:'pass'},{name:'경청/공감',score:12,max:20,type:'AI',status:'warn'},{name:'문제 파악',score:12,max:15,type:'AI',status:'pass'},{name:'해결 제시',score:16,max:20,type:'AI',status:'pass'},{name:'정확성',score:13,max:15,type:'NLP',status:'pass'},{name:'종결 멘트',score:8.5,max:10,type:'NLP',status:'pass'}] },
+      { id: 'EV-2025-04247', date: '2025-01-27', time: '09:25', type: 'O/B', duration: '04:10', score: 93.0, issue: '-', eval_form: 'O/B 텔레마케팅 평가표 v1.3', consultation_type: '해피콜 > 만족도조사 > 배송완료', feedback: '아웃바운드 캠페인 멘트를 정확히 전달했습니다. 고객 응대가 매우 친절합니다.', items: [{name:'인사 멘트',score:10,max:10,type:'NLP',status:'pass'},{name:'고객 확인',score:10,max:10,type:'AI',status:'pass'},{name:'경청/공감',score:19,max:20,type:'AI',status:'pass'},{name:'문제 파악',score:14,max:15,type:'AI',status:'pass'},{name:'해결 제시',score:18,max:20,type:'AI',status:'pass'},{name:'정확성',score:12,max:15,type:'NLP',status:'pass'},{name:'종결 멘트',score:10,max:10,type:'NLP',status:'pass'}] },
+      { id: 'EV-2025-04238', date: '2025-01-26', time: '17:02', type: 'I/B', duration: '09:55', score: 86.5, issue: '-', eval_form: 'I/B VIP 평가표 v1.0', consultation_type: '배송 > 배송조회 > 한정판 스니커즈', feedback: '전반적으로 양호한 상담이었습니다. 문제 해결 과정이 체계적입니다.', items: [{name:'인사 멘트',score:10,max:10,type:'NLP',status:'pass'},{name:'고객 확인',score:9,max:10,type:'AI',status:'pass'},{name:'경청/공감',score:16,max:20,type:'AI',status:'pass'},{name:'문제 파악',score:13,max:15,type:'AI',status:'pass'},{name:'해결 제시',score:16,max:20,type:'AI',status:'pass'},{name:'정확성',score:13,max:15,type:'NLP',status:'pass'},{name:'종결 멘트',score:9.5,max:10,type:'NLP',status:'pass'}] },
+      { id: 'EV-2025-04231', date: '2025-01-26', time: '15:38', type: 'I/B', duration: '07:20', score: 90.0, issue: '-', eval_form: 'I/B VIP 평가표 v1.0', consultation_type: '기술지원 > 앱오류 > 로그인실패', feedback: '고객 요구사항을 정확히 파악하고 신속하게 처리했습니다.', items: [{name:'인사 멘트',score:10,max:10,type:'NLP',status:'pass'},{name:'고객 확인',score:10,max:10,type:'AI',status:'pass'},{name:'경청/공감',score:17,max:20,type:'AI',status:'pass'},{name:'문제 파악',score:14,max:15,type:'AI',status:'pass'},{name:'해결 제시',score:17,max:20,type:'AI',status:'pass'},{name:'정확성',score:13,max:15,type:'NLP',status:'pass'},{name:'종결 멘트',score:9,max:10,type:'NLP',status:'pass'}] },
+      { id: 'EV-2025-04224', date: '2025-01-26', time: '13:50', type: 'I/B', duration: '11:15', score: 84.0, issue: '정확성 주의', eval_form: 'I/B VIP 평가표 v1.0', consultation_type: '상품문의 > 신발 > 재입고문의', feedback: '상품 안내 시 일부 부정확한 정보가 포함되었습니다. 최신 약관 확인이 필요합니다.', items: [{name:'인사 멘트',score:10,max:10,type:'NLP',status:'pass'},{name:'고객 확인',score:9,max:10,type:'AI',status:'pass'},{name:'경청/공감',score:17,max:20,type:'AI',status:'pass'},{name:'문제 파악',score:13,max:15,type:'AI',status:'pass'},{name:'해결 제시',score:15,max:20,type:'AI',status:'pass'},{name:'정확성',score:10,max:15,type:'NLP',status:'warn'},{name:'종결 멘트',score:10,max:10,type:'NLP',status:'pass'}] },
+      { id: 'EV-2025-04218', date: '2025-01-26', time: '10:22', type: 'O/B', duration: '03:45', score: 95.0, issue: '-', eval_form: 'O/B 텔레마케팅 평가표 v1.3', consultation_type: '프로모션 > 쿠폰안내 > 생일쿠폰', feedback: '매우 우수한 상담입니다. 고객 만족도 높은 응대가 이루어졌습니다.', items: [{name:'인사 멘트',score:10,max:10,type:'NLP',status:'pass'},{name:'고객 확인',score:10,max:10,type:'AI',status:'pass'},{name:'경청/공감',score:19,max:20,type:'AI',status:'pass'},{name:'문제 파악',score:15,max:15,type:'AI',status:'pass'},{name:'해결 제시',score:19,max:20,type:'AI',status:'pass'},{name:'정확성',score:14,max:15,type:'NLP',status:'pass'},{name:'종결 멘트',score:8,max:10,type:'NLP',status:'pass'}] }
+    ];
+
+    let growthChart = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderGrowthChart();
+      renderEvalTable();
+    });
+
+    function renderGrowthChart() {
+      const ctx = document.getElementById('growth-chart');
+      if (!ctx) return;
+
+      if (growthChart) growthChart.destroy();
+      growthChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['8월', '9월', '10월', '11월', '12월', '1월'],
+          datasets: [{
+            label: '월별 평균 점수',
+            data: [82.1, 83.5, 85.0, 86.2, 87.8, 88.5],
+            borderColor: '#0F766E',
+            backgroundColor: 'rgba(15,118,110,0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.3,
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            pointBackgroundColor: '#0F766E',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  return ctx.parsed.y.toFixed(1) + '점';
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              min: 75,
+              max: 95,
+              grid: { color: '#F0F0F0' },
+              ticks: { font: { size: 11 }, color: '#757575', callback: v => v + '점' }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { font: { size: 11 }, color: '#757575' }
+            }
+          }
+        }
+      });
+    }
+
+    function renderEvalTable() {
+      const tbody = document.getElementById('eval-tbody');
+      tbody.innerHTML = recentEvals.map(ev => {
+        const typeBadge = ev.type === 'I/B'
+          ? '<span class="badge badge-nlp">I/B</span>'
+          : '<span class="badge badge-ai">O/B</span>';
+        const issueHtml = ev.issue === '-'
+          ? '<span style="color:#9E9E9E;font-size:12px;">-</span>'
+          : `<span style="font-size:12px;color:#F57F17;">${ev.issue}</span>`;
+
+        return `
+          <tr onclick="showEvalDetail('${ev.id}')">
+            <td style="font-size:12px;font-family:monospace;">${ev.id}</td>
+            <td style="font-size:12px;">${ev.date} ${ev.time}</td>
+            <td>${typeBadge}</td>
+            <td style="font-size:12px;">${ev.duration}</td>
+            <td style="text-align:right;">${AICC_Fmt.scoreHtml(ev.score)}</td>
+            <td style="max-width:120px;">${issueHtml}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function showEvalDetail(evalId) {
+      const ev = recentEvals.find(e => e.id === evalId);
+      if (!ev) return;
+
+      const scoreRows = ev.items.map(item => {
+        const statusCls = item.status === 'pass' ? 'score-good' : item.status === 'warn' ? 'score-warn' : 'score-danger';
+        const statusText = item.status === 'pass' ? '통과' : item.status === 'warn' ? '주의' : '미달';
+        return `
+          <tr style="cursor:default;">
+            <td style="font-size:12px;">${item.name}</td>
+            <td>${AICC_Fmt.typeBadge(item.type)}</td>
+            <td style="text-align:right;font-weight:500;">${item.score} / ${item.max}</td>
+            <td><span class="${statusCls}" style="font-size:12px;">${statusText}</span></td>
+          </tr>
+        `;
+      }).join('');
+
+      const scoreColor = ev.score >= 80 ? '#4CAF50' : ev.score >= 60 ? '#FFC107' : '#F44336';
+
+      AICC_Modal.open({
+        title: '평가 상세 - ' + ev.id,
+        size: 'lg',
+        content: `
+          <div style="display:flex;gap:24px;margin-bottom:16px;flex-wrap:wrap;padding:16px 20px;background:#FAFAFA;border-radius:8px;border:1px solid #EEEEEE;">
+            <div><span style="font-size:11px;color:#9E9E9E;display:block;margin-bottom:4px;">상담사</span><strong style="font-size:14px;">홍길동</strong></div>
+            <div><span style="font-size:11px;color:#9E9E9E;display:block;margin-bottom:4px;">팀</span><strong style="font-size:14px;">서울센터 &gt; VIP상담팀</strong></div>
+            <div><span style="font-size:11px;color:#9E9E9E;display:block;margin-bottom:4px;">유형</span><span class="badge ${ev.type === 'I/B' ? 'badge-nlp' : 'badge-ai'}" style="font-size:12px;margin-top:2px;">${ev.type}</span></div>
+            <div><span style="font-size:11px;color:#9E9E9E;display:block;margin-bottom:4px;">일시</span><strong style="font-size:14px;">${ev.date} ${ev.time}</strong></div>
+            <div><span style="font-size:11px;color:#9E9E9E;display:block;margin-bottom:4px;">통화시간</span><strong style="font-size:14px;">${ev.duration}</strong></div>
+            <div><span style="font-size:11px;color:#9E9E9E;display:block;margin-bottom:4px;">총점</span><strong style="font-size:20px;color:${scoreColor}">${ev.score}점</strong></div>
+            <div><span style="font-size:11px;color:#9E9E9E;display:block;margin-bottom:4px;">평가표</span><strong style="font-size:13px;">${ev.eval_form || '-'}</strong></div>
+            <div><span style="font-size:11px;color:#9E9E9E;display:block;margin-bottom:4px;">상담유형</span><strong style="font-size:13px;">${ev.consultation_type || '-'}</strong></div>
+          </div>
+
+          <div style="background:#F5F5F5;border-radius:6px;padding:12px 16px;margin-bottom:16px;font-size:13px;line-height:1.6;">
+            <strong>AI 피드백:</strong> ${ev.feedback}
+          </div>
+
+          <div style="font-size:14px;font-weight:600;margin-bottom:8px;">항목별 점수</div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>평가 항목</th>
+                <th>방식</th>
+                <th style="text-align:right">점수</th>
+                <th>상태</th>
+              </tr>
+            </thead>
+            <tbody>${scoreRows}</tbody>
+          </table>
+        `,
+        footer: `
+          <button class="btn btn-secondary" onclick="AICC_Modal.close()">닫기</button>
+        `
+      });
+    }
+  </script>
+</body>
+</html>
