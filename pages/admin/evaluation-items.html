@@ -126,6 +126,64 @@
       document.getElementById('item-count').textContent = `총 ${totalItems}개 항목`;
     }
 
+    const NLP_METHOD_LABELS = {
+      script_match: '스크립트 매칭',
+      keyword_detect: '키워드 탐지',
+      pattern_detect: '패턴 탐지',
+      time_measure: '시간 측정'
+    };
+    const NLP_METHOD_COLORS = {
+      script_match: { bg: '#E3F2FD', border: '#90CAF9', text: '#1565C0' },
+      keyword_detect: { bg: '#FFF3E0', border: '#FFCC80', text: '#E65100' },
+      pattern_detect: { bg: '#F3E5F5', border: '#CE93D8', text: '#7B1FA2' },
+      time_measure: { bg: '#E8F5E9', border: '#A5D6A7', text: '#2E7D32' }
+    };
+
+    function renderNlpConfigSection(cfg) {
+      const method = cfg.method || 'keyword_detect';
+      const colors = NLP_METHOD_COLORS[method] || NLP_METHOD_COLORS.keyword_detect;
+      const methodLabel = NLP_METHOD_LABELS[method] || method;
+
+      let innerHtml = `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+          <span style="font-size:12px;font-weight:600;padding:3px 10px;border-radius:4px;color:${colors.text};background:${colors.bg};border:1px solid ${colors.border};">${methodLabel}</span>
+        </div>`;
+
+      if (cfg.reference_scripts && cfg.reference_scripts.length > 0) {
+        innerHtml += `
+          <div style="margin-bottom:10px;">
+            <div style="font-size:11px;font-weight:600;color:#757575;margin-bottom:4px;">기준 문장</div>
+            ${cfg.reference_scripts.map(s => `<div style="background:#F5F5F5;border-left:3px solid ${colors.border};padding:8px 12px;border-radius:0 4px 4px 0;font-size:12px;color:#424242;line-height:1.5;margin-bottom:4px;">"${s}"</div>`).join('')}
+          </div>`;
+      }
+
+      if (cfg.keywords && cfg.keywords.length > 0) {
+        innerHtml += `
+          <div style="margin-bottom:10px;">
+            <div style="font-size:11px;font-weight:600;color:#757575;margin-bottom:4px;">매칭 키워드</div>
+            <div style="display:flex;flex-wrap:wrap;gap:4px;">
+              ${cfg.keywords.map(k => `<span style="font-size:11px;padding:2px 8px;border-radius:10px;background:${colors.bg};color:${colors.text};border:1px solid ${colors.border};">${k}</span>`).join('')}
+            </div>
+          </div>`;
+      }
+
+      if (cfg.matching_desc) {
+        innerHtml += `
+          <div>
+            <div style="font-size:11px;font-weight:600;color:#757575;margin-bottom:4px;">매칭 규칙</div>
+            <div style="font-size:12px;color:#424242;line-height:1.5;">${cfg.matching_desc}</div>
+          </div>`;
+      }
+
+      return `
+        <div style="margin-bottom:20px;">
+          <div class="form-label">NLP 매칭 기준</div>
+          <div style="background:${colors.bg};border:1px solid ${colors.border};border-radius:6px;padding:14px;">
+            ${innerHtml}
+          </div>
+        </div>`;
+    }
+
     function selectItem(itemId) {
       // 이전 선택 해제
       document.querySelectorAll('.tree-item.selected').forEach(el => el.classList.remove('selected'));
@@ -203,6 +261,8 @@
             <div class="form-label">설명</div>
             <div style="font-size:13px;color:#424242;line-height:1.6;">${found.description}</div>
           </div>` : ''}
+
+          ${found.type === 'NLP' && found.nlp_config ? renderNlpConfigSection(found.nlp_config) : ''}
 
           <div style="margin-bottom:20px;">
             <div class="form-label">평가 기준</div>
@@ -577,7 +637,19 @@
       const criteria = document.getElementById('form-criteria')?.value?.trim() || '';
       const desc = document.getElementById('form-desc')?.value?.trim() || '';
       const prompt = document.getElementById('form-prompt')?.value?.trim() || '';
-      return { catVal, name, score, scoreType, evalType, isActive, criteria, desc, prompt };
+
+      const nlpMethod = document.getElementById('form-nlp-method')?.value || 'keyword_detect';
+      const nlpScriptsRaw = document.getElementById('form-nlp-scripts')?.value?.trim() || '';
+      const nlpKeywordsRaw = document.getElementById('form-nlp-keywords')?.value?.trim() || '';
+      const nlpDesc = document.getElementById('form-nlp-desc')?.value?.trim() || '';
+      const nlpConfig = {
+        method: nlpMethod,
+        reference_scripts: nlpScriptsRaw ? nlpScriptsRaw.split('\n').map(s => s.trim()).filter(Boolean) : [],
+        keywords: nlpKeywordsRaw ? nlpKeywordsRaw.split(',').map(s => s.trim()).filter(Boolean) : [],
+        matching_desc: nlpDesc
+      };
+
+      return { catVal, name, score, scoreType, evalType, isActive, criteria, desc, prompt, nlpConfig };
     }
 
     function saveNewItem() {
@@ -613,6 +685,7 @@
         is_fail: false
       };
       if (v.evalType === 'AI' && v.prompt) newItem.ai_prompt = v.prompt;
+      if (v.evalType === 'NLP') newItem.nlp_config = v.nlpConfig;
 
       targetSub.items.push(newItem);
       inlineNewItem = null;
@@ -637,6 +710,9 @@
       selectedItem.is_active = v.isActive;
       selectedItem.description = v.desc;
       if (v.evalType === 'AI' && v.prompt) selectedItem.ai_prompt = v.prompt;
+      else delete selectedItem.ai_prompt;
+      if (v.evalType === 'NLP') selectedItem.nlp_config = v.nlpConfig;
+      else delete selectedItem.nlp_config;
 
       renderTree(itemsData.categories);
       AICC_Modal.close();
@@ -658,6 +734,8 @@
         modalEditingItem.description = v.desc;
         if (v.evalType === 'AI' && v.prompt) modalEditingItem.ai_prompt = v.prompt;
         else delete modalEditingItem.ai_prompt;
+        if (v.evalType === 'NLP') modalEditingItem.nlp_config = v.nlpConfig;
+        else delete modalEditingItem.nlp_config;
         const wasPending = pendingNewItemId === modalEditingItem.id;
         pendingNewItemId = null;
         renderTree(itemsData.categories);
@@ -791,6 +869,8 @@
 
     function getItemFormHtml(item, isEmbedded, hideItemName) {
       const isAI = item ? item.type === 'AI' : false;
+      const isNLP = item ? item.type === 'NLP' : true;
+      const nlpCfg = item && item.nlp_config ? item.nlp_config : { method: 'keyword_detect', reference_scripts: [], keywords: [], matching_desc: '' };
       const scoreType = item && item.score_type ? item.score_type : 'deduction';
       const isActive = item ? (item.is_active !== false) : true;
       const prompt = item && item.ai_prompt ? item.ai_prompt : '당신은 AICC 품질 관리 전문가입니다.\n상담사의 해당 항목을 평가해주세요.\n\n평가 기준:\n1. ...\n\n반드시 근거를 명시하여 응답하세요.';
@@ -887,7 +967,10 @@
               <label class="form-label">평가 방식 *</label>
               <div style="display:flex;gap:12px;padding-top:6px;">
                 <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
-                  <input type="radio" name="eval-type" value="NLP" onchange="togglePromptSection()" ${!item ? 'checked' : item.type === 'NLP' ? 'checked' : ''}> Auto-NLP
+                  <input type="radio" name="eval-type" value="Manual" onchange="togglePromptSection()" ${!item ? 'checked' : item.type === 'Manual' ? 'checked' : ''}> 수동
+                </label>
+                <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+                  <input type="radio" name="eval-type" value="NLP" onchange="togglePromptSection()" ${item && item.type === 'NLP' ? 'checked' : ''}> Auto-NLP
                 </label>
                 <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
                   <input type="radio" name="eval-type" value="AI" onchange="togglePromptSection()" ${item && item.type === 'AI' ? 'checked' : ''}> Auto-AI
@@ -902,6 +985,34 @@
           <div>
             <label class="form-label">설명</label>
             <textarea id="form-desc" class="form-input" style="width:100%;height:60px;" placeholder="항목에 대한 상세 설명">${item ? item.description || '' : ''}</textarea>
+          </div>
+          <div id="nlp-config-section" style="display:${isNLP && !isAI ? 'block' : 'none'};">
+            <div style="background:#E3F2FD;border:1px solid #90CAF9;border-radius:6px;padding:16px;">
+              <div style="font-size:13px;font-weight:600;color:#1565C0;margin-bottom:12px;">NLP 매칭 설정</div>
+              <div style="display:flex;flex-direction:column;gap:12px;">
+                <div>
+                  <label class="form-label">매칭 방식</label>
+                  <select id="form-nlp-method" class="form-input" style="width:100%;" onchange="toggleNlpScriptField()">
+                    <option value="script_match"${nlpCfg.method === 'script_match' ? ' selected' : ''}>스크립트 매칭</option>
+                    <option value="keyword_detect"${nlpCfg.method === 'keyword_detect' ? ' selected' : ''}>키워드 탐지</option>
+                    <option value="pattern_detect"${nlpCfg.method === 'pattern_detect' ? ' selected' : ''}>패턴 탐지</option>
+                    <option value="time_measure"${nlpCfg.method === 'time_measure' ? ' selected' : ''}>시간 측정</option>
+                  </select>
+                </div>
+                <div id="nlp-script-field" style="display:${nlpCfg.method === 'script_match' ? 'block' : 'none'};">
+                  <label class="form-label">기준 문장</label>
+                  <textarea id="form-nlp-scripts" class="form-input" style="width:100%;height:60px;" placeholder="기준 문장을 입력하세요 (여러 문장은 줄바꿈으로 구분)">${nlpCfg.reference_scripts ? nlpCfg.reference_scripts.join('\\n') : ''}</textarea>
+                </div>
+                <div>
+                  <label class="form-label">매칭 키워드</label>
+                  <input type="text" id="form-nlp-keywords" class="form-input" style="width:100%;" placeholder="키워드를 쉼표(,)로 구분하여 입력" value="${nlpCfg.keywords ? nlpCfg.keywords.join(', ') : ''}">
+                </div>
+                <div>
+                  <label class="form-label">매칭 규칙 설명</label>
+                  <textarea id="form-nlp-desc" class="form-input" style="width:100%;height:50px;" placeholder="매칭 규칙에 대한 설명을 입력하세요">${nlpCfg.matching_desc || ''}</textarea>
+                </div>
+              </div>
+            </div>
           </div>
           <div id="ai-prompt-section" style="display:${isAI ? 'block' : 'none'};">
             <div style="background:#FFF8E1;border:1px solid #FFE0B2;border-radius:6px;padding:16px;">
@@ -919,8 +1030,16 @@
 
     function togglePromptSection() {
       const sel = document.querySelector('input[name="eval-type"]:checked');
-      const section = document.getElementById('ai-prompt-section');
-      if (section) section.style.display = (sel && sel.value === 'AI') ? 'block' : 'none';
+      const aiSection = document.getElementById('ai-prompt-section');
+      const nlpSection = document.getElementById('nlp-config-section');
+      if (aiSection) aiSection.style.display = (sel && sel.value === 'AI') ? 'block' : 'none';
+      if (nlpSection) nlpSection.style.display = (sel && sel.value === 'NLP') ? 'block' : 'none';
+    }
+
+    function toggleNlpScriptField() {
+      const method = document.getElementById('form-nlp-method')?.value;
+      const field = document.getElementById('nlp-script-field');
+      if (field) field.style.display = method === 'script_match' ? 'block' : 'none';
     }
   </script>
 </body>

@@ -8,8 +8,8 @@
           "id": "greeting",
           "name": "인사",
           "items": [
-            { "id": "first-greeting", "name": "첫인사", "full_name": "스크립트 첫인사 내용대로 발화", "type": "NLP", "default_score": 6, "description": "안녕, 무신사, 서포터 중 포함 여부 확인", "criteria": [{"score": 6, "label": "정상", "desc": "스크립트 인사 발화 포함"}, {"score": 0, "label": "감점", "desc": "첫인사 누락 또는 미흡"}], "used_in": ["I/B 일반 상담 평가표 v2.1", "I/B VIP 평가표 v1.0"] },
-            { "id": "last-greeting", "name": "끝인사", "full_name": "스크립트 끝인사 내용대로 발화", "type": "NLP", "default_score": 6, "description": "마무리 인사 발화 포함 여부 확인", "criteria": [{"score": 6, "label": "정상", "desc": "끝인사 발화 포함"}, {"score": 0, "label": "감점", "desc": "끝인사 누락"}], "used_in": ["I/B 일반 상담 평가표 v2.1"] }
+            { "id": "first-greeting", "name": "첫인사", "full_name": "스크립트 첫인사 내용대로 발화", "type": "NLP", "default_score": 6, "description": "안녕, 무신사, 서포터 중 포함 여부 확인", "criteria": [{"score": 6, "label": "정상", "desc": "스크립트 인사 발화 포함"}, {"score": 0, "label": "감점", "desc": "첫인사 누락 또는 미흡"}], "used_in": ["I/B 일반 상담 평가표 v2.1", "I/B VIP 평가표 v1.0"], "nlp_config": {"method": "script_match", "reference_scripts": ["안녕하세요, 무신사 서포터 OOO입니다. 무엇을 도와드릴까요?"], "keywords": ["안녕", "무신사", "서포터"], "matching_desc": "키워드 중 2개 이상 포함 시 정상 판정"} },
+            { "id": "last-greeting", "name": "끝인사", "full_name": "스크립트 끝인사 내용대로 발화", "type": "NLP", "default_score": 6, "description": "마무리 인사 발화 포함 여부 확인", "criteria": [{"score": 6, "label": "정상", "desc": "끝인사 발화 포함"}, {"score": 0, "label": "감점", "desc": "끝인사 누락"}], "used_in": ["I/B 일반 상담 평가표 v2.1"], "nlp_config": {"method": "script_match", "reference_scripts": ["감사합니다. 좋은 하루 되세요, 무신사 서포터 OOO이었습니다."], "keywords": ["감사", "좋은 하루", "무신사"], "matching_desc": "마무리 인사 키워드 1개 이상 포함 시 정상 판정"} }
           ]
         },
         {
@@ -31,34 +31,34 @@
           "id": "overlap",
           "name": "말겹침",
           "items": [
-            { "id": "simultaneous-speech", "name": "동시 발화", "full_name": "동시 발화가 이루어지지 않게 함", "type": "NLP", "default_score": 6, "description": "상담사와 고객의 동시 발화 발생 시 대처 방식 평가", "criteria": [{"score": 6, "label": "정상", "desc": "말겹침 후 사과/배려 표현"}, {"score": 4, "label": "경미", "desc": "겹침 후 일시 멈춤"}, {"score": 0, "label": "심각", "desc": "상담사 발화 지속(덮어씀)"}], "used_in": ["I/B 일반 상담 평가표 v2.1"] }
+            { "id": "simultaneous-speech", "name": "동시 발화", "full_name": "동시 발화가 이루어지지 않게 함", "type": "NLP", "default_score": 6, "description": "상담사와 고객의 동시 발화 발생 시 대처 방식 평가", "criteria": [{"score": 6, "label": "정상", "desc": "말겹침 후 사과/배려 표현"}, {"score": 4, "label": "경미", "desc": "겹침 후 일시 멈춤"}, {"score": 0, "label": "심각", "desc": "상담사 발화 지속(덮어씀)"}], "used_in": ["I/B 일반 상담 평가표 v2.1"], "nlp_config": {"method": "pattern_detect", "keywords": ["죄송", "말씀하세요", "네 먼저"], "matching_desc": "상담사-고객 음성 겹침 구간 감지 후, 겹침 이후 상담사의 사과/배려 표현 여부 판정"} }
           ]
         },
         {
           "id": "no-response",
           "name": "무응답",
           "items": [
-            { "id": "no-acknowledge", "name": "양해 없는 무응답", "full_name": "고객 양해 없는 무응답 방지", "type": "NLP", "default_score": 5, "description": "15초 이상 무응답 시 양해 멘트 유무 평가", "criteria": [{"score": 5, "label": "정상", "desc": "15초 미만 또는 양해 멘트 3개"}, {"score": 2, "label": "경미", "desc": "15초↑ 무응답, 양해 멘트 ≤1개"}, {"score": 0, "label": "심각", "desc": "15초↑ 무응답, 양해 멘트 없음"}], "used_in": ["I/B 일반 상담 평가표 v2.1"] }
+            { "id": "no-acknowledge", "name": "양해 없는 무응답", "full_name": "고객 양해 없는 무응답 방지", "type": "NLP", "default_score": 5, "description": "15초 이상 무응답 시 양해 멘트 유무 평가", "criteria": [{"score": 5, "label": "정상", "desc": "15초 미만 또는 양해 멘트 3개"}, {"score": 2, "label": "경미", "desc": "15초↑ 무응답, 양해 멘트 ≤1개"}, {"score": 0, "label": "심각", "desc": "15초↑ 무응답, 양해 멘트 없음"}], "used_in": ["I/B 일반 상담 평가표 v2.1"], "nlp_config": {"method": "time_measure", "keywords": ["잠시만요", "확인해보겠습니다", "잠깐만 기다려주세요"], "matching_desc": "15초 이상 무응답 구간 감지 후, 양해 멘트 포함 횟수로 판정 (3개 이상: 정상, 1개 이하: 경미, 0개: 심각)"} }
           ]
         },
         {
           "id": "fail",
           "name": "FAIL",
           "items": [
-            { "id": "profanity", "name": "욕설/금지어", "full_name": "욕설, 금지어 표현 일체", "type": "NLP", "default_score": 0, "is_fail": true, "description": "욕설, 금지어, 비속어, 한숨/짜증 표현 탐지 시 전 항목 0점 처리", "criteria": [{"score": 0, "label": "FAIL", "desc": "탐지 시 전 항목 0점"}, {"score": 0, "label": "PASS", "desc": "미검출 - 정상 평가 유지"}], "used_in": ["I/B 일반 상담 평가표 v2.1", "I/B VIP 평가표 v1.0", "O/B 텔레마케팅 평가표 v1.3"] }
+            { "id": "profanity", "name": "욕설/금지어", "full_name": "욕설, 금지어 표현 일체", "type": "NLP", "default_score": 0, "is_fail": true, "description": "욕설, 금지어, 비속어, 한숨/짜증 표현 탐지 시 전 항목 0점 처리", "criteria": [{"score": 0, "label": "FAIL", "desc": "탐지 시 전 항목 0점"}, {"score": 0, "label": "PASS", "desc": "미검출 - 정상 평가 유지"}], "used_in": ["I/B 일반 상담 평가표 v2.1", "I/B VIP 평가표 v1.0", "O/B 텔레마케팅 평가표 v1.3"], "nlp_config": {"method": "keyword_detect", "keywords": ["씨발", "개새끼", "미친", "꺼져", "죽어", "한숨", "짜증"], "matching_desc": "금지어 사전 기반 매칭, 1회라도 탐지 시 FAIL 처리"} }
           ]
         },
         {
           "id": "professional-attitude",
           "name": "전문적 상담 태도",
           "items": [
-            { "id": "interruption", "name": "말끊기", "full_name": "상담원의 의도적인 말겹침", "type": "NLP", "default_score": 5, "description": "고객 발화 중 상담원 개입으로 인한 발화 중단 평가", "criteria": [{"score": 5, "label": "정상", "desc": "정상 청취"}, {"score": 0, "label": "감점", "desc": "고객 발화 중단 → 5초↑ 무발화"}], "used_in": ["I/B 일반 상담 평가표 v2.1"] },
+            { "id": "interruption", "name": "말끊기", "full_name": "상담원의 의도적인 말겹침", "type": "NLP", "default_score": 5, "description": "고객 발화 중 상담원 개입으로 인한 발화 중단 평가", "criteria": [{"score": 5, "label": "정상", "desc": "정상 청취"}, {"score": 0, "label": "감점", "desc": "고객 발화 중단 → 5초↑ 무발화"}], "used_in": ["I/B 일반 상담 평가표 v2.1"], "nlp_config": {"method": "pattern_detect", "keywords": [], "matching_desc": "고객 발화 중 상담사 개입 감지 후, 고객 발화가 5초 이상 중단되면 감점 판정"} },
             { "id": "customer-focus", "name": "고객향 상담", "full_name": "무시/무관심 발화 금지", "type": "AI", "default_score": 5, "description": "무시/무관심 발화 여부 평가 (됐고요, 그래서요? 등)", "criteria": [{"score": 5, "label": "정상", "desc": "무시/무관심 발화 없음"}, {"score": 0, "label": "감점", "desc": "무시 발화 1회 이상"}], "used_in": ["I/B 일반 상담 평가표 v2.1"] },
-            { "id": "speech-ending", "name": "상담 어미", "full_name": "전문적인 상담 어미", "type": "NLP", "default_score": 5, "description": "공손한 종결 어미 사용 여부 평가 (~습니다, ~세요 등)", "criteria": [{"score": 5, "label": "정상", "desc": "공손한 종결 어미 사용"}, {"score": 0, "label": "감점", "desc": "비격식 발화 ≥3회"}], "used_in": ["I/B 일반 상담 평가표 v2.1"] },
-            { "id": "professional-speech", "name": "전문적 화법", "full_name": "전문적인 상담 화법", "type": "NLP", "default_score": 5, "description": "비언어 발화(어, 음) 및 비전문적 호응(네네네) 빈도 평가", "criteria": [{"score": 5, "label": "정상", "desc": "비언어 <5회 AND 비전문적 <3회"}, {"score": 4, "label": "경미", "desc": "비전문적 호응 ≥3회"}, {"score": 2, "label": "중간", "desc": "비언어 ≥5회"}, {"score": 0, "label": "복합", "desc": "비언어 ≥5회 AND 비전문적 ≥3회"}], "used_in": ["I/B 일반 상담 평가표 v2.1"] },
+            { "id": "speech-ending", "name": "상담 어미", "full_name": "전문적인 상담 어미", "type": "NLP", "default_score": 5, "description": "공손한 종결 어미 사용 여부 평가 (~습니다, ~세요 등)", "criteria": [{"score": 5, "label": "정상", "desc": "공손한 종결 어미 사용"}, {"score": 0, "label": "감점", "desc": "비격식 발화 ≥3회"}], "used_in": ["I/B 일반 상담 평가표 v2.1"], "nlp_config": {"method": "keyword_detect", "keywords": ["습니다", "세요", "겠습니다", "드리겠습니다", "주세요"], "matching_desc": "공손한 종결 어미(~습니다, ~세요) 사용 비율 측정, 비격식 어미(~해, ~거든, ~잖아) 3회 이상 시 감점"} },
+            { "id": "professional-speech", "name": "전문적 화법", "full_name": "전문적인 상담 화법", "type": "NLP", "default_score": 5, "description": "비언어 발화(어, 음) 및 비전문적 호응(네네네) 빈도 평가", "criteria": [{"score": 5, "label": "정상", "desc": "비언어 <5회 AND 비전문적 <3회"}, {"score": 4, "label": "경미", "desc": "비전문적 호응 ≥3회"}, {"score": 2, "label": "중간", "desc": "비언어 ≥5회"}, {"score": 0, "label": "복합", "desc": "비언어 ≥5회 AND 비전문적 ≥3회"}], "used_in": ["I/B 일반 상담 평가표 v2.1"], "nlp_config": {"method": "keyword_detect", "keywords": ["어", "음", "아", "네네네", "네네", "그니까"], "matching_desc": "비언어 발화(어, 음, 아) 5회 이상 또는 비전문적 호응(네네네) 3회 이상 시 감점"} },
             { "id": "proactiveness", "name": "적극성(회피)", "full_name": "회피성/추측성 발화 금지", "type": "AI", "default_score": 5, "description": "회피성 또는 추측성 발화 여부 평가", "criteria": [{"score": 5, "label": "정상", "desc": "회피/추측 발화 없음"}, {"score": 2, "label": "감점", "desc": "회피/추측 발화 1회 이상"}], "used_in": ["I/B 일반 상담 평가표 v2.1"] },
-            { "id": "convenience", "name": "편리(재질의)", "full_name": "고객 정보 재질의 금지", "type": "NLP", "default_score": 5, "description": "이름/연락처/인입사유 중복 질의 여부 평가", "criteria": [{"score": 5, "label": "정상", "desc": "재질의 없음"}, {"score": 0, "label": "감점", "desc": "중복 질의 1회 이상"}], "used_in": ["I/B 일반 상담 평가표 v2.1"] },
-            { "id": "speed", "name": "신속성", "full_name": "신속한 응대", "type": "NLP", "default_score": 5, "description": "상담사 응답 지연 시간 평가", "criteria": [{"score": 5, "label": "정상", "desc": "1.0초 이내 응답"}, {"score": 2, "label": "경미", "desc": "1.0~3.0초 지연"}, {"score": 0, "label": "중대", "desc": "3.0초 이상 지연"}], "used_in": ["I/B 일반 상담 평가표 v2.1"] },
+            { "id": "convenience", "name": "편리(재질의)", "full_name": "고객 정보 재질의 금지", "type": "NLP", "default_score": 5, "description": "이름/연락처/인입사유 중복 질의 여부 평가", "criteria": [{"score": 5, "label": "정상", "desc": "재질의 없음"}, {"score": 0, "label": "감점", "desc": "중복 질의 1회 이상"}], "used_in": ["I/B 일반 상담 평가표 v2.1"], "nlp_config": {"method": "keyword_detect", "keywords": ["성함", "이름", "연락처", "전화번호", "휴대폰"], "matching_desc": "이름/연락처/인입사유 관련 키워드가 2회 이상 질의되면 중복 질의로 감점"} },
+            { "id": "speed", "name": "신속성", "full_name": "신속한 응대", "type": "NLP", "default_score": 5, "description": "상담사 응답 지연 시간 평가", "criteria": [{"score": 5, "label": "정상", "desc": "1.0초 이내 응답"}, {"score": 2, "label": "경미", "desc": "1.0~3.0초 지연"}, {"score": 0, "label": "중대", "desc": "3.0초 이상 지연"}], "used_in": ["I/B 일반 상담 평가표 v2.1"], "nlp_config": {"method": "time_measure", "keywords": [], "matching_desc": "고객 발화 종료 후 상담사 응답까지의 지연 시간 측정 (1.0초 이내: 정상, 1.0~3.0초: 경미, 3.0초 초과: 중대)"} },
             { "id": "tone", "name": "어조", "full_name": "불편 어조 금지", "type": "AI", "default_score": 5, "description": "불편 어조 빈도 평가 (하세요, 됩니다 등)", "criteria": [{"score": 5, "label": "정상", "desc": "불편 어조 <3회"}, {"score": 0, "label": "감점", "desc": "불편 어조 ≥3회"}], "used_in": ["I/B 일반 상담 평가표 v2.1"] }
           ]
         }
@@ -72,7 +72,7 @@
           "id": "privacy",
           "name": "개인정보처리방침",
           "items": [
-            { "id": "required-privacy", "name": "개인정보 확인", "full_name": "필수 개인 정보 확인", "type": "NLP", "default_score": 5, "description": "구매자명, 연락처, 본인 여부 3가지 확인 수행", "criteria": [{"score": 5, "label": "정상", "desc": "필수 항목 3개 모두 수행"}, {"score": 0, "label": "감점", "desc": "0~2개만 수행"}], "used_in": ["I/B 일반 상담 평가표 v2.1"] }
+            { "id": "required-privacy", "name": "개인정보 확인", "full_name": "필수 개인 정보 확인", "type": "NLP", "default_score": 5, "description": "구매자명, 연락처, 본인 여부 3가지 확인 수행", "criteria": [{"score": 5, "label": "정상", "desc": "필수 항목 3개 모두 수행"}, {"score": 0, "label": "감점", "desc": "0~2개만 수행"}], "used_in": ["I/B 일반 상담 평가표 v2.1"], "nlp_config": {"method": "keyword_detect", "keywords": ["구매자명", "성함", "연락처", "전화번호", "본인"], "matching_desc": "구매자명, 연락처, 본인 여부 3가지 키워드 확인 수행 여부 판정 (3개 모두: 정상, 0~2개: 감점)"} }
           ]
         },
         {
