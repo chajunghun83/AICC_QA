@@ -18,6 +18,46 @@
       <button class="btn btn-primary" onclick="openCreateModal()">+ 새 계획 추가</button>
     </div>
 
+    <!-- 필터 -->
+    <div class="filter-section">
+      <div class="filter-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'flex':'none'">
+        <span>검색조건</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#757575" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+      <div class="filter-body">
+        <div>
+          <label class="form-label">계획명</label>
+          <input type="text" class="form-input" id="plan-search" placeholder="계획명 검색" style="min-width:150px;">
+        </div>
+        <div>
+          <label class="form-label">상태</label>
+          <select class="form-select" id="plan-status-filter">
+            <option value="all">전체</option>
+            <option value="진행 중">진행 중</option>
+            <option value="예정">예정</option>
+            <option value="종료">종료</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">반복 주기</label>
+          <select class="form-select" id="repeat-filter">
+            <option value="all">전체</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">대상</label>
+          <input type="text" class="form-input" id="target-search" placeholder="대상 검색" style="min-width:120px;">
+        </div>
+        <div>
+          <label class="form-label">&nbsp;</label>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-secondary btn-sm" onclick="resetPlanFilter()">초기화</button>
+            <button class="btn btn-primary btn-sm" onclick="applyPlanFilter()">검색</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 테이블 -->
     <div class="content-card">
       <div class="content-card-header">
@@ -142,12 +182,13 @@
       return workspace + ' > ' + teams.join(', ');
     }
 
-    function renderTable() {
+    function renderTable(list) {
+      const data = list || plans;
       const tbody = document.getElementById('plan-tbody');
       const countEl = document.getElementById('plan-count');
-      if (countEl) countEl.textContent = `총 ${plans.length}건`;
+      if (countEl) countEl.textContent = '총 ' + data.length + '건';
 
-      tbody.innerHTML = plans.map(p => {
+      tbody.innerHTML = data.map(p => {
         const cs = computePlanStatus(p);
         const periodDisplay = p.periodEnd ? `${p.periodStart} ~ ${p.periodEnd}` : p.periodStart;
         return `
@@ -161,6 +202,28 @@
           </tr>
         `;
       }).join('');
+    }
+
+    function applyPlanFilter() {
+      let filtered = [...plans];
+      const nameSearch = (document.getElementById('plan-search').value || '').trim().toLowerCase();
+      if (nameSearch) filtered = filtered.filter(p => p.name.toLowerCase().includes(nameSearch));
+      const statusVal = document.getElementById('plan-status-filter').value;
+      if (statusVal !== 'all') filtered = filtered.filter(p => computePlanStatus(p).statusText === statusVal);
+      const repeatVal = document.getElementById('repeat-filter').value;
+      if (repeatVal !== 'all') filtered = filtered.filter(p => p.repeat === repeatVal);
+      const targetSearch = (document.getElementById('target-search').value || '').trim().toLowerCase();
+      if (targetSearch) filtered = filtered.filter(p => (p.target || '').toLowerCase().includes(targetSearch));
+      renderTable(filtered);
+      AICC_Toast.show('필터가 적용되었습니다.');
+    }
+
+    function resetPlanFilter() {
+      document.getElementById('plan-search').value = '';
+      document.getElementById('plan-status-filter').value = 'all';
+      document.getElementById('repeat-filter').value = 'all';
+      document.getElementById('target-search').value = '';
+      renderTable();
     }
 
     function openDetail(no) {
@@ -279,8 +342,8 @@
       const p = plan || {};
       const td = p.targetDetail || { workspace: '', teams: [], inbound: true, outbound: true };
       const selectedWs = td.workspace || '';
-      const repeatVal = p.repeat || '1회성';
-      const isOneTime = repeatVal === '1회성';
+      const repeatVal = p.repeat || '지속';
+      const isOneTime = repeatVal === '1회성' || repeatVal === '지속';
 
       const wsOptions = workspacesData.map(ws =>
         `<option value="${ws.name}"${ws.name === selectedWs ? ' selected' : ''}>${ws.name}</option>`
@@ -319,6 +382,9 @@
             <div style="flex:1;">
               <label class="form-label">반복 주기</label>
               <div style="display:flex;gap:10px;margin-top:6px;">
+                <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+                  <input type="radio" name="pf-repeat" value="지속" onchange="onRepeatChange()" ${repeatVal === '지속' ? 'checked' : ''}> 지속
+                </label>
                 <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
                   <input type="radio" name="pf-repeat" value="1회성" onchange="onRepeatChange()" ${repeatVal === '1회성' ? 'checked' : ''}> 1회성
                 </label>
@@ -372,10 +438,10 @@
 
     /* ── 반복 주기 변경 시 종료일 토글 ── */
     function onRepeatChange() {
-      const repeat = document.querySelector('input[name="pf-repeat"]:checked')?.value || '1회성';
+      const repeat = document.querySelector('input[name="pf-repeat"]:checked')?.value || '지속';
       const endInput = document.getElementById('pf-end');
       if (!endInput) return;
-      if (repeat === '1회성') {
+      if (repeat === '1회성' || repeat === '지속') {
         endInput.disabled = true;
         endInput.value = '';
         endInput.style.background = '#F5F5F5';
@@ -431,9 +497,9 @@
       const periodStart = document.getElementById('pf-start')?.value;
       if (!periodStart) { AICC_Toast.show('시작일을 입력하세요.'); return null; }
 
-      const repeat = document.querySelector('input[name="pf-repeat"]:checked')?.value || '1회성';
-      const periodEnd = repeat === '1회성' ? '' : (document.getElementById('pf-end')?.value || '');
-      if (repeat !== '1회성' && !periodEnd) { AICC_Toast.show('종료일을 입력하세요.'); return null; }
+      const repeat = document.querySelector('input[name="pf-repeat"]:checked')?.value || '지속';
+      const periodEnd = (repeat === '1회성' || repeat === '지속') ? '' : (document.getElementById('pf-end')?.value || '');
+      if (repeat !== '1회성' && repeat !== '지속' && !periodEnd) { AICC_Toast.show('종료일을 입력하세요.'); return null; }
 
       const workspace = document.getElementById('pf-ws')?.value || '';
       const teams = [...document.querySelectorAll('input[name="pf-team"]:checked')].map(el => el.value);
@@ -546,6 +612,11 @@
       formsData = await AICC_DataLoader.load('evaluation-forms.json');
       const wsRaw = await AICC_DataLoader.load('workspaces.json');
       if (wsRaw) workspacesData = wsRaw;
+
+      const repeats = [...new Set(plans.map(p => p.repeat).filter(Boolean))];
+      const repeatSel = document.getElementById('repeat-filter');
+      repeats.forEach(r => { repeatSel.innerHTML += '<option value="' + r + '">' + r + '</option>'; });
+
       renderTable();
     });
   </script>

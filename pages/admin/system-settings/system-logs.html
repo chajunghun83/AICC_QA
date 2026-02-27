@@ -24,16 +24,21 @@
       </div>
       <div class="filter-body">
         <div>
-          <label class="form-label">시작일</label>
-          <input type="date" class="form-input" id="date-start" value="2025-01-01" onchange="filterLogs()">
-        </div>
-        <div>
-          <label class="form-label">종료일</label>
-          <input type="date" class="form-input" id="date-end" value="2025-01-15" onchange="filterLogs()">
+          <label class="form-label">기간</label>
+          <div id="period-picker-container"></div>
         </div>
         <div>
           <label class="form-label">사용자</label>
-          <input type="text" class="form-input" id="user-search" placeholder="사용자명 검색..." oninput="filterLogs()">
+          <input type="text" class="form-input" id="user-search" placeholder="사용자명 검색" style="min-width:120px;">
+        </div>
+        <div>
+          <label class="form-label">역할</label>
+          <select class="form-select" id="role-filter" onchange="filterLogs()">
+            <option value="all">전체</option>
+            <option value="ADMIN">관리자</option>
+            <option value="QA_MANAGER">QA 매니저</option>
+            <option value="AGENT">상담사</option>
+          </select>
         </div>
         <div>
           <label class="form-label">액션 유형</label>
@@ -46,6 +51,17 @@
             <option value="역할 변경">역할 변경</option>
             <option value="사용자 관리">사용자 관리</option>
           </select>
+        </div>
+        <div>
+          <label class="form-label">IP 주소</label>
+          <input type="text" class="form-input" id="ip-search" placeholder="IP 검색" style="min-width:120px;">
+        </div>
+        <div>
+          <label class="form-label">&nbsp;</label>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-secondary btn-sm" onclick="resetLogFilter()">초기화</button>
+            <button class="btn btn-primary btn-sm" onclick="filterLogs()">검색</button>
+          </div>
         </div>
       </div>
     </div>
@@ -83,6 +99,7 @@
   <script src="../../../js/components/layout.js"></script>
   <script src="../../../js/components/modal.js"></script>
   <script src="../../../js/components/toast.js"></script>
+  <script src="../../../js/components/period-picker.js"></script>
   <script>
     // 더미 데이터
     const logs = [
@@ -142,27 +159,26 @@
     }
 
     function filterLogs() {
-      const dateStart = document.getElementById('date-start').value;
-      const dateEnd = document.getElementById('date-end').value;
-      const userSearch = document.getElementById('user-search').value.trim().toLowerCase();
+      const userSearch = (document.getElementById('user-search').value || '').trim().toLowerCase();
       const actionVal = document.getElementById('action-filter').value;
+      const roleVal = document.getElementById('role-filter').value;
+      const ipSearch = (document.getElementById('ip-search').value || '').trim().toLowerCase();
 
       let filtered = logs;
-
-      if (dateStart) {
-        filtered = filtered.filter(l => l.datetime >= dateStart);
-      }
-      if (dateEnd) {
-        filtered = filtered.filter(l => l.datetime <= dateEnd + ' 23:59:59');
-      }
-      if (userSearch) {
-        filtered = filtered.filter(l => l.user.toLowerCase().includes(userSearch));
-      }
-      if (actionVal !== 'all') {
-        filtered = filtered.filter(l => l.action === actionVal);
-      }
+      if (userSearch) filtered = filtered.filter(l => l.user.toLowerCase().includes(userSearch));
+      if (actionVal !== 'all') filtered = filtered.filter(l => l.action === actionVal);
+      if (roleVal !== 'all') filtered = filtered.filter(l => l.role === roleVal);
+      if (ipSearch) filtered = filtered.filter(l => (l.ip || '').toLowerCase().includes(ipSearch));
 
       renderTable(filtered);
+    }
+
+    function resetLogFilter() {
+      document.getElementById('user-search').value = '';
+      document.getElementById('action-filter').value = 'all';
+      document.getElementById('role-filter').value = 'all';
+      document.getElementById('ip-search').value = '';
+      renderTable(logs);
     }
 
     function openDetail(no) {
@@ -215,6 +231,10 @@
 
     // 초기 렌더링
     document.addEventListener('DOMContentLoaded', () => {
+      AICC_PeriodPicker.create('period-picker-container', {
+        defaultPeriod: 'monthly',
+        onChange: function() { filterLogs(); }
+      });
       renderTable(logs);
     });
   </script>

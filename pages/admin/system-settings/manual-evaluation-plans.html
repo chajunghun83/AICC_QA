@@ -17,6 +17,50 @@
       <button class="btn btn-primary" onclick="openCreateModal()">+ 새 계획 추가</button>
     </div>
 
+    <!-- 필터 -->
+    <div class="filter-section">
+      <div class="filter-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'flex':'none'">
+        <span>검색조건</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#757575" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+      <div class="filter-body">
+        <div>
+          <label class="form-label">계획명</label>
+          <input type="text" class="form-input" id="plan-search" placeholder="계획명 검색" style="min-width:150px;">
+        </div>
+        <div>
+          <label class="form-label">상태</label>
+          <select class="form-select" id="plan-status-filter">
+            <option value="all">전체</option>
+            <option value="진행 중">진행 중</option>
+            <option value="예정">예정</option>
+            <option value="종료">종료</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">반복 주기</label>
+          <select class="form-select" id="repeat-filter">
+            <option value="all">전체</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">대상</label>
+          <input type="text" class="form-input" id="target-search" placeholder="대상 검색" style="min-width:120px;">
+        </div>
+        <div>
+          <label class="form-label">담당자</label>
+          <input type="text" class="form-input" id="assignee-search" placeholder="담당자명 검색" style="min-width:120px;">
+        </div>
+        <div>
+          <label class="form-label">&nbsp;</label>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-secondary btn-sm" onclick="resetPlanFilter()">초기화</button>
+            <button class="btn btn-primary btn-sm" onclick="applyPlanFilter()">검색</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="content-card">
       <div class="content-card-header">
         <span style="font-size:14px;font-weight:600;">수동 평가 계획 목록</span>
@@ -31,7 +75,7 @@
               <th>적용 평가표</th>
               <th>평가기간</th>
               <th>대상</th>
-              <th>평가 기준</th>
+              <th>상세 조건</th>
               <th>담당자</th>
               <th>상태</th>
             </tr>
@@ -52,6 +96,8 @@
   <script src="../../../js/components/toast.js"></script>
   <script>
     let formsData = null;
+    let evaluationsData = [];
+    let consultTypeTree = {};
     let workspacesData = [
       { id: 'ws-seoul', name: '서울센터', teams: [
         { id: 'team-vip', name: 'VIP상담팀' },
@@ -70,7 +116,12 @@
       sampling:       { label: '샘플링 비율',     format: v => `${v.rate}%` },
       scoreThreshold: { label: 'AI 점수 기준',    format: v => `${v.score}점 미만` },
       confidence:     { label: 'AI 신뢰도 기준',  format: v => `${v.level} 이하` },
-      specificAgents: { label: '특정 상담사 지정', format: v => v.agents.join(', ') }
+      specificAgents: { label: '특정 상담사 지정', format: v => (v.agents || []).join(', ') },
+      consultType:    { label: '상담 유형',       format: v => v.depth === 'all' ? '전체' : `${v.depth}Depth - ${v.selected || '전체'}` },
+      callSegment:    { label: '통화 구간 지정',  format: v => v.full ? '전체 구간' : `${v.start || '00:00'} ~ ${v.end || '끝'}` },
+      durationRange:  { label: '통화 시간 범위',  format: v => `${v.min || 0}분 ~ ${v.max || '제한없음'}분` },
+      callTimeRange:  { label: '상담 시간대',     format: v => `${v.start || '00:00'} ~ ${v.end || '23:59'}` },
+      weekdays:       { label: '요일 필터',       format: v => (v.days || []).join(', ') || '전체' }
     };
 
     const plans = [
@@ -150,10 +201,13 @@
       return `<span class="badge ${cls[status] || 'badge-pending'}">${text}</span>`;
     }
 
-    function criteriaBadge(type, value) {
-      const c = CRITERIA_MAP[type];
-      if (!c) return '-';
-      return `<span class="badge badge-active" style="font-size:11px;">${c.label}: ${c.format(value)}</span>`;
+    function criteriaBadge(type, value, criteriaArr) {
+      const list = criteriaArr || (type ? [{ type, value: value || {} }] : []);
+      if (list.length === 0) return '-';
+      return list.map(c => {
+        const cm = CRITERIA_MAP[c.type];
+        return cm ? `<span class="badge badge-active" style="font-size:11px;margin:1px 2px;">${cm.label}</span>` : '';
+      }).join('');
     }
 
     function renderFormsBadge(forms) {
@@ -170,12 +224,13 @@
     }
 
     /* ── 테이블 렌더링 ── */
-    function renderTable() {
+    function renderTable(list) {
+      const data = list || plans;
       const tbody = document.getElementById('plan-tbody');
       const countEl = document.getElementById('plan-count');
-      if (countEl) countEl.textContent = `총 ${plans.length}건`;
+      if (countEl) countEl.textContent = '총 ' + data.length + '건';
 
-      tbody.innerHTML = plans.map(p => {
+      tbody.innerHTML = data.map(p => {
         const cs = computeStatus(p);
         const period = p.periodEnd ? `${p.periodStart} ~ ${p.periodEnd}` : p.periodStart;
         return `
@@ -185,12 +240,37 @@
             <td style="max-width:180px;">${renderFormsBadge(p.forms)}</td>
             <td style="font-size:12px;color:#757575;">${period}</td>
             <td>${p.target}</td>
-            <td>${criteriaBadge(p.criteriaType, p.criteriaValue)}</td>
+            <td>${criteriaBadge(p.criteriaType, p.criteriaValue, p.criteria)}</td>
             <td>${p.assignee || '-'}</td>
             <td>${statusBadge(cs.status, cs.text)}</td>
           </tr>
         `;
       }).join('');
+    }
+
+    function applyPlanFilter() {
+      let filtered = [...plans];
+      const nameSearch = (document.getElementById('plan-search').value || '').trim().toLowerCase();
+      if (nameSearch) filtered = filtered.filter(p => p.name.toLowerCase().includes(nameSearch));
+      const statusVal = document.getElementById('plan-status-filter').value;
+      if (statusVal !== 'all') filtered = filtered.filter(p => computeStatus(p).text === statusVal);
+      const repeatVal = document.getElementById('repeat-filter').value;
+      if (repeatVal !== 'all') filtered = filtered.filter(p => p.repeat === repeatVal);
+      const targetSearch = (document.getElementById('target-search').value || '').trim().toLowerCase();
+      if (targetSearch) filtered = filtered.filter(p => (p.target || '').toLowerCase().includes(targetSearch));
+      const assigneeSearch = (document.getElementById('assignee-search').value || '').trim().toLowerCase();
+      if (assigneeSearch) filtered = filtered.filter(p => (p.assignee || '').toLowerCase().includes(assigneeSearch));
+      renderTable(filtered);
+      AICC_Toast.show('필터가 적용되었습니다.');
+    }
+
+    function resetPlanFilter() {
+      document.getElementById('plan-search').value = '';
+      document.getElementById('plan-status-filter').value = 'all';
+      document.getElementById('repeat-filter').value = 'all';
+      document.getElementById('target-search').value = '';
+      document.getElementById('assignee-search').value = '';
+      renderTable();
     }
 
     /* ── 상세 모달 ── */
@@ -204,9 +284,16 @@
       const isPending = cs.status === 'pending';
       const periodEndDisplay = p.periodEnd ? AICC_Fmt.date(p.periodEnd) : '-';
       const teamsDisplay = td.teams.map(t => td.workspace + ' > ' + t).join(', ');
-      const cm = CRITERIA_MAP[p.criteriaType];
-      const criteriaLabel = cm ? cm.label : '-';
-      const criteriaDetail = cm ? cm.format(p.criteriaValue) : '-';
+      const criteriaList = p.criteria || (p.criteriaType ? [{ type: p.criteriaType, value: p.criteriaValue || {} }] : []);
+      const criteriaHtml = criteriaList.length > 0
+        ? criteriaList.map(c => {
+            const cm = CRITERIA_MAP[c.type];
+            return cm ? `<div style="display:flex;gap:8px;align-items:baseline;margin-bottom:4px;">
+              <span class="badge badge-active" style="font-size:11px;flex-shrink:0;">${cm.label}</span>
+              <span style="font-size:12px;color:#616161;">${cm.format(c.value || {})}</span>
+            </div>` : '';
+          }).join('')
+        : '<span style="color:#BDBDBD;font-size:12px;">미설정</span>';
 
       const content = `
         <div style="margin-bottom:20px;">
@@ -265,23 +352,14 @@
         </div>
 
         <div style="border-top:1px solid #E0E0E0;padding-top:16px;margin-bottom:20px;">
-          <div class="form-label" style="margin-bottom:12px;font-size:13px;font-weight:700;color:#212121;">적용 평가표</div>
-          <div style="display:flex;flex-wrap:wrap;gap:8px;">
-            ${p.forms.length > 0 ? `<span class="badge badge-active">${p.forms[0]}</span>` : '<span style="color:#BDBDBD;font-size:12px;">미지정</span>'}
-          </div>
+          <div class="form-label" style="margin-bottom:12px;font-size:13px;font-weight:700;color:#212121;">상세 조건</div>
+          <div>${criteriaHtml}</div>
         </div>
 
         <div style="border-top:1px solid #E0E0E0;padding-top:16px;margin-bottom:20px;">
-          <div class="form-label" style="margin-bottom:12px;font-size:13px;font-weight:700;color:#212121;">수동 평가 대상 기준</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-            <div>
-              <div class="form-label">선정 기준</div>
-              <div style="font-size:13px;font-weight:500;">${criteriaLabel}</div>
-            </div>
-            <div>
-              <div class="form-label">세부 조건</div>
-              <div style="font-size:13px;">${criteriaDetail}</div>
-            </div>
+          <div class="form-label" style="margin-bottom:12px;font-size:13px;font-weight:700;color:#212121;">적용 평가표</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;">
+            ${p.forms.length > 0 ? `<span class="badge badge-active">${p.forms[0]}</span>` : '<span style="color:#BDBDBD;font-size:12px;">미지정</span>'}
           </div>
         </div>
 
@@ -461,15 +539,154 @@
             <div id="criteria-agent-area"></div>
             <div style="font-size:11px;color:#9E9E9E;margin-top:6px;">지정된 상담사의 모든 상담을 수동 평가 대상으로 지정합니다</div>
           </div>`;
+        case 'consultType': {
+          const depthVal = v.depth || 'all';
+          return `<div style="margin-top:8px;">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              ${['all','1','2','3','4'].map(d => `
+                <label style="display:flex;align-items:center;gap:3px;font-size:13px;cursor:pointer;">
+                  <input type="radio" name="ct-depth" value="${d}" onchange="onConsultDepthChange()" ${depthVal === d ? 'checked' : ''}> ${d === 'all' ? '전체' : d + 'Depth'}
+                </label>`).join('')}
+            </div>
+            <div id="ct-select-area" style="margin-top:8px;"></div>
+            <div style="font-size:11px;color:#9E9E9E;margin-top:6px;">지정한 상담 유형에 해당하는 건만 평가 대상에 포함합니다</div>
+          </div>`;
+        }
+        case 'callSegment': {
+          const isFull = v.full !== false;
+          return `<div style="margin-top:8px;">
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;margin-bottom:8px;">
+              <input type="checkbox" id="cs-full" onchange="onCallSegmentToggle()" ${isFull ? 'checked' : ''}> 전체 구간
+            </label>
+            <div id="cs-range" style="display:flex;align-items:center;gap:8px;${isFull ? 'display:none;' : ''}">
+              <input type="text" id="cs-start" class="form-input" style="width:80px;" placeholder="00:00" value="${v.start || ''}">
+              <span style="font-size:13px;color:#757575;">~</span>
+              <input type="text" id="cs-end" class="form-input" style="width:80px;" placeholder="05:00" value="${v.end || ''}">
+              <span style="font-size:12px;color:#9E9E9E;">(분:초)</span>
+            </div>
+            <div style="font-size:11px;color:#9E9E9E;margin-top:6px;">통화 녹음 중 특정 구간만 평가 대상으로 지정합니다</div>
+          </div>`;
+        }
+        case 'durationRange':
+          return `<div style="margin-top:8px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <label class="form-label" style="margin:0;white-space:nowrap;">최소</label>
+              <input type="number" id="dr-min" class="form-input" style="width:70px;" value="${v.min || ''}" min="0" placeholder="0">
+              <span style="font-size:13px;color:#757575;">분 ~</span>
+              <label class="form-label" style="margin:0;white-space:nowrap;">최대</label>
+              <input type="number" id="dr-max" class="form-input" style="width:70px;" value="${v.max || ''}" min="0" placeholder="∞">
+              <span style="font-size:13px;color:#757575;">분</span>
+            </div>
+            <div style="font-size:11px;color:#9E9E9E;margin-top:6px;">총 통화 시간이 지정 범위에 해당하는 건만 평가 대상에 포함합니다 (빈값 = 제한 없음)</div>
+          </div>`;
+        case 'callTimeRange':
+          return `<div style="margin-top:8px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <label class="form-label" style="margin:0;white-space:nowrap;">시작</label>
+              <input type="time" id="ctr-start" class="form-input" style="width:120px;" value="${v.start || ''}">
+              <span style="font-size:13px;color:#757575;">~</span>
+              <label class="form-label" style="margin:0;white-space:nowrap;">종료</label>
+              <input type="time" id="ctr-end" class="form-input" style="width:120px;" value="${v.end || ''}">
+            </div>
+            <div style="font-size:11px;color:#9E9E9E;margin-top:6px;">해당 시간대에 발생한 상담만 평가 대상에 포함합니다 (빈값 = 전체 시간대)</div>
+          </div>`;
+        case 'weekdays': {
+          const allDays = ['월','화','수','목','금','토','일'];
+          const checked = v.days || allDays;
+          return `<div style="margin-top:8px;">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              ${allDays.map(d => `
+                <label style="display:flex;align-items:center;gap:3px;font-size:13px;cursor:pointer;">
+                  <input type="checkbox" name="wd-day" value="${d}" ${checked.includes(d) ? 'checked' : ''}> ${d}
+                </label>`).join('')}
+            </div>
+            <div style="font-size:11px;color:#9E9E9E;margin-top:6px;">선택한 요일에 발생한 상담만 평가 대상에 포함합니다</div>
+          </div>`;
+        }
         default:
           return '';
       }
     }
 
-    function onCriteriaChange() {
-      const type = document.getElementById('pf-criteria')?.value || '';
-      const area = document.getElementById('criteria-detail');
-      if (area) area.innerHTML = type ? buildCriteriaDetail(type, {}) : '';
+    function onCriteriaToggle(type) {
+      const chk = document.querySelector(`input[name="pf-criteria-chk"][value="${type}"]`);
+      const area = document.getElementById('criteria-detail-' + type);
+      if (!area) return;
+      if (chk && chk.checked) {
+        area.style.display = '';
+        area.innerHTML = buildCriteriaDetail(type, {});
+      } else {
+        area.style.display = 'none';
+        area.innerHTML = '';
+      }
+    }
+
+    function onConsultDepthChange() {
+      const depth = document.querySelector('input[name="ct-depth"]:checked')?.value || 'all';
+      const area = document.getElementById('ct-select-area');
+      if (!area) return;
+      if (depth === 'all') { area.innerHTML = ''; return; }
+      const n = parseInt(depth);
+      let html = '';
+      const d1Opts = Object.keys(consultTypeTree).map(k => `<option value="${k}">${k}</option>`).join('');
+      html += `<select id="ct-d1" class="form-select" style="width:100%;" onchange="onConsultDChange(1)"><option value="">1Depth 선택</option>${d1Opts}</select>`;
+      for (let i = 2; i <= n; i++) {
+        html += `<select id="ct-d${i}" class="form-select" style="width:100%;margin-top:6px;" onchange="onConsultDChange(${i})"><option value="">${i}Depth 선택</option></select>`;
+      }
+      area.innerHTML = html;
+    }
+
+    function getConsultOptions(level) {
+      if (level === 1) return Object.keys(consultTypeTree);
+      const d1 = document.getElementById('ct-d1')?.value;
+      if (!d1 || !consultTypeTree[d1]) return [];
+      if (level === 2) return Object.keys(consultTypeTree[d1] || {});
+      const d2 = document.getElementById('ct-d2')?.value;
+      if (!d2 || !consultTypeTree[d1]?.[d2]) return [];
+      if (level === 3) return Object.keys(consultTypeTree[d1][d2] || {});
+      const d3 = document.getElementById('ct-d3')?.value;
+      if (!d3 || !consultTypeTree[d1]?.[d2]?.[d3]) return [];
+      if (level === 4) {
+        const node = consultTypeTree[d1][d2][d3];
+        return typeof node === 'object' ? Object.keys(node) : [];
+      }
+      return [];
+    }
+
+    function onConsultDChange(changedLevel) {
+      const depth = parseInt(document.querySelector('input[name="ct-depth"]:checked')?.value || '0');
+      for (let i = changedLevel + 1; i <= depth; i++) {
+        const sel = document.getElementById('ct-d' + i);
+        if (!sel) continue;
+        const opts = getConsultOptions(i);
+        sel.innerHTML = `<option value="">${i}Depth 선택</option>` + opts.map(k => `<option value="${k}">${k}</option>`).join('');
+      }
+    }
+
+    function onCallSegmentToggle() {
+      const isFull = document.getElementById('cs-full')?.checked;
+      const range = document.getElementById('cs-range');
+      if (range) range.style.display = isFull ? 'none' : 'flex';
+    }
+
+    function buildConsultTypeTree(evals) {
+      const tree = {};
+      evals.forEach(ev => {
+        const ct = ev.consultation_type;
+        if (!ct) return;
+        const parts = ct.split('>').map(s => s.trim());
+        if (!tree[parts[0]]) tree[parts[0]] = {};
+        if (parts[1]) {
+          if (!tree[parts[0]][parts[1]]) tree[parts[0]][parts[1]] = {};
+          if (parts[2]) {
+            if (!tree[parts[0]][parts[1]][parts[2]]) tree[parts[0]][parts[1]][parts[2]] = {};
+            if (parts[3]) {
+              tree[parts[0]][parts[1]][parts[2]][parts[3]] = true;
+            }
+          }
+        }
+      });
+      return tree;
     }
 
     function onCriteriaWsChange() {
@@ -503,8 +720,8 @@
       const p = plan || {};
       const td = p.targetDetail || { workspace: '', teams: [], inbound: true, outbound: true };
       const selectedWs = td.workspace || '';
-      const repeatVal = p.repeat || '1회성';
-      const isOneTime = repeatVal === '1회성';
+      const repeatVal = p.repeat || '지속';
+      const isOneTime = repeatVal === '1회성' || repeatVal === '지속';
 
       const wsOptions = workspacesData.map(ws =>
         `<option value="${ws.name}"${ws.name === selectedWs ? ' selected' : ''}>${ws.name}</option>`
@@ -524,17 +741,33 @@
 
       const formsSelectHtml = getFormsSelectHtml(p.forms || []);
 
-      const criteriaType = p.criteriaType || '';
+      const selectedCriteria = p.criteria || (p.criteriaType ? [{ type: p.criteriaType, value: p.criteriaValue || {} }] : []);
+      const selectedTypes = selectedCriteria.map(c => c.type);
       const criteriaOptions = [
         { value: 'workingDays', label: '근무일수 기준' },
         { value: 'sampling', label: '샘플링 비율' },
         { value: 'scoreThreshold', label: 'AI 점수 기준' },
         { value: 'confidence', label: 'AI 신뢰도 기준' },
-        { value: 'specificAgents', label: '특정 상담사 지정' }
+        { value: 'specificAgents', label: '특정 상담사 지정' },
+        { value: 'consultType', label: '상담 유형 (Depth)' },
+        { value: 'callSegment', label: '통화 구간 지정' },
+        { value: 'durationRange', label: '통화 시간 범위' },
+        { value: 'callTimeRange', label: '상담 시간대' },
+        { value: 'weekdays', label: '요일 필터' }
       ];
-      const criteriaSelectHtml = criteriaOptions.map(o =>
-        `<option value="${o.value}"${o.value === criteriaType ? ' selected' : ''}>${o.label}</option>`
-      ).join('');
+      const criteriaCheckboxesHtml = criteriaOptions.map(o => {
+        const isChecked = selectedTypes.includes(o.value);
+        const cv = (selectedCriteria.find(c => c.type === o.value) || {}).value || {};
+        return `
+          <div style="border:1px solid #E0E0E0;border-radius:6px;padding:10px 14px;margin-bottom:6px;">
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;font-weight:500;">
+              <input type="checkbox" name="pf-criteria-chk" value="${o.value}" onchange="onCriteriaToggle('${o.value}')" ${isChecked ? 'checked' : ''}> ${o.label}
+            </label>
+            <div id="criteria-detail-${o.value}" style="${isChecked ? '' : 'display:none;'}">
+              ${isChecked ? buildCriteriaDetail(o.value, cv) : ''}
+            </div>
+          </div>`;
+      }).join('');
 
       return `
         <div style="display:flex;flex-direction:column;gap:16px;">
@@ -555,6 +788,9 @@
             <div style="flex:1;">
               <label class="form-label">반복 주기</label>
               <div style="display:flex;gap:10px;margin-top:6px;">
+                <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+                  <input type="radio" name="pf-repeat" value="지속" onchange="onRepeatChange()" ${repeatVal === '지속' ? 'checked' : ''}> 지속
+                </label>
                 <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
                   <input type="radio" name="pf-repeat" value="1회성" onchange="onRepeatChange()" ${repeatVal === '1회성' ? 'checked' : ''}> 1회성
                 </label>
@@ -599,19 +835,15 @@
           </div>
 
           <div style="border-top:1px solid #E0E0E0;padding-top:14px;">
-            <div class="form-label" style="font-weight:700;margin-bottom:8px;">적용 평가표</div>
-            ${formsSelectHtml}
+            <div class="form-label" style="font-weight:700;margin-bottom:8px;">상세 조건</div>
+            <div style="max-height:340px;overflow-y:auto;padding-right:4px;">
+              ${criteriaCheckboxesHtml}
+            </div>
           </div>
 
           <div style="border-top:1px solid #E0E0E0;padding-top:14px;">
-            <div class="form-label" style="font-weight:700;margin-bottom:8px;">수동 평가 대상 기준 *</div>
-            <select id="pf-criteria" class="form-select" style="width:100%;" onchange="onCriteriaChange()">
-              <option value="">기준을 선택하세요</option>
-              ${criteriaSelectHtml}
-            </select>
-            <div id="criteria-detail">
-              ${criteriaType ? buildCriteriaDetail(criteriaType, p.criteriaValue || {}) : ''}
-            </div>
+            <div class="form-label" style="font-weight:700;margin-bottom:8px;">적용 평가표</div>
+            ${formsSelectHtml}
           </div>
 
           <div style="border-top:1px solid #E0E0E0;padding-top:14px;">
@@ -623,10 +855,10 @@
     }
 
     function onRepeatChange() {
-      const repeat = document.querySelector('input[name="pf-repeat"]:checked')?.value || '1회성';
+      const repeat = document.querySelector('input[name="pf-repeat"]:checked')?.value || '지속';
       const endInput = document.getElementById('pf-end');
       if (!endInput) return;
-      if (repeat === '1회성') {
+      if (repeat === '1회성' || repeat === '지속') {
         endInput.disabled = true; endInput.value = '';
         endInput.style.background = '#F5F5F5'; endInput.style.color = '#BDBDBD';
       } else {
@@ -678,9 +910,9 @@
       const periodStart = document.getElementById('pf-start')?.value;
       if (!periodStart) { AICC_Toast.show('시작일을 입력하세요.'); return null; }
 
-      const repeat = document.querySelector('input[name="pf-repeat"]:checked')?.value || '1회성';
-      const periodEnd = repeat === '1회성' ? '' : (document.getElementById('pf-end')?.value || '');
-      if (repeat !== '1회성' && !periodEnd) { AICC_Toast.show('종료일을 입력하세요.'); return null; }
+      const repeat = document.querySelector('input[name="pf-repeat"]:checked')?.value || '지속';
+      const periodEnd = (repeat === '1회성' || repeat === '지속') ? '' : (document.getElementById('pf-end')?.value || '');
+      if (repeat !== '1회성' && repeat !== '지속' && !periodEnd) { AICC_Toast.show('종료일을 입력하세요.'); return null; }
 
       const workspace = document.getElementById('pf-ws')?.value || '';
       const teams = [...document.querySelectorAll('input[name="pf-team"]:checked')].map(el => el.value);
@@ -689,41 +921,67 @@
       const selectedForm = document.getElementById('pf-form')?.value;
       const forms = selectedForm ? [selectedForm] : [];
 
-      const criteriaType = document.getElementById('pf-criteria')?.value;
-      if (!criteriaType) { AICC_Toast.show('수동 평가 대상 기준을 선택하세요.'); return null; }
-
-      let criteriaValue = {};
-      switch (criteriaType) {
-        case 'workingDays': {
-          const d = parseInt(document.getElementById('criteria-days')?.value);
-          if (!d || d <= 0) { AICC_Toast.show('근무일수를 입력하세요.'); return null; }
-          criteriaValue = { days: d };
-          break;
+      const checkedCriteria = [...document.querySelectorAll('input[name="pf-criteria-chk"]:checked')].map(el => el.value);
+      const criteria = [];
+      for (const ct of checkedCriteria) {
+        let val = {};
+        switch (ct) {
+          case 'workingDays': {
+            const d = parseInt(document.getElementById('criteria-days')?.value);
+            if (!d || d <= 0) { AICC_Toast.show('근무일수를 입력하세요.'); return null; }
+            val = { days: d }; break;
+          }
+          case 'sampling': {
+            const r = parseInt(document.getElementById('criteria-rate')?.value);
+            if (!r || r <= 0 || r > 100) { AICC_Toast.show('샘플링 비율을 1~100% 범위로 입력하세요.'); return null; }
+            val = { rate: r }; break;
+          }
+          case 'scoreThreshold': {
+            const sc = parseInt(document.getElementById('criteria-score')?.value);
+            if (sc == null || sc < 0 || sc > 100) { AICC_Toast.show('AI 점수를 0~100 범위로 입력하세요.'); return null; }
+            val = { score: sc }; break;
+          }
+          case 'confidence': {
+            val = { level: document.getElementById('criteria-level')?.value || 'Medium' }; break;
+          }
+          case 'specificAgents': {
+            const agents = getDlbSelected('dlb-criteria-agents');
+            if (agents.length === 0) { AICC_Toast.show('상담사를 선택하세요.'); return null; }
+            val = { agents }; break;
+          }
+          case 'consultType': {
+            const depth = document.querySelector('input[name="ct-depth"]:checked')?.value || 'all';
+            let selected = '';
+            if (depth !== 'all') {
+              const parts = [];
+              for (let i = 1; i <= parseInt(depth); i++) {
+                const v = document.getElementById('ct-d' + i)?.value;
+                if (v) parts.push(v);
+              }
+              selected = parts.join(' > ');
+            }
+            val = { depth, selected }; break;
+          }
+          case 'callSegment': {
+            const full = document.getElementById('cs-full')?.checked !== false;
+            val = { full, start: document.getElementById('cs-start')?.value || '', end: document.getElementById('cs-end')?.value || '' }; break;
+          }
+          case 'durationRange': {
+            val = { min: document.getElementById('dr-min')?.value || '', max: document.getElementById('dr-max')?.value || '' }; break;
+          }
+          case 'callTimeRange': {
+            val = { start: document.getElementById('ctr-start')?.value || '', end: document.getElementById('ctr-end')?.value || '' }; break;
+          }
+          case 'weekdays': {
+            const days = [...document.querySelectorAll('input[name="wd-day"]:checked')].map(el => el.value);
+            val = { days }; break;
+          }
         }
-        case 'sampling': {
-          const r = parseInt(document.getElementById('criteria-rate')?.value);
-          if (!r || r <= 0 || r > 100) { AICC_Toast.show('샘플링 비율을 1~100% 범위로 입력하세요.'); return null; }
-          criteriaValue = { rate: r };
-          break;
-        }
-        case 'scoreThreshold': {
-          const sc = parseInt(document.getElementById('criteria-score')?.value);
-          if (sc == null || sc < 0 || sc > 100) { AICC_Toast.show('AI 점수를 0~100 범위로 입력하세요.'); return null; }
-          criteriaValue = { score: sc };
-          break;
-        }
-        case 'confidence': {
-          const lv = document.getElementById('criteria-level')?.value || 'Medium';
-          criteriaValue = { level: lv };
-          break;
-        }
-        case 'specificAgents': {
-          const agents = getDlbSelected('dlb-criteria-agents');
-          if (agents.length === 0) { AICC_Toast.show('상담사를 선택하세요.'); return null; }
-          criteriaValue = { agents };
-          break;
-        }
+        criteria.push({ type: ct, value: val });
       }
+
+      const criteriaType = criteria.length > 0 ? criteria[0].type : '';
+      const criteriaValue = criteria.length > 0 ? criteria[0].value : {};
 
       const assignee = document.getElementById('pf-assignee')?.value?.trim() || '';
       const targetLabel = buildTargetLabel(workspace, teams);
@@ -732,7 +990,7 @@
         name, periodStart, periodEnd, repeat,
         target: targetLabel,
         targetDetail: { workspace, teams, inbound, outbound },
-        forms, criteriaType, criteriaValue, assignee
+        forms, criteriaType, criteriaValue, criteria, assignee
       };
     }
 
@@ -830,6 +1088,13 @@
       if (wsRaw) workspacesData = wsRaw;
       const usRaw = await AICC_DataLoader.load('users.json');
       if (usRaw) usersData = usRaw;
+      const evRaw = await AICC_DataLoader.load('evaluations.json');
+      if (evRaw) { evaluationsData = evRaw; consultTypeTree = buildConsultTypeTree(evRaw); }
+
+      const repeats = [...new Set(plans.map(p => p.repeat).filter(Boolean))];
+      const repeatSel = document.getElementById('repeat-filter');
+      repeats.forEach(r => { repeatSel.innerHTML += '<option value="' + r + '">' + r + '</option>'; });
+
       renderTable();
     });
   </script>

@@ -701,3 +701,178 @@
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ── Period Picker ── */
+.pp-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.pp-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border: 1px solid #E0E0E0;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #212121;
+  background: white;
+  cursor: pointer;
+  white-space: nowrap;
+  min-width: 180px;
+  transition: border-color 0.15s;
+}
+.pp-trigger:hover { border-color: #BDBDBD; }
+.pp-trigger:focus { outline: none; border-color: #0F766E; box-shadow: 0 0 0 2px rgba(15,118,110,0.1); }
+
+.pp-popup {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  background: white;
+  border: 1px solid #E0E0E0;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  z-index: 80;
+  min-width: 360px;
+  animation: fadeIn 0.15s ease;
+}
+
+.pp-tabs {
+  display: flex;
+  border-bottom: 1px solid #E0E0E0;
+  padding: 4px;
+  gap: 2px;
+}
+.pp-tab {
+  flex: 1;
+  padding: 6px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #757575;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.pp-tab:hover { background: #F5F5F5; color: #424242; }
+.pp-tab.active { background: #E0F2F1; color: #0F766E; font-weight: 600; }
+
+.pp-body { padding: 12px; }
+
+.pp-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.pp-nav-btn {
+  width: 28px; height: 28px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: transparent;
+  border: 1px solid #E0E0E0;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 18px;
+  color: #757575;
+  line-height: 1;
+}
+.pp-nav-btn:hover { background: #F5F5F5; }
+.pp-nav-title { font-size: 13px; font-weight: 600; color: #212121; }
+
+/* Day / Week Calendar */
+.pp-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+}
+.pp-weekday {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: #9E9E9E;
+  padding: 4px 0;
+}
+.pp-day {
+  text-align: center;
+  padding: 7px 0;
+  font-size: 13px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.pp-day:hover { background: #F5F5F5; }
+.pp-day.empty { cursor: default; }
+.pp-day.empty:hover { background: transparent; }
+.pp-day.other { color: #BDBDBD; }
+.pp-day.today { color: #0F766E; font-weight: 700; }
+.pp-day.selected { background: #0F766E; color: white; font-weight: 600; }
+.pp-day.week-sel { background: #E0F2F1; color: #0F766E; font-weight: 500; }
+.pp-day.week-hover { background: #F0FDFA; }
+
+/* Month Grid */
+.pp-month-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.pp-month-cell {
+  text-align: center;
+  padding: 14px 8px;
+  font-size: 13px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid transparent;
+}
+.pp-month-cell:hover { background: #F5F5F5; border-color: #E0E0E0; }
+.pp-month-cell.selected { background: #0F766E; color: white; font-weight: 600; border-color: #0F766E; }
+
+/* Year Grid */
+.pp-year-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.pp-year-cell {
+  text-align: center;
+  padding: 14px 8px;
+  font-size: 13px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid transparent;
+}
+.pp-year-cell:hover { background: #F5F5F5; border-color: #E0E0E0; }
+.pp-year-cell.selected { background: #0F766E; color: white; font-weight: 600; border-color: #0F766E; }
+
+/* Custom Range */
+.pp-custom {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+.pp-custom-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+.pp-custom-field label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #757575;
+}
+.pp-custom-field input { font-size: 12px; width: 100%; }
+.pp-custom-sep {
+  font-size: 14px;
+  color: #757575;
+  padding-bottom: 6px;
+  flex-shrink: 0;
+}
+.pp-custom .btn { white-space: nowrap; flex-shrink: 0; }

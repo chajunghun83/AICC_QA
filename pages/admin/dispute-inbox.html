@@ -49,6 +49,10 @@
       </div>
       <div class="filter-body">
         <div>
+          <label class="form-label">기간</label>
+          <div id="period-picker-container"></div>
+        </div>
+        <div>
           <label class="form-label">상태</label>
           <select class="form-select" id="status-filter" onchange="filterDisputes()">
             <option value="all">전체</option>
@@ -59,13 +63,31 @@
           </select>
         </div>
         <div>
-          <label class="form-label">기간</label>
-          <select class="form-select" id="period-filter" onchange="filterDisputes()">
-            <option value="all">전체 기간</option>
-            <option value="7d">최근 7일</option>
-            <option value="30d">최근 30일</option>
-            <option value="90d">최근 90일</option>
+          <label class="form-label">팀</label>
+          <select class="form-select" id="team-filter" onchange="filterDisputes()">
+            <option value="all">전체</option>
           </select>
+        </div>
+        <div>
+          <label class="form-label">상담사</label>
+          <input type="text" class="form-input" id="agent-search" placeholder="상담사명 검색" style="min-width:120px;">
+        </div>
+        <div>
+          <label class="form-label">이의 항목</label>
+          <select class="form-select" id="item-filter" onchange="filterDisputes()">
+            <option value="all">전체</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">처리자</label>
+          <input type="text" class="form-input" id="handler-search" placeholder="처리자명 검색" style="min-width:120px;">
+        </div>
+        <div>
+          <label class="form-label">&nbsp;</label>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-secondary btn-sm" onclick="resetDisputeFilter()">초기화</button>
+            <button class="btn btn-primary btn-sm" onclick="filterDisputes()">검색</button>
+          </div>
         </div>
       </div>
     </div>
@@ -105,6 +127,7 @@
   <script src="../../js/components/layout.js"></script>
   <script src="../../js/components/modal.js"></script>
   <script src="../../js/components/toast.js"></script>
+  <script src="../../js/components/period-picker.js"></script>
   <script>
     // 더미 데이터
     const disputes = [
@@ -149,13 +172,28 @@
     }
 
     function filterDisputes() {
+      let filtered = [...disputes];
       const statusVal = document.getElementById('status-filter').value;
-      let filtered = disputes;
-      if (statusVal !== 'all') {
-        filtered = filtered.filter(d => d.status === statusVal);
-      }
+      if (statusVal !== 'all') filtered = filtered.filter(d => d.status === statusVal);
+      const teamVal = document.getElementById('team-filter').value;
+      if (teamVal !== 'all') filtered = filtered.filter(d => d.team === teamVal);
+      const agentSearch = (document.getElementById('agent-search').value || '').trim().toLowerCase();
+      if (agentSearch) filtered = filtered.filter(d => (d.agent || '').toLowerCase().includes(agentSearch));
+      const itemVal = document.getElementById('item-filter').value;
+      if (itemVal !== 'all') filtered = filtered.filter(d => d.item === itemVal);
+      const handlerSearch = (document.getElementById('handler-search').value || '').trim().toLowerCase();
+      if (handlerSearch) filtered = filtered.filter(d => (d.handler || '').toLowerCase().includes(handlerSearch));
       renderTable(filtered);
       AICC_Toast.show('필터가 적용되었습니다.');
+    }
+
+    function resetDisputeFilter() {
+      document.getElementById('status-filter').value = 'all';
+      document.getElementById('team-filter').value = 'all';
+      document.getElementById('agent-search').value = '';
+      document.getElementById('item-filter').value = 'all';
+      document.getElementById('handler-search').value = '';
+      renderTable(disputes);
     }
 
     function openDetail(no) {
@@ -255,6 +293,19 @@
 
     // 초기 렌더링
     document.addEventListener('DOMContentLoaded', () => {
+      AICC_PeriodPicker.create('period-picker-container', {
+        defaultPeriod: 'monthly',
+        onChange: function() { filterDisputes(); }
+      });
+
+      const teams = [...new Set(disputes.map(d => d.team))];
+      const teamSel = document.getElementById('team-filter');
+      teams.forEach(t => { teamSel.innerHTML += '<option value="' + t + '">' + t + '</option>'; });
+
+      const items = [...new Set(disputes.map(d => d.item))];
+      const itemSel = document.getElementById('item-filter');
+      items.forEach(i => { itemSel.innerHTML += '<option value="' + i + '">' + i + '</option>'; });
+
       renderTable(disputes);
     });
   </script>

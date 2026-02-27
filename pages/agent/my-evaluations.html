@@ -27,11 +27,7 @@
       <div class="filter-body">
         <div>
           <label class="form-label">기간</label>
-          <select class="form-select" id="period-filter" onchange="applyFilter()">
-            <option value="today">오늘</option>
-            <option value="week" selected>최근 7일</option>
-            <option value="month">최근 30일</option>
-          </select>
+          <div id="period-picker-container"></div>
         </div>
         <div>
           <label class="form-label">점수 범위</label>
@@ -49,6 +45,33 @@
             <option value="I/B">I/B (인바운드)</option>
             <option value="O/B">O/B (아웃바운드)</option>
           </select>
+        </div>
+        <div>
+          <label class="form-label">평가표</label>
+          <select class="form-select" id="form-filter">
+            <option value="all">전체</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">이슈 유무</label>
+          <select class="form-select" id="issue-filter">
+            <option value="all">전체</option>
+            <option value="yes">이슈 있음</option>
+            <option value="no">이슈 없음</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">신뢰도</label>
+          <select class="form-select" id="confidence-filter">
+            <option value="all">전체</option>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">상담유형</label>
+          <input type="text" class="form-input" id="consult-search" placeholder="상담유형 검색" style="min-width:130px;">
         </div>
         <div>
           <label class="form-label">&nbsp;</label>
@@ -107,6 +130,7 @@
   <script src="../../js/components/layout.js"></script>
   <script src="../../js/components/modal.js"></script>
   <script src="../../js/components/toast.js"></script>
+  <script src="../../js/components/period-picker.js"></script>
   <script>
     // 인라인 더미 데이터 - 홍길동 평가 15건
     const allEvals = [
@@ -190,21 +214,36 @@
     let filteredEvals = [...allEvals];
 
     document.addEventListener('DOMContentLoaded', () => {
+      AICC_PeriodPicker.create('period-picker-container', {
+        defaultPeriod: 'monthly',
+        onChange: function() { applyFilter(); }
+      });
+
+      const formNames = [...new Set(allEvals.map(e => e.eval_form).filter(Boolean))];
+      const formSel = document.getElementById('form-filter');
+      formNames.forEach(f => { formSel.innerHTML += '<option value="' + f + '">' + f + '</option>'; });
+
       renderEvalTable(allEvals);
     });
 
     function applyFilter() {
-      const period = document.getElementById('period-filter').value;
       const scoreRange = document.getElementById('score-filter').value;
       const callType = document.getElementById('type-filter').value;
+      const formVal = document.getElementById('form-filter').value;
+      const issueVal = document.getElementById('issue-filter').value;
+      const confVal = document.getElementById('confidence-filter').value;
+      const consultSearch = (document.getElementById('consult-search').value || '').trim().toLowerCase();
 
       filteredEvals = allEvals.filter(ev => {
-        // 점수 필터
         if (scoreRange === 'high' && ev.score < 80) return false;
         if (scoreRange === 'mid' && (ev.score < 60 || ev.score >= 80)) return false;
         if (scoreRange === 'low' && ev.score >= 60) return false;
-        // 유형 필터
         if (callType !== 'all' && ev.type !== callType) return false;
+        if (formVal !== 'all' && ev.eval_form !== formVal) return false;
+        if (issueVal === 'yes' && (!ev.issue || ev.issue === '-')) return false;
+        if (issueVal === 'no' && ev.issue && ev.issue !== '-') return false;
+        if (confVal !== 'all' && ev.confidence !== confVal) return false;
+        if (consultSearch && !(ev.consultation_type || '').toLowerCase().includes(consultSearch)) return false;
         return true;
       });
 
@@ -213,9 +252,12 @@
     }
 
     function resetFilter() {
-      document.getElementById('period-filter').value = 'week';
       document.getElementById('score-filter').value = 'all';
       document.getElementById('type-filter').value = 'all';
+      document.getElementById('form-filter').value = 'all';
+      document.getElementById('issue-filter').value = 'all';
+      document.getElementById('confidence-filter').value = 'all';
+      document.getElementById('consult-search').value = '';
       filteredEvals = [...allEvals];
       renderEvalTable(filteredEvals);
     }

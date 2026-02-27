@@ -43,19 +43,10 @@
       </div>
     </div>
 
-    <!-- 기간 선택 버튼 -->
+    <!-- 기간 선택 -->
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
       <span style="font-size:13px;font-weight:600;color:#424242;margin-right:4px;">기간:</span>
-      <button class="btn btn-secondary btn-sm period-btn" onclick="setPeriod(this, 7)">7일</button>
-      <button class="btn btn-secondary btn-sm period-btn active" onclick="setPeriod(this, 30)" style="background:#0F766E;color:white;border-color:#0F766E;">30일</button>
-      <button class="btn btn-secondary btn-sm period-btn" onclick="setPeriod(this, 90)">90일</button>
-      <button class="btn btn-secondary btn-sm period-btn" onclick="openCustomPeriod()">직접설정</button>
-      <div id="custom-period" style="display:none;margin-left:8px;display:none;align-items:center;gap:6px;">
-        <input type="date" class="form-input" id="date-from" value="2025-01-01" style="font-size:12px;">
-        <span style="color:#757575;">~</span>
-        <input type="date" class="form-input" id="date-to" value="2025-01-15" style="font-size:12px;">
-        <button class="btn btn-primary btn-sm" onclick="applyCustomPeriod()">적용</button>
-      </div>
+      <div id="period-picker-container"></div>
     </div>
 
     <!-- 차트 영역 -->
@@ -105,6 +96,7 @@
   <script src="../../js/components/layout.js"></script>
   <script src="../../js/components/modal.js"></script>
   <script src="../../js/components/toast.js"></script>
+  <script src="../../js/components/period-picker.js"></script>
   <script>
     /* ========== 인라인 더미 데이터 ========== */
     const TEAMS = [
@@ -192,6 +184,19 @@
     let trendChart = null;
 
     document.addEventListener('DOMContentLoaded', () => {
+      AICC_PeriodPicker.create('period-picker-container', {
+        defaultPeriod: 'monthly',
+        onChange: function(periodType, info) {
+          var labels = { daily: 1, weekly: 7, monthly: 30, yearly: 365 };
+          if (periodType === 'custom' && info.from && info.to) {
+            currentPeriod = Math.max(1, Math.ceil((new Date(info.to) - new Date(info.from)) / 86400000));
+          } else {
+            currentPeriod = labels[periodType] || 30;
+          }
+          document.getElementById('chart-period-label').textContent = periodType === 'custom' ? info.from + ' ~ ' + info.to : { daily:'일간', weekly:'주간', monthly:'월간', yearly:'년간' }[periodType] || '';
+          loadData();
+        }
+      });
       renderTeamCheckboxes();
       loadData();
     });
@@ -223,60 +228,6 @@
       renderTeamCheckboxes();
       renderChart();
       renderComparisonTable();
-    }
-
-    /* ========== 기간 선택 ========== */
-    function setPeriod(btn, days) {
-      document.querySelectorAll('.period-btn').forEach(b => {
-        b.style.background = '';
-        b.style.color = '';
-        b.style.borderColor = '';
-      });
-      btn.style.background = '#0F766E';
-      btn.style.color = 'white';
-      btn.style.borderColor = '#0F766E';
-
-      document.getElementById('custom-period').style.display = 'none';
-      currentPeriod = days;
-
-      const labels = { 7: '최근 7일', 30: '최근 30일', 90: '최근 90일' };
-      document.getElementById('chart-period-label').textContent = labels[days] || `최근 ${days}일`;
-
-      loadData();
-    }
-
-    function openCustomPeriod() {
-      document.querySelectorAll('.period-btn').forEach(b => {
-        b.style.background = '';
-        b.style.color = '';
-        b.style.borderColor = '';
-      });
-      // 마지막 버튼(직접설정) 활성화
-      const btns = document.querySelectorAll('.period-btn');
-      const lastBtn = btns[btns.length - 1];
-      lastBtn.style.background = '#0F766E';
-      lastBtn.style.color = 'white';
-      lastBtn.style.borderColor = '#0F766E';
-
-      document.getElementById('custom-period').style.display = 'flex';
-    }
-
-    function applyCustomPeriod() {
-      const from = document.getElementById('date-from').value;
-      const to = document.getElementById('date-to').value;
-      if (!from || !to) {
-        AICC_Toast.show('시작일과 종료일을 모두 선택해주세요.');
-        return;
-      }
-      const diffDays = Math.ceil((new Date(to) - new Date(from)) / (1000 * 60 * 60 * 24));
-      if (diffDays <= 0) {
-        AICC_Toast.show('종료일은 시작일 이후여야 합니다.');
-        return;
-      }
-      currentPeriod = Math.min(diffDays, 180);
-      document.getElementById('chart-period-label').textContent = `${from} ~ ${to} (${diffDays}일)`;
-      loadData();
-      AICC_Toast.show(`직접설정 기간이 적용되었습니다. (${diffDays}일)`);
     }
 
     /* ========== 필터 적용 ========== */

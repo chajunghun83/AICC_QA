@@ -36,11 +36,15 @@
         </div>
         <div>
           <label class="form-label">기간</label>
-          <select class="form-select" id="period-filter">
-            <option value="today">오늘</option>
-            <option value="week" selected>최근 7일</option>
-            <option value="month">최근 30일</option>
-          </select>
+          <div id="period-picker-container"></div>
+        </div>
+        <div>
+          <label class="form-label">상담사</label>
+          <input type="text" class="form-input" id="agent-search" placeholder="상담사명 검색" style="min-width:130px;">
+        </div>
+        <div>
+          <label class="form-label">평가자</label>
+          <input type="text" class="form-input" id="evaluator-search" placeholder="평가자명 검색" style="min-width:130px;">
         </div>
         <div>
           <label class="form-label">통화유형</label>
@@ -59,10 +63,29 @@
           </select>
         </div>
         <div>
+          <label class="form-label">점수 범위</label>
+          <select class="form-select" id="score-filter">
+            <option value="all">전체</option>
+            <option value="high">80점 이상</option>
+            <option value="mid">60 ~ 79점</option>
+            <option value="low">60점 미만</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">평가표</label>
+          <select class="form-select" id="form-filter">
+            <option value="all">전체</option>
+          </select>
+        </div>
+        <div>
           <label class="form-label">평가 계획</label>
           <select class="form-select" id="plan-filter" onchange="applyFilter()">
             <option value="all">전체</option>
           </select>
+        </div>
+        <div>
+          <label class="form-label">상담유형</label>
+          <input type="text" class="form-input" id="consult-search" placeholder="상담유형 검색" style="min-width:130px;">
         </div>
         <div>
           <label class="form-label">&nbsp;</label>
@@ -140,6 +163,7 @@
   <script src="../../js/components/layout.js"></script>
   <script src="../../js/components/modal.js"></script>
   <script src="../../js/components/toast.js"></script>
+  <script src="../../js/components/period-picker.js"></script>
   <script>
     let allData = {};
 
@@ -623,6 +647,18 @@
       if (statusVal === 'completed') filtered = filtered.filter(e => e.eval_status === 'completed');
       const planVal = document.getElementById('plan-filter').value;
       if (planVal !== 'all') filtered = filtered.filter(e => e.manual_plan === planVal);
+      const agentSearch = (document.getElementById('agent-search').value || '').trim().toLowerCase();
+      if (agentSearch) filtered = filtered.filter(e => (e.agent_name || '').toLowerCase().includes(agentSearch));
+      const evalSearch = (document.getElementById('evaluator-search').value || '').trim().toLowerCase();
+      if (evalSearch) filtered = filtered.filter(e => e.manual_review && (e.manual_review.reviewer || '').toLowerCase().includes(evalSearch));
+      const scoreVal = document.getElementById('score-filter').value;
+      if (scoreVal === 'high') filtered = filtered.filter(e => e.total_score >= 80);
+      if (scoreVal === 'mid') filtered = filtered.filter(e => e.total_score >= 60 && e.total_score < 80);
+      if (scoreVal === 'low') filtered = filtered.filter(e => e.total_score > 0 && e.total_score < 60);
+      const formVal = document.getElementById('form-filter').value;
+      if (formVal !== 'all') filtered = filtered.filter(e => e.eval_form === formVal);
+      const consultSearch = (document.getElementById('consult-search').value || '').trim().toLowerCase();
+      if (consultSearch) filtered = filtered.filter(e => (e.consultation_type || '').toLowerCase().includes(consultSearch));
       renderTable(filtered);
     }
 
@@ -630,10 +666,14 @@
       document.getElementById('ws-filter').value = 'all';
       document.getElementById('team-filter').value = 'all';
       document.getElementById('team-filter').disabled = true;
-      document.getElementById('period-filter').value = 'week';
       document.getElementById('type-filter').value = 'all';
       document.getElementById('status-filter').value = 'all';
       document.getElementById('plan-filter').value = 'all';
+      document.getElementById('agent-search').value = '';
+      document.getElementById('evaluator-search').value = '';
+      document.getElementById('score-filter').value = 'all';
+      document.getElementById('form-filter').value = 'all';
+      document.getElementById('consult-search').value = '';
       renderTable(manualEvals);
     }
 
@@ -656,6 +696,15 @@
       PLAN_NAMES.forEach(pn => {
         planFilter.innerHTML += `<option value="${pn}">${pn}</option>`;
       });
+
+      AICC_PeriodPicker.create('period-picker-container', {
+        defaultPeriod: 'monthly',
+        onChange: function() { applyFilter(); }
+      });
+
+      const formNames = [...new Set(manualEvals.map(e => e.eval_form).filter(Boolean))];
+      const formSel = document.getElementById('form-filter');
+      formNames.forEach(f => { formSel.innerHTML += '<option value="' + f + '">' + f + '</option>'; });
 
       renderTable(manualEvals);
     });

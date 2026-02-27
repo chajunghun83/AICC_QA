@@ -17,15 +17,17 @@
         <p style="font-size:12px;color:#757575;margin:4px 0 0;">워크스페이스 / 팀 / 상담사 단위 드릴다운 분석</p>
       </div>
       <div style="display:flex;align-items:center;gap:12px;">
-        <select class="form-select" id="period-filter" onchange="applyPeriodFilter()">
-          <option value="today">오늘</option>
-          <option value="week" selected>최근 7일</option>
-          <option value="month">최근 30일</option>
-        </select>
+        <div id="period-picker-container"></div>
         <select class="form-select" id="type-filter" onchange="applyPeriodFilter()">
           <option value="all">전체 유형</option>
           <option value="I/B">I/B (인바운드)</option>
           <option value="O/B">O/B (아웃바운드)</option>
+        </select>
+        <select class="form-select" id="score-range-filter" onchange="applyPeriodFilter()">
+          <option value="all">전체 점수</option>
+          <option value="high">80점 이상</option>
+          <option value="mid">60 ~ 79점</option>
+          <option value="low">60점 미만</option>
         </select>
       </div>
     </div>
@@ -73,6 +75,7 @@
   <script src="../../js/components/layout.js"></script>
   <script src="../../js/components/modal.js"></script>
   <script src="../../js/components/toast.js"></script>
+  <script src="../../js/components/period-picker.js"></script>
   <script>
     /* ========== 인라인 더미 데이터 ========== */
     const DUMMY = {
@@ -293,6 +296,11 @@
     let navStack = []; // [{level, label, data}]
 
     document.addEventListener('DOMContentLoaded', () => {
+      AICC_PeriodPicker.create('period-picker-container', {
+        defaultPeriod: 'monthly',
+        onChange: function() { applyPeriodFilter(); }
+      });
+
       const params = new URLSearchParams(window.location.search);
       const wsName = params.get('ws');
       const teamName = params.get('team');

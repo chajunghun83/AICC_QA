@@ -17,19 +17,7 @@
         <p style="font-size:12px;color:#757575;margin:4px 0 0;">실시간 품질 모니터링</p>
       </div>
       <div style="display:flex;align-items:center;gap:12px;">
-        <select class="form-select" id="period-filter" onchange="onPeriodChange()">
-          <option value="daily">일간</option>
-          <option value="weekly">주간</option>
-          <option value="monthly" selected>월간</option>
-          <option value="yearly">년간</option>
-          <option value="custom">사용자 지정</option>
-        </select>
-        <div id="custom-range" style="display:none;align-items:center;gap:6px;">
-          <input type="date" class="form-select" id="date-from" value="2024-01-01" style="min-width:130px;">
-          <span style="color:#757575;">~</span>
-          <input type="date" class="form-select" id="date-to" value="2024-01-31" style="min-width:130px;">
-          <button class="btn btn-primary btn-sm" onclick="applyCustomRange()">적용</button>
-        </div>
+        <div id="period-picker-container"></div>
         <select class="form-select" id="ws-filter" onchange="filterDashboard()">
           <option value="all">전체 워크스페이스</option>
         </select>
@@ -134,14 +122,19 @@
   <script src="../../js/components/layout.js"></script>
   <script src="../../js/components/modal.js"></script>
   <script src="../../js/components/toast.js"></script>
+  <script src="../../js/components/period-picker.js"></script>
   <script>
     let dashboardData = null;
     let trendChart = null;
     let teamChart = null;
 
     document.addEventListener('DOMContentLoaded', async () => {
-      // 레이아웃이 init된 후 데이터 로드
       await loadDashboard();
+
+      AICC_PeriodPicker.create('period-picker-container', {
+        defaultPeriod: 'monthly',
+        onChange: function(periodType) { applyPeriod(periodType); }
+      });
     });
 
     async function loadDashboard() {
@@ -166,8 +159,7 @@
         });
       }
 
-      const initPeriod = document.getElementById('period-filter').value;
-      const initCfg = periodConfig[initPeriod];
+      const initCfg = periodConfig['monthly'];
       renderKPICards(dashboardData.summary, initCfg);
       renderTrendChart(dashboardData.quality_trend_30days);
       renderTeamChart(dashboardData.team_scores);
@@ -469,19 +461,6 @@
       };
     }
 
-    function onPeriodChange() {
-      const period = document.getElementById('period-filter').value;
-      const customRange = document.getElementById('custom-range');
-      customRange.style.display = period === 'custom' ? 'flex' : 'none';
-
-      if (period === 'custom') return;
-      applyPeriod(period);
-    }
-
-    function applyCustomRange() {
-      applyPeriod('custom');
-      AICC_Toast.show('사용자 지정 기간이 적용되었습니다.');
-    }
 
     function generateDistribution() {
       const e = () => Math.round(10 + Math.random() * 40);

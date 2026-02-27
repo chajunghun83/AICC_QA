@@ -13,9 +13,9 @@
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
       <div>
         <h1 style="font-size:20px;font-weight:700;margin:0;">사용자 관리</h1>
-        <p style="font-size:12px;color:#757575;margin:4px 0 0;">시스템 사용자 및 역할 관리</p>
+        <p style="font-size:12px;color:#757575;margin:4px 0 0;">시스템 사용자 및 접근 범위 관리</p>
       </div>
-      <button class="btn btn-primary" onclick="openAddUserModal()">+ 사용자 추가</button>
+      <span></span>
     </div>
 
     <!-- 필터 -->
@@ -25,16 +25,19 @@
       </div>
       <div class="filter-body">
         <div>
-          <label class="form-label">역할</label>
-          <select class="form-select" id="role-filter" onchange="filterUsers()">
+          <label class="form-label">워크스페이스</label>
+          <select class="form-select" id="ws-filter" onchange="filterUsers()">
             <option value="all">전체</option>
-            <option value="ADMIN">관리자</option>
-            <option value="QA_MANAGER">QA 매니저</option>
-            <option value="AGENT">상담사</option>
           </select>
         </div>
         <div>
-          <label class="form-label">상태</label>
+          <label class="form-label">팀</label>
+          <select class="form-select" id="team-filter" onchange="filterUsers()">
+            <option value="all">전체</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">접속 권한</label>
           <select class="form-select" id="status-filter" onchange="filterUsers()">
             <option value="all">전체</option>
             <option value="active">활성</option>
@@ -42,8 +45,19 @@
           </select>
         </div>
         <div>
-          <label class="form-label">검색</label>
-          <input type="text" class="form-input" id="search-input" placeholder="이름 검색..." oninput="filterUsers()">
+          <label class="form-label">이름</label>
+          <input type="text" class="form-input" id="search-input" placeholder="이름 검색" style="min-width:120px;">
+        </div>
+        <div>
+          <label class="form-label">이메일</label>
+          <input type="text" class="form-input" id="email-search" placeholder="이메일 검색" style="min-width:150px;">
+        </div>
+        <div>
+          <label class="form-label">&nbsp;</label>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-secondary btn-sm" onclick="resetUserFilter()">초기화</button>
+            <button class="btn btn-primary btn-sm" onclick="filterUsers()">검색</button>
+          </div>
         </div>
       </div>
     </div>
@@ -60,10 +74,10 @@
             <tr>
               <th style="width:40px;">No</th>
               <th>이름</th>
-              <th>역할</th>
-              <th>팀</th>
               <th>워크스페이스</th>
-              <th>상태</th>
+              <th>팀</th>
+              <th>접근 범위</th>
+              <th>접속 권한</th>
             </tr>
           </thead>
           <tbody id="user-tbody"></tbody>
@@ -81,28 +95,105 @@
   <script src="../../../js/components/modal.js"></script>
   <script src="../../../js/components/toast.js"></script>
   <script>
-    // 더미 데이터
-    const users = [
-      { no: 1, name: '김철수', email: 'cskim@company.com', role: 'ADMIN', team: '-', workspace: '전체', status: 'active', statusText: '활성', joinDate: '2023-03-15' },
-      { no: 2, name: '박영희', email: 'yhpark@company.com', role: 'ADMIN', team: '-', workspace: '전체', status: 'active', statusText: '활성', joinDate: '2023-05-20' },
-      { no: 3, name: '이준호', email: 'jhlee@company.com', role: 'QA_MANAGER', team: '고객지원1팀', workspace: '서울센터', status: 'active', statusText: '활성', joinDate: '2023-08-01' },
-      { no: 4, name: '김민수', email: 'mskim@company.com', role: 'AGENT', team: '고객지원1팀', workspace: '서울센터', status: 'active', statusText: '활성', joinDate: '2024-01-10' },
-      { no: 5, name: '이서연', email: 'sylee@company.com', role: 'AGENT', team: '고객지원2팀', workspace: '서울센터', status: 'active', statusText: '활성', joinDate: '2024-02-15' },
-      { no: 6, name: '박지훈', email: 'jhpark@company.com', role: 'AGENT', team: '기술지원팀', workspace: '서울센터', status: 'active', statusText: '활성', joinDate: '2024-03-01' },
-      { no: 7, name: '최유진', email: 'yjchoi@company.com', role: 'AGENT', team: '고객지원1팀', workspace: '부산센터', status: 'active', statusText: '활성', joinDate: '2024-04-20' },
-      { no: 8, name: '정다은', email: 'dejung@company.com', role: 'AGENT', team: '영업지원팀', workspace: '부산센터', status: 'active', statusText: '활성', joinDate: '2024-05-10' },
-      { no: 9, name: '한승우', email: 'swhan@company.com', role: 'AGENT', team: '고객지원2팀', workspace: '서울센터', status: 'inactive', statusText: '비활성', joinDate: '2024-06-01' },
-      { no: 10, name: '윤하나', email: 'hnyoon@company.com', role: 'AGENT', team: '기술지원팀', workspace: '부산센터', status: 'inactive', statusText: '비활성', joinDate: '2024-07-15' }
+    const PERM_TREE = [
+      { id: 'admin', label: '관리자 영역', children: [
+        { id: 'admin-dashboard', label: '대시보드', children: [
+          { id: 'qa-dashboard', label: 'QA 대시보드' }
+        ]},
+        { id: 'admin-eval', label: '평가 현황', children: [
+          { id: 'auto-eval-status', label: '자동 평가 현황' },
+          { id: 'manual-eval-status', label: '수동 평가 현황' }
+        ]},
+        { id: 'admin-settings', label: '평가 설정', children: [
+          { id: 'eval-forms', label: '평가표 관리', children: [
+            { id: 'auto-eval-forms', label: '자동 평가표 관리' },
+            { id: 'manual-eval-forms', label: '수동 평가표 관리' }
+          ]},
+          { id: 'eval-items', label: '평가 항목 관리' },
+          { id: 'eval-plans', label: '평가 계획', children: [
+            { id: 'auto-eval-plans', label: '자동 평가 계획' },
+            { id: 'manual-eval-plans', label: '수동 평가 계획' }
+          ]}
+        ]},
+        { id: 'admin-analysis', label: '분석', children: [
+          { id: 'detail-analysis', label: '상세 분석' },
+          { id: 'trend-analysis', label: '트렌드 분석' },
+          { id: 'report-gen', label: '보고서 생성' }
+        ]},
+        { id: 'dispute-inbox', label: '이의제기 처리함' },
+        { id: 'admin-system', label: '시스템 설정', children: [
+          { id: 'user-mgmt', label: '사용자 관리' },
+          { id: 'system-logs', label: '시스템 로그' },
+          { id: 'eval-exclusions', label: '평가 제외 설정' },
+          { id: 'prompt-templates', label: '프롬프트 템플릿' }
+        ]}
+      ]},
+      { id: 'agent', label: '상담사 영역', children: [
+        { id: 'my-dashboard', label: '나의 성과 대시보드' },
+        { id: 'my-evaluations', label: '나의 평가 결과' },
+        { id: 'my-disputes', label: '나의 이의제기' }
+      ]},
+      { id: 'data-scope', label: '데이터 범위', children: [
+        { id: 'data-seoul', label: '서울센터', children: [
+          { id: 'data-seoul-vip', label: 'VIP상담팀' },
+          { id: 'data-seoul-general', label: '일반상담팀' },
+          { id: 'data-seoul-tech', label: '기술지원팀' }
+        ]},
+        { id: 'data-busan', label: '부산센터', children: [
+          { id: 'data-busan-general', label: '일반상담팀' },
+          { id: 'data-busan-happycall', label: '해피콜팀' }
+        ]}
+      ]}
     ];
 
-    function getRoleBadge(role) {
-      const map = {
-        'ADMIN': '<span class="badge" style="background:#E0F2F1;color:#0F766E;border:1px solid #B2DFDB;">ADMIN</span>',
-        'QA_MANAGER': '<span class="badge" style="background:#E3F2FD;color:#1565C0;border:1px solid #BBDEFB;">QA 매니저</span>',
-        'AGENT': '<span class="badge" style="background:#F5F5F5;color:#757575;border:1px solid #E0E0E0;">상담사</span>'
-      };
-      return map[role] || role;
+    function getAllIds(nodes) {
+      let ids = [];
+      nodes.forEach(n => { ids.push(n.id); if (n.children) ids = ids.concat(getAllIds(n.children)); });
+      return ids;
     }
+
+    const PERM_BADGE_COLORS = {
+      'admin':      'background:#E3F2FD;color:#1565C0;border:1px solid #BBDEFB;',
+      'agent':      'background:#E8F5E9;color:#2E7D32;border:1px solid #C8E6C9;',
+      'data-scope': 'background:#FFF3E0;color:#E65100;border:1px solid #FFE0B2;'
+    };
+
+    function permBadges(perms) {
+      if (!perms || perms.length === 0) return '<span style="color:#BDBDBD;font-size:11px;">미설정</span>';
+      const badges = [];
+      PERM_TREE.forEach(top => {
+        const allIds = getAllIds([top]);
+        const hasAny = allIds.some(id => perms.includes(id));
+        if (hasAny) {
+          const style = PERM_BADGE_COLORS[top.id] || 'background:#F5F5F5;color:#757575;border:1px solid #E0E0E0;';
+          badges.push(`<span class="badge" style="font-size:10px;margin:1px 2px;${style}">${top.label}</span>`);
+        }
+      });
+      return badges.length > 0 ? badges.join('') : '<span style="color:#BDBDBD;font-size:11px;">미설정</span>';
+    }
+
+    const users = [
+      { no: 1, name: '김철수', email: 'cskim@company.com', workspace: '서울센터', team: '전체', status: 'active', statusText: '활성', joinDate: '2023-03-15',
+        permissions: getAllIds(PERM_TREE) },
+      { no: 2, name: '박영희', email: 'yhpark@company.com', workspace: '부산센터', team: '전체', status: 'active', statusText: '활성', joinDate: '2023-05-20',
+        permissions: ['admin','admin-dashboard','qa-dashboard','admin-eval','auto-eval-status','manual-eval-status','admin-analysis','detail-analysis','trend-analysis','report-gen','dispute-inbox','data-scope','data-busan','data-busan-general','data-busan-happycall'] },
+      { no: 3, name: '이준호', email: 'jhlee@company.com', workspace: '서울센터', team: '고객지원1팀', status: 'active', statusText: '활성', joinDate: '2023-08-01',
+        permissions: ['admin','admin-dashboard','qa-dashboard','admin-eval','auto-eval-status','manual-eval-status','admin-analysis','detail-analysis','trend-analysis','data-scope','data-seoul','data-seoul-vip','data-seoul-general'] },
+      { no: 4, name: '김민수', email: 'mskim@company.com', workspace: '서울센터', team: '고객지원1팀', status: 'active', statusText: '활성', joinDate: '2024-01-10',
+        permissions: ['agent','my-dashboard','my-evaluations','my-disputes','data-scope','data-seoul','data-seoul-vip'] },
+      { no: 5, name: '이서연', email: 'sylee@company.com', workspace: '서울센터', team: '고객지원2팀', status: 'active', statusText: '활성', joinDate: '2024-02-15',
+        permissions: ['agent','my-dashboard','my-evaluations','my-disputes','data-scope','data-seoul','data-seoul-general'] },
+      { no: 6, name: '박지훈', email: 'jhpark@company.com', workspace: '서울센터', team: '기술지원팀', status: 'active', statusText: '활성', joinDate: '2024-03-01',
+        permissions: ['agent','my-dashboard','my-evaluations','my-disputes','data-scope','data-seoul','data-seoul-tech'] },
+      { no: 7, name: '최유진', email: 'yjchoi@company.com', workspace: '부산센터', team: '고객지원1팀', status: 'active', statusText: '활성', joinDate: '2024-04-20',
+        permissions: ['agent','my-dashboard','my-evaluations','my-disputes','data-scope','data-busan','data-busan-general'] },
+      { no: 8, name: '정다은', email: 'dejung@company.com', workspace: '부산센터', team: '영업지원팀', status: 'active', statusText: '활성', joinDate: '2024-05-10',
+        permissions: ['agent','my-dashboard','my-evaluations','my-disputes','data-scope','data-busan','data-busan-happycall'] },
+      { no: 9, name: '한승우', email: 'swhan@company.com', workspace: '서울센터', team: '고객지원2팀', status: 'inactive', statusText: '비활성', joinDate: '2024-06-01',
+        permissions: ['agent','my-dashboard','my-evaluations','data-scope','data-seoul','data-seoul-general'] },
+      { no: 10, name: '윤하나', email: 'hnyoon@company.com', workspace: '부산센터', team: '기술지원팀', status: 'inactive', statusText: '비활성', joinDate: '2024-07-15',
+        permissions: ['agent','my-dashboard','my-evaluations','data-scope','data-busan','data-busan-happycall'] }
+    ];
 
     function renderTable(data) {
       const tbody = document.getElementById('user-tbody');
@@ -111,187 +202,285 @@
         <tr onclick="openDetail(${u.no})">
           <td>${u.no}</td>
           <td style="font-weight:500;">${u.name}</td>
-          <td>${getRoleBadge(u.role)}</td>
-          <td>${u.team}</td>
           <td>${u.workspace}</td>
+          <td>${u.team}</td>
+          <td style="max-width:260px;">${permBadges(u.permissions)}</td>
           <td>${AICC_Fmt.statusBadge(u.status, u.statusText)}</td>
         </tr>
       `).join('');
     }
 
     function filterUsers() {
-      const roleVal = document.getElementById('role-filter').value;
       const statusVal = document.getElementById('status-filter').value;
-      const searchVal = document.getElementById('search-input').value.trim().toLowerCase();
-
+      const searchVal = (document.getElementById('search-input').value || '').trim().toLowerCase();
+      const wsVal = document.getElementById('ws-filter').value;
+      const teamVal = document.getElementById('team-filter').value;
+      const emailSearch = (document.getElementById('email-search').value || '').trim().toLowerCase();
       let filtered = users;
-      if (roleVal !== 'all') {
-        filtered = filtered.filter(u => u.role === roleVal);
-      }
-      if (statusVal !== 'all') {
-        filtered = filtered.filter(u => u.status === statusVal);
-      }
-      if (searchVal) {
-        filtered = filtered.filter(u => u.name.toLowerCase().includes(searchVal));
-      }
+      if (wsVal !== 'all') filtered = filtered.filter(u => u.workspace === wsVal);
+      if (teamVal !== 'all') filtered = filtered.filter(u => u.team === teamVal);
+      if (statusVal !== 'all') filtered = filtered.filter(u => u.status === statusVal);
+      if (searchVal) filtered = filtered.filter(u => u.name.toLowerCase().includes(searchVal));
+      if (emailSearch) filtered = filtered.filter(u => (u.email || '').toLowerCase().includes(emailSearch));
       renderTable(filtered);
     }
 
-    function openDetail(no) {
-      const u = users.find(x => x.no === no);
-      if (!u) return;
+    /* ── 트리 렌더링 ── */
+    function renderPermTree(nodes, checkedIds, depth, readonly) {
+      const d = depth || 0;
+      const ro = !!readonly;
+      return nodes.map(n => {
+        const hasKids = n.children && n.children.length > 0;
+        const isChecked = checkedIds.includes(n.id);
+        const pad = d * 20;
+        const chkId = 'perm-' + n.id;
+        if (hasKids) {
+          const allChildIds = getAllIds(n.children);
+          const allChecked = allChildIds.every(id => checkedIds.includes(id));
+          const someChecked = allChildIds.some(id => checkedIds.includes(id));
+          return `
+            <div style="margin-left:${pad}px;">
+              <div style="display:flex;align-items:center;gap:6px;padding:4px 0;cursor:pointer;" onclick="togglePermGroup(this)">
+                <span class="perm-arrow" style="font-size:10px;color:#9E9E9E;width:14px;text-align:center;transition:transform .2s;transform:rotate(90deg);">▶</span>
+                <input type="checkbox" id="${chkId}" data-perm-id="${n.id}" ${allChecked ? 'checked' : ''} ${(!allChecked && someChecked) ? 'data-indeterminate="true"' : ''} ${ro ? 'disabled' : `onchange="onPermCheck('${n.id}', this.checked)"`} onclick="event.stopPropagation()">
+                <label for="${chkId}" style="font-size:13px;font-weight:600;cursor:pointer;" onclick="event.stopPropagation()">${n.label}</label>
+              </div>
+              <div class="perm-children" style="display:block;">
+                ${renderPermTree(n.children, checkedIds, d + 1, ro)}
+              </div>
+            </div>`;
+        }
+        return `
+          <div style="margin-left:${pad}px;">
+            <div style="display:flex;align-items:center;gap:6px;padding:3px 0;">
+              <span style="width:14px;"></span>
+              <input type="checkbox" id="${chkId}" data-perm-id="${n.id}" ${isChecked ? 'checked' : ''} ${ro ? 'disabled' : `onchange="onPermCheck('${n.id}', this.checked)"`}>
+              <label for="${chkId}" style="font-size:13px;cursor:pointer;">${n.label}</label>
+            </div>
+          </div>`;
+      }).join('');
+    }
 
-      const content = `
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+    function togglePermGroup(el) {
+      const arrow = el.querySelector('.perm-arrow');
+      const children = el.nextElementSibling;
+      if (!children) return;
+      const isOpen = children.style.display !== 'none';
+      children.style.display = isOpen ? 'none' : 'block';
+      if (arrow) arrow.style.transform = isOpen ? '' : 'rotate(90deg)';
+    }
+
+    function findNode(nodes, id) {
+      for (const n of nodes) {
+        if (n.id === id) return n;
+        if (n.children) { const f = findNode(n.children, id); if (f) return f; }
+      }
+      return null;
+    }
+
+    function findParent(nodes, id, parent) {
+      for (const n of nodes) {
+        if (n.id === id) return parent;
+        if (n.children) { const f = findParent(n.children, id, n); if (f) return f; }
+      }
+      return null;
+    }
+
+    function onPermCheck(id, checked) {
+      const node = findNode(PERM_TREE, id);
+      if (!node) return;
+      if (node.children) {
+        const allIds = getAllIds(node.children);
+        allIds.forEach(cid => {
+          const el = document.querySelector(`[data-perm-id="${cid}"]`);
+          if (el) { el.checked = checked; el.indeterminate = false; }
+        });
+      }
+      updateParentState(PERM_TREE, id);
+    }
+
+    function updateParentState(tree, changedId) {
+      const parent = findParent(tree, changedId, null);
+      if (!parent || !parent.children) return;
+      const childIds = getAllIds(parent.children);
+      const checkStates = childIds.map(cid => {
+        const el = document.querySelector(`[data-perm-id="${cid}"]`);
+        return el ? el.checked : false;
+      });
+      const allChecked = checkStates.every(Boolean);
+      const someChecked = checkStates.some(Boolean);
+      const parentEl = document.querySelector(`[data-perm-id="${parent.id}"]`);
+      if (parentEl) {
+        parentEl.checked = allChecked;
+        parentEl.indeterminate = !allChecked && someChecked;
+      }
+      updateParentState(tree, parent.id);
+    }
+
+    function getCheckedPerms() {
+      return [...document.querySelectorAll('[data-perm-id]')]
+        .filter(el => el.checked)
+        .map(el => el.dataset.permId);
+    }
+
+    function initIndeterminate() {
+      document.querySelectorAll('[data-indeterminate="true"]').forEach(el => {
+        el.indeterminate = true;
+        el.removeAttribute('data-indeterminate');
+      });
+    }
+
+    /* ── 읽기 전용 모달 ── */
+    function buildReadonlyHtml(u) {
+      const treeHtml = renderPermTree(PERM_TREE, u.permissions || [], 0, true);
+      return `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
           <div>
             <div class="form-label">이름</div>
-            <input type="text" class="form-input" style="width:100%;" value="${u.name}">
+            <div style="font-size:14px;font-weight:500;padding:8px 0;">${u.name}</div>
           </div>
           <div>
             <div class="form-label">이메일</div>
-            <input type="email" class="form-input" style="width:100%;" value="${u.email}">
+            <div style="font-size:14px;padding:8px 0;">${u.email}</div>
           </div>
         </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
-          <div>
-            <div class="form-label">역할</div>
-            <select class="form-select" style="width:100%;" id="modal-role-select">
-              <option value="ADMIN" ${u.role === 'ADMIN' ? 'selected' : ''}>ADMIN (관리자)</option>
-              <option value="QA_MANAGER" ${u.role === 'QA_MANAGER' ? 'selected' : ''}>QA 매니저</option>
-              <option value="AGENT" ${u.role === 'AGENT' ? 'selected' : ''}>상담사</option>
-            </select>
-          </div>
-          <div>
-            <div class="form-label">상태</div>
-            <select class="form-select" style="width:100%;" id="modal-status-select">
-              <option value="active" ${u.status === 'active' ? 'selected' : ''}>활성</option>
-              <option value="inactive" ${u.status === 'inactive' ? 'selected' : ''}>비활성</option>
-            </select>
-          </div>
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px;">
           <div>
             <div class="form-label">워크스페이스</div>
-            <select class="form-select" style="width:100%;">
-              <option ${u.workspace === '전체' ? 'selected' : ''}>전체</option>
-              <option ${u.workspace === '서울센터' ? 'selected' : ''}>서울센터</option>
-              <option ${u.workspace === '부산센터' ? 'selected' : ''}>부산센터</option>
+            <div style="font-size:14px;padding:8px 0;">${u.workspace}</div>
+          </div>
+          <div>
+            <div class="form-label">팀</div>
+            <div style="font-size:14px;padding:8px 0;">${u.team}</div>
+          </div>
+          <div>
+            <div class="form-label">접속 권한</div>
+            <div style="padding:8px 0;">${AICC_Fmt.statusBadge(u.status, u.statusText)}</div>
+          </div>
+        </div>
+        <div style="margin-bottom:16px;">
+          <span class="form-label">가입일</span>
+          <span style="font-size:13px;color:#757575;margin-left:8px;">${AICC_Fmt.date(u.joinDate)}</span>
+        </div>
+        <div style="border-top:1px solid #E0E0E0;padding-top:14px;">
+          <div class="form-label" style="font-weight:700;margin-bottom:8px;">접근 범위</div>
+          <div style="max-height:380px;overflow-y:auto;border:1px solid #E0E0E0;border-radius:6px;padding:12px 14px;background:#FAFAFA;">
+            ${treeHtml}
+          </div>
+        </div>
+      `;
+    }
+
+    /* ── 수정 모달 ── */
+    function buildEditHtml(u) {
+      const treeHtml = renderPermTree(PERM_TREE, u.permissions || [], 0, false);
+      return `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+          <div>
+            <div class="form-label">이름 *</div>
+            <input type="text" class="form-input" id="uf-name" style="width:100%;" value="${u.name}">
+          </div>
+          <div>
+            <div class="form-label">이메일 *</div>
+            <input type="email" class="form-input" id="uf-email" style="width:100%;" value="${u.email}">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px;">
+          <div>
+            <div class="form-label">워크스페이스</div>
+            <select class="form-select" id="uf-ws" style="width:100%;">
+              <option value="서울센터" ${u.workspace === '서울센터' ? 'selected' : ''}>서울센터</option>
+              <option value="부산센터" ${u.workspace === '부산센터' ? 'selected' : ''}>부산센터</option>
             </select>
           </div>
           <div>
             <div class="form-label">팀</div>
-            <select class="form-select" style="width:100%;">
-              <option ${u.team === '-' ? 'selected' : ''}>-</option>
+            <select class="form-select" id="uf-team" style="width:100%;">
+              <option ${u.team === '전체' ? 'selected' : ''}>전체</option>
               <option ${u.team === '고객지원1팀' ? 'selected' : ''}>고객지원1팀</option>
               <option ${u.team === '고객지원2팀' ? 'selected' : ''}>고객지원2팀</option>
               <option ${u.team === '기술지원팀' ? 'selected' : ''}>기술지원팀</option>
               <option ${u.team === '영업지원팀' ? 'selected' : ''}>영업지원팀</option>
             </select>
           </div>
+          <div>
+            <div class="form-label">접속 권한</div>
+            <select class="form-select" id="uf-status" style="width:100%;">
+              <option value="active" ${u.status === 'active' ? 'selected' : ''}>활성</option>
+              <option value="inactive" ${u.status === 'inactive' ? 'selected' : ''}>비활성</option>
+            </select>
+          </div>
         </div>
-
-        <div style="border-top:1px solid #E0E0E0;padding-top:16px;">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-            <div>
-              <div class="form-label">가입일</div>
-              <div style="font-size:13px;color:#757575;">${AICC_Fmt.date(u.joinDate)}</div>
-            </div>
-            <div>
-              <div class="form-label">현재 역할</div>
-              <div>${getRoleBadge(u.role)}</div>
-            </div>
+        <div style="margin-bottom:16px;">
+          <span class="form-label">가입일</span>
+          <span style="font-size:13px;color:#757575;margin-left:8px;">${AICC_Fmt.date(u.joinDate)}</span>
+        </div>
+        <div style="border-top:1px solid #E0E0E0;padding-top:14px;">
+          <div class="form-label" style="font-weight:700;margin-bottom:8px;">접근 범위</div>
+          <div style="max-height:380px;overflow-y:auto;border:1px solid #E0E0E0;border-radius:6px;padding:12px 14px;background:#FAFAFA;">
+            ${treeHtml}
           </div>
         </div>
       `;
-
-      const footer = `
-        <button class="btn btn-danger" onclick="handleUserAction(${u.no}, '삭제')">삭제</button>
-        <div style="flex:1;"></div>
-        <button class="btn btn-secondary" onclick="AICC_Modal.close()">취소</button>
-        <button class="btn btn-primary" onclick="handleUserAction(${u.no}, '저장')">저장</button>
-      `;
-
-      AICC_Modal.open({
-        title: `사용자 상세 - ${u.name}`,
-        content: content,
-        footer: footer,
-        size: 'md'
-      });
     }
 
-    function openAddUserModal() {
-      const content = `
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
-          <div>
-            <div class="form-label">이름</div>
-            <input type="text" class="form-input" style="width:100%;" placeholder="이름 입력">
-          </div>
-          <div>
-            <div class="form-label">이메일</div>
-            <input type="email" class="form-input" style="width:100%;" placeholder="이메일 입력">
-          </div>
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
-          <div>
-            <div class="form-label">역할</div>
-            <select class="form-select" style="width:100%;">
-              <option value="AGENT">상담사</option>
-              <option value="QA_MANAGER">QA 매니저</option>
-              <option value="ADMIN">ADMIN (관리자)</option>
-            </select>
-          </div>
-          <div>
-            <div class="form-label">상태</div>
-            <select class="form-select" style="width:100%;">
-              <option value="active">활성</option>
-              <option value="inactive">비활성</option>
-            </select>
-          </div>
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-          <div>
-            <div class="form-label">워크스페이스</div>
-            <select class="form-select" style="width:100%;">
-              <option>서울센터</option>
-              <option>부산센터</option>
-            </select>
-          </div>
-          <div>
-            <div class="form-label">팀</div>
-            <select class="form-select" style="width:100%;">
-              <option>고객지원1팀</option>
-              <option>고객지원2팀</option>
-              <option>기술지원팀</option>
-              <option>영업지원팀</option>
-            </select>
-          </div>
-        </div>
-      `;
-
-      const footer = `
-        <button class="btn btn-secondary" onclick="AICC_Modal.close()">취소</button>
-        <button class="btn btn-primary" onclick="handleUserAction(0, '추가')">추가</button>
-      `;
-
+    function openDetail(no) {
+      const u = users.find(x => x.no === no);
+      if (!u) return;
       AICC_Modal.open({
-        title: '사용자 추가',
-        content: content,
-        footer: footer,
-        size: 'md'
+        title: '사용자 상세 - ' + u.name,
+        content: buildReadonlyHtml(u),
+        footer: `
+          <button class="btn btn-secondary" onclick="AICC_Modal.close()">닫기</button>
+          <button class="btn btn-primary" onclick="openEditMode(${u.no})">수정</button>
+        `,
+        size: 'lg'
       });
+      setTimeout(initIndeterminate, 50);
+    }
+
+    function openEditMode(no) {
+      const u = users.find(x => x.no === no);
+      if (!u) return;
+      AICC_Modal.close();
+      setTimeout(() => {
+        AICC_Modal.open({
+          title: '사용자 수정 - ' + u.name,
+          content: buildEditHtml(u),
+          footer: `
+            <button class="btn btn-danger" onclick="handleUserAction(${u.no}, '삭제')">삭제</button>
+            <div style="flex:1;"></div>
+            <button class="btn btn-secondary" onclick="openDetail(${u.no})">취소</button>
+            <button class="btn btn-primary" onclick="handleUserAction(${u.no}, '저장')">저장</button>
+          `,
+          size: 'lg'
+        });
+        setTimeout(initIndeterminate, 50);
+      }, 200);
     }
 
     function handleUserAction(no, action) {
       AICC_Modal.close();
-      AICC_Toast.show(`사용자 ${action}가 완료되었습니다.`);
+      AICC_Toast.show('사용자 ' + action + '가 완료되었습니다.');
     }
 
-    // 초기 렌더링
+    function resetUserFilter() {
+      document.getElementById('ws-filter').value = 'all';
+      document.getElementById('team-filter').value = 'all';
+      document.getElementById('status-filter').value = 'all';
+      document.getElementById('search-input').value = '';
+      document.getElementById('email-search').value = '';
+      renderTable(users);
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
+      const wsList = [...new Set(users.map(u => u.workspace).filter(Boolean))];
+      const wsSel = document.getElementById('ws-filter');
+      wsList.forEach(w => { wsSel.innerHTML += '<option value="' + w + '">' + w + '</option>'; });
+      const teamList = [...new Set(users.map(u => u.team).filter(t => t && t !== '전체'))];
+      const teamSel = document.getElementById('team-filter');
+      teamSel.innerHTML += '<option value="전체">전체</option>';
+      teamList.forEach(t => { teamSel.innerHTML += '<option value="' + t + '">' + t + '</option>'; });
       renderTable(users);
     });
   </script>

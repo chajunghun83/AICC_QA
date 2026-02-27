@@ -38,10 +38,19 @@
         </div>
         <div>
           <label class="form-label">기간</label>
-          <select class="form-select" id="period-filter">
-            <option value="today">오늘</option>
-            <option value="week" selected>최근 7일</option>
-            <option value="month">최근 30일</option>
+          <div id="period-picker-container"></div>
+        </div>
+        <div>
+          <label class="form-label">상담사</label>
+          <input type="text" class="form-input" id="agent-search" placeholder="상담사명 검색" style="min-width:130px;">
+        </div>
+        <div>
+          <label class="form-label">점수 범위</label>
+          <select class="form-select" id="score-filter">
+            <option value="all">전체</option>
+            <option value="high">80점 이상</option>
+            <option value="mid">60 ~ 79점</option>
+            <option value="low">60점 미만</option>
           </select>
         </div>
         <div>
@@ -51,6 +60,25 @@
             <option value="I/B">I/B (인바운드)</option>
             <option value="O/B">O/B (아웃바운드)</option>
           </select>
+        </div>
+        <div>
+          <label class="form-label">평가표</label>
+          <select class="form-select" id="form-filter">
+            <option value="all">전체</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">신뢰도</label>
+          <select class="form-select" id="confidence-filter">
+            <option value="all">전체</option>
+            <option value="high">90% 이상</option>
+            <option value="mid">70 ~ 89%</option>
+            <option value="low">70% 미만</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">상담유형</label>
+          <input type="text" class="form-input" id="consult-search" placeholder="상담유형 검색" style="min-width:130px;">
         </div>
         <div>
           <label class="form-label">이슈 유형</label>
@@ -128,6 +156,7 @@
   <script src="../../js/components/layout.js"></script>
   <script src="../../js/components/modal.js"></script>
   <script src="../../js/components/toast.js"></script>
+  <script src="../../js/components/period-picker.js"></script>
   <script>
     let allData = {};
 
@@ -156,6 +185,18 @@
       const teamParam = params.get('team');
       if (teamParam) {
         document.getElementById('team-filter').value = teamParam;
+      }
+
+      AICC_PeriodPicker.create('period-picker-container', {
+        defaultPeriod: 'monthly',
+        onChange: function() { applyFilter(); }
+      });
+
+      const evals = allData['evaluations.json'];
+      if (evals) {
+        const formNames = [...new Set(evals.map(e => e.eval_form).filter(Boolean))];
+        const formSel = document.getElementById('form-filter');
+        formNames.forEach(f => { formSel.innerHTML += '<option value="' + f + '">' + f + '</option>'; });
       }
 
       if (issueParam || teamParam) {
@@ -655,6 +696,20 @@
         const reviewVal = document.getElementById('review-filter').value;
         if (reviewVal === 'reviewed') filtered = filtered.filter(e => e.manual_review);
         if (reviewVal === 'unreviewed') filtered = filtered.filter(e => !e.manual_review);
+        const agentSearch = (document.getElementById('agent-search').value || '').trim().toLowerCase();
+        if (agentSearch) filtered = filtered.filter(e => (e.agent_name || '').toLowerCase().includes(agentSearch));
+        const scoreVal = document.getElementById('score-filter').value;
+        if (scoreVal === 'high') filtered = filtered.filter(e => e.total_score >= 80);
+        if (scoreVal === 'mid') filtered = filtered.filter(e => e.total_score >= 60 && e.total_score < 80);
+        if (scoreVal === 'low') filtered = filtered.filter(e => e.total_score < 60);
+        const formVal = document.getElementById('form-filter').value;
+        if (formVal !== 'all') filtered = filtered.filter(e => e.eval_form === formVal);
+        const confVal = document.getElementById('confidence-filter').value;
+        if (confVal === 'high') filtered = filtered.filter(e => e.confidence >= 90);
+        if (confVal === 'mid') filtered = filtered.filter(e => e.confidence >= 70 && e.confidence < 90);
+        if (confVal === 'low') filtered = filtered.filter(e => e.confidence < 70);
+        const consultSearch = (document.getElementById('consult-search').value || '').trim().toLowerCase();
+        if (consultSearch) filtered = filtered.filter(e => (e.consultation_type || '').toLowerCase().includes(consultSearch));
         renderEvalTable(filtered);
       }
 
@@ -665,10 +720,14 @@
       document.getElementById('ws-filter').value = 'all';
       document.getElementById('team-filter').value = 'all';
       document.getElementById('team-filter').disabled = true;
-      document.getElementById('period-filter').value = 'week';
       document.getElementById('type-filter').value = 'all';
       document.getElementById('issue-filter').value = 'all';
       document.getElementById('review-filter').value = 'all';
+      document.getElementById('agent-search').value = '';
+      document.getElementById('score-filter').value = 'all';
+      document.getElementById('form-filter').value = 'all';
+      document.getElementById('confidence-filter').value = 'all';
+      document.getElementById('consult-search').value = '';
       renderAll();
     }
   </script>
