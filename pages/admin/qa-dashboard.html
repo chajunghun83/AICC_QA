@@ -137,6 +137,7 @@
       });
     });
 
+    // 대시보드 초기 데이터를 비동기로 일괄 로드 후, 모든 위젯을 순차적으로 렌더링
     async function loadDashboard() {
       const data = await AICC_DataLoader.loadAll([
         'dashboard-stats.json',
@@ -168,6 +169,7 @@
       renderTeamTable(dashboardData.teams);
     }
 
+    // 기간 설정에 따라 KPI 라벨과 비교 기준을 동적으로 변경하여 하나의 함수로 모든 기간 유형을 처리
     function renderKPICards(summary, cfg) {
       const prefix = cfg ? cfg.kpiPrefix : '금일';
       const prevLabel = cfg ? cfg.prevLabel : '전일';
@@ -182,6 +184,7 @@
       container.innerHTML = cards.map(card => {
         let trendHtml = '';
         if (card.isDuration) {
+          // 통화시간이 "분:초" 문자열이므로 초 단위로 변환해야 수치 비교가 가능
           const toSec = (s) => { const p = s.split(':'); return parseInt(p[0])*60 + parseInt(p[1]); };
           const cur = toSec(card.current), prev = toSec(card.prev);
           const diffSec = cur - prev;
@@ -210,6 +213,7 @@
       }).join('');
     }
 
+    // 기존 차트 인스턴스를 파괴 후 재생성하여 기간 전환 시 차트가 중복되지 않게 함
     function renderTrendChart(trendData) {
       const ctx = document.getElementById('trend-chart');
       if (!ctx) return;
@@ -253,6 +257,7 @@
       });
     }
 
+    // 점수 구간별(80+/60+/미만) 색상을 다르게 적용하여 팀 성과를 직관적으로 구분
     function renderTeamChart(teamScores) {
       const ctx = document.getElementById('team-chart');
       if (!ctx) return;
@@ -294,6 +299,7 @@
       });
     }
 
+    // 이슈 유형에 따라 적절한 상세 페이지로 분기하여 컨텍스트에 맞는 네비게이션 제공
     function getIssueLink(issue) {
       if (issue.type.includes('FAIL')) return 'evaluation-status.html?issue=fail';
       if (issue.type.includes('과락')) return 'evaluation-status.html?issue=under';
@@ -301,6 +307,7 @@
       return 'evaluation-status.html';
     }
 
+    // FAIL 이슈와 일반 이슈를 시각적으로 구분(색상/아이콘)하여 긴급도를 즉시 파악 가능하게 함
     function renderIssues(issues) {
       const container = document.getElementById('issue-list');
       const countEl = document.getElementById('issue-count');
@@ -333,6 +340,7 @@
     }
 
     let distChart = null;
+    // 외부에서 분포 데이터를 주입할 수 있게 하여 기간 전환 시에도 차트를 갱신할 수 있게 설계
     function renderDistribution(customDist) {
       const dist = customDist || { excellent: 32, good: 41, caution: 18, poor: 9 };
       const total = dist.excellent + dist.good + dist.caution + dist.poor;
@@ -377,6 +385,7 @@
       `).join('');
     }
 
+    // 행 클릭 시 해당 팀의 상세 분석 페이지로 이동하여 드릴다운 네비게이션을 제공
     function renderTeamTable(teams) {
       const tbody = document.getElementById('team-tbody');
       tbody.innerHTML = teams.map(team => {
@@ -397,6 +406,7 @@
       }).join('');
     }
 
+    // 채널(I/B, O/B) 전환 시 랜덤 변동값을 적용하여 필터링 효과를 시뮬레이션
     function setChannel(btn, channel) {
       document.querySelectorAll('.channel-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
@@ -418,6 +428,7 @@
       custom:  { trendTitle: '품질 추세 (사용자 지정)', kpiPrefix: '기간 내', prevLabel: '이전 기간' }
     };
 
+    // 기간 유형별로 x축 라벨과 데이터 포인트 수를 다르게 생성하여 적절한 차트 형태를 시뮬레이션
     function generateTrendData(period) {
       const base = 82;
       const variance = () => (Math.random() * 6 - 3);
@@ -445,6 +456,7 @@
       }
     }
 
+    // 기간 배수(factor)를 적용하여 일/주/월/년별 KPI 수치를 현실적으로 스케일링
     function generateKPIVariation(period) {
       const s = dashboardData.summary;
       const factor = { daily: 1, weekly: 7, monthly: 30, yearly: 365, custom: 15 };
@@ -462,12 +474,14 @@
     }
 
 
+    // 기간 전환 시 분포 변화를 표현하기 위해 랜덤 데이터를 생성
     function generateDistribution() {
       const e = () => Math.round(10 + Math.random() * 40);
       const dist = { excellent: e(), good: e(), caution: Math.round(5 + Math.random() * 25), poor: Math.round(2 + Math.random() * 12) };
       return dist;
     }
 
+    // 기간 변경 시 KPI·차트·분포 등 모든 위젯을 일괄 갱신하여 데이터 일관성 유지
     function applyPeriod(period) {
       if (!dashboardData) return;
       const cfg = periodConfig[period];
@@ -485,6 +499,7 @@
       AICC_Toast.show(`${cfg.kpiPrefix} 데이터로 전환되었습니다.`);
     }
 
+    // 워크스페이스 선택 시 해당 팀 목록만 필터링하는 캐스케이딩 필터 패턴 적용
     function filterDashboard() {
       const wsId = document.getElementById('ws-filter').value;
       const teamFilter = document.getElementById('team-filter');

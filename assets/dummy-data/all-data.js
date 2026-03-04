@@ -1,6 +1,11 @@
 /**
  * AICC QA - All Dummy Data (Inline)
- * file:// 프로토콜 호환을 위해 JSON 데이터를 JS로 변환
+ * file:// 프로토콜에서는 fetch로 JSON을 로드할 수 없으므로
+ * 모든 JSON 더미 데이터를 window.AICC_DATA에 인라인으로 할당
+ * DataLoader가 이 객체를 우선 참조하여 로컬 환경에서도 정상 동작
+ *
+ * 포함 데이터: workspaces, users, dashboard-stats,
+ *   evaluation-items, evaluation-forms, evaluations
  */
 window.AICC_DATA = {};
 

@@ -215,11 +215,13 @@
       }
     ];
 
+    // 항목 라이브러리 데이터를 먼저 비동기 로딩해야 평가표 생성/편집 시 항목 선택이 가능
     document.addEventListener('DOMContentLoaded', async () => {
       itemsData = await AICC_DataLoader.load('evaluation-items.json');
       renderForms(manualFormsData);
     });
 
+    // 필터 적용·데이터 변경 시 동일 로직으로 재렌더링할 수 있도록 목록을 분리
     function renderForms(forms) {
       const tbody = document.getElementById('forms-tbody');
       document.getElementById('form-count').textContent = `총 ${forms.length}개`;
@@ -249,6 +251,7 @@
     }
 
     /* ── 새 수동 평가표 생성 모달 ── */
+    // 빈 상태에서 항목을 자유 구성할 수 있도록 피커 초기화 후 모달 표시
     function showNewFormModal() {
       if (!itemsData) { AICC_Toast.show('항목 데이터를 불러오는 중입니다.'); return; }
       pickerSelected = {};
@@ -319,6 +322,7 @@
       });
     }
 
+    // 선택 항목을 단일 섹션으로 묶어 평가표 생성 (섹션 분할은 상세에서 관리)
     function saveNewForm() {
       const name = document.getElementById('nf-name')?.value?.trim();
       if (!name) { AICC_Toast.show('평가표명을 입력하세요.'); return; }
@@ -328,6 +332,7 @@
       const pass = parseInt(document.getElementById('nf-pass')?.value) || null;
       const selectedItems = Object.values(pickerSelected);
       const sections = [];
+      // 선택 항목이 있으면 하나의 기본 섹션으로 그룹화 (생성 단계에서는 섹션 분리 불필요)
       if (selectedItems.length > 0) {
         sections.push({
           id: 'ms-' + Date.now(),
@@ -345,6 +350,7 @@
         });
       }
 
+      // 선택 항목 기반 총점이 있으면 수동 입력값보다 우선 적용하여 불일치 방지
       const calcTotal = sections.length > 0 ? sections[0].total_score : total;
 
       const newForm = {
@@ -370,6 +376,7 @@
     }
 
     /* ── 평가표 상세 모달 ── */
+    // 섹션 > 항목 구조를 아코디언 트리로 시각화하여 전체 구성을 한눈에 파악 가능하게 함
     function showFormDetail(formId) {
       const form = manualFormsData.find(f => f.id === formId);
       if (!form) return;
@@ -452,6 +459,7 @@
     }
 
     /* ── 항목 라이브러리 트리 (NLP/AI 뱃지 없이) ── */
+    // 카테고리 > 하위분류 > 항목 3단계 트리로 체계적 탐색 지원, 이미 추가된 항목은 비활성화하여 중복 방지
     function buildManualLibraryTreeHtml(existingIds) {
       let html = '';
       for (const cat of itemsData.categories) {
@@ -486,11 +494,13 @@
     }
 
     /* ── 항목 라이브러리 피커 (상세 모달에서 추가) ── */
+    // 기존 평가표의 항목 ID를 수집하여 중복 선택을 원천 차단한 상태로 피커를 표시
     function showItemLibraryPicker(formId) {
       if (!itemsData) { AICC_Toast.show('항목 데이터를 불러오는 중입니다.'); return; }
       pickerSelected = {};
 
       const form = manualFormsData.find(f => f.id === formId);
+      // 이미 포함된 항목 ID를 Set으로 수집하여 트리 빌드 시 비활성화 판별에 사용
       const existingIds = new Set();
       if (form) form.sections.forEach(s => s.items.forEach(it => existingIds.add(it.item_id)));
 
@@ -520,6 +530,7 @@
       });
     }
 
+    // 아코디언 패턴으로 카테고리 접힘/펼침을 구현하여 많은 항목 탐색 시 가독성 확보
     function togglePickerCat(el) {
       const body = el.nextElementSibling;
       const chevron = el.querySelector('.picker-chevron');
@@ -532,6 +543,7 @@
       }
     }
 
+    // 체크박스 상태에 따라 선택 맵을 동기화하여 우측 패널에 즉시 반영
     function togglePickerItem(itemId, name, score, scoreType, checked) {
       if (checked) {
         pickerSelected[itemId] = { id: itemId, name, score, score_type: scoreType || 'deduction', guide: '', commentable: false };
@@ -541,6 +553,7 @@
       renderPickerSelected();
     }
 
+    // 선택 항목 변경 시 총점을 자동 재계산하여 수동 입력 오류 방지
     function updatePickerTotal() {
       const totalInput = document.getElementById('nf-total');
       if (!totalInput) return;
@@ -548,6 +561,7 @@
       totalInput.value = sum;
     }
 
+    // 선택된 항목의 배점·가이드·코멘트 설정을 인라인 편집 가능하게 렌더링
     function renderPickerSelected() {
       const list = document.getElementById('picker-selected-list');
       const count = document.getElementById('picker-count');
@@ -585,6 +599,7 @@
       updatePickerTotal();
     }
 
+    // 선택 항목을 첫 번째 섹션에 추가 후 총점 재계산, 상세 모달을 다시 열어 결과 확인
     function applyPickerItems(formId) {
       const items = Object.values(pickerSelected);
       if (items.length === 0) { AICC_Toast.show('항목을 선택하세요.'); return; }
@@ -592,6 +607,7 @@
       const form = manualFormsData.find(f => f.id === formId);
       if (!form) return;
 
+      // 기존 섹션이 없으면 기본 섹션을 자동 생성하여 항목을 추가할 수 있게 함
       if (form.sections.length === 0) {
         form.sections.push({
           id: 'ms-' + Date.now(),
@@ -621,10 +637,12 @@
       renderForms(manualFormsData);
       AICC_Modal.close();
       AICC_Toast.show(`${items.length}개 항목이 추가되었습니다.`);
+      // 모달 닫힘 애니메이션 완료 후 상세 모달을 열어 UI 전환 충돌 방지
       setTimeout(() => showFormDetail(formId), 300);
     }
 
     /* ── 항목 설정 모달 ── */
+    // 개별 항목의 배점·가이드 등 세부 설정을 별도 모달에서 편집할 수 있도록 제공
     function showItemSettingModal(formId, sectionIdx, itemIdx) {
       const form = manualFormsData.find(f => f.id === formId);
       if (!form) return;
@@ -679,6 +697,7 @@
       });
     }
 
+    // 항목 설정 변경 후 섹션·전체 총점을 연쇄 재계산하여 데이터 일관성 유지
     function saveFormItemSetting(formId, sectionIdx, itemIdx) {
       const form = manualFormsData.find(f => f.id === formId);
       if (!form) return;
@@ -697,9 +716,11 @@
       renderForms(manualFormsData);
       AICC_Modal.close();
       AICC_Toast.show('항목 설정이 저장되었습니다.');
+      // 모달 닫힘 애니메이션 완료 후 상세 모달을 다시 열어 변경 결과 즉시 확인
       setTimeout(() => showFormDetail(formId), 300);
     }
 
+    // 항목 삭제 시 빈 섹션도 함께 제거하여 불필요한 빈 구조를 방지
     function deleteFormItem(formId, sectionIdx, itemIdx) {
       const form = manualFormsData.find(f => f.id === formId);
       if (!form) return;
@@ -711,6 +732,7 @@
       form.total_score = form.sections.reduce((s, sec) => s + sec.total_score, 0);
       form.updated_at = new Date().toISOString().slice(0, 10);
 
+      // 항목이 모두 삭제된 빈 섹션은 자동 정리하여 UI에 빈 그룹이 남지 않도록 함
       if (section.items.length === 0) {
         form.sections.splice(sectionIdx, 1);
       }
@@ -718,9 +740,11 @@
       renderForms(manualFormsData);
       AICC_Modal.close();
       AICC_Toast.show(`"${itemName}" 항목이 삭제되었습니다.`);
+      // 모달 닫힘 애니메이션 완료 후 상세 모달을 다시 열어 삭제 결과 확인
       setTimeout(() => showFormDetail(formId), 300);
     }
 
+    // 원본 배열을 복사 후 필터링하여 원본 데이터 훼손 없이 조건부 표시
     function applyFilter() {
       let filtered = [...manualFormsData];
       const type = document.getElementById('type-filter').value;
@@ -732,6 +756,7 @@
       renderForms(filtered);
     }
 
+    // 모든 필터를 초기값으로 복원하고 전체 데이터를 다시 렌더링
     function resetFilter() {
       document.getElementById('type-filter').value = 'all';
       document.getElementById('status-filter').value = 'all';

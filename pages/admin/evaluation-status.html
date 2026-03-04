@@ -160,6 +160,7 @@
   <script>
     let allData = {};
 
+    // 페이지 진입 시 필요한 모든 데이터를 일괄 로드하여 이후 필터·상세 조회에서 추가 요청 없이 사용
     document.addEventListener('DOMContentLoaded', async () => {
       allData = await AICC_DataLoader.loadAll([
         'dashboard-stats.json',
@@ -177,6 +178,7 @@
         });
       }
 
+      // 대시보드 등에서 딥링크로 특정 이슈/팀 필터를 걸고 진입할 수 있도록 URL 파라미터 반영
       const params = new URLSearchParams(window.location.search);
       const issueParam = params.get('issue');
       if (issueParam) {
@@ -192,6 +194,7 @@
         onChange: function() { applyFilter(); }
       });
 
+      // 평가표 필터 옵션을 실제 데이터 기반으로 동적 생성 (하드코딩 방지)
       const evals = allData['evaluations.json'];
       if (evals) {
         const formNames = [...new Set(evals.map(e => e.eval_form).filter(Boolean))];
@@ -199,6 +202,7 @@
         formNames.forEach(f => { formSel.innerHTML += '<option value="' + f + '">' + f + '</option>'; });
       }
 
+      // URL 파라미터가 있으면 필터 적용, 없으면 전체 데이터 렌더링
       if (issueParam || teamParam) {
         applyFilter();
       } else {
@@ -206,6 +210,7 @@
       }
     });
 
+    // 3단계 중첩 구조(카테고리→하위→항목)를 flat map으로 변환하여 ID 기반 O(1) 조회 지원
     function buildItemNameMap() {
       const items = allData['evaluation-items.json'];
       const map = {};
@@ -220,9 +225,12 @@
       return map;
     }
 
+    // 평가표마다 과락 기준이 다르므로, 해당 평가 건에 적용된 평가표의 기준을 동적으로 조회
+    // 매칭 실패 시 업계 관행상 60점을 기본값으로 사용
     function getPassThreshold(ev) {
       const forms = allData['evaluation-forms.json'];
       if (!forms) return 60;
+      // active 상태 + 동일 통화유형 + 해당 워크스페이스에 적용된 평가표만 매칭
       const matched = forms.find(f => {
         if (f.status !== 'active') return false;
         if (f.type !== ev.call_type) return false;
@@ -231,10 +239,12 @@
       return matched && matched.pass_threshold ? matched.pass_threshold : 60;
     }
 
+    // 과락 여부를 평가표별 동적 기준으로 판단 (고정값 비교가 아님)
     function isUnderThreshold(ev) {
       return ev.total_score < getPassThreshold(ev);
     }
 
+    // 필터 없이 전체 데이터를 초기 렌더링하는 진입점
     function renderAll() {
       const stats = allData['dashboard-stats.json'];
       const evals = allData['evaluations.json'];
@@ -244,6 +254,7 @@
       }
     }
 
+    // innerHTML 일괄 교체 방식으로 대량 행을 빠르게 렌더링 (개별 DOM 조작 대비 성능 이점)
     function renderEvalTable(evals) {
       const tbody = document.getElementById('eval-tbody');
       document.getElementById('eval-count').textContent = `총 ${evals.length}건`;
@@ -255,6 +266,7 @@
           ? '<span class="badge badge-pending">Mid</span>'
           : '<span class="badge badge-rejected">Low</span>';
 
+        // 이슈가 많을 경우 테이블 행 높이 유지를 위해 최대 2건만 표시
         const issueHtml = ev.issues && ev.issues.length > 0
           ? ev.issues.slice(0, 2).map(i => `<div style="font-size:10px;color:#F57F17;">${i}</div>`).join('')
           : '<span style="color:#9E9E9E;font-size:11px;">-</span>';
@@ -281,6 +293,7 @@
       }).join('');
     }
 
+    // 평가 상세 모달: 항목별 점수와 스크립트를 탭으로 분리하여 정보 과부하 방지
     function showEvalDetail(evalId) {
       const evals = allData['evaluations.json'];
       const ev = evals.find(e => e.id === evalId);
@@ -393,12 +406,15 @@
       });
     }
 
+    // 스크립트 라인 클릭 시 해당 구간 재생을 시뮬레이션 (실제 오디오 미연동 상태)
+    // 이전 선택을 해제하고 현재 라인을 하이라이트하여 시각적 피드백 제공
     function playSegment(el, time) {
       document.querySelectorAll('.transcript-line').forEach(line => {
         line.classList.remove('playing');
         line.style.background = '';
       });
       el.classList.add('playing');
+      // 상담사(녹색 아이콘)와 고객 라인을 구분하여 각각 다른 하이라이트 색상 적용
       el.style.background = el.querySelector('[fill="#0F766E"]') ? '#B2DFDB' : '#EEEEEE';
 
       const label = document.getElementById('player-segment-label');
@@ -408,6 +424,7 @@
       if (timeEl) timeEl.textContent = time;
 
       const progress = document.getElementById('player-progress');
+      // 시뮬레이션 용도: 5~95% 범위 내 랜덤 진행률로 재생 효과 표현
       if (progress) {
         const pct = Math.min(95, Math.max(5, Math.random() * 80 + 10));
         progress.style.width = pct + '%';
@@ -419,9 +436,11 @@
       AICC_Toast.show(`${time} 구간 재생 (시뮬레이션)`);
     }
 
+    // SVG 아이콘의 innerHTML로 재생/일시정지 상태를 판별하여 토글 (별도 상태 변수 없이 DOM 기반)
     function togglePlay(btn) {
       const icon = document.getElementById('play-btn-icon');
       if (!icon) return;
+      // polygon=재생 아이콘(▶), rect=일시정지 아이콘(⏸)으로 현재 상태 판별
       const isPaused = icon.innerHTML.includes('polygon');
       if (isPaused) {
         icon.innerHTML = '<rect x="6" y="4" width="4" height="16" fill="#424242"/><rect x="14" y="4" width="4" height="16" fill="#424242"/>';
@@ -432,6 +451,7 @@
       }
     }
 
+    // 클릭 위치의 상대 좌표를 백분율로 변환하여 진행 바 위치 반영
     function seekBar(e) {
       const rect = e.currentTarget.getBoundingClientRect();
       const pct = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
@@ -441,6 +461,8 @@
 
     let manualReviewEvalId = null;
 
+    // 기존 상세 모달을 닫고 수동 검증 모달을 여는 2단계 모달 전환
+    // 스크립트 참조와 점수 수정을 좌우 분할 레이아웃으로 동시에 보여줌
     function openManualReview(evalId) {
       AICC_Modal.close();
       manualReviewEvalId = evalId;
@@ -473,6 +495,7 @@
       const scoreRowsHtml = scoreKeys.map((key, idx) => {
         const val = ev.scores[key];
         const itemName = itemNameMap[key] || key;
+        // NLP 항목은 자동 계산 결과이므로 수동 수정 불가 (disabled 처리)
         const isNlp = val.type === 'NLP';
         const statusCls = val.status === 'pass' ? 'score-good' : val.status === 'warn' ? 'score-warn' : 'score-danger';
         const statusText = val.status === 'pass' ? '통과' : val.status === 'warn' ? '주의' : '미달';
@@ -502,6 +525,7 @@
            </div>`
         : '';
 
+      // 이전 모달의 닫힘 애니메이션 완료를 기다린 후 새 모달을 열기 위한 지연
       setTimeout(() => {
         AICC_Modal.open({
           title: `수동 검증 - ${ev.id}`,
@@ -565,6 +589,8 @@
       }, 200);
     }
 
+    // 개별 항목 점수 변경 시 실시간 합산하여 검증 총점에 즉시 반영
+    // 입력값을 0~max 범위로 클램핑하여 유효하지 않은 점수 입력 방지
     function recalcManualTotal() {
       const inputs = document.querySelectorAll('.mr-score-input');
       let total = 0;
@@ -580,6 +606,8 @@
       if (el) el.textContent = total + '점';
     }
 
+    // 검증 결과를 메모리 내 allData에 즉시 반영하여 모달 닫은 후 테이블에 변경사항이 보이도록 함
+    // 서버 연동 시 이 시점에서 API 호출 추가 필요
     function saveManualReview() {
       if (!manualReviewEvalId) return;
 
@@ -600,6 +628,8 @@
         if (v > max) v = max;
         newTotal += v;
 
+        // 변경된 항목만 추적하여 수정 이력 저장 및 상태 자동 재산정
+        // 상태 기준: 80% 이상=통과, 50% 이상=주의, 미만=미달
         if (v !== original) {
           modifiedItems.push({ item_id: key, original_score: original, new_score: v });
           ev.scores[key].score = v;
@@ -630,6 +660,7 @@
       manualReviewEvalId = null;
       AICC_Modal.close();
 
+      // 현재 적용 중인 필터를 다시 적용하여 수정된 데이터로 테이블 갱신
       const wsId = document.getElementById('ws-filter').value;
       const teamId = document.getElementById('team-filter').value;
       let filtered = evals;
@@ -651,6 +682,7 @@
       );
     }
 
+    // display 토글 방식의 간단한 탭 전환 (SPA 라우팅 불필요한 모달 내부용)
     function switchDetailTab(btn, tabId) {
       btn.parentElement.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
       btn.classList.add('active');
@@ -658,6 +690,7 @@
       document.getElementById('script-tab').style.display = tabId === 'script-tab' ? '' : 'none';
     }
 
+    // 워크스페이스 변경 시 하위 팀 목록을 연쇄적으로 갱신 (종속 드롭다운 패턴)
     function onWsChange() {
       const wsId = document.getElementById('ws-filter').value;
       const teamFilter = document.getElementById('team-filter');
@@ -679,6 +712,8 @@
       applyFilter();
     }
 
+    // 모든 필터 조건을 순차 체이닝하여 AND 조건으로 적용
+    // 각 필터는 독립적으로 'all'이면 건너뛰는 방식
     function applyFilter() {
       const wsId = document.getElementById('ws-filter').value;
       const teamId = document.getElementById('team-filter').value;
@@ -716,6 +751,7 @@
       AICC_Toast.show('필터가 적용되었습니다.');
     }
 
+    // 모든 필터를 초기 상태로 복원 후 전체 데이터 재렌더링
     function resetFilter() {
       document.getElementById('ws-filter').value = 'all';
       document.getElementById('team-filter').value = 'all';

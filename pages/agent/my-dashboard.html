@@ -136,10 +136,12 @@
       renderEvalTable();
     });
 
+    // Chart.js로 월별 점수 추이를 시각화 — 기존 차트가 있으면 destroy 후 재생성하여 메모리 누수 방지
     function renderGrowthChart() {
       const ctx = document.getElementById('growth-chart');
       if (!ctx) return;
 
+      // Chart.js는 같은 canvas에 중복 생성 시 렌더링 충돌 발생하므로 기존 인스턴스 제거 필수
       if (growthChart) growthChart.destroy();
       growthChart = new Chart(ctx, {
         type: 'line',
@@ -189,6 +191,7 @@
       });
     }
 
+    // 최근 평가 목록을 I/B·O/B 유형 뱃지와 이슈 강조 표시와 함께 렌더링
     function renderEvalTable() {
       const tbody = document.getElementById('eval-tbody');
       tbody.innerHTML = recentEvals.map(ev => {
@@ -212,10 +215,12 @@
       }).join('');
     }
 
+    // 평가 상세 모달 — 항목별 점수, AI 피드백, 메타정보를 종합 표시하여 자기 개선 지원
     function showEvalDetail(evalId) {
       const ev = recentEvals.find(e => e.id === evalId);
       if (!ev) return;
 
+      // pass/warn/fail 3단계로 상태를 분류하여 색상·텍스트를 차등 적용
       const scoreRows = ev.items.map(item => {
         const statusCls = item.status === 'pass' ? 'score-good' : item.status === 'warn' ? 'score-warn' : 'score-danger';
         const statusText = item.status === 'pass' ? '통과' : item.status === 'warn' ? '주의' : '미달';
@@ -229,6 +234,7 @@
         `;
       }).join('');
 
+      // 80점 이상 녹색, 60점 이상 황색, 미만 적색 — 직관적 성과 수준 인지를 위한 3단계 색상
       const scoreColor = ev.score >= 80 ? '#4CAF50' : ev.score >= 60 ? '#FFC107' : '#F44336';
 
       AICC_Modal.open({

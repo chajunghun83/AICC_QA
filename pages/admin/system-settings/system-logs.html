@@ -120,6 +120,7 @@
       { no: 15, datetime: '2025-01-03 09:00:18', user: '김철수', role: 'ADMIN', action: '사용자 관리', detail: '정다은 상담사 계정 생성', ip: '192.168.1.101', fullDetail: '정다은 사용자를 신규 등록하였습니다. 역할: 상담사, 팀: 영업지원팀, 워크스페이스: 부산센터.' }
     ];
 
+    // 액션 유형별 커스텀 색상 뱃지 — 기본 CSS 클래스로 커버 불가한 6가지 색상 조합을 인라인으로 처리
     function getActionBadge(action) {
       const map = {
         '로그인': { bg: '#E3F2FD', color: '#1565C0', border: '#BBDEFB' },
@@ -133,6 +134,7 @@
       return `<span class="badge" style="background:${style.bg};color:${style.color};border:1px solid ${style.border};">${action}</span>`;
     }
 
+    // 역할을 컴팩트한 텍스트 뱃지로 표현 — 테이블 열 폭 절약을 위해 span만 사용
     function getRoleBadgeSmall(role) {
       const map = {
         'ADMIN': '<span style="font-size:11px;color:#0F766E;font-weight:600;">ADMIN</span>',
@@ -142,6 +144,7 @@
       return map[role] || role;
     }
 
+    // 필터링된 로그 데이터를 테이블에 반영하고 총 건수 업데이트
     function renderTable(data) {
       const tbody = document.getElementById('log-tbody');
       document.getElementById('total-count').textContent = `총 ${data.length}건`;
@@ -158,6 +161,7 @@
       `).join('');
     }
 
+    // 텍스트 검색(사용자/IP)과 셀렉트 필터(역할/액션)를 순차 체이닝하여 누적 필터링
     function filterLogs() {
       const userSearch = (document.getElementById('user-search').value || '').trim().toLowerCase();
       const actionVal = document.getElementById('action-filter').value;
@@ -173,6 +177,7 @@
       renderTable(filtered);
     }
 
+    // 모든 필터를 초기 상태로 복원 후 전체 로그 재렌더링
     function resetLogFilter() {
       document.getElementById('user-search').value = '';
       document.getElementById('action-filter').value = 'all';
@@ -181,6 +186,7 @@
       renderTable(logs);
     }
 
+    // 로그 상세 정보를 읽기 전용 모달로 표시 — 감사 추적 목적으로 수정 기능 없음
     function openDetail(no) {
       const l = logs.find(x => x.no === no);
       if (!l) return;

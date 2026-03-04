@@ -208,6 +208,7 @@ JSON 형식으로 결과를 출력하세요.`,
       }
     ];
 
+    // AI/NLP 유형별로 고정된 뱃지 HTML을 반환 — 확장 시 map에 추가만 하면 됨
     function getTypeBadge(type) {
       const map = {
         'AI': '<span class="badge badge-ai">AI</span>',
@@ -216,6 +217,7 @@ JSON 형식으로 결과를 출력하세요.`,
       return map[type] || type;
     }
 
+    // 톤 설정(엄격/표준/관대)을 시각적으로 구분하여 평가 강도를 직관적으로 파악 가능하게 함
     function getToneBadge(tone) {
       const map = {
         '엄격': '<span class="badge badge-rejected">엄격</span>',
@@ -225,6 +227,7 @@ JSON 형식으로 결과를 출력하세요.`,
       return map[tone] || tone;
     }
 
+    // 템플릿 전체 목록을 테이블에 렌더링 — 필터 없이 전체 표시
     function renderTable() {
       const tbody = document.getElementById('template-tbody');
       tbody.innerHTML = templates.map(t => `
@@ -239,6 +242,7 @@ JSON 형식으로 결과를 출력하세요.`,
       `).join('');
     }
 
+    // 프롬프트 내용, 톤 설정, 사용 통계, 버전 이력을 모달에 종합 표시
     function openDetail(no) {
       const t = templates.find(x => x.no === no);
       if (!t) return;
@@ -325,10 +329,12 @@ JSON 형식으로 결과를 출력하세요.`,
       });
     }
 
+    // 신규 생성 기능은 미구현 — Toast로 개발 중 안내
     function openCreateModal() {
       AICC_Toast.show('새 템플릿 생성 모달은 개발 중입니다.');
     }
 
+    // 삭제/복사/편집 공통 핸들러 — 실제 API 연동 시 action별 분기 처리 필요
     function handleTemplateAction(no, action) {
       AICC_Modal.close();
       AICC_Toast.show(`"${action}" 처리가 완료되었습니다.`);

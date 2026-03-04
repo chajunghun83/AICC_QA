@@ -151,6 +151,7 @@
       }
     ];
 
+    // 삭제로 인한 번호 공백이 있어도 충돌 없이 유일한 번호를 부여하기 위해 최대값+1 사용
     function getNextNo() {
       return plans.length > 0 ? Math.max(...plans.map(p => p.no)) + 1 : 1;
     }
@@ -160,20 +161,24 @@
       const today = new Date().toISOString().slice(0, 10);
       if (today < plan.periodStart) return { status: 'pending', statusText: '예정' };
       if (plan.periodEnd && today > plan.periodEnd) return { status: 'completed', statusText: '종료' };
+      // 종료일 없는 1회성 계획은 시작일 경과 시 자동으로 '종료' 처리
       if (!plan.periodEnd && plan.repeat === '1회성' && today > plan.periodStart) return { status: 'completed', statusText: '종료' };
       return { status: 'active', statusText: '진행 중' };
     }
 
+    // 상태 코드를 CSS 클래스로 매핑하여 일관된 배지 스타일 보장
     function getPlanStatusBadge(status, text) {
       const map = { 'active': 'badge-active', 'pending': 'badge-pending', 'completed': 'badge-inactive' };
       return `<span class="badge ${map[status] || 'badge-pending'}">${text}</span>`;
     }
 
+    // 테이블 셀 공간 절약을 위해 복수 평가표 중 첫 번째만 표시
     function renderFormsBadges(forms) {
       if (!forms || forms.length === 0) return '<span style="color:#BDBDBD;font-size:11px;">-</span>';
       return `<span class="badge badge-active" style="font-size:11px;">${forms[0]}</span>`;
     }
 
+    // 워크스페이스 내 전체 팀이 선택된 경우 '전체'로 축약하여 가독성 향상
     function buildTargetLabel(workspace, teams) {
       if (!workspace) return '미지정';
       const ws = workspacesData.find(w => w.name === workspace);
@@ -182,6 +187,7 @@
       return workspace + ' > ' + teams.join(', ');
     }
 
+    // 필터 적용 시 필터된 목록, 미적용 시 전체 plans를 렌더링
     function renderTable(list) {
       const data = list || plans;
       const tbody = document.getElementById('plan-tbody');
@@ -204,6 +210,7 @@
       }).join('');
     }
 
+    // 다중 필터 조건을 순차 체이닝하여 AND 조건으로 적용
     function applyPlanFilter() {
       let filtered = [...plans];
       const nameSearch = (document.getElementById('plan-search').value || '').trim().toLowerCase();
@@ -226,6 +233,7 @@
       renderTable();
     }
 
+    // 상태(진행 중/예정 vs 종료)에 따라 하단 버튼 구성을 분기하여 권한 제어
     function openDetail(no) {
       const p = plans.find(x => x.no === no);
       if (!p) return;
@@ -471,6 +479,7 @@
       `).join('');
     }
 
+    // 동적 로드된 평가표 목록으로 셀렉트 생성, 미로드 시 하드코딩 폴백으로 UX 유지
     function getFormsSelectHtml(selectedForms) {
       const formNames = [];
       if (formsData && Array.isArray(formsData)) {
@@ -479,6 +488,7 @@
           formNames.push(label);
         });
       }
+      // formsData 미로드 시 기본 목록으로 폴백
       if (formNames.length === 0) {
         formNames.push('표준 QA 평가표 v2.1', '기술지원 전문 평가표', '표준 QA 평가표 v2.0');
       }
@@ -490,6 +500,7 @@
       return `<select id="pf-form" class="form-select" style="width:100%;"><option value="">평가표를 선택하세요</option>${options}</select>`;
     }
 
+    // 폼 값 수집과 유효성 검증을 통합하여 호출부에서 null 체크만으로 검증 완료
     function readPlanForm() {
       const name = document.getElementById('pf-name')?.value?.trim();
       if (!name) { AICC_Toast.show('계획명을 입력하세요.'); return null; }
@@ -498,6 +509,7 @@
       if (!periodStart) { AICC_Toast.show('시작일을 입력하세요.'); return null; }
 
       const repeat = document.querySelector('input[name="pf-repeat"]:checked')?.value || '지속';
+      // '1회성'/'지속'은 종료일 불필요, 반복 주기(매주/매월)만 종료일 필수
       const periodEnd = (repeat === '1회성' || repeat === '지속') ? '' : (document.getElementById('pf-end')?.value || '');
       if (repeat !== '1회성' && repeat !== '지속' && !periodEnd) { AICC_Toast.show('종료일을 입력하세요.'); return null; }
 
@@ -532,6 +544,7 @@
       });
     }
 
+    // 실행 전 계획이므로 stats를 0/기본값으로 초기화하여 추가
     function saveNewPlan() {
       const vals = readPlanForm();
       if (!vals) return;
@@ -554,6 +567,7 @@
       const p = plans.find(x => x.no === no);
       if (!p) return;
 
+      // 이전 모달 닫힘 애니메이션 완료 후 새 모달을 열기 위한 지연
       setTimeout(() => {
         const html = buildPlanFormHtml(p);
         AICC_Modal.open({
@@ -568,6 +582,7 @@
       }, 300);
     }
 
+    // Object.assign으로 기존 객체를 직접 갱신하여 plans 배열 참조 유지
     function saveEditPlan(no) {
       const vals = readPlanForm();
       if (!vals) return;
@@ -596,6 +611,7 @@
           break;
 
         case 'copy': {
+          // JSON 직렬화로 깊은 복사하여 원본과 완전히 독립된 사본 생성
           const copy = JSON.parse(JSON.stringify(p));
           copy.no = getNextNo();
           copy.name = p.name + ' (사본)';
@@ -608,11 +624,13 @@
       }
     }
 
+    // 평가표·워크스페이스 데이터 로드 후 필터 옵션을 동적 생성하고 테이블 초기 렌더링
     document.addEventListener('DOMContentLoaded', async () => {
       formsData = await AICC_DataLoader.load('evaluation-forms.json');
       const wsRaw = await AICC_DataLoader.load('workspaces.json');
       if (wsRaw) workspacesData = wsRaw;
 
+      // plans에서 사용 중인 반복 주기 값을 중복 없이 필터 옵션으로 추가
       const repeats = [...new Set(plans.map(p => p.repeat).filter(Boolean))];
       const repeatSel = document.getElementById('repeat-filter');
       repeats.forEach(r => { repeatSel.innerHTML += '<option value="' + r + '">' + r + '</option>'; });

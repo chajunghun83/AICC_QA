@@ -169,6 +169,7 @@
       renderDisputeTable();
     });
 
+    // 상태별 뱃지와 결과 텍스트를 매핑하여 이의 제기 진행 상황을 한눈에 파악 가능하게 함
     function renderDisputeTable() {
       const tbody = document.getElementById('dispute-tbody');
 
@@ -205,6 +206,7 @@
       }).join('');
     }
 
+    // 이의 제기 전문과 관리자 처리 결과를 모달로 표시하여 진행 상태 추적 지원
     function showDisputeDetail(no) {
       const d = disputes.find(item => item.no === no);
       if (!d) return;
@@ -219,6 +221,7 @@
 
       const scoreColor = d.evalScore >= 80 ? '#4CAF50' : d.evalScore >= 60 ? '#FFC107' : '#F44336';
 
+      // 관리자 응답 유무에 따라 처리 결과 섹션 또는 대기 안내를 분기 렌더링
       let adminSection = '';
       if (d.adminResponse) {
         const resultColor = d.status === '승인' ? '#4CAF50' : d.status === '수정 승인' ? '#0F766E' : '#F44336';
@@ -292,6 +295,7 @@
       });
     }
 
+    // 별도 페이지 이동 없이 모달 폼으로 신규 이의 제기를 즉시 제출 가능하게 함
     function openNewDisputeForm() {
       AICC_Modal.open({
         title: '새 이의 제기',
@@ -347,6 +351,7 @@
       });
     }
 
+    // 단계적 필수값 검증으로 누락 항목을 순차적으로 안내하여 완전한 제출 보장
     function submitNewDispute() {
       const evalId = document.getElementById('new-dispute-eval').value;
       const item = document.getElementById('new-dispute-item').value;

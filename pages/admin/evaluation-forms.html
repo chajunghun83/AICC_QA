@@ -93,12 +93,14 @@
     let itemsData = null;
     let pickerSelected = {};
 
+    // 평가표·항목 데이터를 순차 로드 후 테이블 초기 렌더링
     document.addEventListener('DOMContentLoaded', async () => {
       formsData = await AICC_DataLoader.load('evaluation-forms.json');
       itemsData = await AICC_DataLoader.load('evaluation-items.json');
       if (formsData) renderForms(formsData);
     });
 
+    // sections 내 items를 합산하여 항목 수를 동적 계산 (데이터 변경 시 정합성 보장)
     function renderForms(forms) {
       const tbody = document.getElementById('forms-tbody');
       document.getElementById('form-count').textContent = `총 ${forms.length}개`;
@@ -128,6 +130,7 @@
     }
 
     /* ── 새 평가표 생성 모달 (xl 2-패널) ── */
+    // 왼쪽 항목 라이브러리 트리와 오른쪽 선택 목록을 동시 표시하는 2-패널 구조
     function showNewFormModal() {
       if (!itemsData) { AICC_Toast.show('항목 데이터를 불러오는 중입니다.'); return; }
       pickerSelected = {};
@@ -198,6 +201,7 @@
       });
     }
 
+    // 선택된 항목들을 단일 섹션으로 묶어 평가표 구조 생성
     function saveNewForm() {
       const name = document.getElementById('nf-name')?.value?.trim();
       if (!name) { AICC_Toast.show('평가표명을 입력하세요.'); return; }
@@ -223,6 +227,7 @@
         });
       }
 
+      // 항목 선택 시 합산 점수 사용, 미선택 시 수동 입력 총점으로 폴백
       const calcTotal = sections.length > 0 ? sections[0].total_score : total;
 
       const newForm = {
@@ -249,6 +254,7 @@
     }
 
     /* ── 평가표 상세 모달 ── */
+    // 섹션별 아코디언 구조로 항목을 계층적으로 표시하여 대량 항목 탐색 용이
     function showFormDetail(formId) {
       const form = formsData.find(f => f.id === formId);
       if (!form) return;
@@ -328,6 +334,7 @@
     }
 
     /* ── 항목 라이브러리 트리 HTML 생성 (재사용) ── */
+    // 새 평가표 생성과 기존 평가표 항목 추가에서 공용으로 사용
     function buildLibraryTreeHtml(existingIds) {
       let html = '';
       for (const cat of itemsData.categories) {
@@ -342,6 +349,7 @@
           html += `<div style="margin-left:20px;margin-bottom:4px;">`;
           html += `<div style="font-size:12px;font-weight:600;color:#757575;padding:4px 6px;">${sub.name}</div>`;
           for (const item of sub.items) {
+            // 이미 추가된 항목은 비활성 처리하여 중복 추가 방지
             const already = existingIds.has(item.id);
             const disabledStyle = already ? 'opacity:0.45;' : '';
             const checkedAttr = already ? 'checked disabled' : '';
@@ -363,6 +371,7 @@
     }
 
     /* ── 항목 라이브러리 피커 ── */
+    // 기존 항목 ID를 Set으로 수집하여 트리에서 중복 선택을 차단
     function showItemLibraryPicker(formId) {
       if (!itemsData) { AICC_Toast.show('항목 데이터를 불러오는 중입니다.'); return; }
       pickerSelected = {};
@@ -397,6 +406,7 @@
       });
     }
 
+    // CSS transform으로 chevron 회전과 카테고리 본문 토글을 동기화
     function togglePickerCat(el) {
       const body = el.nextElementSibling;
       const chevron = el.querySelector('.picker-chevron');
@@ -409,6 +419,7 @@
       }
     }
 
+    // 항목 ID를 키로 사용하여 중복 없는 선택 상태를 객체로 관리
     function togglePickerItem(itemId, name, score, type, scoreType, checked) {
       if (checked) {
         pickerSelected[itemId] = { id: itemId, name, score, type, score_type: scoreType || 'deduction' };
@@ -418,6 +429,7 @@
       renderPickerSelected();
     }
 
+    // 새 평가표 생성 모달의 총점 필드를 선택 항목 합산으로 자동 갱신
     function updatePickerTotal() {
       const totalInput = document.getElementById('nf-total');
       if (!totalInput) return;
@@ -425,6 +437,7 @@
       totalInput.value = sum;
     }
 
+    // 선택 목록 UI와 총점을 동기화하여 실시간 피드백 제공
     function renderPickerSelected() {
       const list = document.getElementById('picker-selected-list');
       const count = document.getElementById('picker-count');
@@ -453,6 +466,7 @@
       updatePickerTotal();
     }
 
+    // 섹션이 없으면 자동 생성 후 첫 번째 섹션에 항목을 일괄 추가하는 단순화 전략
     function applyPickerItems(formId) {
       const items = Object.values(pickerSelected);
       if (items.length === 0) { AICC_Toast.show('항목을 선택하세요.'); return; }
@@ -488,10 +502,12 @@
       renderForms(formsData);
       AICC_Modal.close();
       AICC_Toast.show(`${items.length}개 항목이 추가되었습니다.`);
+      // 모달 닫힘 애니메이션 완료 후 상세 모달을 다시 열어 결과 확인
       setTimeout(() => showFormDetail(formId), 300);
     }
 
     /* ── 항목 설정 모달 ── */
+    // 개별 항목의 배점 수정과 삭제를 위한 경량 설정 모달
     function showItemSettingModal(formId, sectionIdx, itemIdx) {
       const form = formsData.find(f => f.id === formId);
       if (!form) return;
@@ -533,6 +549,7 @@
       });
     }
 
+    // 항목 배점 변경 시 섹션·평가표 총점을 재계산하여 데이터 정합성 유지
     function saveFormItemSetting(formId, sectionIdx, itemIdx) {
       const form = formsData.find(f => f.id === formId);
       if (!form) return;
@@ -551,6 +568,7 @@
       setTimeout(() => showFormDetail(formId), 300);
     }
 
+    // 항목 삭제 후 빈 섹션도 자동 제거하여 구조적 일관성 유지
     function deleteFormItem(formId, sectionIdx, itemIdx) {
       const form = formsData.find(f => f.id === formId);
       if (!form) return;
@@ -572,6 +590,7 @@
       setTimeout(() => showFormDetail(formId), 300);
     }
 
+    // 다중 필터 조건을 순차 체이닝하여 AND 조건으로 적용
     function applyFilter() {
       if (!formsData) return;
       let filtered = [...formsData];

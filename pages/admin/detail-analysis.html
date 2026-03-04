@@ -295,6 +295,7 @@
     let currentLevel = 0; // 0=전체, 1=워크스페이스, 2=팀, 3=상담사
     let navStack = []; // [{level, label, data}]
 
+    // URL 파라미터(?ws=&team=) 기반 딥링크를 지원하여, 다른 페이지에서 특정 팀으로 바로 진입 가능
     document.addEventListener('DOMContentLoaded', () => {
       AICC_PeriodPicker.create('period-picker-container', {
         defaultPeriod: 'monthly',
@@ -319,6 +320,7 @@
     });
 
     /* ========== 브레드크럼 ========== */
+    // navStack을 순회하며 클릭 가능한 경로 링크를 생성하되, 마지막 항목만 비활성화하여 현재 위치 표시
     function updateBreadcrumb() {
       const bc = document.getElementById('breadcrumb');
       const backBtn = document.getElementById('back-btn');
@@ -337,6 +339,7 @@
       backBtn.style.display = currentLevel > 0 ? '' : 'none';
     }
 
+    // navStack을 slice하여 원하는 레벨로 점프 — 브레드크럼 클릭 시 중간 레벨 복원에 사용
     function goToLevel(level) {
       if (level === 0) {
         currentLevel = 0;
@@ -360,6 +363,7 @@
     }
 
     /* ========== KPI 카드 렌더링 ========== */
+    // 범용 KPI 렌더러 — 레벨별로 다른 지표를 동일한 카드 형태로 표현하기 위해 items 배열 기반 설계
     function renderKPI(items) {
       const container = document.getElementById('kpi-cards');
       container.innerHTML = items.map(card => {
@@ -375,6 +379,7 @@
     }
 
     /* ========== Level 0: 워크스페이스 목록 ========== */
+    // 최상위 뷰: 전체 워크스페이스를 집계하여 KPI와 테이블을 동시에 갱신
     function renderLevel0() {
       currentLevel = 0;
       navStack = [];
@@ -420,6 +425,7 @@
     }
 
     /* ========== Level 1: 팀 목록 (워크스페이스 내) ========== */
+    // 테이블 행 클릭 진입점 — navStack에 워크스페이스 컨텍스트를 push한 뒤 팀 목록 렌더링
     function drillToWorkspace(wsId) {
       const ws = DUMMY.workspaces.find(w => w.id === wsId);
       if (!ws) return;
@@ -430,6 +436,7 @@
       updateBreadcrumb();
     }
 
+    // 워크스페이스 내 팀별 비교 뷰 렌더링
     function renderLevel1(ws) {
       const teams = ws.teams;
 
@@ -468,6 +475,7 @@
     }
 
     /* ========== Level 2: 상담사 목록 (팀 내) ========== */
+    // ws→team 2단계 navStack을 한 번에 구성 — 딥링크 및 직접 클릭 모두 지원
     function drillToTeam(wsId, teamId) {
       const ws = DUMMY.workspaces.find(w => w.id === wsId);
       if (!ws) return;
@@ -483,6 +491,7 @@
       updateBreadcrumb();
     }
 
+    // 팀 내 상담사별 순위·유형 비교 뷰 렌더링
     function renderLevel2(ctx) {
       const { ws, team } = ctx;
       const agents = team.agents;
@@ -522,6 +531,7 @@
     }
 
     /* ========== Level 3: 평가 목록 (상담사) ========== */
+    // ws→team→agent 3단계 navStack을 한 번에 구성하여 모달에서 컨텍스트 참조 가능하게 함
     function drillToAgent(wsId, teamId, agentId) {
       const ws = DUMMY.workspaces.find(w => w.id === wsId);
       if (!ws) return;
@@ -540,6 +550,7 @@
       updateBreadcrumb();
     }
 
+    // 개별 상담사의 평가 이력 뷰 — 이슈 건수를 별도 KPI로 표시하여 주의 필요 상담 즉시 파악 가능
     function renderLevel3(ctx) {
       const { ws, team, agent } = ctx;
       const evals = agent.evaluations;
@@ -569,6 +580,7 @@
 
       const tbody = document.getElementById('table-body');
       tbody.innerHTML = evals.map(ev => {
+        // 신뢰도 High/Mid에 따라 시각적 배지 구분 — 낮은 신뢰도 평가는 수동 검증 우선순위 판단에 활용
         const confBadge = ev.confidence === 'High'
           ? '<span class="badge badge-active">High</span>'
           : '<span class="badge badge-pending">Mid</span>';
@@ -592,6 +604,7 @@
     }
 
     /* ========== 평가 상세 모달 ========== */
+    // 실제 평가표 항목 구조를 반영한 시뮬레이션 데이터 — NLP/AI 방식 구분은 실제 채점 엔진 유형과 매핑
     const SIM_SCORE_ITEMS = [
       { name: '첫인사', max: 6, type: 'NLP' },
       { name: '고객 인사 화답', max: 6, type: 'AI' },
@@ -613,11 +626,14 @@
       { name: '적극적 응대', max: 6, type: 'AI' }
     ];
 
+    // 총점 비율(ratio)에 따라 감점 확률을 역비례 적용하여, 고득점자는 감점이 적은 현실적 분포를 시뮬레이션
     function generateSimScores(totalScore) {
+      // 0.6~1.0 범위로 클램핑 — 극단적 저점수에서도 최소 60% 통과율 보장
       const ratio = Math.max(0.6, Math.min(1, totalScore / 100));
       return SIM_SCORE_ITEMS.map(item => {
         let score = item.max;
         if (item.max > 0) {
+          // ratio 미만 난수일 때만 감점 — 고득점자일수록 감점 확률 낮음
           const loss = Math.random() < ratio ? 0 : Math.ceil(Math.random() * 2);
           score = Math.max(0, item.max - loss);
         }
@@ -629,6 +645,7 @@
       });
     }
 
+    // 데모용 고정 시나리오 스크립트 — 실제 서비스에서는 STT API 응답으로 대체
     function generateSimTranscript(agentName) {
       return [
         { speaker: 'agent', time: '00:01', text: `안녕하세요, ${agentName}입니다. 무엇을 도와드릴까요?` },
@@ -641,6 +658,7 @@
       ];
     }
 
+    // 점수 구간별 피드백 분기 — 실제 서비스에서는 LLM 기반 자동 생성으로 대체 예정
     function generateSimFeedback(totalScore) {
       if (totalScore >= 95) return '전반적으로 매우 우수한 상담입니다. 고객 요구사항을 정확히 파악하고 신속하게 처리하였습니다.';
       if (totalScore >= 85) return '우수한 상담입니다. 일부 항목에서 소폭 감점이 있으나 전반적으로 양호합니다.';
@@ -648,6 +666,7 @@
       return '개선이 필요한 상담입니다. 기본 응대 매뉴얼을 재확인하고 교육에 참여해 주세요.';
     }
 
+    // navStack 3단계 컨텍스트(ws→team→agent)에서 메타 정보를 추출하여 모달에 표시
     function showEvalDetail(evalId) {
       let foundEval = null;
       if (navStack.length === 3) {
@@ -662,6 +681,7 @@
       const teamName = navStack[1].label;
       const callType = navStack[2].data.agent.callType || 'I/B';
 
+      // 통화유형·팀명으로 평가표 분기 — 실제로는 워크스페이스별 설정에서 매핑
       const simEvalForm = callType === 'O/B' ? 'O/B 텔레마케팅 평가표 v1.3'
         : teamName.includes('VIP') ? 'I/B VIP 평가표 v1.0' : 'I/B 일반 상담 평가표 v2.1';
       const simConsultTypes = [
@@ -673,6 +693,7 @@
         '상품문의 > 신발 > 재입고문의', '프로모션 > 쿠폰안내 > 생일쿠폰',
         '회원 > 정보변경 > 배송지변경', '프로모션 > 멤버십안내 > 등급혜택'
       ];
+      // evalId의 숫자 부분을 해시로 사용하여 동일 평가에 항상 같은 상담유형이 할당되도록 보장
       const simConsultType = simConsultTypes[parseInt(evalId.replace(/\D/g,'')) % simConsultTypes.length];
 
       const simScores = generateSimScores(ev.score);
@@ -783,6 +804,7 @@
       });
     }
 
+    // 모달 내 탭 전환 — display 토글 방식으로 탭 상태를 유지하여 재렌더링 방지
     function switchDetailTab(btn, tabId) {
       btn.parentElement.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
       btn.classList.add('active');
@@ -790,12 +812,14 @@
       document.getElementById('script-tab').style.display = tabId === 'script-tab' ? '' : 'none';
     }
 
+    // 스크립트 라인 클릭 시 해당 구간 재생 시뮬레이션 — 이전 하이라이트를 해제하고 현재 라인만 활성화
     function playSegment(el, time) {
       document.querySelectorAll('.transcript-line').forEach(line => {
         line.classList.remove('playing');
         line.style.background = '';
       });
       el.classList.add('playing');
+      // SVG fill 색상(#0F766E=상담사)으로 화자를 구분하여 각기 다른 하이라이트 색상 적용
       el.style.background = el.querySelector('[fill="#0F766E"]') ? '#B2DFDB' : '#EEEEEE';
 
       const label = document.getElementById('player-segment-label');
@@ -816,6 +840,7 @@
       AICC_Toast.show(`${time} 구간 재생 (시뮬레이션)`);
     }
 
+    // SVG innerHTML 내 polygon(▶) / rect(⏸) 존재 여부로 재생 상태를 판별하는 토글 방식
     function togglePlay(btn) {
       const icon = document.getElementById('play-btn-icon');
       if (!icon) return;
@@ -829,6 +854,7 @@
       }
     }
 
+    // 프로그레스 바 클릭 위치의 상대 좌표(%)를 계산하여 재생 위치 시뮬레이션
     function seekBar(e) {
       const rect = e.currentTarget.getBoundingClientRect();
       const pct = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
@@ -836,11 +862,13 @@
       if (progress) progress.style.width = pct + '%';
     }
 
+    // 수동 검증 페이지 이동 stub — 실제 구현 시 evalId를 쿼리파라미터로 전달 예정
     function openManualReview(evalId) {
       AICC_Toast.show('수동 검증 화면으로 이동합니다. (시뮬레이션)');
     }
 
     /* ========== 필터 ========== */
+    // 기간·유형·점수 필터 적용 stub — 실제 구현 시 현재 레벨의 데이터를 재조회하여 렌더링
     function applyPeriodFilter() {
       AICC_Toast.show('필터가 적용되었습니다. (시뮬레이션)');
     }

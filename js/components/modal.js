@@ -1,12 +1,14 @@
 /**
  * AICC QA - Modal Component
  * 범용 모달 팝업
+ * 여러 페이지에서 동일한 모달 UX를 제공하기 위해 싱글턴 패턴으로 관리
  */
 window.AICC_Modal = {
   isOpen: false,
 
   /**
    * 모달 열기
+   * 동시에 1개만 표시되도록 기존 모달이 있으면 먼저 닫음
    * @param {Object} options
    * @param {string} options.title - 모달 제목
    * @param {string} options.content - 모달 본문 HTML
@@ -45,7 +47,6 @@ window.AICC_Modal = {
       </div>
     `;
 
-    // 백드롭 클릭 시 닫기
     backdrop.addEventListener('click', (e) => {
       if (e.target === backdrop) this.close();
     });
@@ -53,12 +54,11 @@ window.AICC_Modal = {
     document.body.appendChild(backdrop);
     document.body.style.overflow = 'hidden';
 
-    // 애니메이션
+    // DOM 삽입 직후 rAF로 class를 추가해야 CSS transition이 정상 작동
     requestAnimationFrame(() => {
       backdrop.classList.add('active');
     });
 
-    // ESC 키 닫기
     this._escHandler = (e) => {
       if (e.key === 'Escape') this.close();
     };
@@ -70,6 +70,7 @@ window.AICC_Modal = {
 
   /**
    * 모달 닫기
+   * 닫힘 애니메이션(200ms) 완료 후 DOM에서 제거
    */
   close() {
     const backdrop = document.getElementById('aicc-modal-backdrop');
@@ -90,7 +91,8 @@ window.AICC_Modal = {
   },
 
   /**
-   * 확인 다이얼로그
+   * 확인/취소 다이얼로그 - 간편 래퍼
+   * onConfirm을 toString()으로 인라인 실행하여 별도 바인딩 없이 동작
    */
   confirm(message, onConfirm) {
     this.open({

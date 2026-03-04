@@ -143,6 +143,7 @@
       { no: 10, date: '2025-01-05', agent: '임재혁', team: '고객지원2팀', evalId: 'EVAL-2025-0265', item: '통화 종료 절차', score: 68, status: '반려', handler: '관리자B' }
     ];
 
+    // 상태값에 따라 시각적 구분을 위한 뱃지 클래스 매핑 (fallback으로 badge-pending 사용)
     function getStatusBadge(status) {
       const map = {
         '대기': 'badge-pending',
@@ -153,6 +154,7 @@
       return `<span class="badge ${map[status] || 'badge-pending'}">${status}</span>`;
     }
 
+    // 필터 결과 또는 전체 데이터를 테이블에 반영하고 건수를 갱신
     function renderTable(data) {
       const tbody = document.getElementById('dispute-tbody');
       document.getElementById('total-count').textContent = `총 ${data.length}건`;
@@ -171,6 +173,7 @@
       `).join('');
     }
 
+    // 다중 조건을 순차 체이닝하여 누적 필터링 — 각 조건이 독립적이므로 순서 무관
     function filterDisputes() {
       let filtered = [...disputes];
       const statusVal = document.getElementById('status-filter').value;
@@ -187,6 +190,7 @@
       AICC_Toast.show('필터가 적용되었습니다.');
     }
 
+    // 모든 필터를 초기 상태로 복원 후 전체 데이터 재렌더링
     function resetDisputeFilter() {
       document.getElementById('status-filter').value = 'all';
       document.getElementById('team-filter').value = 'all';
@@ -196,6 +200,7 @@
       renderTable(disputes);
     }
 
+    // 상태(대기/검토 중)에 따라 처리 액션 버튼 또는 조회 전용 모달로 분기
     function openDetail(no) {
       const d = disputes.find(x => x.no === no);
       if (!d) return;
@@ -213,6 +218,7 @@
         10: '통화 종료 전에 추가 문의 확인을 하였으나, 고객이 빠르게 끊어서 기록에 반영되지 않았습니다.'
       };
 
+      // 처리가 완료되지 않은 건만 수정/승인/반려 액션을 허용하기 위한 분기
       const isPending = d.status === '대기' || d.status === '검토 중';
 
       const content = `
@@ -286,6 +292,7 @@
       });
     }
 
+    // 모달 닫기 후 Toast로 즉시 피드백 — 실제 API 연동 시 비동기 처리로 대체 예정
     function handleAction(no, action) {
       AICC_Modal.close();
       AICC_Toast.show(`${action} 처리가 완료되었습니다.`);
@@ -298,6 +305,7 @@
         onChange: function() { filterDisputes(); }
       });
 
+      // Set으로 중복 제거 후 필터 드롭다운 옵션을 데이터 기반으로 동적 생성
       const teams = [...new Set(disputes.map(d => d.team))];
       const teamSel = document.getElementById('team-filter');
       teams.forEach(t => { teamSel.innerHTML += '<option value="' + t + '">' + t + '</option>'; });

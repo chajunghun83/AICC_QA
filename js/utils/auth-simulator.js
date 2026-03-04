@@ -1,8 +1,10 @@
 /**
  * AICC QA - Auth Simulator
- * 권한 전환 시뮬레이션
+ * 프로토타입용 역할 전환 시뮬레이션
+ * 실제 인증 없이 localStorage로 역할 상태를 유지하여 관리자/상담사 화면 전환 시연
  */
 window.AICC_Auth = {
+  /** 역할별 고정 사용자 프로필 (프로토타입용 하드코딩) */
   roles: {
     ADMIN: { label: '관리자', name: '김관리자', team: 'QA팀', workspace: '전체' },
     AGENT: { label: '상담사', name: '홍길동', team: 'VIP상담팀', workspace: '서울센터' }
@@ -41,11 +43,11 @@ window.AICC_Auth = {
   },
 
   /**
-   * 역할 전환 + 페이지 리로드
+   * 역할 전환 + 적절한 페이지로 리다이렉트
+   * 관리자↔상담사 간 접근 가능 페이지가 다르므로 각 역할의 대시보드로 이동
    */
   switchRole(role) {
     this.setRole(role);
-    // 상담사로 전환 시 상담사 전용 페이지로 이동
     const path = window.location.pathname;
     if (role === 'AGENT' && path.includes('/pages/admin/')) {
       const basePath = path.includes('system-settings') ? '../../../' : '../../';
@@ -58,7 +60,8 @@ window.AICC_Auth = {
   },
 
   /**
-   * 역할 전환 UI 생성
+   * 화면 우하단 역할 전환 토글 UI 렌더링
+   * 프로토타입 시연 시 관리자/상담사 뷰를 즉시 전환할 수 있도록 제공
    */
   renderRoleToggle() {
     const currentRole = this.getRole();

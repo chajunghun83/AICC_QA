@@ -219,6 +219,7 @@
         onChange: function() { applyFilter(); }
       });
 
+      // 데이터에서 평가표 목록을 동적 추출하여 새 평가표 추가 시 코드 수정 불필요
       const formNames = [...new Set(allEvals.map(e => e.eval_form).filter(Boolean))];
       const formSel = document.getElementById('form-filter');
       formNames.forEach(f => { formSel.innerHTML += '<option value="' + f + '">' + f + '</option>'; });
@@ -226,6 +227,7 @@
       renderEvalTable(allEvals);
     });
 
+    // 다중 조건 AND 결합 + early return 패턴으로 불필요한 비교 최소화
     function applyFilter() {
       const scoreRange = document.getElementById('score-filter').value;
       const callType = document.getElementById('type-filter').value;
@@ -251,6 +253,7 @@
       AICC_Toast.show('필터가 적용되었습니다.');
     }
 
+    // 서버 재요청 없이 클라이언트 측에서 즉시 전체 데이터로 복원
     function resetFilter() {
       document.getElementById('score-filter').value = 'all';
       document.getElementById('type-filter').value = 'all';
@@ -262,6 +265,7 @@
       renderEvalTable(filteredEvals);
     }
 
+    // 필터 결과를 즉시 반영하고 건수를 갱신하여 사용자에게 피드백 제공
     function renderEvalTable(evals) {
       const tbody = document.getElementById('eval-tbody');
       document.getElementById('eval-count').textContent = '총 ' + evals.length + '건';
@@ -293,6 +297,7 @@
       }).join('');
     }
 
+    // 페이지 이동 없이 모달로 상세 정보를 표시하여 목록 컨텍스트 유지
     function showEvalDetail(evalId) {
       const ev = allEvals.find(e => e.id === evalId);
       if (!ev) return;
@@ -310,6 +315,7 @@
         `;
       }).join('');
 
+      // 스크립트 데이터 없는 평가도 존재하므로 빈 배열 시 안내 메시지로 폴백
       const transcriptHtml = ev.transcript && ev.transcript.length > 0
         ? ev.transcript.map(t => {
             const isAgent = t.speaker === 'agent';
@@ -327,6 +333,7 @@
           }).join('')
         : '<p style="color:#9E9E9E;font-size:13px;text-align:center;padding:20px;">스크립트 데이터가 없습니다.</p>';
 
+      // QA 등급 기준(80/60점)에 맞춘 3단계 색상으로 직관적 수준 인식 지원
       const scoreColor = ev.score >= 80 ? '#4CAF50' : ev.score >= 60 ? '#FFC107' : '#F44336';
 
       AICC_Modal.open({
@@ -380,6 +387,7 @@
       });
     }
 
+    // 모달 내부 DOM으로 탭 전환 범위를 한정하여 외부 요소 간섭 방지
     function switchDetailTab(btn, tabId) {
       const allTabs = btn.parentElement.querySelectorAll('.tab-item');
       allTabs.forEach(t => t.classList.remove('active'));
@@ -392,6 +400,7 @@
       document.getElementById(tabId).style.display = '';
     }
 
+    // 모달 닫기→열기 시 애니메이션 충돌 방지를 위해 300ms 지연 후 새 모달 표시
     function openDisputeForm(evalId, currentScore) {
       AICC_Modal.close();
 
@@ -439,6 +448,7 @@
       }, 300);
     }
 
+    // 필수 입력값을 단계적으로 검증하여 누락 항목을 순차 안내
     function submitDispute(evalId) {
       const item = document.getElementById('dispute-item').value;
       const score = document.getElementById('dispute-score').value;

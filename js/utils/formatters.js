@@ -1,6 +1,7 @@
 /**
  * AICC QA - Formatters
  * 숫자, 날짜, 점수 포맷팅 유틸리티
+ * null/undefined 입력 시 '-'를 반환하여 빈 데이터를 안전하게 표시
  */
 window.AICC_Fmt = {
   /**
@@ -28,7 +29,8 @@ window.AICC_Fmt = {
   },
 
   /**
-   * 점수에 따른 상태 클래스
+   * 점수 구간별 상태 분류 (80+: 양호, 60+: 주의, 60 미만: 위험)
+   * CSS 클래스명 및 색상 결정의 기준이 됨
    */
   scoreStatus(score) {
     if (score >= 80) return 'good';
@@ -87,7 +89,7 @@ window.AICC_Fmt = {
   },
 
   /**
-   * 평가 방식 배지 HTML
+   * 평가 방식(AI/NLP/수동)에 따른 색상 배지 HTML 생성
    */
   typeBadge(type) {
     const map = {
@@ -114,7 +116,8 @@ window.AICC_Fmt = {
   },
 
   /**
-   * 증감 표시 (화살표 + 수치)
+   * 전기 대비 증감 표시 (▲ 녹색 / ▼ 빨간색)
+   * 0.1 미만 변동은 무변동('-')으로 처리하여 시각적 노이즈 방지
    */
   trend(current, previous) {
     if (previous == null) return '';

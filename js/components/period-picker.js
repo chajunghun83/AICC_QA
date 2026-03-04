@@ -1,6 +1,7 @@
 /**
  * AICC Period Picker - 공통 기간 선택 컴포넌트
  * 일간/주간/월간/년간/사용자 지정 + 달력 UI
+ * IIFE 패턴으로 내부 상태를 캡슐화하고 create()만 외부에 노출
  */
 const AICC_PeriodPicker = (function() {
   const PERIOD_TYPES = [
@@ -13,23 +14,28 @@ const AICC_PeriodPicker = (function() {
   const WEEKDAYS = ['일','월','화','수','목','금','토'];
   const MONTH_NAMES = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 
+  /** 해당 월의 마지막 날짜 계산 (다음 달 0일 = 이번 달 말일) */
   function daysInMonth(y, m) { return new Date(y, m + 1, 0).getDate(); }
+  /** 해당 월 1일의 요일 (달력 그리드 시작 위치 결정용) */
   function firstDayOfMonth(y, m) { return new Date(y, m, 1).getDay(); }
 
+  /** Date → 'YYYY-MM-DD' 문자열 변환 (비교/표시용 통일 포맷) */
   function fmt(d) {
     return d.getFullYear() + '-' +
       String(d.getMonth() + 1).padStart(2, '0') + '-' +
       String(d.getDate()).padStart(2, '0');
   }
 
+  /** 주어진 날짜가 속한 주의 월~일 범위 반환 (ISO 주 기준: 월요일 시작) */
   function weekRange(date) {
     const d = new Date(date);
     const day = d.getDay();
-    const start = new Date(d); start.setDate(d.getDate() - day + 1); // 월요일
-    const end = new Date(start); end.setDate(start.getDate() + 6);   // 일요일
+    const start = new Date(d); start.setDate(d.getDate() - day + 1);
+    const end = new Date(start); end.setDate(start.getDate() + 6);
     return { start, end };
   }
 
+  /** 기간 유형별 트리거 버튼에 표시할 한글 텍스트 생성 */
   function displayText(s) {
     const d = s.selectedDate;
     switch (s.periodType) {
@@ -49,6 +55,7 @@ const AICC_PeriodPicker = (function() {
     }
   }
 
+  /** onChange 콜백에 전달할 구조화된 기간 정보 객체 생성 */
   function dateInfo(s) {
     const d = s.selectedDate;
     switch (s.periodType) {
@@ -61,6 +68,7 @@ const AICC_PeriodPicker = (function() {
   }
 
   /* ── 달력 렌더 ── */
+  /** 일간 달력 그리드 렌더링 - 날짜 클릭 시 done() 콜백으로 선택 확정 */
   function renderDayPicker(el, s, done) {
     const y = s.viewYear, m = s.viewMonth;
     const dim = daysInMonth(y, m), fd = firstDayOfMonth(y, m);
@@ -91,6 +99,7 @@ const AICC_PeriodPicker = (function() {
     });
   }
 
+  /** 주간 선택 달력 - 마우스 호버 시 해당 주 전체를 하이라이트 */
   function renderWeekPicker(el, s, done) {
     const y = s.viewYear, m = s.viewMonth;
     const dim = daysInMonth(y, m), fd = firstDayOfMonth(y, m);
@@ -104,6 +113,7 @@ const AICC_PeriodPicker = (function() {
     h += '<div class="pp-cal-grid week-mode">';
     WEEKDAYS.forEach(w => { h += '<div class="pp-weekday">' + w + '</div>'; });
 
+    // 이전/다음 달 날짜를 포함해 전체 주를 완성 (주 단위 선택이므로 필수)
     var cells = [];
     for (let i = 0; i < fd; i++) {
       var pm = m === 0 ? 11 : m - 1, py = m === 0 ? y - 1 : y;
@@ -143,6 +153,7 @@ const AICC_PeriodPicker = (function() {
     });
   }
 
+  /** 월간 선택기 - 12개월 그리드로 표시 */
   function renderMonthPicker(el, s, done) {
     const selY = s.selectedDate.getFullYear(), selM = s.selectedDate.getMonth();
     let h = '<div class="pp-nav">' +
@@ -165,6 +176,7 @@ const AICC_PeriodPicker = (function() {
     });
   }
 
+  /** 년간 선택기 - 12년 단위로 페이지네이션 */
   function renderYearPicker(el, s, done) {
     const selY = s.selectedDate.getFullYear();
     const base = s.yearBase;
@@ -188,6 +200,7 @@ const AICC_PeriodPicker = (function() {
     });
   }
 
+  /** 사용자 지정 기간 - 시작일/종료일 input[type=date]로 직접 입력 */
   function renderCustomPicker(el, s, done) {
     var fv = s.customFrom ? fmt(s.customFrom) : '', tv = s.customTo ? fmt(s.customTo) : '';
     el.innerHTML = '<div class="pp-custom">' +
@@ -204,6 +217,10 @@ const AICC_PeriodPicker = (function() {
   }
 
   /* ── Public API ── */
+  /**
+   * 기간 선택기 인스턴스 생성
+   * 대상 컨테이너 안에 트리거 버튼 + 팝업 달력을 주입하고 상태 객체를 반환
+   */
   function create(containerId, opts) {
     opts = opts || {};
     var el = typeof containerId === 'string' ? document.getElementById(containerId) : containerId;
@@ -253,6 +270,7 @@ const AICC_PeriodPicker = (function() {
 
     function close() { s.isOpen = false; popup.style.display = 'none'; }
     function updateLabel() { el.querySelector('.pp-label').textContent = displayText(s); }
+    /** 날짜 선택 확정 시 라벨 갱신 → 팝업 닫기 → 콜백 호출 순서로 실행 */
     function emit() { updateLabel(); close(); s.onChange(s.periodType, dateInfo(s)); }
 
     function renderBody() {
@@ -272,6 +290,7 @@ const AICC_PeriodPicker = (function() {
       if (s.isOpen) renderBody();
     };
 
+    // 팝업 외부 클릭 시 닫기 (document 레벨에서 감지)
     document.addEventListener('click', function(e) {
       if (!el.contains(e.target)) close();
     });

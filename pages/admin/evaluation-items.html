@@ -63,16 +63,19 @@
     let inlineNewItem = null;
     let pendingNewItemId = null;
 
+    // 데이터 로딩 완료 후 트리를 렌더링하기 위해 async/await 패턴 사용
     document.addEventListener('DOMContentLoaded', async () => {
       itemsData = await AICC_DataLoader.load('evaluation-items.json');
       if (itemsData) renderTree(itemsData.categories);
     });
 
+    // DOM 조작 최소화를 위해 HTML 문자열을 조합 후 innerHTML로 일괄 삽입
     function renderTree(categories) {
       const container = document.getElementById('tree-container');
       let totalItems = 0;
 
       let html = categories.map(cat => {
+        // 대분류 레벨에서 총 항목 수를 표시하기 위해 중분류 전체를 합산
         const catItems = cat.children.reduce((sum, sub) => sum + sub.items.length, 0);
         totalItems += catItems;
         const statusLabel = cat.status ? `<span style="font-size:10px;color:#9E9E9E;margin-left:4px;">(${cat.status})</span>` : '';
@@ -126,6 +129,7 @@
       document.getElementById('item-count').textContent = `총 ${totalItems}개 항목`;
     }
 
+    // NLP 메서드별 UI 표현을 일관되게 관리하기 위해 라벨/색상을 상수 객체로 분리
     const NLP_METHOD_LABELS = {
       script_match: '스크립트 매칭',
       keyword_detect: '키워드 탐지',
@@ -139,7 +143,9 @@
       time_measure: { bg: '#E8F5E9', border: '#A5D6A7', text: '#2E7D32' }
     };
 
+    // NLP 메서드마다 표시할 필드 조합이 달라 조건부 HTML 조합 방식 사용
     function renderNlpConfigSection(cfg) {
+      // 설정 누락 시 keyword_detect를 기본값으로 사용하여 UI 깨짐 방지
       const method = cfg.method || 'keyword_detect';
       const colors = NLP_METHOD_COLORS[method] || NLP_METHOD_COLORS.keyword_detect;
       const methodLabel = NLP_METHOD_LABELS[method] || method;
@@ -184,6 +190,7 @@
         </div>`;
     }
 
+    // 3중 중첩 탐색으로 항목과 카테고리 경로를 동시에 추출 (플랫 맵 대신 트리 순회로 경로 정보 보존)
     function selectItem(itemId) {
       // 이전 선택 해제
       document.querySelectorAll('.tree-item.selected').forEach(el => el.classList.remove('selected'));
@@ -291,6 +298,7 @@
       `;
     }
 
+    // parent/sub 모드 분기로 카테고리 추가(대분류 선택)와 항목 추가(중분류 선택) 용도를 하나의 함수로 처리
     function renderCategoryMiniTree(mode, selectedVal) {
       if (!itemsData) return '';
       let html = '';
@@ -337,6 +345,7 @@
       return html;
     }
 
+    // 모달 컨텍스트(카테고리 추가 vs 항목 추가)에 따라 서로 다른 UI 요소를 업데이트해야 하므로 mode 분기
     function onCatTreeSelect(el) {
       const value = el.dataset.value;
       const label = el.dataset.label;
@@ -368,6 +377,7 @@
       if (dd) dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
     }
 
+    // 트리 내 인라인 CRUD(카테고리/항목 추가)를 지원하기 위해 상태 변수 기반 조건부 렌더링
     function renderItemModalTree(selectedVal) {
       if (!itemsData) return '';
       let html = '';
@@ -464,6 +474,7 @@
       if (chevron) chevron.style.transform = hidden ? 'rotate(0)' : 'rotate(-90deg)';
     }
 
+    // 카테고리 선택 시 하위 항목을 자동 펼쳐 사용성 향상
     function onItemTreeSelect(el) {
       const value = el.dataset.value;
       const label = el.dataset.label;
@@ -476,11 +487,13 @@
       if (subId) toggleItemTreeNode('sub-' + subId);
     }
 
+    // 트리 상태 변경 후 전체 재렌더링하고 인라인 입력 필드에 자동 포커스
     function refreshItemModalTree() {
       const container = document.getElementById('item-modal-tree');
       if (!container) return;
       const currentVal = document.getElementById('form-category')?.value || '';
       container.innerHTML = renderItemModalTree(currentVal);
+      // innerHTML 반영 후 DOM 업데이트를 기다린 뒤 포커스 이동
       setTimeout(() => {
         const input = document.getElementById('inline-cat-name');
         if (input) input.focus();
@@ -492,6 +505,7 @@
       refreshItemModalTree();
     }
 
+    // __root__이면 대분류, 아니면 해당 대분류 하위에 중분류로 추가하여 트리 구조 유지
     function confirmInlineCatAdd(parentId) {
       const input = document.getElementById('inline-cat-name');
       const name = input?.value?.trim();
@@ -520,6 +534,7 @@
       refreshItemModalTree();
     }
 
+    // 트리 UI로 추가 위치를 시각적으로 선택할 수 있도록 미니 트리를 모달에 포함
     function showAddCategoryModal() {
       catModalSelection = { value: '__root__', label: '최상위 (새 대분류 추가)' };
       const treeHtml = renderCategoryMiniTree('parent', '__root__');
@@ -558,6 +573,7 @@
       });
     }
 
+    // 모달에서 선택한 위치에 따라 대분류 또는 중분류로 분기하여 저장
     function saveNewCategory() {
       const name = document.getElementById('cat-modal-name')?.value?.trim();
       if (!name) { AICC_Toast.show('카테고리명을 입력하세요.'); return; }
@@ -578,7 +594,9 @@
       AICC_Toast.show('카테고리가 추가되었습니다.');
     }
 
+    // 모달 닫힘 시 임시 생성 항목을 정리하기 위해 onClose 콜백 등록
     function showAddItemModal() {
+      // 이전 상태 초기화로 모달 간 간섭 방지
       inlineAddParent = null;
       modalEditingItem = null;
       inlineNewItem = null;
@@ -625,6 +643,7 @@
       });
     }
 
+    // 폼의 모든 필드를 한 객체로 수집하여 신규/수정 저장 로직에서 재사용
     function readFormValues() {
       const catVal = document.getElementById('form-category')?.value || '';
       const inlineName = document.getElementById('inline-item-name')?.value?.trim() || '';
@@ -642,6 +661,7 @@
       const nlpScriptsRaw = document.getElementById('form-nlp-scripts')?.value?.trim() || '';
       const nlpKeywordsRaw = document.getElementById('form-nlp-keywords')?.value?.trim() || '';
       const nlpDesc = document.getElementById('form-nlp-desc')?.value?.trim() || '';
+      // 줄바꿈/쉼표 구분자로 사용자 입력을 배열로 파싱 (빈 값 필터링 포함)
       const nlpConfig = {
         method: nlpMethod,
         reference_scripts: nlpScriptsRaw ? nlpScriptsRaw.split('\n').map(s => s.trim()).filter(Boolean) : [],
@@ -652,6 +672,7 @@
       return { catVal, name, score, scoreType, evalType, isActive, criteria, desc, prompt, nlpConfig };
     }
 
+    // 트리에서 목표 중분류를 찾아 삽입 후, DOM 렌더링 완료를 기다려 새 항목 선택
     function saveNewItem() {
       const v = readFormValues();
       if (!v.name) { AICC_Toast.show('항목명을 입력하세요.'); return; }
@@ -670,6 +691,7 @@
       if (!targetSub) { AICC_Toast.show('카테고리를 찾을 수 없습니다.'); return; }
 
       const newId = 'item-' + Date.now();
+      // 트리 노드에서 긴 이름이 레이아웃을 깨지 않도록 10자로 축약, full_name은 별도 보존
       const shortName = v.name.length > 10 ? v.name.substring(0, 10) : v.name;
       const newItem = {
         id: newId,
@@ -694,9 +716,11 @@
       AICC_Modal.close();
       AICC_Toast.show('항목이 추가되었습니다.');
 
+      // DOM 렌더링 완료를 기다린 후 새 항목을 선택하여 상세 패널에 표시
       setTimeout(() => selectItem(newId), 100);
     }
 
+    // 참조 객체를 직접 수정하여 별도 검색 없이 변경사항 즉시 반영
     function saveEditItem() {
       if (!selectedItem) return;
       const v = readFormValues();
@@ -721,6 +745,7 @@
       setTimeout(() => selectItem(selectedItem.id), 100);
     }
 
+    // modalEditingItem 유무로 신규/수정을 판단하여 하나의 저장 버튼으로 동작 통합
     function saveItemModalAction() {
       if (modalEditingItem) {
         const v = readFormValues();
@@ -736,6 +761,7 @@
         else delete modalEditingItem.ai_prompt;
         if (v.evalType === 'NLP') modalEditingItem.nlp_config = v.nlpConfig;
         else delete modalEditingItem.nlp_config;
+        // 신규 저장과 수정의 토스트 메시지를 구분하기 위해 pending 상태 미리 확인
         const wasPending = pendingNewItemId === modalEditingItem.id;
         pendingNewItemId = null;
         renderTree(itemsData.categories);
@@ -746,6 +772,7 @@
       }
     }
 
+    // 모달 취소 시 임시 생성된 항목을 데이터에서 제거하여 데이터 일관성 보장
     function removePendingItem() {
       if (!pendingNewItemId) return;
       for (const cat of itemsData.categories) {
@@ -762,6 +789,7 @@
       modalEditingItem = null;
     }
 
+    // 항목 ID로 소속 카테고리/중분류를 함께 반환하여 호출측에서 경로 탐색 중복 방지
     function findItemContext(itemId) {
       for (const cat of itemsData.categories) {
         for (const sub of cat.children) {
@@ -773,6 +801,7 @@
       return null;
     }
 
+    // 인라인 입력 UI 활성화 후 해당 위치로 트리를 펼치고 입력 필드에 자동 포커스
     function startNewItemInSub(catId, subId) {
       modalEditingItem = null;
       inlineNewItem = { catId, subId };
@@ -787,6 +816,7 @@
       }, 100);
     }
 
+    // 기존 임시 항목을 먼저 정리한 후 새 항목 편집으로 전환하여 데이터 충돌 방지
     function onItemTreeItemClick(itemId) {
       const ctx = findItemContext(itemId);
       if (!ctx) return;
@@ -802,6 +832,7 @@
       expandTreeTo(ctx.cat.id, ctx.sub.id);
     }
 
+    // 특정 노드까지 트리를 펼쳐 사용자에게 현재 컨텍스트를 시각적으로 제공
     function expandTreeTo(catId, subId) {
       const catContainer = document.getElementById('itree-children-cat-' + catId);
       const catChevron = document.getElementById('itree-chevron-cat-' + catId);
@@ -815,6 +846,7 @@
       }
     }
 
+    // 기본값으로 임시 항목을 먼저 생성하고 편집 모드로 전환하여 상세 설정 유도
     function confirmInlineItemAdd() {
       const nameInput = document.getElementById('inline-item-name');
       const name = nameInput?.value?.trim();
@@ -860,6 +892,7 @@
       refreshItemModalTree();
     }
 
+    // 편집/신규 상태에 따라 저장 버튼 텍스트를 동적 변경하여 현재 동작을 명시
     function refreshItemFormPanel(item, hideItemName) {
       const panel = document.getElementById('item-form-panel');
       if (panel) panel.innerHTML = getItemFormHtml(item, true, hideItemName);
@@ -867,6 +900,7 @@
       if (btn) btn.textContent = (item && !pendingNewItemId) ? '수정' : '저장';
     }
 
+    // embedded(모달 내 트리와 함께)/standalone(단독 모달) 모드에 따라 레이아웃 분기하여 재사용
     function getItemFormHtml(item, isEmbedded, hideItemName) {
       const isAI = item ? item.type === 'AI' : false;
       const isNLP = item ? item.type === 'NLP' : true;
@@ -1028,6 +1062,7 @@
       `;
     }
 
+    // 평가 방식(Manual/NLP/AI) 선택에 따라 관련 설정 섹션만 표시하여 불필요한 입력 방지
     function togglePromptSection() {
       const sel = document.querySelector('input[name="eval-type"]:checked');
       const aiSection = document.getElementById('ai-prompt-section');
@@ -1036,6 +1071,7 @@
       if (nlpSection) nlpSection.style.display = (sel && sel.value === 'NLP') ? 'block' : 'none';
     }
 
+    // script_match 방식에서만 기준 문장 입력이 필요하므로 조건부 표시
     function toggleNlpScriptField() {
       const method = document.getElementById('form-nlp-method')?.value;
       const field = document.getElementById('nlp-script-field');

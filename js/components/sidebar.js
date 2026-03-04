@@ -1,9 +1,10 @@
 /**
  * AICC QA - Sidebar Component
  * 2단 오버레이 사이드바 (1단: 고정 틸 그린, 2단: 흰색 오버레이)
+ * ELP 포탈의 전체 메뉴 구조를 모방하되, QA 서브메뉴만 실제 동작
  */
 window.AICC_Sidebar = {
-  /** QA 서브메뉴 정의 */
+  /** 관리자/상담사 역할별 메뉴 트리 정의 */
   menuItems: {
     admin: [
       {
@@ -59,7 +60,7 @@ window.AICC_Sidebar = {
     ]
   },
 
-  hideTimeout: null,
+  hideTimeout: null,  // 2단 메뉴 숨김 지연 타이머
   basePath: '',
 
   init(basePath) {
@@ -67,7 +68,8 @@ window.AICC_Sidebar = {
   },
 
   /**
-   * 현재 페이지에 맞는 활성 메뉴 ID 반환
+   * 파일명으로 활성 메뉴 식별
+   * menuItems의 id와 HTML 파일명이 일치하도록 설계했으므로 파일명만 추출
    */
   getActiveId() {
     const path = window.location.pathname;
@@ -76,7 +78,8 @@ window.AICC_Sidebar = {
   },
 
   /**
-   * 1단 사이드바 HTML 생성
+   * 1단 사이드바(고정 네비게이션) HTML 생성
+   * QA 외 메뉴는 프로토타입이므로 비활성 상태로 렌더링
    */
   render1stTier() {
     return `
@@ -146,7 +149,8 @@ window.AICC_Sidebar = {
   },
 
   /**
-   * 2단 서브메뉴 HTML 생성
+   * 2단 서브메뉴(오버레이 패널) HTML 생성
+   * 관리자는 전체 메뉴 + MY ZONE, 상담사는 MY ZONE만 표시
    */
   render2ndTier() {
     const isAdmin = AICC_Auth.isAdmin();
@@ -197,6 +201,7 @@ window.AICC_Sidebar = {
 
   /**
    * 호버 이벤트 바인딩
+   * 1단↔2단 사이 마우스 이동 시 깜빡임 방지를 위해 150ms 지연 숨김 적용
    */
   bindEvents() {
     const trigger = document.getElementById('qa-menu-trigger');
@@ -210,6 +215,7 @@ window.AICC_Sidebar = {
       sidebar2nd.classList.add('visible');
     };
 
+    // 마우스가 1단→2단으로 이동하는 동안의 간극을 허용하기 위한 지연
     const scheduleHide = () => {
       this.hideTimeout = setTimeout(() => {
         sidebar2nd.classList.remove('visible');

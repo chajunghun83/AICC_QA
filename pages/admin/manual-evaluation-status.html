@@ -192,6 +192,7 @@
       'item-forbidden': '욕설/금지어'
     };
 
+    // 로컬 정의와 외부 JSON 데이터를 병합해 항목명 누락 시 폴백 제공
     function buildItemNameMap() {
       const items = allData['evaluation-items.json'];
       const map = { ...LOCAL_ITEM_NAMES };
@@ -204,6 +205,7 @@
       return map;
     }
 
+    // innerHTML 일괄 교체로 테이블을 렌더링하고, 이슈는 최대 2개로 제한해 행 높이 일관성 유지
     function renderTable(evals) {
       const tbody = document.getElementById('eval-tbody');
       document.getElementById('eval-count').textContent = `총 ${evals.length}건`;
@@ -242,6 +244,7 @@
     }
 
     /* ── 상세 모달 ── */
+    // 항목별 점수와 스크립트를 탭으로 분리해 정보 과부하 방지
     function showDetail(evalId) {
       const ev = manualEvals.find(e => e.id === evalId);
       if (!ev) return;
@@ -285,6 +288,7 @@
         : '<p style="color:#9E9E9E;font-size:13px;text-align:center;padding:20px;">스크립트 데이터가 없습니다.</p>';
 
       const totalScoreDisplay = ev.eval_status === 'completed' ? ev.total_score + '점' : '-';
+      // 80점 이상 녹색, 60~79점 노란색, 60점 미만 빨간색으로 직관적 품질 수준 표시
       const totalScoreColor = ev.eval_status !== 'completed' ? 'color:#BDBDBD'
         : ev.total_score >= 80 ? 'color:#4CAF50' : ev.total_score >= 60 ? 'color:#FFC107' : 'color:#F44336';
       const evalStatusBadge = ev.eval_status === 'completed'
@@ -371,6 +375,7 @@
     /* ── 수동 평가 모달 ── */
     let currentEvalId = null;
 
+    // 스크립트와 채점표를 좌우 분할 레이아웃으로 배치해 동시 참조 가능하게 설계
     function openManualEval(evalId) {
       AICC_Modal.close();
       currentEvalId = evalId;
@@ -431,6 +436,7 @@
            </div>`
         : '';
 
+      // 이전 모달 닫기 애니메이션 완료 후 새 모달을 열어 전환 충돌 방지
       setTimeout(() => {
         AICC_Modal.open({
           title: `수동 평가 - ${ev.id}`,
@@ -495,6 +501,7 @@
       }, 200);
     }
 
+    // 입력값을 0~max 범위로 클램핑해 유효하지 않은 점수 입력 방지
     function recalcTotal() {
       const inputs = document.querySelectorAll('.mr-score-input');
       let total = 0;
@@ -510,6 +517,7 @@
       if (el) el.textContent = total + '점';
     }
 
+    // 원본 점수 대비 변경된 항목만 추적해 수정 이력의 정확도 확보
     function saveManualEval() {
       if (!currentEvalId) return;
 
@@ -532,6 +540,7 @@
         if (v !== original) {
           modifiedItems.push({ item_id: key, original_score: original, new_score: v });
           ev.scores[key].score = v;
+          // 배점 대비 80% 이상 통과, 50% 이상 주의, 미만 미달로 자동 상태 결정
           if (v >= max * 0.8) ev.scores[key].status = 'pass';
           else if (v >= max * 0.5) ev.scores[key].status = 'warn';
           else ev.scores[key].status = 'fail';
@@ -568,6 +577,7 @@
     }
 
     /* ── 플레이어 헬퍼 ── */
+    // 실제 음성 파일 없이 UI 인터랙션을 시뮬레이션하는 프로토타입용 함수
     function playSegment(el, time) {
       document.querySelectorAll('.transcript-line').forEach(line => {
         line.classList.remove('playing');
@@ -586,6 +596,7 @@
       AICC_Toast.show(`${time} 구간 재생 (시뮬레이션)`);
     }
 
+    // SVG innerHTML 비교로 재생/정지 상태를 판별해 별도 상태 변수 불필요
     function togglePlay(btn) {
       const icon = document.getElementById('play-btn-icon');
       if (!icon) return;
@@ -599,6 +610,7 @@
       }
     }
 
+    // 클릭 위치의 상대 좌표를 백분율로 변환해 진행률 시각 피드백 제공
     function seekBar(e) {
       const rect = e.currentTarget.getBoundingClientRect();
       const pct = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
@@ -606,6 +618,7 @@
       if (progress) progress.style.width = pct + '%';
     }
 
+    // 모든 탭의 active 클래스를 제거 후 선택 탭만 활성화해 단일 활성 탭 보장
     function switchDetailTab(btn, tabId) {
       btn.parentElement.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
       btn.classList.add('active');
@@ -614,6 +627,7 @@
     }
 
     /* ── 필터 ── */
+    // 워크스페이스 변경 시 팀 필터를 연쇄 갱신해 계층적 필터링 구현
     function onWsChange() {
       const wsId = document.getElementById('ws-filter').value;
       const teamFilter = document.getElementById('team-filter');
@@ -634,6 +648,7 @@
       applyFilter();
     }
 
+    // 다수의 필터 조건을 순차 체이닝해 AND 조건 검색 구현
     function applyFilter() {
       let filtered = [...manualEvals];
       const wsId = document.getElementById('ws-filter').value;
@@ -662,6 +677,7 @@
       renderTable(filtered);
     }
 
+    // 팀 필터 disabled 복원 포함 전체 필터 초기화로 깔끔한 리셋 보장
     function resetFilter() {
       document.getElementById('ws-filter').value = 'all';
       document.getElementById('team-filter').value = 'all';
@@ -678,6 +694,7 @@
     }
 
     /* ── 초기화 ── */
+    // 외부 JSON 데이터를 비동기 로드 후 필터 옵션과 테이블을 초기 세팅
     document.addEventListener('DOMContentLoaded', async () => {
       allData = await AICC_DataLoader.loadAll([
         'evaluation-items.json',

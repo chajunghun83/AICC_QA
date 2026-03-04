@@ -111,6 +111,7 @@
     ];
     let usersData = [];
 
+    // 조건 유형별 라벨과 포맷터를 중앙 관리하여 테이블·상세 모달에서 일관된 표시 보장
     const CRITERIA_MAP = {
       workingDays:    { label: '근무일수 기준',   format: v => `${v.days}일 미만` },
       sampling:       { label: '샘플링 비율',     format: v => `${v.rate}%` },
@@ -183,24 +184,29 @@
       }
     ];
 
+    // 기존 번호 최대값 기반으로 중복 없는 번호를 부여하기 위함
     function getNextNo() {
       return plans.length > 0 ? Math.max(...plans.map(p => p.no)) + 1 : 1;
     }
 
     /* ── 상태 자동 계산 ── */
+    // DB 상태 필드 대신 날짜 기반으로 자동 계산하여 데이터 정합성 유지
     function computeStatus(plan) {
       const today = new Date().toISOString().slice(0, 10);
       if (today < plan.periodStart) return { status: 'pending', text: '예정' };
       if (plan.periodEnd && today > plan.periodEnd) return { status: 'completed', text: '종료' };
+      // 1회성 계획은 종료일이 없으므로 시작일 경과 시 자동 종료 처리
       if (!plan.periodEnd && plan.repeat === '1회성' && today > plan.periodStart) return { status: 'completed', text: '종료' };
       return { status: 'active', text: '진행 중' };
     }
 
+    // 상태값을 CSS 클래스로 매핑하여 badge 스타일 일관성 유지
     function statusBadge(status, text) {
       const cls = { active: 'badge-active', pending: 'badge-pending', completed: 'badge-inactive' };
       return `<span class="badge ${cls[status] || 'badge-pending'}">${text}</span>`;
     }
 
+    // 단일 조건(레거시)과 다중 조건(신규) 모두 호환하도록 배열로 통합 처리
     function criteriaBadge(type, value, criteriaArr) {
       const list = criteriaArr || (type ? [{ type, value: value || {} }] : []);
       if (list.length === 0) return '-';
@@ -210,11 +216,13 @@
       }).join('');
     }
 
+    // 테이블 셀 공간 제약상 첫 번째 평가표만 badge로 표시
     function renderFormsBadge(forms) {
       if (!forms || forms.length === 0) return '<span style="color:#BDBDBD;font-size:11px;">-</span>';
       return `<span class="badge badge-active" style="font-size:11px;">${forms[0]}</span>`;
     }
 
+    // 전체 팀 선택 시 "전체"로 축약하여 라벨 간결화
     function buildTargetLabel(workspace, teams) {
       if (!workspace) return '미지정';
       const ws = workspacesData.find(w => w.name === workspace);
@@ -248,6 +256,7 @@
       }).join('');
     }
 
+    // 모든 필터를 AND 조건으로 체이닝하여 점진적 필터링 구현
     function applyPlanFilter() {
       let filtered = [...plans];
       const nameSearch = (document.getElementById('plan-search').value || '').trim().toLowerCase();
@@ -264,6 +273,7 @@
       AICC_Toast.show('필터가 적용되었습니다.');
     }
 
+    // 필터 초기화 후 전체 목록 즉시 갱신
     function resetPlanFilter() {
       document.getElementById('plan-search').value = '';
       document.getElementById('plan-status-filter').value = 'all';
@@ -274,6 +284,7 @@
     }
 
     /* ── 상세 모달 ── */
+    // 계획의 전체 정보를 읽기 전용으로 표시하고, 상태에 따라 편집/삭제 버튼을 조건부 노출
     function openDetail(no) {
       const p = plans.find(x => x.no === no);
       if (!p) return;
@@ -284,6 +295,7 @@
       const isPending = cs.status === 'pending';
       const periodEndDisplay = p.periodEnd ? AICC_Fmt.date(p.periodEnd) : '-';
       const teamsDisplay = td.teams.map(t => td.workspace + ' > ' + t).join(', ');
+      // 레거시(단일 조건)와 신규(다중 조건) 데이터 구조 모두 호환
       const criteriaList = p.criteria || (p.criteriaType ? [{ type: p.criteriaType, value: p.criteriaValue || {} }] : []);
       const criteriaHtml = criteriaList.length > 0
         ? criteriaList.map(c => {
@@ -400,13 +412,16 @@
     }
 
     /* ── 듀얼리스트박스 ── */
+    // 여러 DLB 인스턴스의 상태를 ID 기반으로 관리 (폼 내 다중 DLB 동시 사용 지원)
     const _dlb = {};
 
+    // DLB 상태를 전역 객체에 초기화하여 외부에서 선택값 참조 가능하게 함
     function renderDlb(id, all, selected) {
       _dlb[id] = { all: [...all], selected: [...selected], filter: '' };
       return buildDlbHtml(id);
     }
 
+    // 좌측(후보)/우측(선택) 패널 구조로 직관적 다중 선택 UX 제공
     function buildDlbHtml(id) {
       const s = _dlb[id];
       if (!s) return '';
@@ -450,6 +465,7 @@
       </div>`;
     }
 
+    // 인덱스 기반 항목 이동으로 중복 선택 방지
     function dlbMove(id, idx, dir) {
       const s = _dlb[id];
       if (!s || idx < 0 || idx >= s.all.length) return;
@@ -458,24 +474,29 @@
       else if (dir === 'left') s.selected = s.selected.filter(n => n !== name);
       dlbRefresh(id);
     }
+    // 전체 선택/해제를 한번에 처리하여 대량 항목 관리 효율화
     function dlbMoveAll(id, dir) {
       const s = _dlb[id]; if (!s) return;
       s.selected = dir === 'right' ? [...s.all] : [];
       dlbRefresh(id);
     }
+    // 후보 목록만 필터링 (선택된 항목에는 영향 없음)
     function dlbFilter(id, val) {
       const s = _dlb[id]; if (!s) return;
       s.filter = val; dlbRefresh(id);
     }
+    // outerHTML 교체로 이벤트 핸들러 포함 완전 리렌더링
     function dlbRefresh(id) {
       const el = document.getElementById(id);
       if (el) el.outerHTML = buildDlbHtml(id);
     }
+    // 외부에서 선택 상태를 읽기 위한 인터페이스 (readForm에서 사용)
     function getDlbSelected(id) {
       return _dlb[id] ? [..._dlb[id].selected] : [];
     }
 
     /* ── 기준별 세부 입력 영역 생성 ── */
+    // 조건 유형별로 전혀 다른 입력 UI가 필요하므로 switch 분기로 개별 HTML 생성
     function buildCriteriaDetail(type, value) {
       const v = value || {};
       switch (type) {
@@ -608,6 +629,7 @@
       }
     }
 
+    // 체크 해제 시 상세 영역을 비워 불필요한 잔여 입력값 제거
     function onCriteriaToggle(type) {
       const chk = document.querySelector(`input[name="pf-criteria-chk"][value="${type}"]`);
       const area = document.getElementById('criteria-detail-' + type);
@@ -621,6 +643,7 @@
       }
     }
 
+    // 선택한 depth까지 cascading select를 동적 생성하여 유연한 계층 탐색 지원
     function onConsultDepthChange() {
       const depth = document.querySelector('input[name="ct-depth"]:checked')?.value || 'all';
       const area = document.getElementById('ct-select-area');
@@ -636,6 +659,7 @@
       area.innerHTML = html;
     }
 
+    // 상위 depth 선택값을 기반으로 트리를 순회하여 하위 옵션 추출
     function getConsultOptions(level) {
       if (level === 1) return Object.keys(consultTypeTree);
       const d1 = document.getElementById('ct-d1')?.value;
@@ -653,6 +677,7 @@
       return [];
     }
 
+    // 상위 depth 변경 시 하위 옵션을 리셋하여 잘못된 조합 방지
     function onConsultDChange(changedLevel) {
       const depth = parseInt(document.querySelector('input[name="ct-depth"]:checked')?.value || '0');
       for (let i = changedLevel + 1; i <= depth; i++) {
@@ -663,12 +688,14 @@
       }
     }
 
+    // 전체 구간 선택 시 불필요한 범위 입력을 숨겨 혼동 방지
     function onCallSegmentToggle() {
       const isFull = document.getElementById('cs-full')?.checked;
       const range = document.getElementById('cs-range');
       if (range) range.style.display = isFull ? 'none' : 'flex';
     }
 
+    // 평가 데이터의 '>' 구분자를 파싱하여 4단계 트리 구조로 변환 (cascading select용)
     function buildConsultTypeTree(evals) {
       const tree = {};
       evals.forEach(ev => {
@@ -689,6 +716,7 @@
       return tree;
     }
 
+    // 워크스페이스 변경 시 하위 팀·상담사 선택을 초기화하여 정합성 유지
     function onCriteriaWsChange() {
       const wsName = document.getElementById('criteria-ws')?.value;
       const teamSel = document.getElementById('criteria-team');
@@ -701,6 +729,7 @@
       document.getElementById('criteria-agent-area').innerHTML = '';
     }
 
+    // 선택된 팀의 상담사를 듀얼리스트박스로 제공하여 다중 선택 지원
     function onCriteriaTeamChange() {
       const wsName = document.getElementById('criteria-ws')?.value;
       const teamName = document.getElementById('criteria-team')?.value;
@@ -716,6 +745,7 @@
     }
 
     /* ── 폼 HTML ── */
+    // plan 유무로 생성/편집 폼을 동일 함수로 처리하여 코드 재사용
     function buildFormHtml(plan) {
       const p = plan || {};
       const td = p.targetDetail || { workspace: '', teams: [], inbound: true, outbound: true };
@@ -854,6 +884,7 @@
       `;
     }
 
+    // 1회성/지속은 종료일 개념이 없으므로 입력 비활성화로 혼동 방지
     function onRepeatChange() {
       const repeat = document.querySelector('input[name="pf-repeat"]:checked')?.value || '지속';
       const endInput = document.getElementById('pf-end');
@@ -866,6 +897,7 @@
       }
     }
 
+    // 워크스페이스 변경 시 해당 센터의 팀 체크박스를 동적 반영
     function onWorkspaceChange() {
       const wsName = document.getElementById('pf-ws')?.value;
       const area = document.getElementById('pf-teams-area');
@@ -883,6 +915,7 @@
       `).join('');
     }
 
+    // 서버 데이터 미로드 시 하드코딩 폴백으로 기본 동작 보장
     function getFormsSelectHtml(selectedForms) {
       const formNames = [];
       if (formsData && Array.isArray(formsData)) {
@@ -903,6 +936,7 @@
     }
 
     /* ── 폼 읽기 ── */
+    // 폼 전체 데이터 수집과 필수값 검증을 함께 수행하여 유효하지 않으면 null 반환
     function readForm() {
       const name = document.getElementById('pf-name')?.value?.trim();
       if (!name) { AICC_Toast.show('계획명을 입력하세요.'); return null; }
@@ -921,6 +955,7 @@
       const selectedForm = document.getElementById('pf-form')?.value;
       const forms = selectedForm ? [selectedForm] : [];
 
+      // 선택된 모든 조건 유형을 순회하며 각각의 입력값을 수집·검증
       const checkedCriteria = [...document.querySelectorAll('input[name="pf-criteria-chk"]:checked')].map(el => el.value);
       const criteria = [];
       for (const ct of checkedCriteria) {
@@ -980,6 +1015,7 @@
         criteria.push({ type: ct, value: val });
       }
 
+      // 레거시 호환을 위해 첫 번째 조건을 단일 필드로도 저장
       const criteriaType = criteria.length > 0 ? criteria[0].type : '';
       const criteriaValue = criteria.length > 0 ? criteria[0].value : {};
 
@@ -995,6 +1031,7 @@
     }
 
     /* ── 새 계획 추가 ── */
+    // null 전달로 빈 폼 생성 (buildFormHtml의 생성/편집 공용 구조 활용)
     function openCreateModal() {
       const html = buildFormHtml(null);
       AICC_Modal.open({
@@ -1008,6 +1045,7 @@
       });
     }
 
+    // readForm 검증 통과 시에만 배열에 추가하여 무결성 보장
     function saveNew() {
       const vals = readForm();
       if (!vals) return;
@@ -1023,6 +1061,7 @@
     }
 
     /* ── 편집 ── */
+    // 기존 모달을 닫은 후 setTimeout으로 전환 애니메이션 충돌 방지
     function openEditModal(no) {
       AICC_Modal.close();
       const p = plans.find(x => x.no === no);
@@ -1042,6 +1081,7 @@
       }, 300);
     }
 
+    // Object.assign으로 기존 객체를 직접 갱신하여 배열 내 참조 유지
     function saveEdit(no) {
       const vals = readForm();
       if (!vals) return;
@@ -1056,6 +1096,7 @@
     }
 
     /* ── 삭제 / 복사 ── */
+    // 삭제/복사 동작을 하나의 함수로 통합하여 모달 닫기 로직 중복 방지
     function handleAction(no, action) {
       AICC_Modal.close();
       const idx = plans.findIndex(x => x.no === no);
@@ -1069,6 +1110,7 @@
           AICC_Toast.show(`"${p.name}" 계획이 삭제되었습니다. 연동된 자동 평가 제외 규칙도 함께 삭제됩니다.`);
           break;
         case 'copy': {
+          // deep copy로 원본과 완전히 독립된 사본 생성
           const copy = JSON.parse(JSON.stringify(p));
           copy.no = getNextNo();
           copy.name = p.name + ' (사본)';
@@ -1082,6 +1124,7 @@
     }
 
     /* ── 초기화 ── */
+    // 비동기 데이터 로드 완료 후 필터 옵션 동적 생성 및 테이블 초기화
     document.addEventListener('DOMContentLoaded', async () => {
       formsData = await AICC_DataLoader.load('evaluation-forms.json');
       const wsRaw = await AICC_DataLoader.load('workspaces.json');
@@ -1091,6 +1134,7 @@
       const evRaw = await AICC_DataLoader.load('evaluations.json');
       if (evRaw) { evaluationsData = evRaw; consultTypeTree = buildConsultTypeTree(evRaw); }
 
+      // 기존 계획에 사용된 반복 주기값을 자동으로 필터 옵션에 추가
       const repeats = [...new Set(plans.map(p => p.repeat).filter(Boolean))];
       const repeatSel = document.getElementById('repeat-filter');
       repeats.forEach(r => { repeatSel.innerHTML += '<option value="' + r + '">' + r + '</option>'; });

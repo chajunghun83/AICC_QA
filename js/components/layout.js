@@ -1,10 +1,12 @@
 /**
  * AICC QA - Layout Component
  * 공유 레이아웃 (헤더 + 사이드바) 주입
+ * 모든 페이지에서 일관된 앱 쉘을 구성하기 위해 단일 진입점으로 사용
  */
 window.AICC_Layout = {
   /**
-   * basePath 결정 (현재 페이지 깊이에 따라)
+   * 페이지 깊이별 상대 경로 반환
+   * HTML이 3단계 디렉터리 구조이므로 경로 깊이에 따라 basePath가 달라짐
    */
   getBasePath() {
     const path = window.location.pathname;
@@ -14,14 +16,14 @@ window.AICC_Layout = {
   },
 
   /**
-   * 브레드크럼 생성
+   * URL 경로 기반 브레드크럼 자동 생성
+   * document.title에서 페이지명을 추출하여 경로 계층에 삽입
    */
   getBreadcrumb() {
     const path = window.location.pathname;
     const parts = ['AICC 플랫폼', 'QA'];
     const title = document.title.split(' - ')[0] || '';
 
-    // 중간 경로 추가
     if (path.includes('system-settings')) {
       parts.push('시스템 설정');
     }
@@ -29,6 +31,7 @@ window.AICC_Layout = {
       parts.push(title);
     }
 
+    // 마지막 요소만 강조 표시하여 현재 위치를 시각적으로 구분
     return parts.map((p, i) => {
       if (i === parts.length - 1) {
         return `<span style="color:#212121;font-weight:500;">${p}</span>`;
@@ -71,16 +74,16 @@ window.AICC_Layout = {
 
   /**
    * 레이아웃 초기화 - 페이지에 헤더+사이드바 주입
+   * body를 완전히 재구성하므로 DOMContentLoaded 후 1회만 호출
    */
   init() {
     const basePath = this.getBasePath();
     AICC_Sidebar.init(basePath);
 
-    // 페이지 콘텐츠를 임시 보관
+    // 페이지 고유 콘텐츠를 보존한 뒤 앱 쉘로 감싸기 위해 임시 저장
     const pageContent = document.getElementById('page-content');
     const pageHtml = pageContent ? pageContent.innerHTML : '';
 
-    // 앱 쉘 구조 생성
     document.body.innerHTML = `
       ${AICC_Sidebar.render1stTier()}
       ${AICC_Sidebar.render2ndTier()}
@@ -92,13 +95,10 @@ window.AICC_Layout = {
       </div>
     `;
 
-    // 사이드바 이벤트 바인딩
     AICC_Sidebar.bindEvents();
-
-    // 권한 전환 토글 렌더링
     AICC_Auth.renderRoleToggle();
 
-    // 30초 시간 갱신
+    // 실시간 시계 - 30초 간격으로 헤더 시각 갱신 (실시간 연동 상태 표현용)
     setInterval(() => {
       const el = document.getElementById('refresh-time');
       if (el) el.textContent = new Date().toLocaleTimeString('ko-KR');
