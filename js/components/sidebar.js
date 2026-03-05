@@ -99,19 +99,19 @@ window.AICC_Sidebar = {
         </div>
 
         <div style="padding:8px 0;">
-          <div class="sidebar-menu-item" style="opacity:0.5;cursor:default;">
+          <div class="sidebar-menu-item" style="opacity:0.75;cursor:default;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
             즐겨찾기
           </div>
-          <div class="sidebar-menu-item" style="opacity:0.5;cursor:default;">
+          <div class="sidebar-menu-item" style="opacity:0.75;cursor:default;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
             대시보드
           </div>
-          <div class="sidebar-menu-item" style="opacity:0.5;cursor:default;">
+          <div class="sidebar-menu-item" style="opacity:0.75;cursor:default;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
             ADMIN
           </div>
-          <div class="sidebar-menu-item" style="opacity:0.5;cursor:default;">
+          <div class="sidebar-menu-item" style="opacity:0.75;cursor:default;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72"/></svg>
             CCaaS 운영관리
           </div>
@@ -123,19 +123,19 @@ window.AICC_Sidebar = {
 
         <div style="padding:4px 0 8px;">
           <div style="padding:4px 16px;font-size:10px;font-weight:600;text-transform:uppercase;color:rgba(255,255,255,0.4);letter-spacing:0.5px;">AICC 플랫폼</div>
-          <div class="sidebar-menu-item" style="opacity:0.5;cursor:default;">
+          <div class="sidebar-menu-item" style="opacity:0.75;cursor:default;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
             에이전트 관리
           </div>
-          <div class="sidebar-menu-item" style="opacity:0.5;cursor:default;">
+          <div class="sidebar-menu-item" style="opacity:0.75;cursor:default;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
             성과 어드바이저
           </div>
-          <div class="sidebar-menu-item" style="opacity:0.5;cursor:default;">
+          <div class="sidebar-menu-item" style="opacity:0.75;cursor:default;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/></svg>
             AICM
           </div>
-          <div class="sidebar-menu-item" style="opacity:0.5;cursor:default;">
+          <div class="sidebar-menu-item" style="opacity:0.75;cursor:default;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/></svg>
             TA
           </div>
