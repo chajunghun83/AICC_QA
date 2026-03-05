@@ -185,7 +185,7 @@
         const resultText = d.status === '승인'
           ? '<span style="font-size:12px;color:#4CAF50;">' + d.finalScore + '점으로 변경</span>'
           : d.status === '수정 승인'
-          ? '<span style="font-size:12px;color:#0F766E;">' + d.finalScore + '점으로 수정</span>'
+          ? '<span style="font-size:12px;color:#00A3FF;">' + d.finalScore + '점으로 수정</span>'
           : d.status === '반려'
           ? '<span style="font-size:12px;color:#F44336;">원 점수 유지</span>'
           : '<span style="font-size:12px;color:#9E9E9E;">-</span>';
@@ -224,7 +224,7 @@
       // 관리자 응답 유무에 따라 처리 결과 섹션 또는 대기 안내를 분기 렌더링
       let adminSection = '';
       if (d.adminResponse) {
-        const resultColor = d.status === '승인' ? '#4CAF50' : d.status === '수정 승인' ? '#0F766E' : '#F44336';
+        const resultColor = d.status === '승인' ? '#4CAF50' : d.status === '수정 승인' ? '#00A3FF' : '#F44336';
         const resultText = d.status === '승인'
           ? d.finalScore + '점으로 변경 승인'
           : d.status === '수정 승인'
@@ -278,7 +278,7 @@
               </div>
               <div>
                 <span style="font-size:12px;color:#757575;">요청 점수</span>
-                <div style="font-weight:600;margin-top:4px;color:#0F766E;">${d.requestedScore}</div>
+                <div style="font-weight:600;margin-top:4px;color:#00A3FF;">${d.requestedScore}</div>
               </div>
             </div>
             <div>

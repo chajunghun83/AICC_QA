@@ -39,7 +39,7 @@
         뒤로
       </button>
       <div id="breadcrumb" style="display:flex;align-items:center;gap:6px;font-size:13px;">
-        <span style="font-weight:600;color:#0F766E;">전체</span>
+        <span style="font-weight:600;color:#00A3FF;">전체</span>
       </div>
     </div>
 
@@ -325,13 +325,13 @@
       const bc = document.getElementById('breadcrumb');
       const backBtn = document.getElementById('back-btn');
 
-      let parts = ['<span style="cursor:pointer;color:#0F766E;" onclick="goToLevel(0)">전체</span>'];
+      let parts = ['<span style="cursor:pointer;color:#00A3FF;" onclick="goToLevel(0)">전체</span>'];
       navStack.forEach((item, idx) => {
         const isLast = idx === navStack.length - 1;
         if (isLast) {
           parts.push(`<span style="font-weight:600;">${item.label}</span>`);
         } else {
-          parts.push(`<span style="cursor:pointer;color:#0F766E;" onclick="goToLevel(${idx + 1})">${item.label}</span>`);
+          parts.push(`<span style="cursor:pointer;color:#00A3FF;" onclick="goToLevel(${idx + 1})">${item.label}</span>`);
         }
       });
 
@@ -718,16 +718,16 @@
 
       const transcriptHtml = simTranscript.map(t => {
         const isAgent = t.speaker === 'agent';
-        const bg = isAgent ? '#E0F2F1' : '#F5F5F5';
-        const hoverBg = isAgent ? '#B2DFDB' : '#EEEEEE';
+        const bg = isAgent ? '#E3F2FD' : '#F5F5F5';
+        const hoverBg = isAgent ? '#B3E5FC' : '#EEEEEE';
         const label = isAgent ? '상담사' : '고객';
         return `
           <div class="transcript-line" style="display:flex;gap:12px;padding:8px 0;cursor:pointer;border-radius:6px;transition:background 0.15s;" onclick="playSegment(this, '${t.time}')" onmouseenter="this.style.background='${hoverBg}'" onmouseleave="if(!this.classList.contains('playing'))this.style.background=''">
             <div style="min-width:50px;font-size:11px;color:#757575;padding-top:2px;">${t.time}</div>
             <div style="flex:1;">
-              <div style="font-size:11px;font-weight:600;color:${isAgent ? '#0F766E' : '#424242'};margin-bottom:2px;">${label}</div>
+              <div style="font-size:11px;font-weight:600;color:${isAgent ? '#00A3FF' : '#424242'};margin-bottom:2px;">${label}</div>
               <div style="background:${bg};padding:8px 12px;border-radius:6px;font-size:13px;line-height:1.5;display:flex;align-items:start;gap:8px;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="${isAgent ? '#0F766E' : '#757575'}" style="flex-shrink:0;margin-top:3px;opacity:0.5;"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="${isAgent ? '#00A3FF' : '#757575'}" style="flex-shrink:0;margin-top:3px;opacity:0.5;"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                 <span>${t.text}</span>
               </div>
             </div>
@@ -785,13 +785,13 @@
                 </button>
                 <div style="flex:1;">
                   <div style="width:100%;height:4px;background:#BDBDBD;border-radius:2px;position:relative;cursor:pointer;" onclick="seekBar(event)">
-                    <div id="player-progress" style="width:0%;height:100%;background:#0F766E;border-radius:2px;transition:width 0.2s;"></div>
+                    <div id="player-progress" style="width:0%;height:100%;background:#00A3FF;border-radius:2px;transition:width 0.2s;"></div>
                   </div>
                 </div>
               </div>
               <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;padding-left:34px;">
                 <span id="player-time" style="font-size:11px;color:#757575;">0:00</span>
-                <span id="player-segment-label" style="font-size:11px;color:#0F766E;"></span>
+                <span id="player-segment-label" style="font-size:11px;color:#00A3FF;"></span>
                 <span style="font-size:11px;color:#757575;">${ev.duration || '0:00'}</span>
               </div>
             </div>
@@ -819,8 +819,8 @@
         line.style.background = '';
       });
       el.classList.add('playing');
-      // SVG fill 색상(#0F766E=상담사)으로 화자를 구분하여 각기 다른 하이라이트 색상 적용
-      el.style.background = el.querySelector('[fill="#0F766E"]') ? '#B2DFDB' : '#EEEEEE';
+      // SVG fill 색상(#00A3FF=상담사)으로 화자를 구분하여 각기 다른 하이라이트 색상 적용
+      el.style.background = el.querySelector('[fill="#00A3FF"]') ? '#B3E5FC' : '#EEEEEE';
 
       const label = document.getElementById('player-segment-label');
       if (label) label.textContent = '\u25B6 ' + time + ' 구간 재생 중';

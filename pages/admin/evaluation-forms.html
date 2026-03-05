@@ -147,7 +147,7 @@
               ${treeHtml}
             </div>
             <div style="width:45%;padding-left:16px;">
-              <div style="font-size:12px;font-weight:600;color:#757575;margin-bottom:8px;">선택한 항목 <span id="picker-count" style="color:#0F766E;">0</span>개</div>
+              <div style="font-size:12px;font-weight:600;color:#757575;margin-bottom:8px;">선택한 항목 <span id="picker-count" style="color:#00A3FF;">0</span>개</div>
               <div id="picker-selected-list" style="overflow-y:auto;max-height:360px;">
                 <div style="padding:40px 16px;text-align:center;color:#BDBDBD;font-size:13px;">왼쪽 라이브러리에서 항목을 선택하세요</div>
               </div>
@@ -339,9 +339,9 @@
       let html = '';
       for (const cat of itemsData.categories) {
         html += `<div style="margin-bottom:8px;">`;
-        html += `<div onclick="togglePickerCat(this)" style="display:flex;align-items:center;gap:6px;padding:6px 8px;cursor:pointer;font-weight:600;font-size:13px;color:#0F766E;border-radius:4px;" onmouseover="this.style.background='#E0F2F1'" onmouseout="this.style.background=''">
+        html += `<div onclick="togglePickerCat(this)" style="display:flex;align-items:center;gap:6px;padding:6px 8px;cursor:pointer;font-weight:600;font-size:13px;color:#00A3FF;border-radius:4px;" onmouseover="this.style.background='#E3F2FD'" onmouseout="this.style.background=''">
           <svg class="picker-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#9E9E9E" stroke-width="2" style="transition:transform 0.15s;transform:rotate(-90deg);flex-shrink:0;"><path d="m6 9 6 6 6-6"/></svg>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0F766E" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00A3FF" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
           ${cat.name}
         </div>`;
         html += `<div style="display:none;">`;
@@ -392,7 +392,7 @@
               ${treeHtml}
             </div>
             <div style="width:45%;padding-left:16px;">
-              <div style="font-size:12px;font-weight:600;color:#757575;margin-bottom:8px;">선택한 항목 <span id="picker-count" style="color:#0F766E;">0</span>개</div>
+              <div style="font-size:12px;font-weight:600;color:#757575;margin-bottom:8px;">선택한 항목 <span id="picker-count" style="color:#00A3FF;">0</span>개</div>
               <div id="picker-selected-list" style="overflow-y:auto;max-height:380px;">
                 <div style="padding:40px 16px;text-align:center;color:#BDBDBD;font-size:13px;">왼쪽에서 항목을 선택하세요</div>
               </div>

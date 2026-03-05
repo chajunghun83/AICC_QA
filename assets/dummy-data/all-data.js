@@ -88,7 +88,7 @@ window.AICC_DATA['dashboard-stats.json'] =
     { "date": "01/29", "score": 82.5 }
   ],
   "team_scores": [
-    { "team": "VIP상담팀", "score": 85.2, "color": "#0F766E" },
+    { "team": "VIP상담팀", "score": 85.2, "color": "#00A3FF" },
     { "team": "일반상담팀", "score": 84.8, "color": "#2196F3" },
     { "team": "기술지원팀", "score": 69.8, "color": "#FF9800" },
     { "team": "해피콜팀", "score": 88.1, "color": "#9C27B0" },

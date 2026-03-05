@@ -86,7 +86,7 @@ window.AICC_Sidebar = {
       <div class="sidebar-1st" id="sidebar-1st">
         <div style="padding:16px 16px 8px;display:flex;align-items:center;gap:8px;">
           <div style="width:28px;height:28px;background:white;border-radius:4px;display:flex;align-items:center;justify-content:center;">
-            <span style="color:#0F766E;font-weight:800;font-size:11px;">ELP</span>
+            <span style="color:#00A3FF;font-weight:800;font-size:11px;">ELP</span>
           </div>
           <span style="font-size:12px;font-weight:600;opacity:0.9;">ELP Cloud Portal</span>
         </div>

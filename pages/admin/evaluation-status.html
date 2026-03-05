@@ -321,16 +321,16 @@
       const transcriptHtml = ev.transcript && ev.transcript.length > 0
         ? ev.transcript.map((t, idx) => {
             const isAgent = t.speaker === 'agent';
-            const bg = isAgent ? '#E0F2F1' : '#F5F5F5';
-            const hoverBg = isAgent ? '#B2DFDB' : '#EEEEEE';
+            const bg = isAgent ? '#E3F2FD' : '#F5F5F5';
+            const hoverBg = isAgent ? '#B3E5FC' : '#EEEEEE';
             const label = isAgent ? '상담사' : '고객';
             return `
               <div class="transcript-line" style="display:flex;gap:12px;padding:8px 0;cursor:pointer;border-radius:6px;transition:background 0.15s;" onclick="playSegment(this, '${t.time}')" onmouseenter="this.style.background='${hoverBg}'" onmouseleave="if(!this.classList.contains('playing'))this.style.background=''">
                 <div style="min-width:50px;font-size:11px;color:#757575;padding-top:2px;">${t.time}</div>
                 <div style="flex:1;">
-                  <div style="font-size:11px;font-weight:600;color:${isAgent ? '#0F766E' : '#424242'};margin-bottom:2px;">${label}</div>
+                  <div style="font-size:11px;font-weight:600;color:${isAgent ? '#00A3FF' : '#424242'};margin-bottom:2px;">${label}</div>
                   <div style="background:${bg};padding:8px 12px;border-radius:6px;font-size:13px;line-height:1.5;display:flex;align-items:start;gap:8px;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="${isAgent ? '#0F766E' : '#757575'}" style="flex-shrink:0;margin-top:3px;opacity:0.5;"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="${isAgent ? '#00A3FF' : '#757575'}" style="flex-shrink:0;margin-top:3px;opacity:0.5;"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                     <span>${t.text}</span>
                   </div>
                 </div>
@@ -387,13 +387,13 @@
                 </button>
                 <div style="flex:1;">
                   <div style="width:100%;height:4px;background:#BDBDBD;border-radius:2px;position:relative;cursor:pointer;" onclick="seekBar(event)">
-                    <div id="player-progress" style="width:0%;height:100%;background:#0F766E;border-radius:2px;transition:width 0.2s;"></div>
+                    <div id="player-progress" style="width:0%;height:100%;background:#00A3FF;border-radius:2px;transition:width 0.2s;"></div>
                   </div>
                 </div>
               </div>
               <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;padding-left:34px;">
                 <span id="player-time" style="font-size:11px;color:#757575;">0:00</span>
-                <span id="player-segment-label" style="font-size:11px;color:#0F766E;"></span>
+                <span id="player-segment-label" style="font-size:11px;color:#00A3FF;"></span>
                 <span style="font-size:11px;color:#757575;">${ev.duration || '0:00'}</span>
               </div>
             </div>
@@ -415,7 +415,7 @@
       });
       el.classList.add('playing');
       // 상담사(녹색 아이콘)와 고객 라인을 구분하여 각각 다른 하이라이트 색상 적용
-      el.style.background = el.querySelector('[fill="#0F766E"]') ? '#B2DFDB' : '#EEEEEE';
+      el.style.background = el.querySelector('[fill="#00A3FF"]') ? '#B3E5FC' : '#EEEEEE';
 
       const label = document.getElementById('player-segment-label');
       if (label) label.textContent = '▶ ' + time + ' 구간 재생 중';
@@ -476,13 +476,13 @@
       const transcriptHtml = ev.transcript && ev.transcript.length > 0
         ? ev.transcript.map((t) => {
             const isAgent = t.speaker === 'agent';
-            const bg = isAgent ? '#E0F2F1' : '#F5F5F5';
+            const bg = isAgent ? '#E3F2FD' : '#F5F5F5';
             const label = isAgent ? '상담사' : '고객';
             return `
               <div style="display:flex;gap:10px;padding:6px 0;">
                 <div style="min-width:44px;font-size:11px;color:#757575;padding-top:2px;">${t.time}</div>
                 <div style="flex:1;">
-                  <div style="font-size:10px;font-weight:600;color:${isAgent ? '#0F766E' : '#424242'};margin-bottom:2px;">${label}</div>
+                  <div style="font-size:10px;font-weight:600;color:${isAgent ? '#00A3FF' : '#424242'};margin-bottom:2px;">${label}</div>
                   <div style="background:${bg};padding:6px 10px;border-radius:6px;font-size:12px;line-height:1.5;">${t.text}</div>
                 </div>
               </div>
@@ -544,7 +544,7 @@
                       <svg id="play-btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="#424242"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                     </button>
                     <div style="flex:1;height:4px;background:#BDBDBD;border-radius:2px;cursor:pointer;" onclick="seekBar(event)">
-                      <div id="player-progress" style="width:0%;height:100%;background:#0F766E;border-radius:2px;transition:width 0.2s;"></div>
+                      <div id="player-progress" style="width:0%;height:100%;background:#00A3FF;border-radius:2px;transition:width 0.2s;"></div>
                     </div>
                     <span style="font-size:11px;color:#757575;">${ev.duration || '0:00'}</span>
                   </div>
@@ -557,7 +557,7 @@
                   <div><span style="font-size:10px;color:#9E9E9E;display:block;">팀</span><strong style="font-size:13px;">${ev.team}</strong></div>
                   <div><span style="font-size:10px;color:#9E9E9E;display:block;">일시</span><strong style="font-size:13px;">${ev.date} ${ev.call_time}</strong></div>
                   <div><span style="font-size:10px;color:#9E9E9E;display:block;">AI 총점</span><strong style="font-size:15px;color:#757575;">${originalTotal}점</strong></div>
-                  <div><span style="font-size:10px;color:#9E9E9E;display:block;">검증 총점</span><strong id="mr-total-score" style="font-size:15px;color:#0F766E;">${originalTotal}점</strong></div>
+                  <div><span style="font-size:10px;color:#9E9E9E;display:block;">검증 총점</span><strong id="mr-total-score" style="font-size:15px;color:#00A3FF;">${originalTotal}점</strong></div>
                 </div>
                 ${reviewedInfo}
                 <div style="font-size:13px;font-weight:600;margin-bottom:8px;">항목별 점수 <span style="font-size:11px;font-weight:400;color:#9E9E9E;">(NLP 항목은 수정 불가)</span></div>

@@ -268,7 +268,7 @@
               ${treeHtml}
             </div>
             <div style="width:50%;padding-left:16px;">
-              <div style="font-size:12px;font-weight:600;color:#757575;margin-bottom:8px;">선택한 항목 <span id="picker-count" style="color:#0F766E;">0</span>개</div>
+              <div style="font-size:12px;font-weight:600;color:#757575;margin-bottom:8px;">선택한 항목 <span id="picker-count" style="color:#00A3FF;">0</span>개</div>
               <div id="picker-selected-list" style="overflow-y:auto;max-height:360px;">
                 <div style="padding:40px 16px;text-align:center;color:#BDBDBD;font-size:13px;">왼쪽 라이브러리에서 항목을 선택하세요</div>
               </div>
@@ -388,7 +388,7 @@
             <span style="flex:1;font-size:13px;">${item.name}</span>
             <span style="font-weight:600;min-width:40px;text-align:right;">${item.score}점</span>
             <span style="font-size:10px;padding:1px 6px;border-radius:3px;${(item.score_type || 'deduction') === 'deduction' ? 'color:#E65100;background:#FFF3E0;' : 'color:#1B5E20;background:#E8F5E9;'}">${(item.score_type || 'deduction') === 'deduction' ? '감점' : '가점'}</span>
-            ${item.commentable ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0F766E" stroke-width="2" title="코멘트 가능"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' : '<span style="width:14px;display:inline-block;"></span>'}
+            ${item.commentable ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00A3FF" stroke-width="2" title="코멘트 가능"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' : '<span style="width:14px;display:inline-block;"></span>'}
             <span style="font-size:11px;color:#9E9E9E;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${item.guide || ''}">${item.guide || ''}</span>
             <button class="btn-icon" style="background:none;border:none;cursor:pointer;color:#757575;" title="설정" onclick="event.stopPropagation();showItemSettingModal('${formId}',${si},${ii})">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -443,7 +443,7 @@
             <div style="display:flex;align-items:center;gap:12px;">
               <span style="font-size:14px;font-weight:600;">평가 항목 구성</span>
               <span style="font-size:11px;color:#9E9E9E;">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0F766E" stroke-width="2" style="vertical-align:middle;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00A3FF" stroke-width="2" style="vertical-align:middle;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                 = 코멘트 작성 가능
               </span>
             </div>
@@ -464,9 +464,9 @@
       let html = '';
       for (const cat of itemsData.categories) {
         html += `<div style="margin-bottom:8px;">`;
-        html += `<div onclick="togglePickerCat(this)" style="display:flex;align-items:center;gap:6px;padding:6px 8px;cursor:pointer;font-weight:600;font-size:13px;color:#0F766E;border-radius:4px;" onmouseover="this.style.background='#E0F2F1'" onmouseout="this.style.background=''">
+        html += `<div onclick="togglePickerCat(this)" style="display:flex;align-items:center;gap:6px;padding:6px 8px;cursor:pointer;font-weight:600;font-size:13px;color:#00A3FF;border-radius:4px;" onmouseover="this.style.background='#E3F2FD'" onmouseout="this.style.background=''">
           <svg class="picker-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#9E9E9E" stroke-width="2" style="transition:transform 0.15s;transform:rotate(-90deg);flex-shrink:0;"><path d="m6 9 6 6 6-6"/></svg>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0F766E" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00A3FF" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
           ${cat.name}
         </div>`;
         html += `<div style="display:none;">`;
@@ -516,7 +516,7 @@
               ${treeHtml}
             </div>
             <div style="width:50%;padding-left:16px;">
-              <div style="font-size:12px;font-weight:600;color:#757575;margin-bottom:8px;">선택한 항목 <span id="picker-count" style="color:#0F766E;">0</span>개</div>
+              <div style="font-size:12px;font-weight:600;color:#757575;margin-bottom:8px;">선택한 항목 <span id="picker-count" style="color:#00A3FF;">0</span>개</div>
               <div id="picker-selected-list" style="overflow-y:auto;max-height:380px;">
                 <div style="padding:40px 16px;text-align:center;color:#BDBDBD;font-size:13px;">왼쪽에서 항목을 선택하세요</div>
               </div>

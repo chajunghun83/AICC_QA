@@ -31,7 +31,7 @@
   top: 0;
   width: 176px;
   height: 100vh;
-  background: #0F766E;
+  background: #00A3FF;
   color: white;
   z-index: 50;
   overflow-y: auto;
@@ -109,7 +109,7 @@
 .sub-menu-group-title {
   font-size: 13px;
   font-weight: 800;
-  color: #0F766E;
+  color: #00A3FF;
   padding: 6px 20px 4px;
   letter-spacing: 0.3px;
   margin-left: 12px;
@@ -124,7 +124,7 @@
   display: inline-block;
   width: 3px;
   height: 14px;
-  background: #0F766E;
+  background: #00A3FF;
   border-radius: 2px;
   flex-shrink: 0;
 }
@@ -142,13 +142,13 @@
 
 .sub-menu-item:hover {
   background: #F5F5F5;
-  color: #0F766E;
+  color: #00A3FF;
 }
 
 .sub-menu-item.active {
-  color: #0F766E;
+  color: #00A3FF;
   font-weight: 600;
-  background: #E0F2F1;
+  background: #E3F2FD;
 }
 
 .sub-menu-divider {
@@ -388,12 +388,12 @@
 }
 
 .btn-primary {
-  background: #0F766E;
+  background: #00A3FF;
   color: white;
 }
 
 .btn-primary:hover {
-  background: #0D6B63;
+  background: #0090E0;
 }
 
 .btn-secondary {
@@ -470,8 +470,8 @@
 
 .form-select:focus {
   outline: none;
-  border-color: #0F766E;
-  box-shadow: 0 0 0 2px rgba(15,118,110,0.1);
+  border-color: #00A3FF;
+  box-shadow: 0 0 0 2px rgba(0,163,255,0.1);
 }
 
 .form-input {
@@ -484,8 +484,8 @@
 
 .form-input:focus {
   outline: none;
-  border-color: #0F766E;
-  box-shadow: 0 0 0 2px rgba(15,118,110,0.1);
+  border-color: #00A3FF;
+  box-shadow: 0 0 0 2px rgba(0,163,255,0.1);
 }
 
 .form-label {
@@ -519,8 +519,8 @@
 }
 
 .tab-item.active {
-  color: #0F766E;
-  border-bottom-color: #0F766E;
+  color: #00A3FF;
+  border-bottom-color: #00A3FF;
   font-weight: 600;
 }
 
@@ -549,9 +549,9 @@
 }
 
 .pagination-btn.active {
-  background: #0F766E;
+  background: #00A3FF;
   color: white;
-  border-color: #0F766E;
+  border-color: #00A3FF;
 }
 
 /* Toast */
@@ -620,7 +620,7 @@
 }
 
 .role-toggle-btn.active {
-  background: #0F766E;
+  background: #00A3FF;
   color: white;
 }
 
@@ -660,8 +660,8 @@
 }
 
 .tree-item.selected {
-  background: #E0F2F1;
-  color: #0F766E;
+  background: #E3F2FD;
+  color: #00A3FF;
   font-weight: 500;
 }
 
@@ -681,8 +681,8 @@
   background: #F5F5F5;
 }
 .cat-tree-node.cat-tree-selected {
-  background: #E0F2F1;
-  color: #0F766E;
+  background: #E3F2FD;
+  color: #00A3FF;
   font-weight: 600;
 }
 
@@ -724,7 +724,7 @@
   transition: border-color 0.15s;
 }
 .pp-trigger:hover { border-color: #BDBDBD; }
-.pp-trigger:focus { outline: none; border-color: #0F766E; box-shadow: 0 0 0 2px rgba(15,118,110,0.1); }
+.pp-trigger:focus { outline: none; border-color: #00A3FF; box-shadow: 0 0 0 2px rgba(0,163,255,0.1); }
 
 .pp-popup {
   position: absolute;
@@ -759,7 +759,7 @@
   white-space: nowrap;
 }
 .pp-tab:hover { background: #F5F5F5; color: #424242; }
-.pp-tab.active { background: #E0F2F1; color: #0F766E; font-weight: 600; }
+.pp-tab.active { background: #E3F2FD; color: #00A3FF; font-weight: 600; }
 
 .pp-body { padding: 12px; }
 
@@ -808,10 +808,10 @@
 .pp-day.empty { cursor: default; }
 .pp-day.empty:hover { background: transparent; }
 .pp-day.other { color: #BDBDBD; }
-.pp-day.today { color: #0F766E; font-weight: 700; }
-.pp-day.selected { background: #0F766E; color: white; font-weight: 600; }
-.pp-day.week-sel { background: #E0F2F1; color: #0F766E; font-weight: 500; }
-.pp-day.week-hover { background: #F0FDFA; }
+.pp-day.today { color: #00A3FF; font-weight: 700; }
+.pp-day.selected { background: #00A3FF; color: white; font-weight: 600; }
+.pp-day.week-sel { background: #E3F2FD; color: #00A3FF; font-weight: 500; }
+.pp-day.week-hover { background: #E8F4FD; }
 
 /* Month Grid */
 .pp-month-grid {
@@ -829,7 +829,7 @@
   border: 1px solid transparent;
 }
 .pp-month-cell:hover { background: #F5F5F5; border-color: #E0E0E0; }
-.pp-month-cell.selected { background: #0F766E; color: white; font-weight: 600; border-color: #0F766E; }
+.pp-month-cell.selected { background: #00A3FF; color: white; font-weight: 600; border-color: #00A3FF; }
 
 /* Year Grid */
 .pp-year-grid {
@@ -847,7 +847,7 @@
   border: 1px solid transparent;
 }
 .pp-year-cell:hover { background: #F5F5F5; border-color: #E0E0E0; }
-.pp-year-cell.selected { background: #0F766E; color: white; font-weight: 600; border-color: #0F766E; }
+.pp-year-cell.selected { background: #00A3FF; color: white; font-weight: 600; border-color: #00A3FF; }
 
 /* Custom Range */
 .pp-custom {

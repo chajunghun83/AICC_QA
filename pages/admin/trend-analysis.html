@@ -100,7 +100,7 @@
   <script>
     /* ========== 인라인 더미 데이터 ========== */
     const TEAMS = [
-      { id: 'tm-1', name: 'VIP상담팀', ws: '서울센터', wsId: 'ws-1', color: '#0F766E' },
+      { id: 'tm-1', name: 'VIP상담팀', ws: '서울센터', wsId: 'ws-1', color: '#00A3FF' },
       { id: 'tm-2', name: '일반상담팀', ws: '서울센터', wsId: 'ws-1', color: '#2196F3' },
       { id: 'tm-3', name: '기술지원팀', ws: '서울센터', wsId: 'ws-1', color: '#FF9800' },
       { id: 'tm-4', name: '아웃바운드팀', ws: '서울센터', wsId: 'ws-1', color: '#9C27B0' },
@@ -212,7 +212,7 @@
       container.innerHTML = filteredTeams.map(team => {
         const checked = selectedTeams.includes(team.id) ? 'checked' : '';
         return `
-          <label style="display:inline-flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;padding:4px 8px;border:1px solid #E0E0E0;border-radius:4px;background:${selectedTeams.includes(team.id) ? '#E0F2F1' : 'white'};">
+          <label style="display:inline-flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;padding:4px 8px;border:1px solid #E0E0E0;border-radius:4px;background:${selectedTeams.includes(team.id) ? '#E3F2FD' : 'white'};">
             <input type="checkbox" value="${team.id}" ${checked} onchange="toggleTeam('${team.id}', this.checked)" style="accent-color:${team.color};">
             <span style="width:8px;height:8px;border-radius:50%;background:${team.color};display:inline-block;"></span>
             ${team.name}

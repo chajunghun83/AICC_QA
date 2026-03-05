@@ -113,7 +113,7 @@
           <div class="tree-node">
             <div class="tree-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('.chevron').style.transform=this.nextElementSibling.style.display==='none'?'rotate(-90deg)':'rotate(0)'" style="font-weight:600;">
               <svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#757575" stroke-width="2" style="transition:transform 0.15s;"><path d="m6 9 6 6 6-6"/></svg>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F766E" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00A3FF" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
               <span>${cat.name}</span>
               <span style="font-size:11px;color:#9E9E9E;font-weight:400;">(${catItems}개)</span>
               ${statusLabel}
@@ -306,7 +306,7 @@
       if (mode === 'parent') {
         const rootSel = (!selectedVal || selectedVal === '__root__') ? ' cat-tree-selected' : '';
         html += `<div class="cat-tree-node${rootSel}" data-value="__root__" data-label="최상위 (새 대분류 추가)" data-mode="parent" onclick="onCatTreeSelect(this)">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0F766E" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00A3FF" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
           <span>최상위 (새 대분류 추가)</span>
         </div>`;
       }
@@ -315,7 +315,7 @@
         if (mode === 'parent') {
           const catSel = selectedVal === cat.id ? ' cat-tree-selected' : '';
           html += `<div class="cat-tree-node${catSel}" data-value="${cat.id}" data-label="${cat.name}" data-mode="parent" onclick="onCatTreeSelect(this)" style="margin-top:2px;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0F766E" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00A3FF" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
             <span style="flex:1;">${cat.name}</span>
             <span style="font-size:11px;color:#9E9E9E;">(${cat.children.length} 하위)</span>
           </div>`;
@@ -326,8 +326,8 @@
             </div>`;
           }
         } else {
-          html += `<div style="padding:6px 8px;font-size:12px;font-weight:600;color:#0F766E;display:flex;align-items:center;gap:6px;margin-top:${html ? '4px' : '0'};">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0F766E" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          html += `<div style="padding:6px 8px;font-size:12px;font-weight:600;color:#00A3FF;display:flex;align-items:center;gap:6px;margin-top:${html ? '4px' : '0'};">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#00A3FF" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
             ${cat.name}
           </div>`;
           for (const sub of cat.children) {
@@ -360,7 +360,7 @@
         const loc = document.getElementById('cat-modal-location');
         if (loc) {
           loc.textContent = value === '__root__' ? '최상위에 새 대분류를 추가합니다.' : `"${label}" 아래에 새 중분류를 추가합니다.`;
-          loc.style.color = '#0F766E';
+          loc.style.color = '#00A3FF';
         }
       } else {
         const hidden = document.getElementById('form-category');
@@ -399,12 +399,12 @@
 
       for (const cat of itemsData.categories) {
         const catNodeId = 'cat-' + cat.id;
-        html += `<div style="display:flex;align-items:center;gap:4px;padding:7px 8px;font-weight:600;color:#0F766E;font-size:13px;border-bottom:1px solid #F5F5F5;">
-          <svg id="itree-chevron-${catNodeId}" onclick="toggleItemTreeNode('${catNodeId}')" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0F766E" stroke-width="2" style="cursor:pointer;transition:transform 0.15s;flex-shrink:0;"><path d="m6 9 6 6 6-6"/></svg>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0F766E" stroke-width="2" style="flex-shrink:0;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        html += `<div style="display:flex;align-items:center;gap:4px;padding:7px 8px;font-weight:600;color:#00A3FF;font-size:13px;border-bottom:1px solid #F5F5F5;">
+          <svg id="itree-chevron-${catNodeId}" onclick="toggleItemTreeNode('${catNodeId}')" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00A3FF" stroke-width="2" style="cursor:pointer;transition:transform 0.15s;flex-shrink:0;"><path d="m6 9 6 6 6-6"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00A3FF" stroke-width="2" style="flex-shrink:0;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
           <span style="flex:1;">${cat.name}</span>
           <span style="font-size:11px;color:#9E9E9E;font-weight:400;">(${cat.children.length})</span>
-          <button type="button" onclick="startInlineCatAdd('${cat.id}')" style="background:none;border:none;cursor:pointer;color:#0F766E;padding:2px;display:flex;align-items:center;" title="중분류 추가">
+          <button type="button" onclick="startInlineCatAdd('${cat.id}')" style="background:none;border:none;cursor:pointer;color:#00A3FF;padding:2px;display:flex;align-items:center;" title="중분류 추가">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
           </button>
         </div>`;
@@ -433,7 +433,7 @@
           for (const item of sub.items) {
             const isPending = pendingNewItemId === item.id;
             const inactiveStyle = item.is_active === false && !isPending ? 'opacity:0.45;' : '';
-            const itemSelected = modalEditingItem && modalEditingItem.id === item.id ? 'background:#FFF3E0;border-left:2px solid #0F766E;' : '';
+            const itemSelected = modalEditingItem && modalEditingItem.id === item.id ? 'background:#FFF3E0;border-left:2px solid #00A3FF;' : '';
             const pendingStyle = isPending ? 'font-style:italic;color:#FF9800;' : '';
             html += `<div onclick="onItemTreeItemClick('${item.id}')" style="display:flex;align-items:center;gap:6px;padding:3px 8px 3px 28px;font-size:11px;color:#757575;cursor:pointer;border-left:2px solid transparent;transition:background 0.15s;${inactiveStyle}${itemSelected}${pendingStyle}" onmouseover="if(!this.style.background.includes('FFF3E0'))this.style.background='#F5F5F5'" onmouseout="if(!this.style.background.includes('FFF3E0'))this.style.background=''">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="${isPending ? '#FF9800' : '#BDBDBD'}" stroke-width="2" style="flex-shrink:0;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/></svg>
@@ -553,7 +553,7 @@
             <div style="width:55%;padding-left:20px;display:flex;flex-direction:column;gap:16px;">
               <div>
                 <label class="form-label">추가 위치</label>
-                <div id="cat-modal-location" style="font-size:13px;font-weight:500;color:#0F766E;padding:4px 0;">최상위에 새 대분류를 추가합니다.</div>
+                <div id="cat-modal-location" style="font-size:13px;font-weight:500;color:#00A3FF;padding:4px 0;">최상위에 새 대분류를 추가합니다.</div>
               </div>
               <div>
                 <label class="form-label">카테고리명 *</label>

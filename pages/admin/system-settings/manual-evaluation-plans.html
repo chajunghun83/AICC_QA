@@ -438,7 +438,7 @@
       const rightItems = s.selected.length === 0
         ? '<div style="text-align:center;color:#BDBDBD;font-size:12px;padding:20px;">선택된 항목 없음</div>'
         : s.selected.map(n => `<div onclick="dlbMove('${id}',${s.all.indexOf(n)},'left')"
-            style="padding:5px 12px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;color:#0F766E;"
+            style="padding:5px 12px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;color:#00A3FF;"
             onmouseover="this.style.background='#F0FDF4'" onmouseout="this.style.background=''">
             <span style="font-size:11px;">&#10003;</span> ${n}</div>`).join('');
 
@@ -458,7 +458,7 @@
         </div>
         <div style="flex:1;border:1px solid #E0E0E0;border-radius:6px;overflow:hidden;">
           <div style="padding:6px 8px;background:#F0FDF4;border-bottom:1px solid #E0E0E0;">
-            <span style="font-size:12px;font-weight:600;color:#0F766E;">선택됨 (${s.selected.length})</span>
+            <span style="font-size:12px;font-weight:600;color:#00A3FF;">선택됨 (${s.selected.length})</span>
           </div>
           <div style="min-height:120px;max-height:160px;overflow-y:auto;padding:4px 0;">${rightItems}</div>
         </div>
