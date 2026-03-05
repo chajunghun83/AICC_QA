@@ -36,8 +36,15 @@
         </div>
         <div>
           <label class="form-label">팀 선택</label>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;" id="team-checkboxes">
-            <!-- JS로 동적 생성 -->
+          <div style="position:relative;" id="team-dropdown-wrap">
+            <button type="button" class="form-select" id="team-dropdown-btn" onclick="toggleTeamDropdown()"
+              style="text-align:left;min-width:260px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;">
+              <span id="team-dropdown-label">팀을 선택하세요</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#757575" stroke-width="2" style="flex-shrink:0;"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <div id="team-dropdown-panel" style="display:none;position:absolute;top:100%;left:0;min-width:100%;background:#fff;border:1px solid #E0E0E0;border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,0.12);z-index:100;margin-top:4px;max-height:280px;overflow-y:auto;">
+              <!-- JS로 동적 생성 -->
+            </div>
           </div>
         </div>
       </div>
@@ -198,37 +205,74 @@
           loadData();
         }
       });
-      renderTeamCheckboxes();
+      renderTeamDropdown();
       loadData();
+
+      // 드롭다운 외부 클릭 시 패널 닫기
+      document.addEventListener('click', (e) => {
+        const wrap = document.getElementById('team-dropdown-wrap');
+        if (wrap && !wrap.contains(e.target)) {
+          document.getElementById('team-dropdown-panel').style.display = 'none';
+        }
+      });
     });
 
-    /* ========== 팀 체크박스 렌더링 ========== */
-    // 워크스페이스 변경 시 해당 센터 팀만 표시하여 불필요한 팀 선택을 방지
-    function renderTeamCheckboxes() {
-      const container = document.getElementById('team-checkboxes');
+    /* ========== 팀 멀티셀렉트 드롭다운 ========== */
+
+    function toggleTeamDropdown() {
+      const panel = document.getElementById('team-dropdown-panel');
+      panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    }
+
+    /** 드롭다운 버튼 텍스트 + 패널 체크박스를 워크스페이스 그룹별로 렌더링 */
+    function renderTeamDropdown() {
+      const panel = document.getElementById('team-dropdown-panel');
+      const label = document.getElementById('team-dropdown-label');
       const wsFilter = document.getElementById('ws-filter').value;
       const filteredTeams = wsFilter === 'all' ? TEAMS : TEAMS.filter(t => t.wsId === wsFilter);
 
-      container.innerHTML = filteredTeams.map(team => {
-        const checked = selectedTeams.includes(team.id) ? 'checked' : '';
-        return `
-          <label style="display:inline-flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;padding:4px 8px;border:1px solid #E0E0E0;border-radius:4px;background:${selectedTeams.includes(team.id) ? '#E3F2FD' : 'white'};">
-            <input type="checkbox" value="${team.id}" ${checked} onchange="toggleTeam('${team.id}', this.checked)" style="accent-color:${team.color};">
-            <span style="width:8px;height:8px;border-radius:50%;background:${team.color};display:inline-block;"></span>
-            ${team.name}
-          </label>
-        `;
-      }).join('');
+      // 버튼 요약 텍스트
+      const selNames = filteredTeams.filter(t => selectedTeams.includes(t.id)).map(t => t.name);
+      if (selNames.length === 0) {
+        label.textContent = '팀을 선택하세요';
+      } else if (selNames.length <= 2) {
+        label.textContent = selNames.join(', ');
+      } else {
+        label.textContent = `${selNames[0]} 외 ${selNames.length - 1}개`;
+      }
+
+      // 워크스페이스별 그룹핑
+      const groups = {};
+      filteredTeams.forEach(t => {
+        if (!groups[t.ws]) groups[t.ws] = [];
+        groups[t.ws].push(t);
+      });
+
+      let html = '';
+      Object.entries(groups).forEach(([wsName, teams]) => {
+        html += `<div style="padding:6px 12px 2px;font-size:11px;font-weight:700;color:#757575;border-bottom:1px solid #F0F0F0;">${wsName}</div>`;
+        teams.forEach(team => {
+          const checked = selectedTeams.includes(team.id) ? 'checked' : '';
+          const bg = selectedTeams.includes(team.id) ? '#F0F7FF' : 'transparent';
+          html += `
+            <label style="display:flex;align-items:center;gap:8px;padding:7px 12px;cursor:pointer;font-size:13px;background:${bg};transition:background 0.1s;" onmouseenter="this.style.background='#F5F5F5'" onmouseleave="this.style.background='${bg}'">
+              <input type="checkbox" value="${team.id}" ${checked} onchange="toggleTeam('${team.id}', this.checked)" style="accent-color:${team.color};flex-shrink:0;">
+              <span style="width:8px;height:8px;border-radius:50%;background:${team.color};flex-shrink:0;"></span>
+              ${team.name}
+            </label>`;
+        });
+      });
+      panel.innerHTML = html;
     }
 
-    // 체크박스 변경 즉시 차트·테이블을 동기화하여 실시간 비교 경험 제공
+    // 체크 변경 즉시 차트·테이블을 동기화하여 실시간 비교 경험 제공
     function toggleTeam(teamId, checked) {
       if (checked) {
         if (!selectedTeams.includes(teamId)) selectedTeams.push(teamId);
       } else {
         selectedTeams = selectedTeams.filter(id => id !== teamId);
       }
-      renderTeamCheckboxes();
+      renderTeamDropdown();
       renderChart();
       renderComparisonTable();
     }
@@ -243,7 +287,7 @@
       } else {
         selectedTeams = ['tm-1', 'tm-2', 'tm-3'];
       }
-      renderTeamCheckboxes();
+      renderTeamDropdown();
       loadData();
       AICC_Toast.show('필터가 적용되었습니다.');
     }
