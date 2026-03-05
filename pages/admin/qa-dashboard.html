@@ -91,7 +91,7 @@
     <div class="content-card" style="margin-top:16px;">
       <div class="content-card-header">
         <span style="font-size:14px;font-weight:600;">팀별 평가 현황</span>
-        <a href="evaluation-status.html" style="font-size:12px;color:#00A3FF;text-decoration:none;">상세 보기 &rarr;</a>
+        <a href="javascript:void(0)" onclick="openPageModal('evaluation-status.html','자동 평가 현황')" style="font-size:12px;color:#00A3FF;text-decoration:none;">상세 보기 &rarr;</a>
       </div>
       <div class="content-card-body" style="padding:0;">
         <table class="data-table">
@@ -128,8 +128,55 @@
     let trendChart = null;
     let teamChart = null;
 
+    /** 풀스크린 iframe 모달 — 페이지 이동 없이 하위 페이지 콘텐츠를 오버레이로 표시 */
+    function initPageModal() {
+      const modal = document.createElement('div');
+      modal.id = 'page-modal';
+      modal.style.cssText = 'display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;';
+      modal.innerHTML = `
+        <div style="background:#fff;border-radius:12px;width:95vw;height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden;">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid #E0E0E0;flex-shrink:0;">
+            <span id="page-modal-title" style="font-size:16px;font-weight:700;color:#212121;"></span>
+            <button onclick="closePageModal()" style="background:none;border:none;cursor:pointer;padding:4px;color:#757575;display:flex;align-items:center;" title="닫기">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+          </div>
+          <div style="flex:1;overflow:hidden;">
+            <iframe id="page-modal-iframe" style="width:100%;height:100%;border:none;" src="about:blank"></iframe>
+          </div>
+        </div>
+      `;
+      // 배경 클릭 시 닫기
+      modal.addEventListener('click', (e) => { if (e.target === modal) closePageModal(); });
+      document.body.appendChild(modal);
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closePageModal();
+      });
+    }
+
+    function openPageModal(url, title) {
+      const modal = document.getElementById('page-modal');
+      const iframe = document.getElementById('page-modal-iframe');
+      document.getElementById('page-modal-title').textContent = title || '';
+      // embed 파라미터를 추가하여 iframe 내 사이드바·헤더 숨김
+      const separator = url.includes('?') ? '&' : '?';
+      iframe.src = url + separator + 'embed=1';
+      modal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closePageModal() {
+      const modal = document.getElementById('page-modal');
+      const iframe = document.getElementById('page-modal-iframe');
+      modal.style.display = 'none';
+      iframe.src = 'about:blank';
+      document.body.style.overflow = '';
+    }
+
     document.addEventListener('DOMContentLoaded', async () => {
       await loadDashboard();
+      initPageModal();
 
       AICC_PeriodPicker.create('period-picker-container', {
         defaultPeriod: 'monthly',
@@ -299,12 +346,12 @@
       });
     }
 
-    // 이슈 유형에 따라 적절한 상세 페이지로 분기하여 컨텍스트에 맞는 네비게이션 제공
-    function getIssueLink(issue) {
-      if (issue.type.includes('FAIL')) return 'evaluation-status.html?issue=fail';
-      if (issue.type.includes('과락')) return 'evaluation-status.html?issue=under';
-      if (issue.type.includes('이의 제기')) return 'dispute-inbox.html';
-      return 'evaluation-status.html';
+    // 이슈 유형별 모달 표시 URL 생성 — 이의 제기만 별도 페이지, 나머지는 평가 현황
+    function getIssueModalParams(issue) {
+      if (issue.type.includes('FAIL')) return { url: 'evaluation-status.html?issue=fail', title: '자동 평가 현황' };
+      if (issue.type.includes('과락')) return { url: 'evaluation-status.html?issue=under', title: '자동 평가 현황' };
+      if (issue.type.includes('이의 제기')) return { url: 'dispute-inbox.html', title: '이의 제기 처리함' };
+      return { url: 'evaluation-status.html', title: '자동 평가 현황' };
     }
 
     // FAIL 이슈와 일반 이슈를 시각적으로 구분(색상/아이콘)하여 긴급도를 즉시 파악 가능하게 함
@@ -319,7 +366,7 @@
         const isUrgent = issue.type.includes('FAIL');
         const textColor = isUrgent ? '#C62828' : '#F57F17';
         const dotColor = isUrgent ? '#F44336' : '#FFC107';
-        const href = getIssueLink(issue);
+        const mp = getIssueModalParams(issue);
 
         let detail = '';
         if (issue.agent) detail = `${issue.team} / ${issue.agent}`;
@@ -327,14 +374,14 @@
         else detail = `${issue.count}건 처리 대기`;
 
         return `
-          <a href="${href}" style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #F0F0F0;text-decoration:none;cursor:pointer;transition:background 0.15s;" onmouseenter="this.style.background='#FAFAFA'" onmouseleave="this.style.background=''">
+          <div onclick="openPageModal('${mp.url}','${mp.title}')" style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #F0F0F0;cursor:pointer;transition:background 0.15s;" onmouseenter="this.style.background='#FAFAFA'" onmouseleave="this.style.background=''">
             <span style="width:8px;height:8px;border-radius:50%;background:${dotColor};flex-shrink:0;"></span>
             <div style="flex:1;">
               <div style="font-size:13px;font-weight:500;color:${textColor};">${issue.type} ${issue.count || ''}건</div>
               <div style="font-size:11px;color:#757575;">${detail}</div>
             </div>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#BDBDBD" stroke-width="2" style="flex-shrink:0;"><path d="m9 18 6-6-6-6"/></svg>
-          </a>
+          </div>
         `;
       }).join('');
     }
@@ -385,7 +432,7 @@
       `).join('');
     }
 
-    // 행 클릭 시 해당 팀의 상세 분석 페이지로 이동하여 드릴다운 네비게이션을 제공
+    // 행 클릭 시 상세 분석 모달을 열어 페이지 이동 없이 드릴다운 제공
     function renderTeamTable(teams) {
       const tbody = document.getElementById('team-tbody');
       tbody.innerHTML = teams.map(team => {
@@ -393,8 +440,9 @@
           ? team.issues.map(i => `<span class="badge ${i.type.includes('FAIL') || i.type.includes('과락') ? 'badge-rejected' : 'badge-pending'}" style="font-size:11px;">${i.type} ${i.count}건</span>`).join(' ')
           : '<span style="color:#9E9E9E;font-size:12px;">-</span>';
 
+        const modalUrl = `detail-analysis.html?ws=${encodeURIComponent(team.workspace)}&team=${encodeURIComponent(team.team)}`;
         return `
-          <tr style="cursor:pointer;" onclick="location.href='detail-analysis.html?ws=${encodeURIComponent(team.workspace)}&team=${encodeURIComponent(team.team)}'">
+          <tr style="cursor:pointer;" onclick="openPageModal('${modalUrl}','상세 분석 - ${team.team}')">
             <td>${team.workspace}</td>
             <td style="font-weight:500;">${team.team}</td>
             <td style="text-align:right;">${AICC_Fmt.number(team.calls)}</td>

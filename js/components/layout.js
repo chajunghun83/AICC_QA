@@ -72,11 +72,24 @@ window.AICC_Layout = {
     `;
   },
 
+  /** iframe 임베드 여부 판별 — 대시보드 모달에서 사이드바 없이 콘텐츠만 표시하기 위함 */
+  isEmbed() {
+    return new URLSearchParams(window.location.search).has('embed');
+  },
+
   /**
    * 레이아웃 초기화 - 페이지에 헤더+사이드바 주입
    * body를 완전히 재구성하므로 DOMContentLoaded 후 1회만 호출
    */
   init() {
+    // embed 모드: 사이드바·헤더 없이 콘텐츠만 렌더링 (대시보드 모달용)
+    if (this.isEmbed()) {
+      document.body.style.background = '#FFFFFF';
+      const pc = document.getElementById('page-content');
+      if (pc) pc.style.padding = '24px';
+      return;
+    }
+
     const basePath = this.getBasePath();
     AICC_Sidebar.init(basePath);
 
