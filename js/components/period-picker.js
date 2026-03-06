@@ -200,26 +200,29 @@ const AICC_PeriodPicker = (function() {
     });
   }
 
-  /** 사용자 지정 기간 - 시작일/종료일 input[type=date]로 직접 입력 */
+  /** 사용자 지정 기간 - 시작일/종료일 input[type=date]로 직접 입력 (하단 확인 버튼으로 최종 적용) */
   function renderCustomPicker(el, s, done) {
     var fv = s.customFrom ? fmt(s.customFrom) : '', tv = s.customTo ? fmt(s.customTo) : '';
     el.innerHTML = '<div class="pp-custom">' +
       '<div class="pp-custom-field"><label>시작일</label><input type="date" class="form-input" id="pp-cf" value="' + fv + '"></div>' +
       '<span class="pp-custom-sep">~</span>' +
-      '<div class="pp-custom-field"><label>종료일</label><input type="date" class="form-input" id="pp-ct" value="' + tv + '"></div>' +
-      '<button type="button" class="btn btn-primary btn-sm" id="pp-ca">적용</button></div>';
-    el.querySelector('#pp-ca').onclick = function() {
-      var f = el.querySelector('#pp-cf').value, t = el.querySelector('#pp-ct').value;
-      if (!f || !t) { if (window.AICC_Toast) AICC_Toast.show('시작일과 종료일을 모두 선택해주세요.'); return; }
-      if (f > t) { if (window.AICC_Toast) AICC_Toast.show('시작일이 종료일보다 클 수 없습니다.'); return; }
-      s.customFrom = new Date(f + 'T00:00:00'); s.customTo = new Date(t + 'T00:00:00'); done();
+      '<div class="pp-custom-field"><label>종료일</label><input type="date" class="form-input" id="pp-ct" value="' + tv + '"></div></div>';
+    // 입력 변경 시 임시 상태에 반영 (확인 버튼 클릭 시 최종 적용됨)
+    el.querySelector('#pp-cf').onchange = function() {
+      var v = this.value;
+      if (v) s.customFrom = new Date(v + 'T00:00:00');
+    };
+    el.querySelector('#pp-ct').onchange = function() {
+      var v = this.value;
+      if (v) s.customTo = new Date(v + 'T00:00:00');
     };
   }
 
   /* ── Public API ── */
   /**
    * 기간 선택기 인스턴스 생성
-   * 대상 컨테이너 안에 트리거 버튼 + 팝업 달력을 주입하고 상태 객체를 반환
+   * 2패널 레이아웃: 좌측 프리셋 사이드바 + 우측 달력 + 하단 취소/확인 버튼
+   * 날짜 선택은 임시 상태로 유지하다가 "확인" 클릭 시 최종 반영
    */
   function create(containerId, opts) {
     opts = opts || {};
@@ -237,6 +240,23 @@ const AICC_PeriodPicker = (function() {
       onChange: opts.onChange || function() {}
     };
 
+    // 팝업 열릴 때 스냅샷 저장용 (취소 시 복원)
+    var snapshot = {};
+    function saveSnapshot() {
+      snapshot = {
+        periodType: s.periodType,
+        selectedDate: new Date(s.selectedDate),
+        customFrom: s.customFrom ? new Date(s.customFrom) : null,
+        customTo: s.customTo ? new Date(s.customTo) : null
+      };
+    }
+    function restoreSnapshot() {
+      s.periodType = snapshot.periodType;
+      s.selectedDate = new Date(snapshot.selectedDate);
+      s.customFrom = snapshot.customFrom ? new Date(snapshot.customFrom) : null;
+      s.customTo = snapshot.customTo ? new Date(snapshot.customTo) : null;
+    }
+
     el.className = (el.className ? el.className + ' ' : '') + 'pp-wrap';
     el.innerHTML =
       '<button type="button" class="pp-trigger">' +
@@ -244,13 +264,19 @@ const AICC_PeriodPicker = (function() {
         '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>' +
       '</button>' +
       '<div class="pp-popup" style="display:none">' +
-        '<div class="pp-tabs"></div>' +
-        '<div class="pp-body"></div>' +
+        '<div class="pp-sidebar"></div>' +
+        '<div class="pp-main">' +
+          '<div class="pp-body"></div>' +
+          '<div class="pp-footer">' +
+            '<button type="button" class="pp-footer-btn" data-action="cancel">취소</button>' +
+            '<button type="button" class="pp-footer-btn primary" data-action="apply">확인</button>' +
+          '</div>' +
+        '</div>' +
       '</div>';
 
     var trigger = el.querySelector('.pp-trigger');
     var popup = el.querySelector('.pp-popup');
-    var tabs = el.querySelector('.pp-tabs');
+    var sidebar = el.querySelector('.pp-sidebar');
     var body = el.querySelector('.pp-body');
 
     PERIOD_TYPES.forEach(function(pt) {
@@ -261,38 +287,66 @@ const AICC_PeriodPicker = (function() {
       btn.dataset.key = pt.key;
       btn.onclick = function() {
         s.periodType = pt.key;
-        tabs.querySelectorAll('.pp-tab').forEach(function(b) { b.classList.remove('active'); });
+        sidebar.querySelectorAll('.pp-tab').forEach(function(b) { b.classList.remove('active'); });
         btn.classList.add('active');
         renderBody();
       };
-      tabs.appendChild(btn);
+      sidebar.appendChild(btn);
     });
 
     function close() { s.isOpen = false; popup.style.display = 'none'; }
     function updateLabel() { el.querySelector('.pp-label').textContent = displayText(s); }
-    /** 날짜 선택 확정 시 라벨 갱신 → 팝업 닫기 → 콜백 호출 순서로 실행 */
-    function emit() { updateLabel(); close(); s.onChange(s.periodType, dateInfo(s)); }
+
+    /** 달력 내 날짜 클릭 시 — 즉시 닫지 않고 임시 선택만 반영 후 달력 재렌더 */
+    function onTempSelect() { renderBody(); }
 
     function renderBody() {
       switch (s.periodType) {
-        case 'daily':   renderDayPicker(body, s, emit); break;
-        case 'weekly':  renderWeekPicker(body, s, emit); break;
-        case 'monthly': renderMonthPicker(body, s, emit); break;
-        case 'yearly':  renderYearPicker(body, s, emit); break;
-        case 'custom':  renderCustomPicker(body, s, emit); break;
+        case 'daily':   renderDayPicker(body, s, onTempSelect); break;
+        case 'weekly':  renderWeekPicker(body, s, onTempSelect); break;
+        case 'monthly': renderMonthPicker(body, s, onTempSelect); break;
+        case 'yearly':  renderYearPicker(body, s, onTempSelect); break;
+        case 'custom':  renderCustomPicker(body, s, onTempSelect); break;
       }
     }
 
-    trigger.onclick = function(e) {
+    // 확인 버튼: 현재 임시 선택을 최종 확정
+    popup.querySelector('[data-action="apply"]').onclick = function(e) {
       e.stopPropagation();
-      s.isOpen = !s.isOpen;
-      popup.style.display = s.isOpen ? 'block' : 'none';
-      if (s.isOpen) renderBody();
+      if (s.periodType === 'custom' && (!s.customFrom || !s.customTo)) {
+        if (window.AICC_Toast) AICC_Toast.show('시작일과 종료일을 모두 선택해주세요.');
+        return;
+      }
+      updateLabel();
+      close();
+      s.onChange(s.periodType, dateInfo(s));
     };
 
-    // 팝업 외부 클릭 시 닫기 (document 레벨에서 감지)
+    // 취소 버튼: 스냅샷으로 복원 후 닫기
+    popup.querySelector('[data-action="cancel"]').onclick = function(e) {
+      e.stopPropagation();
+      restoreSnapshot();
+      updateLabel();
+      close();
+    };
+
+    trigger.onclick = function(e) {
+      e.stopPropagation();
+      if (s.isOpen) { restoreSnapshot(); updateLabel(); close(); return; }
+      saveSnapshot();
+      s.isOpen = true;
+      s.viewYear = s.selectedDate.getFullYear();
+      s.viewMonth = s.selectedDate.getMonth();
+      s.yearBase = Math.floor(s.viewYear / 12) * 12;
+      popup.style.display = 'flex';
+      // 사이드바 active 상태 동기화
+      sidebar.querySelectorAll('.pp-tab').forEach(function(b) { b.classList.toggle('active', b.dataset.key === s.periodType); });
+      renderBody();
+    };
+
+    // 팝업 외부 클릭 시 취소와 동일하게 동작 (스냅샷 복원)
     document.addEventListener('click', function(e) {
-      if (!el.contains(e.target)) close();
+      if (s.isOpen && !el.contains(e.target)) { restoreSnapshot(); updateLabel(); close(); }
     });
 
     updateLabel();

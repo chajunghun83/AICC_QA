@@ -703,6 +703,7 @@
 }
 
 /* ── Period Picker ── */
+/* ── Period Picker (Figma 2-panel layout) ── */
 .pp-wrap {
   position: relative;
   display: inline-block;
@@ -713,17 +714,17 @@
   align-items: center;
   gap: 8px;
   padding: 6px 12px;
-  border: 1px solid #E0E0E0;
+  border: 1px solid #D8DAE5;
   border-radius: 4px;
   font-size: 13px;
-  color: #212121;
+  color: #051B44;
   background: white;
   cursor: pointer;
   white-space: nowrap;
   min-width: 180px;
   transition: border-color 0.15s;
 }
-.pp-trigger:hover { border-color: #BDBDBD; }
+.pp-trigger:hover { border-color: #8F95B2; }
 .pp-trigger:focus { outline: none; border-color: #00A3FF; box-shadow: 0 0 0 2px rgba(0,163,255,0.1); }
 
 .pp-popup {
@@ -731,75 +732,122 @@
   top: calc(100% + 4px);
   left: 0;
   background: white;
-  border: 1px solid #E0E0E0;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  border: none;
+  border-radius: 6px;
+  box-shadow: 0 4px 8px rgba(5,27,68,0.08);
   z-index: 80;
-  min-width: 360px;
+  display: flex;
+  overflow: hidden;
   animation: fadeIn 0.15s ease;
 }
 
-.pp-tabs {
+/* 좌측 프리셋 사이드바 */
+.pp-sidebar {
   display: flex;
-  border-bottom: 1px solid #E0E0E0;
-  padding: 4px;
-  gap: 2px;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 0;
+  border-right: 1px solid #D8DAE5;
+  flex-shrink: 0;
 }
 .pp-tab {
-  flex: 1;
-  padding: 6px 8px;
-  font-size: 12px;
-  font-weight: 500;
-  color: #757575;
+  padding: 4px 20px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #696F8C;
   background: transparent;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.15s;
   white-space: nowrap;
+  text-align: left;
 }
-.pp-tab:hover { background: #F5F5F5; color: #424242; }
-.pp-tab.active { background: #E3F2FD; color: #00A3FF; font-weight: 600; }
+.pp-tab:hover { background: #F5F5F5; color: #051B44; }
+.pp-tab.active { background: #E3F2FD; color: #00A3FF; }
 
-.pp-body { padding: 12px; }
+/* 우측 메인 영역 */
+.pp-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 340px;
+}
+.pp-body { padding: 12px; flex: 1; }
 
+/* 하단 취소/확인 버튼 */
+.pp-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid #D8DAE5;
+}
+.pp-footer-btn {
+  padding: 6px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid #D8DAE5;
+  background: white;
+  color: #051B44;
+}
+.pp-footer-btn:hover { background: #F5F5F5; }
+.pp-footer-btn.primary {
+  background: #00A3FF;
+  color: white;
+  border-color: #00A3FF;
+}
+.pp-footer-btn.primary:hover { background: #0090E0; border-color: #0090E0; }
+
+/* 달력 네비게이션 */
 .pp-nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 8px;
+  padding: 0 4px;
 }
 .pp-nav-btn {
-  width: 28px; height: 28px;
+  width: 32px; height: 32px;
   display: inline-flex; align-items: center; justify-content: center;
-  background: transparent;
-  border: 1px solid #E0E0E0;
+  background: white;
+  border: 1px solid #D8DAE5;
   border-radius: 4px;
   cursor: pointer;
   font-size: 18px;
-  color: #757575;
+  color: #696F8C;
   line-height: 1;
+  transition: all 0.15s;
 }
-.pp-nav-btn:hover { background: #F5F5F5; }
-.pp-nav-title { font-size: 13px; font-weight: 600; color: #212121; }
+.pp-nav-btn:hover { background: #F5F5F5; border-color: #8F95B2; }
+.pp-nav-title { font-size: 18px; font-weight: 600; color: #051B44; }
 
-/* Day / Week Calendar */
+/* 일/주 달력 그리드 */
 .pp-cal-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 1px;
+  grid-template-columns: repeat(7, 36px);
+  justify-content: center;
 }
 .pp-weekday {
   text-align: center;
-  font-size: 11px;
-  font-weight: 600;
-  color: #9E9E9E;
-  padding: 4px 0;
+  font-size: 10px;
+  font-weight: 500;
+  color: #8F95B2;
+  padding: 0 0 8px;
+  line-height: 16px;
 }
 .pp-day {
   text-align: center;
-  padding: 7px 0;
-  font-size: 13px;
+  height: 32px;
+  line-height: 32px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #051B44;
   border-radius: 4px;
   cursor: pointer;
   transition: background 0.1s;
@@ -807,13 +855,14 @@
 .pp-day:hover { background: #F5F5F5; }
 .pp-day.empty { cursor: default; }
 .pp-day.empty:hover { background: transparent; }
-.pp-day.other { color: #BDBDBD; }
-.pp-day.today { color: #00A3FF; font-weight: 700; }
-.pp-day.selected { background: #00A3FF; color: white; font-weight: 600; }
+.pp-day.other { color: #8F95B2; }
+.pp-day.today { color: #00A3FF; font-weight: 700; border: 1.5px solid #00A3FF; border-radius: 50%; line-height: 29px; }
+.pp-day.selected { background: #00A3FF; color: white; font-weight: 600; border-radius: 50%; }
+.pp-day.selected.today { border-color: #00A3FF; line-height: 32px; }
 .pp-day.week-sel { background: #E3F2FD; color: #00A3FF; font-weight: 500; }
 .pp-day.week-hover { background: #E8F4FD; }
 
-/* Month Grid */
+/* 월 그리드 */
 .pp-month-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -821,17 +870,20 @@
 }
 .pp-month-cell {
   text-align: center;
-  padding: 14px 8px;
-  font-size: 13px;
+  padding: 14px 12px;
+  font-size: 14px;
+  white-space: nowrap;
+  font-weight: 500;
+  color: #051B44;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s;
   border: 1px solid transparent;
 }
-.pp-month-cell:hover { background: #F5F5F5; border-color: #E0E0E0; }
+.pp-month-cell:hover { background: #F5F5F5; border-color: #D8DAE5; }
 .pp-month-cell.selected { background: #00A3FF; color: white; font-weight: 600; border-color: #00A3FF; }
 
-/* Year Grid */
+/* 년 그리드 */
 .pp-year-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -839,17 +891,20 @@
 }
 .pp-year-cell {
   text-align: center;
-  padding: 14px 8px;
-  font-size: 13px;
+  padding: 14px 12px;
+  font-size: 14px;
+  white-space: nowrap;
+  font-weight: 500;
+  color: #051B44;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s;
   border: 1px solid transparent;
 }
-.pp-year-cell:hover { background: #F5F5F5; border-color: #E0E0E0; }
+.pp-year-cell:hover { background: #F5F5F5; border-color: #D8DAE5; }
 .pp-year-cell.selected { background: #00A3FF; color: white; font-weight: 600; border-color: #00A3FF; }
 
-/* Custom Range */
+/* 사용자 지정 범위 */
 .pp-custom {
   display: flex;
   align-items: flex-end;
@@ -866,13 +921,6 @@
 .pp-custom-field label {
   font-size: 11px;
   font-weight: 600;
-  color: #757575;
+  color: #696F8C;
 }
-.pp-custom-field input { font-size: 12px; width: 100%; }
-.pp-custom-sep {
-  font-size: 14px;
-  color: #757575;
-  padding-bottom: 6px;
-  flex-shrink: 0;
-}
-.pp-custom .btn { white-space: nowrap; flex-shrink: 0; }
+.pp-custom-field input { font-size: 13px; width: 100%; }
