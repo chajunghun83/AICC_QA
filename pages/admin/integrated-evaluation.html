@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>통합 평가 현황 - AICC Quality Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body class="bg-[#F5F5F5] text-[#212121]">
+  <div id="page-content">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <h1 style="font-size:20px;font-weight:700;margin:0;">통합 평가 현황</h1>
+        <p style="font-size:12px;color:#757575;margin:4px 0 0;">자동 평가 · 수동 평가 통합 조회</p>
+      </div>
+    </div>
+
+    <div class="tab-nav" style="margin-bottom:20px;">
+      <div class="tab-item active" onclick="switchMainTab('all')">전체</div>
+      <div class="tab-item" onclick="switchMainTab('detail')">상세 분석</div>
+    </div>
+
+    <!-- 전체 탭 -->
+    <div id="tab-all">
+      <div class="filter-section">
+        <div class="filter-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'flex':'none'">
+          <span>검색조건</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#757575" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </div>
+        <div class="filter-body">
+          <div>
+            <label class="form-label">센터</label>
+            <select class="form-select" id="ws-filter" onchange="onWsChange()">
+              <option value="all">전체</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">팀</label>
+            <select class="form-select" id="team-filter" onchange="applyFilter()" disabled>
+              <option value="all">전체</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">기간</label>
+            <div id="period-picker-container"></div>
+          </div>
+          <div>
+            <label class="form-label">상담사</label>
+            <input type="text" class="form-input" id="agent-search" placeholder="상담사명 검색" style="min-width:130px;">
+          </div>
+          <div>
+            <label class="form-label">점수 범위</label>
+            <select class="form-select" id="score-filter">
+              <option value="all">전체</option>
+              <option value="excellent">90점 이상 (우수)</option>
+              <option value="good">80 ~ 89점 (양호)</option>
+              <option value="caution">70 ~ 79점 (주의)</option>
+              <option value="low">70점 미만 (미달)</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">통화유형</label>
+            <select class="form-select" id="type-filter">
+              <option value="all">전체</option>
+              <option value="I/B">I/B (인바운드)</option>
+              <option value="O/B">O/B (아웃바운드)</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">평가방식</label>
+            <select class="form-select" id="method-filter">
+              <option value="all">전체</option>
+              <option value="AI">AI</option>
+              <option value="NLP">NLP</option>
+              <option value="manual">수동</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">이슈 유형</label>
+            <select class="form-select" id="issue-filter" onchange="applyFilter()">
+              <option value="all">전체</option>
+              <option value="fail">FAIL (금지어)</option>
+              <option value="under">과락 (평가표 기준 미만)</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">&nbsp;</label>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-secondary btn-sm" onclick="resetFilter()">초기화</button>
+              <button class="btn btn-primary btn-sm" onclick="applyFilter()">검색</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-card" style="margin-top:16px;">
+        <div class="content-card-header">
+          <span style="font-size:14px;font-weight:600;">통합 평가 결과</span>
+          <span style="font-size:12px;color:#757575;" id="eval-count">총 0건</span>
+        </div>
+        <div class="content-card-body" style="padding:0;">
+          <table class="data-table">
+            <colgroup>
+              <col style="width:9%">
+              <col style="width:10%">
+              <col style="width:11%">
+              <col style="width:6%">
+              <col style="width:16%">
+              <col style="width:7%">
+              <col style="width:7%">
+              <col style="width:14%">
+              <col style="width:5%">
+              <col style="width:15%">
+            </colgroup>
+            <thead>
+              <tr>
+                <th style="text-align:center;">평가 ID</th>
+                <th style="text-align:center;">일시</th>
+                <th style="text-align:center;">센터/팀</th>
+                <th style="text-align:center;">상담사</th>
+                <th style="text-align:center;">상담 유형</th>
+                <th style="text-align:center;">유형</th>
+                <th style="text-align:center;">평가방식</th>
+                <th style="text-align:center;">평가표</th>
+                <th style="text-align:center;">점수</th>
+                <th style="text-align:center;">이슈</th>
+              </tr>
+            </thead>
+            <tbody id="eval-tbody"></tbody>
+          </table>
+          <div class="pagination">
+            <button class="pagination-btn" onclick="goPage('first')">&laquo;</button>
+            <span id="page-buttons"></span>
+            <button class="pagination-btn" onclick="goPage('last')">&raquo;</button>
+            <span style="margin-left:16px;font-size:12px;color:#757575;">페이지당:
+              <select class="form-select" id="page-size-select" style="min-width:60px;padding:2px 24px 2px 8px;" onchange="changePageSize()">
+                <option>10</option>
+                <option selected>20</option>
+                <option>50</option>
+              </select>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 상세 분석 탭: detail-analysis.html을 embedded 모드로 로드 -->
+    <div id="tab-detail" style="display:none;">
+      <iframe id="detail-iframe" style="width:100%;border:none;min-height:calc(100vh - 200px);"></iframe>
+    </div>
+  </div>
+
+  <script src="../../assets/dummy-data/all-data.js"></script>
+  <script src="../../js/utils/data-loader.js"></script>
+  <script src="../../js/utils/auth-simulator.js"></script>
+  <script src="../../js/utils/formatters.js"></script>
+  <script src="../../js/components/sidebar.js"></script>
+  <script src="../../js/components/layout.js"></script>
+  <script src="../../js/components/modal.js"></script>
+  <script src="../../js/components/toast.js"></script>
+  <script src="../../js/components/period-picker.js"></script>
+  <script>
+    let allData = {};
+    let allEvals = [];
+    let filteredEvals = [];
+    let currentPage = 1;
+    let pageSize = 20;
+    let deductionParam = null;
+    let dateParam = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      allData = await AICC_DataLoader.loadAll([
+        'evaluations.json',
+        'manual-evaluations.json',
+        'evaluation-forms.json',
+        'evaluation-items.json',
+        'centers.json'
+      ]);
+      mergeEvaluations();
+      populateFilters();
+      applyUrlParams();
+
+      AICC_PeriodPicker.create('period-picker-container', {
+        defaultPeriod: 'monthly',
+        onChange: function() { applyFilter(); }
+      });
+
+      renderTable();
+    });
+
+    // 자동 평가와 수동 평가를 eval_method 필드 부여 후 시간순 병합
+    function mergeEvaluations() {
+      const autoEvals = allData['evaluations.json'] || [];
+      const manualEvals = allData['manual-evaluations.json'] || [];
+
+      const tagged_auto = autoEvals.map(e => ({ ...e, eval_method: 'auto' }));
+      const tagged_manual = manualEvals.map(e => ({ ...e, eval_method: 'manual' }));
+
+      allEvals = [...tagged_auto, ...tagged_manual].sort((a, b) => {
+        const da = (a.date || '') + ' ' + (a.call_time || '');
+        const db = (b.date || '') + ' ' + (b.call_time || '');
+        return db.localeCompare(da);
+      });
+    }
+
+    function populateFilters() {
+      const ws = allData['centers.json'];
+      if (ws) {
+        const select = document.getElementById('ws-filter');
+        ws.forEach(w => {
+          select.innerHTML += `<option value="${w.id}">${w.name}</option>`;
+        });
+      }
+    }
+
+    // 대시보드에서 딥링크로 진입 시 URL 파라미터를 필터에 반영
+    function applyUrlParams() {
+      const params = new URLSearchParams(window.location.search);
+
+      const issueParam = params.get('issue');
+      if (issueParam) document.getElementById('issue-filter').value = issueParam;
+
+      const teamParam = params.get('team');
+      if (teamParam) {
+        const teamFilter = document.getElementById('team-filter');
+        const ws = allData['centers.json'] || [];
+        // 팀명으로 센터를 역추적해 센터 필터도 함께 설정
+        for (const center of ws) {
+          const found = center.teams.find(t => t.name === teamParam);
+          if (found) {
+            document.getElementById('ws-filter').value = center.id;
+            onWsChange();
+            teamFilter.value = found.id;
+            break;
+          }
+        }
+      }
+
+      const centerParam = params.get('center');
+      if (centerParam) {
+        const ws = allData['centers.json'] || [];
+        const found = ws.find(w => w.name === centerParam);
+        if (found) {
+          document.getElementById('ws-filter').value = found.id;
+          onWsChange();
+        }
+      }
+
+      const scoreRange = params.get('score_range');
+      if (scoreRange) {
+        // 대시보드 점수 분포에서 넘어오는 값(excellent/good/caution/low)을 필터 옵션으로 변환
+        const rangeToFilter = { excellent: 'excellent', good: 'good', caution: 'caution', low: 'low', high: 'high', mid: 'mid' };
+        document.getElementById('score-filter').value = rangeToFilter[scoreRange] || scoreRange;
+      }
+
+      const methodParam = params.get('method');
+      if (methodParam) {
+        const map = { 'auto': 'AI', 'manual': 'manual' };
+        document.getElementById('method-filter').value = map[methodParam] || 'all';
+      }
+
+      deductionParam = params.get('deduction') || null;
+      dateParam = params.get('date') || null;
+    }
+
+    // 3단계 중첩 구조를 flat map으로 변환해 ID 기반 O(1) 조회 지원
+    function buildItemNameMap() {
+      const items = allData['evaluation-items.json'];
+      const map = {
+        'item-greeting': '첫인사',
+        'item-empathy': '공감 표현',
+        'item-solution': '문제 해결',
+        'item-closing': '끝인사',
+        'item-forbidden': '욕설/금지어'
+      };
+      if (!items || !items.categories) return map;
+      items.categories.forEach(cat => {
+        cat.children.forEach(child => {
+          child.items.forEach(item => {
+            map[item.id] = item.name;
+          });
+        });
+      });
+      return map;
+    }
+
+    function getPassThreshold(ev) {
+      const forms = allData['evaluation-forms.json'];
+      if (!forms) return 60;
+      const matched = forms.find(f => {
+        if (f.status !== 'active') return false;
+        if (f.type !== ev.call_type) return false;
+        return f.applied_to && f.applied_to.includes(ev.center_id);
+      });
+      return matched && matched.pass_threshold ? matched.pass_threshold : 60;
+    }
+
+    function isUnderThreshold(ev) {
+      return ev.total_score > 0 && ev.total_score < getPassThreshold(ev);
+    }
+
+    // 자동 평가의 주 평가 방식(AI/NLP)을 항목별 비율로 결정
+    function getAutoMethodLabel(ev) {
+      if (!ev.scores) return 'AI';
+      const types = Object.values(ev.scores).map(v => v.type);
+      const aiCount = types.filter(t => t === 'AI').length;
+      const nlpCount = types.filter(t => t === 'NLP').length;
+      return nlpCount > aiCount ? 'NLP' : 'AI';
+    }
+
+    function getMethodBadge(ev) {
+      if (ev.eval_method === 'manual') {
+        return '<span class="badge badge-manual">수동</span>';
+      }
+      const label = getAutoMethodLabel(ev);
+      return AICC_Fmt.typeBadge(label);
+    }
+
+    function getCallTypeBadge(callType) {
+      if (callType === 'I/B') {
+        return '<span style="display:inline-block;padding:2px 8px;background:#e8f5e9;color:#2e7d32;border-radius:4px;font-size:11px;font-weight:600;">I/B</span>';
+      }
+      return '<span style="display:inline-block;padding:2px 8px;background:#fff3e0;color:#e65100;border-radius:4px;font-size:11px;font-weight:600;">O/B</span>';
+    }
+
+    function renderTable() {
+      filteredEvals = getFilteredEvals();
+      const totalPages = Math.max(1, Math.ceil(filteredEvals.length / pageSize));
+      if (currentPage > totalPages) currentPage = totalPages;
+
+      document.getElementById('eval-count').textContent = `총 ${filteredEvals.length}건`;
+
+      const start = (currentPage - 1) * pageSize;
+      const pageData = filteredEvals.slice(start, start + pageSize);
+
+      const tbody = document.getElementById('eval-tbody');
+      tbody.innerHTML = pageData.map(ev => {
+        const callTypeBadge = getCallTypeBadge(ev.call_type);
+        const methodBadge = getMethodBadge(ev);
+        const scoreHtml = ev.total_score > 0
+          ? AICC_Fmt.scoreHtml(ev.total_score)
+          : '<span style="color:#BDBDBD;font-size:12px;">-</span>';
+
+        const issueHtml = ev.issues && ev.issues.length > 0
+          ? ev.issues.slice(0, 2).map(i => `<div style="font-size:10px;color:#F57F17;">${i}</div>`).join('')
+          : (ev.fail_items && ev.fail_items.length > 0
+            ? '<div style="font-size:10px;color:#F57F17;">FAIL</div>'
+            : (isUnderThreshold(ev)
+              ? '<div style="font-size:10px;color:#F57F17;">과락</div>'
+              : '<span style="color:#9E9E9E;font-size:11px;">-</span>'));
+
+        return `<tr onclick="showEvalDetail('${ev.id}')" style="cursor:pointer;">
+          <td style="font-size:11px;font-family:monospace;text-align:center;">${ev.id}</td>
+          <td style="font-size:11px;white-space:nowrap;text-align:center;">${ev.date} ${ev.call_time || ''}</td>
+          <td style="font-size:11px;text-align:center;">${ev.center || '-'} &gt; ${ev.team || '-'}</td>
+          <td style="font-size:12px;text-align:center;">${ev.agent_name || '-'}</td>
+          <td style="font-size:11px;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;" title="${ev.consultation_type || '-'}">${ev.consultation_type || '-'}</td>
+          <td style="text-align:center;">${callTypeBadge}</td>
+          <td style="text-align:center;">${methodBadge}</td>
+          <td style="font-size:11px;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px;" title="${ev.eval_form || '-'}">${ev.eval_form || '-'}</td>
+          <td style="text-align:center;">${scoreHtml}</td>
+          <td style="text-align:center;font-size:11px;">${issueHtml}</td>
+        </tr>`;
+      }).join('');
+
+      renderPagination(totalPages);
+    }
+
+    function renderPagination(totalPages) {
+      const container = document.getElementById('page-buttons');
+      let html = '';
+      const maxVisible = 5;
+      let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+      let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+      if (endPage - startPage < maxVisible - 1) startPage = Math.max(1, endPage - maxVisible + 1);
+
+      for (let i = startPage; i <= endPage; i++) {
+        html += `<button class="pagination-btn ${i === currentPage ? 'active' : ''}" onclick="goPage(${i})">${i}</button>`;
+      }
+      container.innerHTML = html;
+    }
+
+    function goPage(page) {
+      const totalPages = Math.max(1, Math.ceil(filteredEvals.length / pageSize));
+      if (page === 'first') currentPage = 1;
+      else if (page === 'last') currentPage = totalPages;
+      else currentPage = page;
+      renderTable();
+    }
+
+    function changePageSize() {
+      pageSize = parseInt(document.getElementById('page-size-select').value, 10);
+      currentPage = 1;
+      renderTable();
+    }
+
+    // 모든 필터 조건을 순차 체이닝하여 AND 조건 적용
+    function getFilteredEvals() {
+      let filtered = [...allEvals];
+
+      const wsId = document.getElementById('ws-filter').value;
+      if (wsId !== 'all') filtered = filtered.filter(e => e.center_id === wsId);
+
+      const teamId = document.getElementById('team-filter').value;
+      if (teamId !== 'all') filtered = filtered.filter(e => e.team_id === teamId);
+
+      const typeVal = document.getElementById('type-filter').value;
+      if (typeVal !== 'all') filtered = filtered.filter(e => e.call_type === typeVal);
+
+      const methodVal = document.getElementById('method-filter').value;
+      if (methodVal === 'manual') {
+        filtered = filtered.filter(e => e.eval_method === 'manual');
+      } else if (methodVal === 'AI' || methodVal === 'NLP') {
+        filtered = filtered.filter(e => e.eval_method === 'auto' && getAutoMethodLabel(e) === methodVal);
+      }
+
+      const issueVal = document.getElementById('issue-filter').value;
+      if (issueVal === 'fail') {
+        filtered = filtered.filter(e =>
+          (e.fail_items && e.fail_items.length > 0) ||
+          (e.issues && e.issues.some(i => i.includes('FAIL')))
+        );
+      }
+      if (issueVal === 'under') {
+        filtered = filtered.filter(e =>
+          isUnderThreshold(e) ||
+          (e.issues && e.issues.some(i => i.includes('과락')))
+        );
+      }
+
+      const agentSearch = (document.getElementById('agent-search').value || '').trim().toLowerCase();
+      if (agentSearch) filtered = filtered.filter(e => (e.agent_name || '').toLowerCase().includes(agentSearch));
+
+      const scoreVal = document.getElementById('score-filter').value;
+      if (scoreVal === 'excellent') filtered = filtered.filter(e => e.total_score >= 90);
+      else if (scoreVal === 'good') filtered = filtered.filter(e => e.total_score >= 80 && e.total_score < 90);
+      else if (scoreVal === 'caution') filtered = filtered.filter(e => e.total_score >= 70 && e.total_score < 80);
+      else if (scoreVal === 'low') filtered = filtered.filter(e => e.total_score > 0 && e.total_score < 70);
+
+      if (deductionParam) {
+        const itemNameMap = buildItemNameMap();
+        filtered = filtered.filter(e => {
+          if (!e.scores) return false;
+          return Object.entries(e.scores).some(([key, val]) => {
+            const name = itemNameMap[key] || key;
+            return name === deductionParam && val.status !== 'pass';
+          });
+        });
+      }
+
+      // 품질 추세 차트에서 특정 날짜 클릭 시 해당 날짜 건만 표시
+      if (dateParam) {
+        filtered = filtered.filter(e => e.date === dateParam);
+      }
+
+      return filtered;
+    }
+
+    function showEvalDetail(evalId) {
+      const ev = allEvals.find(e => e.id === evalId);
+      if (!ev) return;
+
+      const itemNameMap = buildItemNameMap();
+      const scoreRows = Object.entries(ev.scores).map(([key, val], idx) => {
+        const statusCls = val.status === 'pass' ? 'score-good' : val.status === 'warn' ? 'score-warn' : 'score-danger';
+        const statusText = val.status === 'pass' ? '통과' : val.status === 'warn' ? '주의' : '미달';
+        const confHtml = val.confidence ? `<span style="font-size:11px;color:#757575;">${val.confidence}%</span>` : '';
+        const reasonHtml = val.reason ? `<div style="font-size:10px;color:#F57F17;margin-top:2px;">${val.reason}</div>` : '';
+        const itemName = itemNameMap[key] || key;
+        return `
+          <tr style="cursor:pointer;" onclick="scrollToTranscript(${idx})" title="클릭하면 해당 구간으로 이동합니다">
+            <td style="font-size:11px;padding:6px 4px;text-align:left;">${itemName}</td>
+            <td style="padding:6px 4px;text-align:center;">${AICC_Fmt.typeBadge(val.type)}</td>
+            <td style="text-align:center;font-weight:500;font-size:11px;padding:6px 4px;">${val.score}/${val.max}</td>
+            <td style="padding:6px 4px;text-align:center;">${confHtml}</td>
+            <td style="padding:6px 4px;text-align:center;"><span class="${statusCls}" style="font-size:11px;">${statusText}</span>${reasonHtml}</td>
+          </tr>
+        `;
+      }).join('');
+
+      const transcriptHtml = ev.transcript && ev.transcript.length > 0
+        ? ev.transcript.map((t, idx) => {
+            const isAgent = t.speaker === 'agent';
+            const bg = isAgent ? '#E3F2FD' : '#F5F5F5';
+            const hoverBg = isAgent ? '#B3E5FC' : '#EEEEEE';
+            const label = isAgent ? '상담사' : '고객';
+            return `
+              <div class="transcript-line" data-idx="${idx}" style="display:flex;gap:10px;padding:6px 4px;cursor:pointer;border-radius:6px;transition:background 0.15s;" onclick="playSegment(this, '${t.time}')" onmouseenter="this.style.background='${hoverBg}'" onmouseleave="if(!this.classList.contains('playing'))this.style.background=''">
+                <div style="min-width:40px;font-size:10px;color:#757575;padding-top:2px;">${t.time}</div>
+                <div style="flex:1;">
+                  <div style="font-size:10px;font-weight:600;color:${isAgent ? '#00A3FF' : '#424242'};margin-bottom:2px;">${label}</div>
+                  <div style="background:${bg};padding:6px 10px;border-radius:6px;font-size:12px;line-height:1.5;display:flex;align-items:start;gap:6px;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="${isAgent ? '#00A3FF' : '#757575'}" style="flex-shrink:0;margin-top:3px;opacity:0.5;"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    <span>${t.text}</span>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('')
+        : '<p style="color:#9E9E9E;font-size:13px;text-align:center;padding:20px;">스크립트 데이터가 없습니다.</p>';
+
+      const scoreColor = ev.total_score >= 80 ? 'color:#4CAF50' : ev.total_score >= 60 ? 'color:#FFC107' : 'color:#F44336';
+      const callTypeBadge = getCallTypeBadge(ev.call_type);
+      const methodBadge = getMethodBadge(ev);
+      const confBadge = ev.confidence === 'High'
+        ? '<span class="badge badge-active">High</span>'
+        : ev.confidence === 'Medium'
+        ? '<span class="badge badge-pending">Mid</span>'
+        : ev.confidence
+        ? '<span class="badge badge-rejected">Low</span>'
+        : '<span style="color:#9E9E9E;font-size:11px;">-</span>';
+
+      const totalDisplay = ev.total_score > 0
+        ? `<strong style="font-size:16px;${scoreColor}">${ev.total_score}점</strong>`
+        : '<span style="color:#BDBDBD;">미평가</span>';
+
+      const infoRow = (label, value) => `<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:6px 0;border-bottom:1px solid #F0F0F0;"><span style="font-size:11px;color:#9E9E9E;white-space:nowrap;">${label}</span><span style="font-size:12px;font-weight:500;text-align:right;margin-left:8px;">${value}</span></div>`;
+
+      AICC_Modal.open({
+        title: `평가 상세 - ${ev.id}`,
+        size: 'xxl',
+        content: `
+          <div style="display:grid;grid-template-columns:300px 1fr 400px;gap:20px;height:calc(90vh - 140px);max-height:650px;">
+            <div style="overflow-y:auto;padding-right:8px;min-height:0;">
+              <div style="font-size:13px;font-weight:700;color:#424242;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #424242;">콜 정보</div>
+              ${infoRow('평가 ID', '<span style="font-family:monospace;font-size:11px;">' + ev.id + '</span>')}
+              ${infoRow('일시', ev.date + ' ' + (ev.call_time || ''))}
+              ${infoRow('센터', ev.center || '-')}
+              ${infoRow('팀', ev.team || '-')}
+              ${infoRow('상담사', ev.agent_name || '-')}
+              ${infoRow('상담 유형', '<span style="font-size:11px;">' + (ev.consultation_type || '-') + '</span>')}
+              ${infoRow('유형', callTypeBadge)}
+              ${infoRow('평가방식', methodBadge)}
+              ${infoRow('평가표', '<span style="font-size:11px;">' + (ev.eval_form || '-') + '</span>')}
+              ${infoRow('통화시간', ev.duration || '-')}
+              ${ev.eval_method === 'auto' ? infoRow('신뢰도', confBadge) : ''}
+              ${infoRow('점수', totalDisplay)}
+              ${ev.eval_method === 'manual' && ev.manual_plan ? infoRow('평가 계획', '<span style="font-size:11px;">' + ev.manual_plan + '</span>') : ''}
+              ${ev.ai_feedback ? `<div style="margin-top:12px;background:#F5F5F5;border-radius:6px;padding:10px 12px;font-size:11px;line-height:1.6;"><strong style="color:#424242;">AI 피드백</strong><br><span style="color:#757575;">${ev.ai_feedback}</span></div>` : ''}
+            </div>
+            <div style="display:flex;flex-direction:column;min-width:0;min-height:0;">
+              <div style="font-size:13px;font-weight:700;color:#424242;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #424242;flex-shrink:0;">스크립트</div>
+              <div id="transcript-container" style="flex:1;min-height:0;background:#FAFAFA;border:1px solid #E0E0E0;border-radius:8px;padding:12px;overflow-y:auto;">
+                ${transcriptHtml}
+              </div>
+              <div style="margin-top:10px;background:#F5F5F5;border:1px solid #E0E0E0;border-radius:8px;padding:10px 14px;flex-shrink:0;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <button onclick="togglePlay(this)" style="background:none;border:none;cursor:pointer;padding:0;">
+                    <svg id="play-btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="#424242"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  </button>
+                  <div style="flex:1;">
+                    <div style="width:100%;height:4px;background:#BDBDBD;border-radius:2px;position:relative;cursor:pointer;" onclick="seekBar(event)">
+                      <div id="player-progress" style="width:0%;height:100%;background:#00A3FF;border-radius:2px;transition:width 0.2s;"></div>
+                    </div>
+                  </div>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;padding-left:30px;">
+                  <span id="player-time" style="font-size:10px;color:#757575;">0:00</span>
+                  <span id="player-segment-label" style="font-size:10px;color:#00A3FF;"></span>
+                  <span style="font-size:10px;color:#757575;">${ev.duration || '0:00'}</span>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;min-width:0;min-height:0;">
+              <div style="font-size:13px;font-weight:700;color:#424242;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #424242;flex-shrink:0;">항목별 점수</div>
+              <div style="flex:1;min-height:0;overflow-y:auto;">
+                <table class="data-table" style="font-size:11px;table-layout:fixed;width:100%;">
+                  <colgroup>
+                    <col style="width:30%;">
+                    <col style="width:15%;">
+                    <col style="width:15%;">
+                    <col style="width:15%;">
+                    <col style="width:25%;">
+                  </colgroup>
+                  <thead>
+                    <tr>
+                      <th style="padding:6px 4px;text-align:center;">평가 항목</th>
+                      <th style="padding:6px 4px;text-align:center;">방식</th>
+                      <th style="padding:6px 4px;text-align:center;">점수</th>
+                      <th style="padding:6px 4px;text-align:center;">신뢰도</th>
+                      <th style="padding:6px 4px;text-align:center;">상태</th>
+                    </tr>
+                  </thead>
+                  <tbody>${scoreRows}</tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        `,
+        footer: `
+          <button class="btn btn-secondary" onclick="AICC_Modal.close()">닫기</button>
+        `
+      });
+    }
+
+    function scrollToTranscript(scoreIdx) {
+      const container = document.getElementById('transcript-container');
+      if (!container) return;
+      const lines = container.querySelectorAll('.transcript-line');
+      if (!lines.length) return;
+      const scoreRowCount = document.querySelectorAll('.modal-container .data-table tbody tr').length || 1;
+      const mappedIdx = Math.min(Math.floor(scoreIdx * (lines.length / scoreRowCount)), lines.length - 1);
+      const targetLine = lines[Math.max(0, mappedIdx)];
+      if (!targetLine) return;
+      targetLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const time = targetLine.querySelector('div')?.textContent?.trim() || '0:00';
+      playSegment(targetLine, time);
+    }
+
+    function playSegment(el, time) {
+      document.querySelectorAll('.transcript-line').forEach(line => {
+        line.classList.remove('playing');
+        line.style.background = '';
+      });
+      el.classList.add('playing');
+      el.style.background = el.querySelector('[fill="#00A3FF"]') ? '#B3E5FC' : '#EEEEEE';
+      const label = document.getElementById('player-segment-label');
+      if (label) label.textContent = '▶ ' + time + ' 구간 재생 중';
+      const timeEl = document.getElementById('player-time');
+      if (timeEl) timeEl.textContent = time;
+      const progress = document.getElementById('player-progress');
+      if (progress) {
+        const pct = Math.min(95, Math.max(5, Math.random() * 80 + 10));
+        progress.style.width = pct + '%';
+      }
+      const playIcon = document.getElementById('play-btn-icon');
+      if (playIcon) playIcon.innerHTML = '<rect x="6" y="4" width="4" height="16" fill="#424242"/><rect x="14" y="4" width="4" height="16" fill="#424242"/>';
+      AICC_Toast.show(`${time} 구간 재생 (시뮬레이션)`);
+    }
+
+    function togglePlay(btn) {
+      const icon = document.getElementById('play-btn-icon');
+      if (!icon) return;
+      const isPaused = icon.innerHTML.includes('polygon');
+      if (isPaused) {
+        icon.innerHTML = '<rect x="6" y="4" width="4" height="16" fill="#424242"/><rect x="14" y="4" width="4" height="16" fill="#424242"/>';
+        AICC_Toast.show('재생 시작 (시뮬레이션)');
+      } else {
+        icon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
+        AICC_Toast.show('일시 정지 (시뮬레이션)');
+      }
+    }
+
+    function seekBar(e) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const pct = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+      const progress = document.getElementById('player-progress');
+      if (progress) progress.style.width = pct + '%';
+    }
+
+    let detailIframeLoaded = false;
+    function switchMainTab(tab) {
+      document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById('tab-all').style.display = tab === 'all' ? '' : 'none';
+      document.getElementById('tab-detail').style.display = tab === 'detail' ? '' : 'none';
+
+      // 최초 탭 전환 시에만 iframe src를 설정하여 불필요한 초기 로딩 방지
+      if (tab === 'detail' && !detailIframeLoaded) {
+        const iframe = document.getElementById('detail-iframe');
+        iframe.src = 'detail-analysis.html?embed';
+        iframe.onload = function() { adjustIframeHeight(iframe); };
+        detailIframeLoaded = true;
+      }
+    }
+
+    function adjustIframeHeight(iframe) {
+      try {
+        const h = iframe.contentDocument.body.scrollHeight;
+        iframe.style.height = Math.max(h, 600) + 'px';
+      } catch(e) {}
+      // 내부 콘텐츠 변경(드릴다운 등)에 의한 높이 변화 감지
+      if (window.ResizeObserver && iframe.contentDocument) {
+        new ResizeObserver(() => {
+          try { iframe.style.height = iframe.contentDocument.body.scrollHeight + 'px'; } catch(e) {}
+        }).observe(iframe.contentDocument.body);
+      }
+    }
+
+    function onWsChange() {
+      const wsId = document.getElementById('ws-filter').value;
+      const teamFilter = document.getElementById('team-filter');
+      if (wsId === 'all') {
+        teamFilter.disabled = true;
+        teamFilter.innerHTML = '<option value="all">전체</option>';
+      } else {
+        teamFilter.disabled = false;
+        const ws = allData['centers.json'];
+        const found = ws ? ws.find(w => w.id === wsId) : null;
+        teamFilter.innerHTML = '<option value="all">전체</option>';
+        if (found) {
+          found.teams.forEach(t => {
+            teamFilter.innerHTML += `<option value="${t.id}">${t.name}</option>`;
+          });
+        }
+      }
+      applyFilter();
+    }
+
+    function applyFilter() {
+      currentPage = 1;
+      renderTable();
+      AICC_Toast.show('필터가 적용되었습니다.');
+    }
+
+    function resetFilter() {
+      document.getElementById('ws-filter').value = 'all';
+      document.getElementById('team-filter').value = 'all';
+      document.getElementById('team-filter').disabled = true;
+      document.getElementById('type-filter').value = 'all';
+      document.getElementById('method-filter').value = 'all';
+      document.getElementById('issue-filter').value = 'all';
+      document.getElementById('agent-search').value = '';
+      document.getElementById('score-filter').value = 'all';
+      deductionParam = null;
+      dateParam = null;
+      currentPage = 1;
+      renderTable();
+    }
+  </script>
+</body>
+</html>

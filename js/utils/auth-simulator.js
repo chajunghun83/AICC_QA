@@ -6,8 +6,8 @@
 window.AICC_Auth = {
   /** 역할별 고정 사용자 프로필 (프로토타입용 하드코딩) */
   roles: {
-    ADMIN: { label: '관리자', name: '김관리자', team: 'QA팀', workspace: '전체' },
-    AGENT: { label: '상담사', name: '홍길동', team: 'VIP상담팀', workspace: '서울센터' }
+    ADMIN: { label: '관리자', name: '김관리자', team: 'QA팀', center: '전체' },
+    AGENT: { label: '상담사', name: '홍길동', team: 'VIP상담팀', center: '서울센터' }
   },
 
   /**

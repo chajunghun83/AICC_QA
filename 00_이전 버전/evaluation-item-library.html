@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>평가 항목 관리 - AICC QA</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: { DEFAULT: '#0F766E', dark: '#0D5D56', light: '#F0FDFA' }
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+  <style>
+    * { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; }
+    ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+    .menu-item:hover { background-color: rgba(15,118,110,0.06); }
+    .menu-item.active { background-color: rgba(15,118,110,0.1); border: 1px solid #0F766E; }
+    .tree-item:hover { background-color: #f5f5f5; }
+    .tree-item.selected { background-color: rgba(15,118,110,0.08); }
+  </style>
+</head>
+<body class="bg-gray-50">
+  <div class="flex min-h-screen">
+    
+    <!-- ========== 메인 메뉴 (좁은 사이드바) - 고정 ========== -->
+    <aside class="w-44 bg-primary fixed left-0 top-0 h-screen flex flex-col z-50" id="main-menu">
+      <div class="h-14 flex items-center px-4 border-b border-primary-dark">
+        <span class="font-bold text-white text-sm">AICC 플랫폼</span>
+      </div>
+      
+      <nav class="flex-1 py-2">
+        <a href="#" class="main-menu-item flex items-center gap-3 px-4 py-2.5 text-white/80 hover:bg-white/10 text-sm" data-submenu="">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+          <span>에이전트 빌더</span>
+          <svg class="w-4 h-4 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </a>
+        <a href="#" class="main-menu-item flex items-center gap-3 px-4 py-2.5 text-white/80 hover:bg-white/10 text-sm" data-submenu="">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+          <span>상담 어드바이저</span>
+          <svg class="w-4 h-4 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </a>
+        <a href="#" class="main-menu-item flex items-center gap-3 px-4 py-2.5 text-white/80 hover:bg-white/10 text-sm" data-submenu="">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          <span>AICM</span>
+          <svg class="w-4 h-4 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </a>
+        <a href="#" class="main-menu-item flex items-center gap-3 px-4 py-2.5 text-white/80 hover:bg-white/10 text-sm" data-submenu="">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          <span>TA</span>
+          <svg class="w-4 h-4 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </a>
+        <!-- QA 메뉴 (활성) -->
+        <a href="#" class="main-menu-item flex items-center gap-3 px-4 py-2.5 bg-white/20 text-white text-sm font-medium" data-submenu="qa-submenu" id="qa-menu-trigger">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span>QA</span>
+          <svg class="w-4 h-4 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </a>
+      </nav>
+    </aside>
+
+    <!-- ========== QA 서브메뉴 패널 (오버레이) ========== -->
+    <aside class="w-80 bg-white fixed left-44 top-0 h-screen border-r border-gray-200 overflow-y-auto z-40 transition-all duration-200" id="qa-submenu" style="display: none; box-shadow: 8px 0 30px rgba(0,0,0,0.15);">
+      <div class="h-14 flex items-center px-5 border-b border-gray-100">
+        <h2 class="font-bold text-gray-800 text-lg">QA</h2>
+      </div>
+      
+      <div class="p-4 space-y-6">
+        <!-- 홈 카테고리 -->
+        <div>
+          <div class="flex items-center gap-2 mb-3">
+            <span class="font-semibold text-gray-700 text-sm">홈</span>
+            <span class="bg-primary text-white text-xs px-1.5 py-0.5 rounded">2</span>
+          </div>
+          <div class="space-y-2">
+            <a href="qa-dashboard.html" class="menu-item block p-3 rounded-lg cursor-pointer">
+              <div class="flex items-center gap-2">
+                <span class="text-gray-400">★</span>
+                <span class="font-medium text-gray-800">QA 대시보드</span>
+              </div>
+              <p class="text-xs text-gray-500 mt-1 ml-5">QA 평가자를 위한 평가 현황 대시보드입니다.</p>
+            </a>
+            <a href="evaluation-status.html" class="menu-item block p-3 rounded-lg cursor-pointer">
+              <div class="flex items-center gap-2">
+                <span class="text-gray-400">★</span>
+                <span class="font-medium text-gray-800">평가 현황</span>
+              </div>
+              <p class="text-xs text-gray-500 mt-1 ml-5">팀별 평가 현황을 상세하게 확인합니다.</p>
+            </a>
+          </div>
+        </div>
+
+        <!-- 평가 관리 카테고리 -->
+        <div data-role="admin">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="font-semibold text-gray-700 text-sm">평가 관리</span>
+            <span class="bg-primary text-white text-xs px-1.5 py-0.5 rounded">2</span>
+          </div>
+          <div class="space-y-2">
+            <a href="evaluation-item-library.html" class="menu-item active block p-3 rounded-lg cursor-pointer">
+              <div class="flex items-center gap-2">
+                <span class="text-gray-400">★</span>
+                <span class="font-medium text-gray-800">평가 항목 관리</span>
+              </div>
+              <p class="text-xs text-gray-500 mt-1 ml-5">평가 항목을 생성하고 관리합니다.</p>
+            </a>
+            <a href="evaluation-form-management.html" class="menu-item block p-3 rounded-lg cursor-pointer">
+              <div class="flex items-center gap-2">
+                <span class="text-gray-400">★</span>
+                <span class="font-medium text-gray-800">평가표 관리</span>
+              </div>
+              <p class="text-xs text-gray-500 mt-1 ml-5">평가표를 생성하고 관리합니다.</p>
+            </a>
+          </div>
+        </div>
+
+        <!-- 분석 카테고리 -->
+        <div data-role="admin">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="font-semibold text-gray-700 text-sm">분석</span>
+            <span class="bg-primary text-white text-xs px-1.5 py-0.5 rounded">3</span>
+          </div>
+          <div class="space-y-2">
+            <a href="analytics.html" class="menu-item block p-3 rounded-lg cursor-pointer">
+              <div class="flex items-center gap-2">
+                <span class="text-gray-400">★</span>
+                <span class="font-medium text-gray-800">상세 분석</span>
+              </div>
+              <p class="text-xs text-gray-500 mt-1 ml-5">워크스페이스/팀/개인별 상세 분석</p>
+            </a>
+            <a href="analytics.html?tab=trend" class="menu-item block p-3 rounded-lg cursor-pointer">
+              <div class="flex items-center gap-2">
+                <span class="text-gray-400">★</span>
+                <span class="font-medium text-gray-800">트렌드 분석</span>
+              </div>
+              <p class="text-xs text-gray-500 mt-1 ml-5">시간에 따른 품질 추세 분석</p>
+            </a>
+            <a href="analytics.html?tab=report" class="menu-item block p-3 rounded-lg cursor-pointer">
+              <div class="flex items-center gap-2">
+                <span class="text-gray-400">★</span>
+                <span class="font-medium text-gray-800">리포트 생성기</span>
+              </div>
+              <p class="text-xs text-gray-500 mt-1 ml-5">리포트 생성 및 배포</p>
+            </a>
+          </div>
+        </div>
+
+        <!-- 이의 제기 카테고리 -->
+        <div data-role="admin">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="font-semibold text-gray-700 text-sm">이의 제기</span>
+            <span class="bg-primary text-white text-xs px-1.5 py-0.5 rounded">1</span>
+          </div>
+          <div class="space-y-2">
+            <a href="dispute-center.html" class="menu-item block p-3 rounded-lg cursor-pointer">
+              <div class="flex items-center gap-2">
+                <span class="text-gray-400">★</span>
+                <span class="font-medium text-gray-800">이의 제기 처리함</span>
+              </div>
+              <p class="text-xs text-gray-500 mt-1 ml-5">상담사의 이의 제기를 처리합니다.</p>
+            </a>
+          </div>
+        </div>
+
+        <!-- 시스템 설정 카테고리 -->
+        <div data-role="admin">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="font-semibold text-gray-700 text-sm">시스템 설정</span>
+            <span class="bg-primary text-white text-xs px-1.5 py-0.5 rounded">5</span>
+          </div>
+          <div class="space-y-2">
+            <a href="system-settings.html" class="menu-item block p-3 rounded-lg cursor-pointer">
+              <div class="flex items-center gap-2">
+                <span class="text-gray-400">★</span>
+                <span class="font-medium text-gray-800">사용자 관리</span>
+              </div>
+              <p class="text-xs text-gray-500 mt-1 ml-5">사용자 등록 및 관리</p>
+            </a>
+            <a href="system-settings.html?tab=role" class="menu-item block p-3 rounded-lg cursor-pointer">
+              <div class="flex items-center gap-2">
+                <span class="text-gray-400">★</span>
+                <span class="font-medium text-gray-800">권한 설정</span>
+              </div>
+              <p class="text-xs text-gray-500 mt-1 ml-5">역할별 권한 설정</p>
+            </a>
+            <a href="system-settings.html?tab=plan" class="menu-item block p-3 rounded-lg cursor-pointer">
+              <div class="flex items-center gap-2">
+                <span class="text-gray-400">★</span>
+                <span class="font-medium text-gray-800">평가 계획 관리</span>
+              </div>
+              <p class="text-xs text-gray-500 mt-1 ml-5">평가 계획 설정 및 관리</p>
+            </a>
+            <a href="system-settings.html?tab=prompt" class="menu-item block p-3 rounded-lg cursor-pointer">
+              <div class="flex items-center gap-2">
+                <span class="text-gray-400">★</span>
+                <span class="font-medium text-gray-800">프롬프트 템플릿</span>
+              </div>
+              <p class="text-xs text-gray-500 mt-1 ml-5">AI 프롬프트 템플릿 관리</p>
+            </a>
+            <a href="system-settings.html?tab=log" class="menu-item block p-3 rounded-lg cursor-pointer">
+              <div class="flex items-center gap-2">
+                <span class="text-gray-400">★</span>
+                <span class="font-medium text-gray-800">시스템 로그</span>
+              </div>
+              <p class="text-xs text-gray-500 mt-1 ml-5">시스템 로그 확인</p>
+            </a>
+          </div>
+        </div>
+
+        <!-- 구분선 -->
+        <div class="border-t border-gray-200 pt-4">
+          <!-- 나의 성과 카테고리 -->
+          <div class="mb-6">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="font-semibold text-gray-700 text-sm">나의 성과</span>
+              <span class="bg-primary text-white text-xs px-1.5 py-0.5 rounded">3</span>
+            </div>
+            <div class="space-y-2">
+              <a href="my-dashboard.html" class="menu-item block p-3 rounded-lg cursor-pointer">
+                <div class="flex items-center gap-2">
+                  <span class="text-gray-400">★</span>
+                  <span class="font-medium text-gray-800">나의 성과 대시보드</span>
+                </div>
+                <p class="text-xs text-gray-500 mt-1 ml-5">오늘의 점수와 랭킹을 확인합니다.</p>
+              </a>
+              <a href="my-evaluations.html" class="menu-item block p-3 rounded-lg cursor-pointer">
+                <div class="flex items-center gap-2">
+                  <span class="text-gray-400">★</span>
+                  <span class="font-medium text-gray-800">나의 평가 결과</span>
+                </div>
+                <p class="text-xs text-gray-500 mt-1 ml-5">상담별 평가 결과를 확인합니다.</p>
+              </a>
+              <a href="my-disputes.html" class="menu-item block p-3 rounded-lg cursor-pointer">
+                <div class="flex items-center gap-2">
+                  <span class="text-gray-400">★</span>
+                  <span class="font-medium text-gray-800">나의 이의 제기 현황</span>
+                </div>
+                <p class="text-xs text-gray-500 mt-1 ml-5">이의 제기 처리 현황을 확인합니다.</p>
+              </a>
+            </div>
+          </div>
+
+          <!-- 코칭 관리 (추후 구현) -->
+          <div>
+            <div class="flex items-center gap-2 mb-3">
+              <span class="font-semibold text-gray-400 text-sm">코칭 관리</span>
+              <span class="bg-gray-300 text-white text-xs px-1.5 py-0.5 rounded">추후</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ========== 메인 컨텐츠 (1단 메뉴 너비만큼만 마진) ========== -->
+    <main class="flex-1 ml-44">
+      <!-- 브레드크럼 -->
+      <div class="bg-white border-b border-gray-200 px-6 py-3">
+        <div class="text-sm text-gray-500">
+          AICC 플랫폼 > QA > 평가 관리 > <span class="text-gray-800 font-medium">평가 항목 관리</span>
+        </div>
+      </div>
+
+      <!-- 헤더 영역 -->
+      <div class="bg-white border-b border-gray-100 px-6 py-4">
+        <div class="flex items-center justify-between">
+          <h1 class="text-lg font-bold text-gray-800">평가 항목 라이브러리</h1>
+          <div class="flex items-center gap-2">
+            <button onclick="openCategoryModal()" class="px-4 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50">+ 카테고리</button>
+            <button onclick="openItemModal()" class="px-4 py-2 text-sm bg-primary text-white rounded hover:bg-primary-dark">+ 항목</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 메인 컨텐츠: 좌우 2분할 -->
+      <div class="p-6">
+        <div class="flex gap-6">
+          
+          <!-- 좌측: 트리 구조 -->
+          <div class="w-1/2 bg-white rounded border border-gray-200">
+            <div class="px-4 py-3 border-b border-gray-100">
+              <div class="flex items-center justify-between">
+                <span class="font-medium text-gray-700">항목 트리</span>
+                <input type="text" placeholder="검색..." class="px-3 py-1.5 text-sm border border-gray-200 rounded w-40 focus:outline-none focus:border-primary">
+              </div>
+            </div>
+            <div class="p-4 max-h-[calc(100vh-280px)] overflow-y-auto" id="tree-container">
+              <!-- 응대품질 카테고리 -->
+              <div class="mb-2">
+                <div class="tree-item flex items-center gap-2 px-2 py-2 rounded cursor-pointer" onclick="toggleCategory(this)">
+                  <svg class="w-4 h-4 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                  <svg class="w-5 h-5 text-amber-500" fill="currentColor" viewBox="0 0 24 24"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/></svg>
+                  <span class="font-medium text-gray-700">응대품질</span>
+                  <span class="text-xs text-gray-400 ml-1">(7개 하위)</span>
+                </div>
+                <div class="category-children ml-6 mt-1">
+                  <!-- 인사 -->
+                  <div class="mb-1">
+                    <div class="tree-item flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer" onclick="toggleCategory(this)">
+                      <svg class="w-4 h-4 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                      <svg class="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+                      <span class="text-sm text-gray-700">인사</span>
+                      <span class="text-xs text-gray-400">(2개)</span>
+                    </div>
+                    <div class="category-children ml-6 mt-1">
+                      <div class="tree-item flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer" onclick="selectItem(this, 'first-greeting')">
+                        <span class="w-4"></span>
+                        <svg class="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                        <span class="text-sm text-gray-600">첫인사</span>
+                        <span class="px-1.5 py-0.5 text-xs rounded bg-blue-50 text-blue-600 border border-blue-100">NLP</span>
+                      </div>
+                      <div class="tree-item flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer" onclick="selectItem(this, 'last-greeting')">
+                        <span class="w-4"></span>
+                        <svg class="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                        <span class="text-sm text-gray-600">끝인사</span>
+                        <span class="px-1.5 py-0.5 text-xs rounded bg-blue-50 text-blue-600 border border-blue-100">NLP</span>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- 화답인사 -->
+                  <div class="mb-1">
+                    <div class="tree-item flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer" onclick="toggleCategory(this)">
+                      <svg class="w-4 h-4 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                      <svg class="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+                      <span class="text-sm text-gray-700">화답인사</span>
+                      <span class="text-xs text-gray-400">(2개)</span>
+                    </div>
+                    <div class="category-children ml-6 mt-1">
+                      <div class="tree-item flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer" onclick="selectItem(this, 'customer-greeting-reply')">
+                        <span class="w-4"></span>
+                        <svg class="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                        <span class="text-sm text-gray-600">고객 인사 화답</span>
+                        <span class="px-1.5 py-0.5 text-xs rounded bg-orange-50 text-orange-600 border border-orange-100">AI</span>
+                      </div>
+                      <div class="tree-item flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer" onclick="selectItem(this, 'customer-discomfort')">
+                        <span class="w-4"></span>
+                        <svg class="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                        <span class="text-sm text-gray-600">불편 공감</span>
+                        <span class="px-1.5 py-0.5 text-xs rounded bg-orange-50 text-orange-600 border border-orange-100">AI</span>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- 공감 멘트 -->
+                  <div class="mb-1">
+                    <div class="tree-item flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer" onclick="toggleCategory(this)">
+                      <svg class="w-4 h-4 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                      <svg class="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+                      <span class="text-sm text-gray-700">공감 멘트</span>
+                      <span class="text-xs text-gray-400">(1개)</span>
+                    </div>
+                    <div class="category-children ml-6 mt-1">
+                      <div class="tree-item selected flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer" onclick="selectItem(this, 'pos-neg-empathy')">
+                        <span class="w-4"></span>
+                        <svg class="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                        <span class="text-sm text-gray-600">긍/부정 공감</span>
+                        <span class="px-1.5 py-0.5 text-xs rounded bg-orange-50 text-orange-600 border border-orange-100">AI</span>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- FAIL -->
+                  <div class="mb-1">
+                    <div class="tree-item flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer" onclick="toggleCategory(this)">
+                      <svg class="w-4 h-4 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                      <svg class="w-4 h-4 text-red-400" fill="currentColor" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+                      <span class="text-sm text-gray-700">FAIL</span>
+                      <span class="text-xs text-gray-400">(1개)</span>
+                    </div>
+                    <div class="category-children ml-6 mt-1">
+                      <div class="tree-item flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer" onclick="selectItem(this, 'profanity')">
+                        <span class="w-4"></span>
+                        <svg class="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                        <span class="text-sm text-gray-600">욕설/금지어</span>
+                        <span class="px-1.5 py-0.5 text-xs rounded bg-blue-50 text-blue-600 border border-blue-100">NLP</span>
+                        <span class="px-1.5 py-0.5 text-xs rounded bg-red-100 text-red-600">FAIL</span>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- 전문적 상담 태도 -->
+                  <div class="mb-1">
+                    <div class="tree-item flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer" onclick="toggleCategory(this)">
+                      <svg class="w-4 h-4 text-gray-400 transition-transform rotate-[-90deg]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                      <svg class="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+                      <span class="text-sm text-gray-700">전문적 상담 태도</span>
+                      <span class="text-xs text-gray-400">(8개)</span>
+                    </div>
+                    <div class="category-children ml-6 mt-1 hidden">
+                      <div class="tree-item flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer" onclick="selectItem(this, 'interruption')">
+                        <span class="w-4"></span>
+                        <svg class="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                        <span class="text-sm text-gray-600">말끊기</span>
+                        <span class="px-1.5 py-0.5 text-xs rounded bg-blue-50 text-blue-600 border border-blue-100">NLP</span>
+                      </div>
+                      <div class="tree-item flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer" onclick="selectItem(this, 'customer-focus')">
+                        <span class="w-4"></span>
+                        <svg class="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                        <span class="text-sm text-gray-600">고객향 상담</span>
+                        <span class="px-1.5 py-0.5 text-xs rounded bg-orange-50 text-orange-600 border border-orange-100">AI</span>
+                      </div>
+                      <div class="tree-item flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer" onclick="selectItem(this, 'professional-speech')">
+                        <span class="w-4"></span>
+                        <svg class="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                        <span class="text-sm text-gray-600">전문적 화법</span>
+                        <span class="px-1.5 py-0.5 text-xs rounded bg-blue-50 text-blue-600 border border-blue-100">NLP</span>
+                      </div>
+                      <div class="tree-item flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer" onclick="selectItem(this, 'speed')">
+                        <span class="w-4"></span>
+                        <svg class="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                        <span class="text-sm text-gray-600">신속성</span>
+                        <span class="px-1.5 py-0.5 text-xs rounded bg-blue-50 text-blue-600 border border-blue-100">NLP</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 응대내용 카테고리 -->
+              <div class="mb-2">
+                <div class="tree-item flex items-center gap-2 px-2 py-2 rounded cursor-pointer" onclick="toggleCategory(this)">
+                  <svg class="w-4 h-4 text-gray-400 transition-transform rotate-[-90deg]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                  <svg class="w-5 h-5 text-amber-500" fill="currentColor" viewBox="0 0 24 24"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/></svg>
+                  <span class="font-medium text-gray-700">응대내용</span>
+                  <span class="text-xs text-gray-400 ml-1">(2개 하위)</span>
+                </div>
+                <div class="category-children ml-6 mt-1 hidden">
+                  <!-- 해결력 -->
+                  <div class="mb-1">
+                    <div class="tree-item flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer" onclick="toggleCategory(this)">
+                      <svg class="w-4 h-4 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                      <svg class="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+                      <span class="text-sm text-gray-700">해결력</span>
+                      <span class="text-xs text-gray-400">(3개)</span>
+                    </div>
+                    <div class="category-children ml-6 mt-1">
+                      <div class="tree-item flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer" onclick="selectItem(this, 'problem-solve')">
+                        <span class="w-4"></span>
+                        <svg class="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                        <span class="text-sm text-gray-600">문제 해결</span>
+                        <span class="px-1.5 py-0.5 text-xs rounded bg-orange-50 text-orange-600 border border-orange-100">AI</span>
+                      </div>
+                      <div class="tree-item flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer" onclick="selectItem(this, 'easy-explanation')">
+                        <span class="w-4"></span>
+                        <svg class="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                        <span class="text-sm text-gray-600">쉬운 설명</span>
+                        <span class="px-1.5 py-0.5 text-xs rounded bg-orange-50 text-orange-600 border border-orange-100">AI</span>
+                      </div>
+                      <div class="tree-item flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer" onclick="selectItem(this, 'active-response')">
+                        <span class="w-4"></span>
+                        <svg class="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                        <span class="text-sm text-gray-600">적극적 응대</span>
+                        <span class="px-1.5 py-0.5 text-xs rounded bg-orange-50 text-orange-600 border border-orange-100">AI</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 서비스 카테고리 (추후 확장) -->
+              <div class="mb-2">
+                <div class="tree-item flex items-center gap-2 px-2 py-2 rounded cursor-pointer opacity-60" onclick="toggleCategory(this)">
+                  <svg class="w-4 h-4 text-gray-400 transition-transform rotate-[-90deg]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                  <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 24 24"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/></svg>
+                  <span class="font-medium text-gray-500">서비스</span>
+                  <span class="text-xs text-gray-400 ml-1">(추후 확장)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 우측: 상세 정보 패널 -->
+          <div class="w-1/2 bg-white rounded border border-gray-200">
+            <div class="px-4 py-3 border-b border-gray-100">
+              <span class="font-medium text-gray-700">항목 상세</span>
+            </div>
+            <div class="p-5" id="detail-panel">
+              <!-- 기본 선택 항목: 긍/부정 공감 -->
+              <div>
+                <h3 class="text-lg font-bold text-gray-800 mb-4">긍/부정 공감</h3>
+                
+                <div class="space-y-4">
+                  <div class="flex items-center gap-3">
+                    <span class="text-sm text-gray-500 w-24">카테고리</span>
+                    <span class="text-sm text-gray-800">응대품질 > 공감 멘트</span>
+                  </div>
+                  
+                  <div class="flex items-center gap-3">
+                    <span class="text-sm text-gray-500 w-24">평가 방식</span>
+                    <span class="px-2 py-1 text-xs rounded bg-orange-50 text-orange-600 border border-orange-100">AI (Auto-AI)</span>
+                  </div>
+                  
+                  <div class="flex items-center gap-3">
+                    <span class="text-sm text-gray-500 w-24">기본 배점</span>
+                    <span class="text-sm font-medium text-gray-800">5점</span>
+                  </div>
+                  
+                  <div class="border-t border-gray-100 pt-4">
+                    <span class="text-sm font-medium text-gray-700 block mb-2">평가 기준</span>
+                    <div class="bg-gray-50 rounded p-3 text-sm text-gray-600 space-y-1">
+                      <div>• <strong>5점 (정상)</strong>: 적절한 공감/호응어 포함</div>
+                      <div>• <strong>2점 (경미)</strong>: 단답형/미미한 수준의 공감</div>
+                      <div>• <strong>0점 (심각)</strong>: 공감 발화 전혀 없음</div>
+                    </div>
+                  </div>
+                  
+                  <div class="border-t border-gray-100 pt-4">
+                    <span class="text-sm font-medium text-gray-700 block mb-2">설명</span>
+                    <p class="text-sm text-gray-600">고객이 긍정 또는 부정의 감정을 표현했을 때 상담사가 충분한 공감과 배려 있는 응대를 했는지 평가합니다.</p>
+                  </div>
+                  
+                  <div class="border-t border-gray-100 pt-4">
+                    <span class="text-sm font-medium text-gray-700 block mb-2">AI 프롬프트</span>
+                    <div class="flex gap-2">
+                      <button class="px-3 py-1.5 text-sm border border-gray-300 rounded hover:bg-gray-50">보기</button>
+                      <button class="px-3 py-1.5 text-sm border border-gray-300 rounded hover:bg-gray-50">편집</button>
+                    </div>
+                  </div>
+                  
+                  <div class="border-t border-gray-100 pt-4">
+                    <span class="text-sm font-medium text-gray-700 block mb-2">사용 중인 평가표</span>
+                    <div class="space-y-1 text-sm text-gray-600">
+                      <div>• I/B 일반 상담 평가표 (3회)</div>
+                      <div>• I/B VIP 평가표 (2회)</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="flex gap-2 mt-6 pt-4 border-t border-gray-100">
+                  <button class="px-4 py-2 text-sm bg-primary text-white rounded hover:bg-primary-dark">편집</button>
+                  <button class="px-4 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50">복사</button>
+                  <button class="px-4 py-2 text-sm border border-red-200 text-red-600 rounded hover:bg-red-50">삭제</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- 항목 추가/편집 모달 -->
+  <div id="item-modal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center">
+    <div class="bg-white rounded-lg w-[600px] max-h-[80vh] overflow-y-auto">
+      <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+        <h3 class="text-lg font-bold text-gray-800">평가 항목 추가</h3>
+        <button onclick="closeItemModal()" class="text-gray-400 hover:text-gray-600">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="p-6 space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">소속 카테고리 *</label>
+          <select class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-primary">
+            <option>응대품질 > 인사</option>
+            <option>응대품질 > 화답인사</option>
+            <option>응대품질 > 공감 멘트</option>
+            <option>응대품질 > FAIL</option>
+            <option>응대품질 > 전문적 상담 태도</option>
+            <option>응대내용 > 해결력</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">항목명 *</label>
+          <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-primary" placeholder="항목명을 입력하세요">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">기본 배점</label>
+          <input type="number" class="w-32 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-primary" value="5">
+          <span class="text-sm text-gray-500 ml-2">점 (평가표에서 조정 가능)</span>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">평가 방식 *</label>
+          <div class="space-y-2">
+            <label class="flex items-center gap-2">
+              <input type="radio" name="eval-type" value="manual" class="text-primary">
+              <span class="text-sm">Manual (수동)</span>
+            </label>
+            <label class="flex items-center gap-2">
+              <input type="radio" name="eval-type" value="nlp" class="text-primary">
+              <span class="text-sm">Auto-NLP (규칙 기반)</span>
+            </label>
+            <label class="flex items-center gap-2">
+              <input type="radio" name="eval-type" value="ai" class="text-primary" checked>
+              <span class="text-sm">Auto-AI (AI 자동 평가)</span>
+            </label>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">설명</label>
+          <textarea class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-primary h-20" placeholder="항목에 대한 설명을 입력하세요"></textarea>
+        </div>
+      </div>
+      <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-2">
+        <button onclick="closeItemModal()" class="px-4 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50">취소</button>
+        <button class="px-4 py-2 text-sm bg-primary text-white rounded hover:bg-primary-dark">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 카테고리 토글
+    function toggleCategory(element) {
+      const arrow = element.querySelector('svg:first-child');
+      const children = element.parentElement.querySelector('.category-children');
+      
+      if (children) {
+        children.classList.toggle('hidden');
+        arrow.classList.toggle('rotate-[-90deg]');
+      }
+    }
+
+    // 항목 선택
+    function selectItem(element, itemId) {
+      // 모든 선택 해제
+      document.querySelectorAll('.tree-item.selected').forEach(el => {
+        el.classList.remove('selected');
+      });
+      
+      // 현재 항목 선택
+      element.classList.add('selected');
+      
+      // 상세 정보 업데이트 (더미 데이터)
+      updateDetailPanel(itemId);
+      
+      // 이벤트 전파 중단
+      event.stopPropagation();
+    }
+
+    // 상세 패널 업데이트
+    function updateDetailPanel(itemId) {
+      const items = {
+        'first-greeting': {
+          name: '첫인사',
+          category: '응대품질 > 인사',
+          type: 'NLP',
+          score: 6,
+          criteria: [
+            { score: '6점', status: '정상', desc: '"안녕", "무신사", "서포터" 중 포함' },
+            { score: '0점', status: '감점', desc: '첫인사 누락 또는 미흡' }
+          ],
+          desc: '스크립트 첫인사 내용대로 발화했는지 평가합니다.',
+          usedIn: ['I/B 일반 상담 평가표 (5회)', 'I/B VIP 평가표 (3회)']
+        },
+        'pos-neg-empathy': {
+          name: '긍/부정 공감',
+          category: '응대품질 > 공감 멘트',
+          type: 'AI',
+          score: 5,
+          criteria: [
+            { score: '5점', status: '정상', desc: '적절한 공감/호응어 포함' },
+            { score: '2점', status: '경미', desc: '단답형/미미한 수준의 공감' },
+            { score: '0점', status: '심각', desc: '공감 발화 전혀 없음' }
+          ],
+          desc: '고객이 긍정 또는 부정의 감정을 표현했을 때 상담사가 충분한 공감과 배려 있는 응대를 했는지 평가합니다.',
+          usedIn: ['I/B 일반 상담 평가표 (3회)', 'I/B VIP 평가표 (2회)']
+        },
+        'profanity': {
+          name: '욕설/금지어',
+          category: '응대품질 > FAIL',
+          type: 'NLP',
+          score: 0,
+          isFail: true,
+          criteria: [
+            { score: 'Pass', status: '미검출', desc: '해당 표현 없음' },
+            { score: 'Fail', status: '탐지됨', desc: '욕설, 금지어, 비속어 표현 → 전 항목 0점' }
+          ],
+          desc: '욕설, 금지어, 비속어, 한숨/짜증 표현을 검출합니다. 검출 시 전체 평가가 FAIL 처리됩니다.',
+          usedIn: ['모든 평가표 (필수 적용)']
+        }
+      };
+
+      const item = items[itemId] || items['pos-neg-empathy'];
+      const panel = document.getElementById('detail-panel');
+      
+      panel.innerHTML = `
+        <div>
+          <h3 class="text-lg font-bold text-gray-800 mb-4">${item.name}</h3>
+          
+          <div class="space-y-4">
+            <div class="flex items-center gap-3">
+              <span class="text-sm text-gray-500 w-24">카테고리</span>
+              <span class="text-sm text-gray-800">${item.category}</span>
+            </div>
+            
+            <div class="flex items-center gap-3">
+              <span class="text-sm text-gray-500 w-24">평가 방식</span>
+              <span class="px-2 py-1 text-xs rounded ${item.type === 'AI' ? 'bg-orange-50 text-orange-600 border border-orange-100' : 'bg-blue-50 text-blue-600 border border-blue-100'}">${item.type} (Auto-${item.type})</span>
+              ${item.isFail ? '<span class="px-2 py-1 text-xs rounded bg-red-100 text-red-600">FAIL 항목</span>' : ''}
+            </div>
+            
+            <div class="flex items-center gap-3">
+              <span class="text-sm text-gray-500 w-24">기본 배점</span>
+              <span class="text-sm font-medium text-gray-800">${item.score}점</span>
+            </div>
+            
+            <div class="border-t border-gray-100 pt-4">
+              <span class="text-sm font-medium text-gray-700 block mb-2">평가 기준</span>
+              <div class="bg-gray-50 rounded p-3 text-sm text-gray-600 space-y-1">
+                ${item.criteria.map(c => `<div>• <strong>${c.score} (${c.status})</strong>: ${c.desc}</div>`).join('')}
+              </div>
+            </div>
+            
+            <div class="border-t border-gray-100 pt-4">
+              <span class="text-sm font-medium text-gray-700 block mb-2">설명</span>
+              <p class="text-sm text-gray-600">${item.desc}</p>
+            </div>
+            
+            ${item.type === 'AI' ? `
+            <div class="border-t border-gray-100 pt-4">
+              <span class="text-sm font-medium text-gray-700 block mb-2">AI 프롬프트</span>
+              <div class="flex gap-2">
+                <button class="px-3 py-1.5 text-sm border border-gray-300 rounded hover:bg-gray-50">보기</button>
+                <button class="px-3 py-1.5 text-sm border border-gray-300 rounded hover:bg-gray-50">편집</button>
+              </div>
+            </div>
+            ` : ''}
+            
+            <div class="border-t border-gray-100 pt-4">
+              <span class="text-sm font-medium text-gray-700 block mb-2">사용 중인 평가표</span>
+              <div class="space-y-1 text-sm text-gray-600">
+                ${item.usedIn.map(u => `<div>• ${u}</div>`).join('')}
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex gap-2 mt-6 pt-4 border-t border-gray-100">
+            <button class="px-4 py-2 text-sm bg-primary text-white rounded hover:bg-primary-dark">편집</button>
+            <button class="px-4 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50">복사</button>
+            <button class="px-4 py-2 text-sm border border-red-200 text-red-600 rounded hover:bg-red-50">삭제</button>
+          </div>
+        </div>
+      `;
+    }
+
+    // 항목 모달 열기
+    function openItemModal() {
+      document.getElementById('item-modal').classList.remove('hidden');
+      document.getElementById('item-modal').classList.add('flex');
+    }
+
+    // 항목 모달 닫기
+    function closeItemModal() {
+      document.getElementById('item-modal').classList.add('hidden');
+      document.getElementById('item-modal').classList.remove('flex');
+    }
+
+    // 카테고리 모달 열기
+    function openCategoryModal() {
+      alert('카테고리 추가 모달 (더미)');
+    }
+
+    // ========== 서브메뉴 오버레이 제어 ==========
+    const mainMenu = document.getElementById('main-menu');
+    const qaMenuTrigger = document.getElementById('qa-menu-trigger');
+    const qaSubmenu = document.getElementById('qa-submenu');
+    let isHoveringMenu = false;
+    let isHoveringSubmenu = false;
+    let hideTimeout = null;
+
+    function showSubmenu() {
+      clearTimeout(hideTimeout);
+      qaSubmenu.style.display = 'block';
+    }
+
+    function hideSubmenu() {
+      hideTimeout = setTimeout(() => {
+        if (!isHoveringMenu && !isHoveringSubmenu) {
+          qaSubmenu.style.display = 'none';
+        }
+      }, 150);
+    }
+
+    qaMenuTrigger.addEventListener('mouseenter', () => {
+      isHoveringMenu = true;
+      showSubmenu();
+    });
+
+    qaMenuTrigger.addEventListener('mouseleave', () => {
+      isHoveringMenu = false;
+      hideSubmenu();
+    });
+
+    qaSubmenu.addEventListener('mouseenter', () => {
+      isHoveringSubmenu = true;
+      showSubmenu();
+    });
+
+    qaSubmenu.addEventListener('mouseleave', () => {
+      isHoveringSubmenu = false;
+      hideSubmenu();
+    });
+
+    // ESC 키로 모달 닫기
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeItemModal();
+      }
+    });
+  </script>
+</body>
+</html>

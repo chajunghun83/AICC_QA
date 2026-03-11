@@ -19,7 +19,7 @@
       <div style="display:flex;align-items:center;gap:12px;">
         <div id="period-picker-container"></div>
         <select class="form-select" id="ws-filter" onchange="filterDashboard()">
-          <option value="all">전체 워크스페이스</option>
+          <option value="all">전체 센터</option>
         </select>
         <select class="form-select" id="team-filter" onchange="filterDashboard()" disabled>
           <option value="all">전체 팀</option>
@@ -28,7 +28,7 @@
     </div>
 
     <!-- KPI 카드 4개 -->
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px;" id="kpi-cards">
+    <div style="display:grid;grid-template-columns:0.7fr 1.3fr 1.3fr 0.7fr;gap:16px;margin-bottom:20px;" id="kpi-cards">
       <!-- JS로 동적 생성 -->
     </div>
 
@@ -59,30 +59,47 @@
       </div>
     </div>
 
-    <!-- 하단: 이슈카드 + 평가현황 + 개선필요 Top5 -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-      <!-- 이슈 알림 -->
+    <!-- 하단: 긴급이슈 + 점수분포 + 감점항목Top5 + 감점콜Top5 -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
+      <!-- 긴급 이슈 -->
       <div class="content-card">
         <div class="content-card-header">
           <span style="font-size:14px;font-weight:600;">긴급 이슈</span>
           <span class="badge badge-pending" id="issue-count">0건</span>
         </div>
         <div class="content-card-body" id="issue-list" style="min-height:150px;">
-          <!-- JS로 동적 생성 -->
         </div>
       </div>
 
-      <!-- 점수 분포도 -->
+      <!-- 점수 분포 (세로 배치) -->
       <div class="content-card">
         <div class="content-card-header">
           <span style="font-size:14px;font-weight:600;">점수 분포</span>
         </div>
-        <div class="content-card-body" style="display:flex;align-items:center;gap:16px;">
-          <div style="width:180px;height:180px;flex-shrink:0;">
+        <div class="content-card-body" style="display:flex;align-items:center;gap:60px;">
+          <div style="width:170px;height:170px;flex-shrink:0;">
             <canvas id="distribution-chart"></canvas>
           </div>
-          <div id="distribution-legend" style="flex:1;font-size:13px;">
+          <div id="distribution-legend" style="flex:1;min-width:0;font-size:11px;">
           </div>
+        </div>
+      </div>
+
+      <!-- 최다 감점 항목 Top 5 -->
+      <div class="content-card">
+        <div class="content-card-header">
+          <span style="font-size:14px;font-weight:600;">최다 감점 항목 Top 5</span>
+        </div>
+        <div class="content-card-body" id="deduction-items-list" style="min-height:150px;">
+        </div>
+      </div>
+
+      <!-- 최다 감점 콜 Top 5 -->
+      <div class="content-card">
+        <div class="content-card-header">
+          <span style="font-size:14px;font-weight:600;">최다 감점 콜 Top 5</span>
+        </div>
+        <div class="content-card-body" id="deduction-calls-list" style="min-height:150px;">
         </div>
       </div>
     </div>
@@ -91,18 +108,26 @@
     <div class="content-card" style="margin-top:16px;">
       <div class="content-card-header">
         <span style="font-size:14px;font-weight:600;">팀별 평가 현황</span>
-        <a href="javascript:void(0)" onclick="openPageModal('evaluation-status.html','자동 평가 현황')" style="font-size:12px;color:#00A3FF;text-decoration:none;">상세 보기 &rarr;</a>
+        <a href="evaluation-status.html" style="font-size:12px;color:#00A3FF;text-decoration:none;">상세 보기 &rarr;</a>
       </div>
       <div class="content-card-body" style="padding:0;">
-        <table class="data-table">
+        <table class="data-table" style="table-layout:fixed;">
+          <colgroup>
+            <col style="width:12%">
+            <col style="width:14%">
+            <col style="width:14%">
+            <col style="width:14%">
+            <col style="width:12%">
+            <col style="width:34%">
+          </colgroup>
           <thead>
             <tr>
-              <th>워크스페이스</th>
-              <th>팀</th>
-              <th style="text-align:right">상담 건수</th>
-              <th style="text-align:right">평가 건수</th>
-              <th style="text-align:right">평균 점수</th>
-              <th>이슈</th>
+              <th style="text-align:center;">센터</th>
+              <th style="text-align:center;">팀</th>
+              <th style="text-align:center;">상담 건수</th>
+              <th style="text-align:center;">평가 건수</th>
+              <th style="text-align:center;">평균 점수</th>
+              <th style="text-align:center;">이슈</th>
             </tr>
           </thead>
           <tbody id="team-tbody">
@@ -128,55 +153,8 @@
     let trendChart = null;
     let teamChart = null;
 
-    /** 풀스크린 iframe 모달 — 페이지 이동 없이 하위 페이지 콘텐츠를 오버레이로 표시 */
-    function initPageModal() {
-      const modal = document.createElement('div');
-      modal.id = 'page-modal';
-      modal.style.cssText = 'display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;';
-      modal.innerHTML = `
-        <div style="background:#fff;border-radius:12px;width:95vw;height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden;">
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid #E0E0E0;flex-shrink:0;">
-            <span id="page-modal-title" style="font-size:16px;font-weight:700;color:#212121;"></span>
-            <button onclick="closePageModal()" style="background:none;border:none;cursor:pointer;padding:4px;color:#757575;display:flex;align-items:center;" title="닫기">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-            </button>
-          </div>
-          <div style="flex:1;overflow:hidden;">
-            <iframe id="page-modal-iframe" style="width:100%;height:100%;border:none;" src="about:blank"></iframe>
-          </div>
-        </div>
-      `;
-      // 배경 클릭 시 닫기
-      modal.addEventListener('click', (e) => { if (e.target === modal) closePageModal(); });
-      document.body.appendChild(modal);
-
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closePageModal();
-      });
-    }
-
-    function openPageModal(url, title) {
-      const modal = document.getElementById('page-modal');
-      const iframe = document.getElementById('page-modal-iframe');
-      document.getElementById('page-modal-title').textContent = title || '';
-      // embed 파라미터를 추가하여 iframe 내 사이드바·헤더 숨김
-      const separator = url.includes('?') ? '&' : '?';
-      iframe.src = url + separator + 'embed=1';
-      modal.style.display = 'flex';
-      document.body.style.overflow = 'hidden';
-    }
-
-    function closePageModal() {
-      const modal = document.getElementById('page-modal');
-      const iframe = document.getElementById('page-modal-iframe');
-      modal.style.display = 'none';
-      iframe.src = 'about:blank';
-      document.body.style.overflow = '';
-    }
-
     document.addEventListener('DOMContentLoaded', async () => {
       await loadDashboard();
-      initPageModal();
 
       AICC_PeriodPicker.create('period-picker-container', {
         defaultPeriod: 'monthly',
@@ -188,21 +166,21 @@
     async function loadDashboard() {
       const data = await AICC_DataLoader.loadAll([
         'dashboard-stats.json',
-        'workspaces.json'
+        'centers.json'
       ]);
 
       dashboardData = data['dashboard-stats.json'];
-      const workspaces = data['workspaces.json'];
+      const centers = data['centers.json'];
 
       if (!dashboardData) {
         document.getElementById('kpi-cards').innerHTML = '<p style="color:#757575;grid-column:span 4;text-align:center;padding:40px;">데이터를 불러올 수 없습니다.</p>';
         return;
       }
 
-      // 워크스페이스 필터 옵션 생성
-      if (workspaces) {
+      // 센터 필터 옵션 생성
+      if (centers) {
         const wsSelect = document.getElementById('ws-filter');
-        workspaces.forEach(ws => {
+        centers.forEach(ws => {
           wsSelect.innerHTML += `<option value="${ws.id}">${ws.name}</option>`;
         });
       }
@@ -213,6 +191,8 @@
       renderTeamChart(dashboardData.team_scores);
       renderIssues(dashboardData.urgent_issues);
       renderDistribution();
+      renderDeductionItems(dashboardData.improvement_needed_top5);
+      renderDeductionCalls(dashboardData.fail_agents);
       renderTeamTable(dashboardData.teams);
     }
 
@@ -222,8 +202,19 @@
       const prevLabel = cfg ? cfg.prevLabel : '전일';
       const cards = [
         { label: `${prefix} 평가 상담사 수`, value: AICC_Fmt.number(summary.total_agents), prev: summary.total_agents_prev, current: summary.total_agents, unit: '명', prevLabel },
-        { label: `${prefix} 상담 건수`, value: AICC_Fmt.number(summary.total_calls), prev: summary.total_calls_prev, current: summary.total_calls, unit: '건', prevLabel },
-        { label: '평균 QA 점수', value: AICC_Fmt.score(summary.avg_score), prev: summary.avg_score_prev, current: summary.avg_score, unit: '점', isScore: true, prevLabel },
+        { label: `${prefix} 평가 건수`, value: AICC_Fmt.number(summary.total_calls), prev: summary.total_calls_prev, current: summary.total_calls, unit: '건', prevLabel,
+          isCallBreakdown: true,
+          autoIB: summary.calls_auto_ib, autoIB_done: summary.calls_auto_ib_done,
+          autoOB: summary.calls_auto_ob, autoOB_done: summary.calls_auto_ob_done,
+          manual: summary.calls_manual, manual_done: summary.calls_manual_done,
+          autoIB_prev: summary.calls_auto_ib_prev, autoIB_done_prev: summary.calls_auto_ib_done_prev,
+          autoOB_prev: summary.calls_auto_ob_prev, autoOB_done_prev: summary.calls_auto_ob_done_prev,
+          manual_prev: summary.calls_manual_prev, manual_done_prev: summary.calls_manual_done_prev },
+        { label: '평균 평가 점수', value: AICC_Fmt.score(summary.avg_score), prev: summary.avg_score_prev, current: summary.avg_score, unit: '점', prevLabel,
+          isScoreBreakdown: true,
+          scoreIB: summary.avg_score_auto_ib, scoreIB_prev: summary.avg_score_auto_ib_prev,
+          scoreOB: summary.avg_score_auto_ob, scoreOB_prev: summary.avg_score_auto_ob_prev,
+          scoreManual: summary.avg_score_manual, scoreManual_prev: summary.avg_score_manual_prev },
         { label: '상담사 평균 통화시간', value: summary.avg_duration, prev: summary.avg_duration_prev, current: summary.avg_duration, unit: '', isDuration: true, prevLabel }
       ];
 
@@ -231,7 +222,6 @@
       container.innerHTML = cards.map(card => {
         let trendHtml = '';
         if (card.isDuration) {
-          // 통화시간이 "분:초" 문자열이므로 초 단위로 변환해야 수치 비교가 가능
           const toSec = (s) => { const p = s.split(':'); return parseInt(p[0])*60 + parseInt(p[1]); };
           const cur = toSec(card.current), prev = toSec(card.prev);
           const diffSec = cur - prev;
@@ -246,6 +236,79 @@
           trendHtml = AICC_Fmt.trend(card.current, card.prev);
         }
         const scoreColor = card.isScore ? `color:${AICC_Fmt.scoreColor(card.current)}` : '';
+
+        if (card.isCallBreakdown) {
+          const pct = (done, total) => total > 0 ? Math.round(done / total * 100) : 0;
+          const bd = [
+            { label: '자동/IB', total: card.autoIB, done: card.autoIB_done, totalPrev: card.autoIB_prev, donePrev: card.autoIB_done_prev },
+            { label: '자동/OB', total: card.autoOB, done: card.autoOB_done, totalPrev: card.autoOB_prev, donePrev: card.autoOB_done_prev },
+            { label: '수동',    total: card.manual,  done: card.manual_done, totalPrev: card.manual_prev, donePrev: card.manual_done_prev }
+          ];
+          const maxNum = Math.max(...bd.map(b => Math.max(b.total, b.done)));
+          const curFs = maxNum >= 100000 ? 9 : maxNum >= 10000 ? 10 : 12;
+          const prevMax = Math.max(...bd.map(b => Math.max(b.totalPrev, b.donePrev)));
+          const prevFs = prevMax >= 100000 ? 8 : prevMax >= 10000 ? 9 : 10;
+          const colHeaders = bd.map(b => `<span style="text-align:center;font-size:11px;color:#9E9E9E;">${b.label}</span>`).join('');
+          const colCurrent = bd.map(b => {
+            const numPart = `<span style="white-space:nowrap;"><span style="color:#42A5F5;">${AICC_Fmt.number(b.total)}</span> <span style="color:#BDBDBD;">/</span> <span style="color:#424242;font-weight:600;">${AICC_Fmt.number(b.done)}건</span></span>`;
+            const pctPart = `<span style="color:#424242;font-weight:600;">(${pct(b.done, b.total)}%)</span>`;
+            return `<span style="text-align:center;font-size:${curFs}px;">${numPart}<br>${pctPart}</span>`;
+          }).join('');
+          const colPrev = bd.map(b => {
+            const numPart = `<span style="white-space:nowrap;"><span style="color:#90CAF9;">${AICC_Fmt.number(b.totalPrev)}</span> <span style="color:#D5D5D5;">/</span> <span style="color:#BDBDBD;">${AICC_Fmt.number(b.donePrev)}건</span></span>`;
+            const pctPart = `<span style="color:#BDBDBD;">(${pct(b.donePrev, b.totalPrev)}%)</span>`;
+            return `<span style="text-align:center;font-size:${prevFs}px;">${numPart}<br>${pctPart}</span>`;
+          }).join('');
+          return `
+          <div class="kpi-card">
+            <div style="display:flex;align-items:flex-start;gap:12px;">
+              <div style="flex-shrink:0;">
+                <div style="font-size:12px;color:#757575;margin-bottom:8px;">${card.label}</div>
+                <div style="display:flex;align-items:baseline;gap:8px;">
+                  <span style="font-size:28px;font-weight:700;">${card.value}</span>
+                  ${trendHtml}
+                </div>
+                <div style="font-size:11px;color:#9E9E9E;margin-top:8px;">${card.prevLabel}: ${AICC_Fmt.number(card.prev)}${card.unit}</div>
+              </div>
+              <div style="flex:1;min-width:0;display:grid;grid-template-columns:repeat(3,1fr);row-gap:4px;margin-top:2px;">
+                ${colHeaders}
+                ${colCurrent}
+                ${colPrev}
+              </div>
+            </div>
+          </div>
+          `;
+        }
+
+        if (card.isScoreBreakdown) {
+          const sb = [
+            { label: '자동/IB', score: card.scoreIB, scorePrev: card.scoreIB_prev },
+            { label: '자동/OB', score: card.scoreOB, scorePrev: card.scoreOB_prev },
+            { label: '수동',    score: card.scoreManual, scorePrev: card.scoreManual_prev }
+          ];
+          const sHeaders = sb.map(s => `<span style="text-align:center;font-size:11px;color:#9E9E9E;">${s.label}</span>`).join('');
+          const sScores = sb.map(s => `<span style="text-align:center;font-size:12px;font-weight:600;white-space:nowrap;color:#424242;">${AICC_Fmt.score(s.score)}점</span>`).join('');
+          const sPrev = sb.map(s => `<span style="text-align:center;font-size:10px;white-space:nowrap;color:#BDBDBD;">${AICC_Fmt.score(s.scorePrev)}점</span>`).join('');
+          return `
+          <div class="kpi-card">
+            <div style="display:flex;align-items:flex-start;gap:12px;">
+              <div style="flex-shrink:0;">
+                <div style="font-size:12px;color:#757575;margin-bottom:8px;">${card.label}</div>
+                <div style="display:flex;align-items:baseline;gap:8px;">
+                  <span style="font-size:28px;font-weight:700;${scoreColor}">${card.value}</span>
+                  ${trendHtml}
+                </div>
+                <div style="font-size:11px;color:#9E9E9E;margin-top:8px;">${card.prevLabel}: ${AICC_Fmt.number(card.prev)}${card.unit}</div>
+              </div>
+              <div style="flex:1;min-width:0;display:grid;grid-template-columns:repeat(3,1fr);row-gap:4px;margin-top:2px;">
+                ${sHeaders}
+                ${sScores}
+                ${sPrev}
+              </div>
+            </div>
+          </div>
+          `;
+        }
 
         return `
           <div class="kpi-card">
@@ -265,11 +328,12 @@
       const ctx = document.getElementById('trend-chart');
       if (!ctx) return;
 
+      const trendLabels = trendData.map(d => d.date);
       if (trendChart) trendChart.destroy();
       trendChart = new Chart(ctx, {
         type: 'line',
         data: {
-          labels: trendData.map(d => d.date),
+          labels: trendLabels,
           datasets: [{
             label: '평균 QA 점수',
             data: trendData.map(d => d.score),
@@ -285,6 +349,16 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          onClick: (evt, elements) => {
+            if (elements.length > 0) {
+              const idx = elements[0].index;
+              const date = trendLabels[idx];
+              window.location.href = `integrated-evaluation.html?date=${encodeURIComponent(date)}`;
+            }
+          },
+          onHover: (evt, elements) => {
+            evt.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
+          },
           plugins: {
             legend: { display: false }
           },
@@ -310,10 +384,11 @@
       if (!ctx) return;
 
       if (teamChart) teamChart.destroy();
+      const teamNames = teamScores.map(t => t.team);
       teamChart = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: teamScores.map(t => t.team),
+          labels: teamNames,
           datasets: [{
             label: '평균 점수',
             data: teamScores.map(t => t.score),
@@ -327,6 +402,15 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          onClick: (evt, elements) => {
+            if (elements.length > 0) {
+              const idx = elements[0].index;
+              window.location.href = `integrated-evaluation.html?team=${encodeURIComponent(teamNames[idx])}`;
+            }
+          },
+          onHover: (evt, elements) => {
+            evt.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
+          },
           plugins: {
             legend: { display: false }
           },
@@ -346,12 +430,11 @@
       });
     }
 
-    // 이슈 유형별 모달 표시 URL 생성 — 이의 제기만 별도 페이지, 나머지는 평가 현황
-    function getIssueModalParams(issue) {
-      if (issue.type.includes('FAIL')) return { url: 'evaluation-status.html?issue=fail', title: '자동 평가 현황' };
-      if (issue.type.includes('과락')) return { url: 'evaluation-status.html?issue=under', title: '자동 평가 현황' };
-      if (issue.type.includes('이의 제기')) return { url: 'dispute-inbox.html', title: '이의 제기 처리함' };
-      return { url: 'evaluation-status.html', title: '자동 평가 현황' };
+    function getIssuePageUrl(issue) {
+      if (issue.type.includes('FAIL')) return 'integrated-evaluation.html?issue=fail';
+      if (issue.type.includes('과락')) return 'integrated-evaluation.html?issue=under';
+      if (issue.type.includes('이의 제기')) return 'dispute-inbox.html?status=pending';
+      return 'integrated-evaluation.html';
     }
 
     // FAIL 이슈와 일반 이슈를 시각적으로 구분(색상/아이콘)하여 긴급도를 즉시 파악 가능하게 함
@@ -366,7 +449,7 @@
         const isUrgent = issue.type.includes('FAIL');
         const textColor = isUrgent ? '#C62828' : '#F57F17';
         const dotColor = isUrgent ? '#F44336' : '#FFC107';
-        const mp = getIssueModalParams(issue);
+        const pageUrl = getIssuePageUrl(issue);
 
         let detail = '';
         if (issue.agent) detail = `${issue.team} / ${issue.agent}`;
@@ -374,7 +457,7 @@
         else detail = `${issue.count}건 처리 대기`;
 
         return `
-          <div onclick="openPageModal('${mp.url}','${mp.title}')" style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #F0F0F0;cursor:pointer;transition:background 0.15s;" onmouseenter="this.style.background='#FAFAFA'" onmouseleave="this.style.background=''">
+          <div onclick="window.location.href='${pageUrl}'" style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #F0F0F0;cursor:pointer;transition:background 0.15s;" onmouseenter="this.style.background='#FAFAFA'" onmouseleave="this.style.background=''">
             <span style="width:8px;height:8px;border-radius:50%;background:${dotColor};flex-shrink:0;"></span>
             <div style="flex:1;">
               <div style="font-size:13px;font-weight:500;color:${textColor};">${issue.type} ${issue.count || ''}건</div>
@@ -417,22 +500,75 @@
           responsive: true,
           maintainAspectRatio: true,
           cutout: '60%',
+          onHover: (evt, elements) => {
+            evt.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
+          },
           plugins: { legend: { display: false } }
         }
       });
 
-      document.getElementById('distribution-legend').innerHTML = segments.map(s => `
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid #F0F0F0;">
-          <div style="display:flex;align-items:center;gap:8px;">
-            <span style="width:10px;height:10px;border-radius:2px;background:${s.color};flex-shrink:0;"></span>
-            <span>${s.label}</span>
-          </div>
-          <div style="font-weight:600;">${s.pct}% <span style="font-weight:400;color:#9E9E9E;font-size:11px;">(${s.value}건)</span></div>
-        </div>
-      `).join('');
+      const scoreRangeMap = { '우수': 'excellent', '양호': 'good', '주의': 'caution', '미달': 'low' };
+      document.getElementById('distribution-legend').innerHTML = segments.map(s => {
+        const rangeKey = Object.keys(scoreRangeMap).find(k => s.label.includes(k)) || '';
+        const linkUrl = `integrated-evaluation.html?score_range=${scoreRangeMap[rangeKey] || ''}`;
+        return `
+        <div onclick="window.location.href='${linkUrl}'" style="display:flex;align-items:center;gap:10px;padding:3px 0;cursor:pointer;transition:background 0.15s;" onmouseenter="this.style.background='#FAFAFA'" onmouseleave="this.style.background=''">
+          <span style="width:8px;height:8px;border-radius:2px;background:${s.color};flex-shrink:0;"></span>
+          <span style="font-size:11px;color:#424242;">${s.label}</span>
+          <span style="font-size:11px;font-weight:600;color:#424242;">${s.pct}%</span>
+        </div>`;
+      }).join('');
+
+      // 도넛 차트 세그먼트 클릭 시에도 해당 점수 구간으로 이동
+      const rangeKeys = ['excellent', 'good', 'caution', 'low'];
+      distChart.options.onClick = (evt, elements) => {
+        if (elements.length > 0) {
+          const idx = elements[0].index;
+          window.location.href = `integrated-evaluation.html?score_range=${rangeKeys[idx]}`;
+        }
+      };
     }
 
-    // 행 클릭 시 상세 분석 모달을 열어 페이지 이동 없이 드릴다운 제공
+    function renderDeductionItems(items) {
+      const container = document.getElementById('deduction-items-list');
+      if (!container || !items) return;
+      container.innerHTML = items.slice(0, 5).map((item, i) => {
+        const scoreColor = AICC_Fmt.scoreColor(item.score);
+        const linkUrl = `integrated-evaluation.html?deduction=${encodeURIComponent(item.item)}`;
+        return `
+          <div onclick="window.location.href='${linkUrl}'" style="display:flex;align-items:center;gap:8px;padding:8px 0;cursor:pointer;transition:background 0.15s;${i < 4 ? 'border-bottom:1px solid #F0F0F0;' : ''}" onmouseenter="this.style.background='#FAFAFA'" onmouseleave="this.style.background=''">
+            <span style="width:18px;height:18px;border-radius:4px;background:${item.status === 'danger' ? '#FFEBEE' : '#FFF8E1'};color:${item.status === 'danger' ? '#C62828' : '#F57F17'};font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${i + 1}</span>
+            <div style="flex:1;min-width:0;display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><span style="font-weight:500;">${item.item}</span> <span style="color:#9E9E9E;font-size:11px;margin-left:6px;">(${item.category})</span></span>
+              <span style="font-size:13px;font-weight:600;color:${scoreColor};flex-shrink:0;margin-left:8px;">${item.score}점</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderDeductionCalls(agents) {
+      const container = document.getElementById('deduction-calls-list');
+      if (!container || !agents) return;
+      const sorted = [...agents].sort((a, b) => a.score - b.score).slice(0, 5);
+      container.innerHTML = sorted.map((agent, i) => {
+        const scoreColor = AICC_Fmt.scoreColor(agent.score);
+        const linkUrl = `integrated-evaluation.html?score_range=low`;
+        return `
+          <div onclick="window.location.href='${linkUrl}'" style="display:flex;align-items:center;gap:8px;padding:8px 0;cursor:pointer;transition:background 0.15s;${i < sorted.length - 1 ? 'border-bottom:1px solid #F0F0F0;' : ''}" onmouseenter="this.style.background='#FAFAFA'" onmouseleave="this.style.background=''">
+            <span style="width:18px;height:18px;border-radius:4px;background:${agent.score < 60 ? '#FFEBEE' : '#FFF8E1'};color:${agent.score < 60 ? '#C62828' : '#F57F17'};font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${i + 1}</span>
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${agent.name} / ${agent.team}</span>
+                <span style="font-size:13px;font-weight:600;color:${scoreColor};flex-shrink:0;margin-left:4px;">${agent.score}점</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // 행 클릭 시 상세 분석 페이지로 이동하여 드릴다운 제공
     function renderTeamTable(teams) {
       const tbody = document.getElementById('team-tbody');
       tbody.innerHTML = teams.map(team => {
@@ -440,15 +576,15 @@
           ? team.issues.map(i => `<span class="badge ${i.type.includes('FAIL') || i.type.includes('과락') ? 'badge-rejected' : 'badge-pending'}" style="font-size:11px;">${i.type} ${i.count}건</span>`).join(' ')
           : '<span style="color:#9E9E9E;font-size:12px;">-</span>';
 
-        const modalUrl = `detail-analysis.html?ws=${encodeURIComponent(team.workspace)}&team=${encodeURIComponent(team.team)}`;
+        const detailUrl = `detail-analysis.html?ct=${encodeURIComponent(team.center)}&team=${encodeURIComponent(team.team)}`;
         return `
-          <tr style="cursor:pointer;" onclick="openPageModal('${modalUrl}','상세 분석 - ${team.team}')">
-            <td>${team.workspace}</td>
-            <td style="font-weight:500;">${team.team}</td>
-            <td style="text-align:right;">${AICC_Fmt.number(team.calls)}</td>
-            <td style="text-align:right;">${AICC_Fmt.number(team.evaluations)}</td>
-            <td style="text-align:right;">${AICC_Fmt.scoreHtml(team.avg_score)}</td>
-            <td>${issueHtml}</td>
+          <tr style="cursor:pointer;" onclick="window.location.href='${detailUrl}'">
+            <td style="text-align:center;font-size:12px;">${team.center}</td>
+            <td style="text-align:center;font-size:12px;font-weight:500;">${team.team}</td>
+            <td style="text-align:center;font-size:12px;">${AICC_Fmt.number(team.calls)}</td>
+            <td style="text-align:center;font-size:12px;">${AICC_Fmt.number(team.evaluations)}</td>
+            <td style="text-align:center;">${AICC_Fmt.scoreHtml(team.avg_score)}</td>
+            <td style="text-align:left;font-size:12px;">${issueHtml}</td>
           </tr>
         `;
       }).join('');
@@ -513,10 +649,32 @@
       const callBase = period === 'daily' ? s.total_calls : Math.round(s.total_calls * f * (0.9 + Math.random() * 0.2));
       const agentPrev = period === 'daily' ? s.total_agents_prev : Math.round(agentBase * (0.93 + Math.random() * 0.1));
       const callPrev = period === 'daily' ? s.total_calls_prev : Math.round(callBase * (0.93 + Math.random() * 0.1));
+      // 원본 비율을 기반으로 세분화 건수 + 진행 건수를 스케일링
+      const ibRatio = s.calls_auto_ib / s.total_calls;
+      const obRatio = s.calls_auto_ob / s.total_calls;
+      const autoIB = Math.round(callBase * ibRatio);
+      const autoOB = Math.round(callBase * obRatio);
+      const manual = callBase - autoIB - autoOB;
+      const doneRate = (done, total) => total > 0 ? done / total : 0.95;
+      const autoIB_done = Math.round(autoIB * doneRate(s.calls_auto_ib_done, s.calls_auto_ib));
+      const autoOB_done = Math.round(autoOB * doneRate(s.calls_auto_ob_done, s.calls_auto_ob));
+      const manual_done = Math.round(manual * doneRate(s.calls_manual_done, s.calls_manual));
+      const autoIB_prev = Math.round(callPrev * (s.calls_auto_ib_prev / s.total_calls_prev));
+      const autoOB_prev = Math.round(callPrev * (s.calls_auto_ob_prev / s.total_calls_prev));
+      const manual_prev = callPrev - autoIB_prev - autoOB_prev;
+      const autoIB_done_prev = Math.round(autoIB_prev * doneRate(s.calls_auto_ib_done_prev, s.calls_auto_ib_prev));
+      const autoOB_done_prev = Math.round(autoOB_prev * doneRate(s.calls_auto_ob_done_prev, s.calls_auto_ob_prev));
+      const manual_done_prev = Math.round(manual_prev * doneRate(s.calls_manual_done_prev, s.calls_manual_prev));
       return {
         total_agents: agentBase, total_agents_prev: agentPrev,
         total_calls: callBase, total_calls_prev: callPrev,
+        calls_auto_ib: autoIB, calls_auto_ib_done: autoIB_done, calls_auto_ib_prev: autoIB_prev, calls_auto_ib_done_prev: autoIB_done_prev,
+        calls_auto_ob: autoOB, calls_auto_ob_done: autoOB_done, calls_auto_ob_prev: autoOB_prev, calls_auto_ob_done_prev: autoOB_done_prev,
+        calls_manual: manual, calls_manual_done: manual_done, calls_manual_prev: manual_prev, calls_manual_done_prev: manual_done_prev,
         avg_score: s.avg_score, avg_score_prev: s.avg_score_prev,
+        avg_score_auto_ib: s.avg_score_auto_ib, avg_score_auto_ib_prev: s.avg_score_auto_ib_prev,
+        avg_score_auto_ob: s.avg_score_auto_ob, avg_score_auto_ob_prev: s.avg_score_auto_ob_prev,
+        avg_score_manual: s.avg_score_manual, avg_score_manual_prev: s.avg_score_manual_prev,
         avg_duration: s.avg_duration, avg_duration_prev: s.avg_duration_prev
       };
     }
@@ -547,7 +705,7 @@
       AICC_Toast.show(`${cfg.kpiPrefix} 데이터로 전환되었습니다.`);
     }
 
-    // 워크스페이스 선택 시 해당 팀 목록만 필터링하는 캐스케이딩 필터 패턴 적용
+    // 센터 선택 시 해당 팀 목록만 필터링하는 캐스케이딩 필터 패턴 적용
     function filterDashboard() {
       const wsId = document.getElementById('ws-filter').value;
       const teamFilter = document.getElementById('team-filter');
@@ -557,8 +715,8 @@
         teamFilter.innerHTML = '<option value="all">전체 팀</option>';
       } else {
         teamFilter.disabled = false;
-        // 워크스페이스에 해당하는 팀만 필터
-        const teams = dashboardData.teams.filter(t => t.workspace_id === wsId);
+        // 센터에 해당하는 팀만 필터
+        const teams = dashboardData.teams.filter(t => t.center_id === wsId);
         teamFilter.innerHTML = '<option value="all">전체 팀</option>';
         teams.forEach(t => {
           teamFilter.innerHTML += `<option value="${t.team_id}">${t.team}</option>`;
@@ -569,7 +727,7 @@
       const teamId = teamFilter.value;
       let filtered = dashboardData.teams;
       if (wsId !== 'all') {
-        filtered = filtered.filter(t => t.workspace_id === wsId);
+        filtered = filtered.filter(t => t.center_id === wsId);
       }
       if (teamId !== 'all') {
         filtered = filtered.filter(t => t.team_id === teamId);

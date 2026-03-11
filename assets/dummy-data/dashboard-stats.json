@@ -4,10 +4,35 @@
     "total_agents_prev": 45,
     "total_calls": 1523,
     "total_calls_prev": 1487,
+    "calls_auto_ib": 890,
+    "calls_auto_ib_done": 869,
+    "calls_auto_ib_prev": 838,
+    "calls_auto_ib_done_prev": 838,
+    "calls_auto_ob": 357,
+    "calls_auto_ob_done": 342,
+    "calls_auto_ob_prev": 339,
+    "calls_auto_ob_done_prev": 336,
+    "calls_manual": 276,
+    "calls_manual_done": 120,
+    "calls_manual_prev": 310,
+    "calls_manual_done_prev": 270,
     "avg_score": 82.5,
     "avg_score_prev": 81.2,
+    "avg_score_auto_ib": 84.3,
+    "avg_score_auto_ib_prev": 83.1,
+    "avg_score_auto_ob": 80.7,
+    "avg_score_auto_ob_prev": 79.5,
+    "avg_score_manual": 78.2,
+    "avg_score_manual_prev": 76.8,
     "avg_duration": "6:32",
-    "avg_duration_prev": "6:48"
+    "avg_duration_prev": "6:48",
+    "excluded_agents": 12,
+    "excluded_agents_prev": 8,
+    "urgent_issues": 15,
+    "urgent_issues_prev": 11,
+    "top_deduction": { "item": "첫인사", "calls": 74, "pct": 8 },
+    "low_score_calls": 55,
+    "low_score_pct": 6.2
   },
   "channel_distribution": {
     "IB": 890,
@@ -45,12 +70,14 @@
   "fail_agents": [
     { "name": "최수진", "team": "기술지원팀", "score": 45.2, "reason": "공감 부족 + 과락" },
     { "name": "정민호", "team": "기술지원팀", "score": 52.1, "reason": "신속성 미달" },
-    { "name": "이영희", "team": "VIP상담팀", "score": 58.0, "reason": "FAIL(금지어)" }
+    { "name": "이영희", "team": "VIP상담팀", "score": 58.0, "reason": "FAIL(금지어)" },
+    { "name": "박지훈", "team": "CS상담팀", "score": 62.4, "reason": "해결력 부족" },
+    { "name": "김하늘", "team": "일반상담팀", "score": 65.7, "reason": "인사 멘트 누락" }
   ],
   "improvement_needed_top5": [
     {
       "rank": 1,
-      "workspace": "서울센터",
+      "center": "서울센터",
       "team": "기술지원팀",
       "team_id": "team-tech",
       "item": "긍/부정 공감",
@@ -61,7 +88,7 @@
     },
     {
       "rank": 2,
-      "workspace": "서울센터",
+      "center": "서울센터",
       "team": "VIP상담팀",
       "team_id": "team-vip",
       "item": "전문적 상담 화법",
@@ -72,7 +99,7 @@
     },
     {
       "rank": 3,
-      "workspace": "서울센터",
+      "center": "서울센터",
       "team": "기술지원팀",
       "team_id": "team-tech",
       "item": "신속한 응대",
@@ -83,7 +110,7 @@
     },
     {
       "rank": 4,
-      "workspace": "서울센터",
+      "center": "서울센터",
       "team": "일반상담팀",
       "team_id": "team-general",
       "item": "고객 불편 공감",
@@ -94,7 +121,7 @@
     },
     {
       "rank": 5,
-      "workspace": "서울센터",
+      "center": "서울센터",
       "team": "VIP상담팀",
       "team_id": "team-vip",
       "item": "쉬운 설명",
@@ -106,8 +133,8 @@
   ],
   "teams": [
     {
-      "workspace": "서울센터",
-      "workspace_id": "ws-seoul",
+      "center": "서울센터",
+      "center_id": "ct-seoul",
       "team": "VIP상담팀",
       "team_id": "team-vip",
       "calls": 380,
@@ -117,8 +144,8 @@
       "issues": [{ "type": "FAIL(금지어)", "count": 1 }]
     },
     {
-      "workspace": "서울센터",
-      "workspace_id": "ws-seoul",
+      "center": "서울센터",
+      "center_id": "ct-seoul",
       "team": "일반상담팀",
       "team_id": "team-general",
       "calls": 702,
@@ -128,8 +155,8 @@
       "issues": [{ "type": "공감 부족", "count": 2 }]
     },
     {
-      "workspace": "서울센터",
-      "workspace_id": "ws-seoul",
+      "center": "서울센터",
+      "center_id": "ct-seoul",
       "team": "기술지원팀",
       "team_id": "team-tech",
       "calls": 268,
@@ -139,8 +166,8 @@
       "issues": [{ "type": "과락", "count": 3 }]
     },
     {
-      "workspace": "부산센터",
-      "workspace_id": "ws-busan",
+      "center": "부산센터",
+      "center_id": "ct-busan",
       "team": "일반상담팀",
       "team_id": "team-general2",
       "calls": 520,
@@ -150,8 +177,8 @@
       "issues": []
     },
     {
-      "workspace": "부산센터",
-      "workspace_id": "ws-busan",
+      "center": "부산센터",
+      "center_id": "ct-busan",
       "team": "해피콜팀",
       "team_id": "team-happycall",
       "calls": 185,
@@ -161,8 +188,8 @@
       "issues": []
     },
     {
-      "workspace": "대구센터",
-      "workspace_id": "ws-daegu",
+      "center": "대구센터",
+      "center_id": "ct-daegu",
       "team": "CS상담팀",
       "team_id": "team-cs",
       "calls": 310,
@@ -172,8 +199,8 @@
       "issues": [{ "type": "공감 부족", "count": 1 }]
     },
     {
-      "workspace": "대구센터",
-      "workspace_id": "ws-daegu",
+      "center": "대구센터",
+      "center_id": "ct-daegu",
       "team": "아웃바운드팀",
       "team_id": "team-ob",
       "calls": 158,

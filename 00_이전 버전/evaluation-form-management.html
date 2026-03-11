@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>평가표 관리 - AICC QA</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: { DEFAULT: '#0F766E', dark: '#0D5D56', light: '#F0FDFA' }
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+  <style>
+    * { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; }
+    ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+    .menu-item:hover { background-color: rgba(15,118,110,0.06); }
+    .menu-item.active { background-color: rgba(15,118,110,0.1); border: 1px solid #0F766E; }
+    .tab-btn.active { border-bottom: 2px solid #0F766E; color: #0F766E; }
+    .form-card:hover { border-color: #0F766E; }
+    .form-card.selected { border-color: #0F766E; background-color: rgba(15,118,110,0.03); }
+  </style>
+</head>
+<body class="bg-gray-50">
+  <div class="flex min-h-screen">
+    
+    <!-- ========== 메인 메뉴 (좁은 사이드바) - 고정 ========== -->
+    <aside class="w-44 bg-primary fixed left-0 top-0 h-screen flex flex-col z-50" id="main-menu">
+      <div class="h-14 flex items-center px-4 border-b border-primary-dark">
+        <span class="font-bold text-white text-sm">AICC 플랫폼</span>
+      </div>
+      
+      <nav class="flex-1 py-2">
+        <a href="#" class="main-menu-item flex items-center gap-3 px-4 py-2.5 text-white/80 hover:bg-white/10 text-sm" data-submenu="">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+          <span>에이전트 빌더</span>
+          <svg class="w-4 h-4 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </a>
+        <a href="#" class="main-menu-item flex items-center gap-3 px-4 py-2.5 text-white/80 hover:bg-white/10 text-sm" data-submenu="">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+          <span>상담 어드바이저</span>
+          <svg class="w-4 h-4 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </a>
+        <a href="#" class="main-menu-item flex items-center gap-3 px-4 py-2.5 text-white/80 hover:bg-white/10 text-sm" data-submenu="">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          <span>AICM</span>
+          <svg class="w-4 h-4 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </a>
+        <a href="#" class="main-menu-item flex items-center gap-3 px-4 py-2.5 text-white/80 hover:bg-white/10 text-sm" data-submenu="">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          <span>TA</span>
+          <svg class="w-4 h-4 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </a>
+        <!-- QA 메뉴 (활성) -->
+        <a href="#" class="main-menu-item flex items-center gap-3 px-4 py-2.5 bg-white/20 text-white text-sm font-medium" data-submenu="qa-submenu" id="qa-menu-trigger">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span>QA</span>
+          <svg class="w-4 h-4 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </a>
+      </nav>
+    </aside>
+
+    <!-- ========== QA 서브메뉴 패널 (오버레이) ========== -->
+    <aside class="w-80 bg-white fixed left-44 top-0 h-screen border-r border-gray-200 overflow-y-auto z-40 transition-all duration-200" id="qa-submenu" style="display: none; box-shadow: 8px 0 30px rgba(0,0,0,0.15);">
+      <div class="h-14 flex items-center px-5 border-b border-gray-100">
+        <h2 class="font-bold text-gray-800 text-lg">QA</h2>
+      </div>
+      
+      <div class="p-4 space-y-6">
+        <!-- 홈 카테고리 -->
+        <div>
+          <div class="flex items-center gap-2 mb-3">
+            <span class="font-semibold text-gray-700 text-sm">홈</span>
+            <span class="bg-primary text-white text-xs px-1.5 py-0.5 rounded">2</span>
+          </div>
+          <div class="space-y-2">
+            <a href="qa-dashboard.html" class="menu-item block p-3 rounded-lg cursor-pointer">
+              <div class="flex items-center gap-2">
+                <span class="text-gray-400">★</span>
+                <span class="font-medium text-gray-800">QA 대시보드</span>
+              </div>
+              <p class="text-xs text-gray-500 mt-1 ml-5">QA 평가자를 위한 평가 현황 대시보드입니다.</p>
+            </a>
+            <a href="evaluation-status.html" class="menu-item block p-3 rounded-lg cursor-pointer">
+              <div class="flex items-center gap-2">
+                <span class="text-gray-400">★</span>
+                <span class="font-medium text-gray-800">평가 현황</span>
+              </div>
+              <p class="text-xs text-gray-500 mt-1 ml-5">팀별 평가 현황을 상세하게 확인합니다.</p>
+            </a>
+          </div>
+        </div>
+
+        <!-- 평가 관리 카테고리 -->
+        <div data-role="admin">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="font-semibold text-gray-700 text-sm">평가 관리</span>
+            <span class="bg-primary text-white text-xs px-1.5 py-0.5 rounded">2</span>
+          </div>
+          <div class="space-y-2">
+            <a href="evaluation-item-library.html" class="menu-item block p-3 rounded-lg cursor-pointer">
+              <div class="flex items-center gap-2">
+                <span class="text-gray-400">★</span>
+                <span class="font-medium text-gray-800">평가 항목 관리</span>
+              </div>
+              <p class="text-xs text-gray-500 mt-1 ml-5">평가 항목을 생성하고 관리합니다.</p>
+            </a>
+            <a href="evaluation-form-management.html" class="menu-item active block p-3 rounded-lg cursor-pointer">
+              <div class="flex items-center gap-2">
+                <span class="text-gray-400">★</span>
+                <span class="font-medium text-gray-800">평가표 관리</span>
+              </div>
+              <p class="text-xs text-gray-500 mt-1 ml-5">평가표를 생성하고 관리합니다.</p>
+            </a>
+          </div>
+        </div>
+
+        <!-- 분석 카테고리 -->
+        <div data-role="admin">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="font-semibold text-gray-700 text-sm">분석</span>
+            <span class="bg-primary text-white text-xs px-1.5 py-0.5 rounded">3</span>
+          </div>
+          <div class="space-y-2">
+            <a href="analytics.html" class="menu-item block p-3 rounded-lg cursor-pointer">
+              <div class="flex items-center gap-2">
+                <span class="text-gray-400">★</span>
+                <span class="font-medium text-gray-800">상세 분석</span>
+              </div>
+              <p class="text-xs text-gray-500 mt-1 ml-5">워크스페이스/팀/개인별 상세 분석</p>
+            </a>
+            <a href="analytics.html?tab=trend" class="menu-item block p-3 rounded-lg cursor-pointer">
+              <div class="flex items-center gap-2">
+                <span class="text-gray-400">★</span>
+                <span class="font-medium text-gray-800">트렌드 분석</span>
+              </div>
+              <p class="text-xs text-gray-500 mt-1 ml-5">시간에 따른 품질 추세 분석</p>
+            </a>
+            <a href="analytics.html?tab=report" class="menu-item block p-3 rounded-lg cursor-pointer">
+              <div class="flex items-center gap-2">
+                <span class="text-gray-400">★</span>
+                <span class="font-medium text-gray-800">리포트 생성기</span>
+              </div>
+              <p class="text-xs text-gray-500 mt-1 ml-5">리포트 생성 및 배포</p>
+            </a>
+          </div>
+        </div>
+
+        <!-- 이의 제기 카테고리 -->
+        <div data-role="admin">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="font-semibold text-gray-700 text-sm">이의 제기</span>
+            <span class="bg-primary text-white text-xs px-1.5 py-0.5 rounded">1</span>
+          </div>
+          <div class="space-y-2">
+            <a href="dispute-center.html" class="menu-item block p-3 rounded-lg cursor-pointer">
+              <div class="flex items-center gap-2">
+                <span class="text-gray-400">★</span>
+                <span class="font-medium text-gray-800">이의 제기 처리함</span>
+              </div>
+              <p class="text-xs text-gray-500 mt-1 ml-5">상담사의 이의 제기를 처리합니다.</p>
+            </a>
+          </div>
+        </div>
+
+        <!-- 시스템 설정 카테고리 -->
+        <div data-role="admin">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="font-semibold text-gray-700 text-sm">시스템 설정</span>
+            <span class="bg-primary text-white text-xs px-1.5 py-0.5 rounded">5</span>
+          </div>
+          <div class="space-y-2">
+            <a href="system-settings.html" class="menu-item block p-3 rounded-lg cursor-pointer">
+              <div class="flex items-center gap-2">
+                <span class="text-gray-400">★</span>
+                <span class="font-medium text-gray-800">사용자 관리</span>
+              </div>
+              <p class="text-xs text-gray-500 mt-1 ml-5">사용자 등록 및 관리</p>
+            </a>
+            <a href="system-settings.html?tab=role" class="menu-item block p-3 rounded-lg cursor-pointer">
+              <div class="flex items-center gap-2">
+                <span class="text-gray-400">★</span>
+                <span class="font-medium text-gray-800">권한 설정</span>
+              </div>
+              <p class="text-xs text-gray-500 mt-1 ml-5">역할별 권한 설정</p>
+            </a>
+            <a href="system-settings.html?tab=plan" class="menu-item block p-3 rounded-lg cursor-pointer">
+              <div class="flex items-center gap-2">
+                <span class="text-gray-400">★</span>
+                <span class="font-medium text-gray-800">평가 계획 관리</span>
+              </div>
+              <p class="text-xs text-gray-500 mt-1 ml-5">평가 계획 설정 및 관리</p>
+            </a>
+            <a href="system-settings.html?tab=prompt" class="menu-item block p-3 rounded-lg cursor-pointer">
+              <div class="flex items-center gap-2">
+                <span class="text-gray-400">★</span>
+                <span class="font-medium text-gray-800">프롬프트 템플릿</span>
+              </div>
+              <p class="text-xs text-gray-500 mt-1 ml-5">AI 프롬프트 템플릿 관리</p>
+            </a>
+            <a href="system-settings.html?tab=log" class="menu-item block p-3 rounded-lg cursor-pointer">
+              <div class="flex items-center gap-2">
+                <span class="text-gray-400">★</span>
+                <span class="font-medium text-gray-800">시스템 로그</span>
+              </div>
+              <p class="text-xs text-gray-500 mt-1 ml-5">시스템 로그 확인</p>
+            </a>
+          </div>
+        </div>
+
+        <!-- 구분선 -->
+        <div class="border-t border-gray-200 pt-4">
+          <!-- 나의 성과 카테고리 -->
+          <div class="mb-6">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="font-semibold text-gray-700 text-sm">나의 성과</span>
+              <span class="bg-primary text-white text-xs px-1.5 py-0.5 rounded">3</span>
+            </div>
+            <div class="space-y-2">
+              <a href="my-dashboard.html" class="menu-item block p-3 rounded-lg cursor-pointer">
+                <div class="flex items-center gap-2">
+                  <span class="text-gray-400">★</span>
+                  <span class="font-medium text-gray-800">나의 성과 대시보드</span>
+                </div>
+                <p class="text-xs text-gray-500 mt-1 ml-5">오늘의 점수와 랭킹을 확인합니다.</p>
+              </a>
+              <a href="my-evaluations.html" class="menu-item block p-3 rounded-lg cursor-pointer">
+                <div class="flex items-center gap-2">
+                  <span class="text-gray-400">★</span>
+                  <span class="font-medium text-gray-800">나의 평가 결과</span>
+                </div>
+                <p class="text-xs text-gray-500 mt-1 ml-5">상담별 평가 결과를 확인합니다.</p>
+              </a>
+              <a href="my-disputes.html" class="menu-item block p-3 rounded-lg cursor-pointer">
+                <div class="flex items-center gap-2">
+                  <span class="text-gray-400">★</span>
+                  <span class="font-medium text-gray-800">나의 이의 제기 현황</span>
+                </div>
+                <p class="text-xs text-gray-500 mt-1 ml-5">이의 제기 처리 현황을 확인합니다.</p>
+              </a>
+            </div>
+          </div>
+
+          <!-- 코칭 관리 (추후 구현) -->
+          <div>
+            <div class="flex items-center gap-2 mb-3">
+              <span class="font-semibold text-gray-400 text-sm">코칭 관리</span>
+              <span class="bg-gray-300 text-white text-xs px-1.5 py-0.5 rounded">추후</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ========== 메인 컨텐츠 (1단 메뉴 너비만큼만 마진) ========== -->
+    <main class="flex-1 ml-44">
+      <!-- 브레드크럼 -->
+      <div class="bg-white border-b border-gray-200 px-6 py-3">
+        <div class="text-sm text-gray-500">
+          AICC 플랫폼 > QA > 평가 관리 > <span class="text-gray-800 font-medium">평가표 관리</span>
+        </div>
+      </div>
+
+      <!-- 탭 영역 -->
+      <div class="bg-white border-b border-gray-200">
+        <div class="flex items-center px-6">
+          <button class="tab-btn active px-4 py-3 text-sm font-medium border-b-2 border-transparent" onclick="switchTab('list')">평가표 목록</button>
+          <button class="tab-btn px-4 py-3 text-sm font-medium text-gray-500 border-b-2 border-transparent" onclick="switchTab('edit')" id="edit-tab">평가표 편집</button>
+        </div>
+      </div>
+
+      <!-- 평가표 목록 탭 -->
+      <div id="tab-list" class="p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-4">
+            <select class="px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:border-primary">
+              <option>전체 유형</option>
+              <option>I/B (인바운드)</option>
+              <option>O/B (아웃바운드)</option>
+            </select>
+            <select class="px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:border-primary">
+              <option>전체 상태</option>
+              <option>사용 중</option>
+              <option>미사용</option>
+            </select>
+            <input type="text" placeholder="평가표명 검색..." class="px-3 py-2 text-sm border border-gray-300 rounded w-48 focus:outline-none focus:border-primary">
+          </div>
+          <button onclick="openNewFormModal()" class="px-4 py-2 text-sm bg-primary text-white rounded hover:bg-primary-dark">+ 새 평가표</button>
+        </div>
+
+        <!-- 평가표 목록 테이블 -->
+        <div class="bg-white rounded border border-gray-200">
+          <table class="w-full">
+            <thead class="bg-gray-50">
+              <tr class="text-left text-sm text-gray-600">
+                <th class="px-4 py-3 font-medium">평가표명</th>
+                <th class="px-4 py-3 font-medium">유형</th>
+                <th class="px-4 py-3 font-medium">버전</th>
+                <th class="px-4 py-3 font-medium">항목 수</th>
+                <th class="px-4 py-3 font-medium">총점</th>
+                <th class="px-4 py-3 font-medium">적용 대상</th>
+                <th class="px-4 py-3 font-medium">상태</th>
+                <th class="px-4 py-3 font-medium">수정일</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              <tr class="hover:bg-gray-50 cursor-pointer" onclick="openFormEditor('ib-general')">
+                <td class="px-4 py-3">
+                  <div class="font-medium text-gray-800">I/B 일반 상담 평가표</div>
+                  <div class="text-xs text-gray-500 mt-0.5">일반 인바운드 상담 평가용</div>
+                </td>
+                <td class="px-4 py-3">
+                  <span class="px-2 py-1 text-xs rounded bg-blue-50 text-blue-600">I/B</span>
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-600">v2.1</td>
+                <td class="px-4 py-3 text-sm text-gray-600">12개</td>
+                <td class="px-4 py-3 text-sm font-medium text-gray-800">100점</td>
+                <td class="px-4 py-3 text-sm text-gray-600">서울, 부산센터</td>
+                <td class="px-4 py-3">
+                  <span class="px-2 py-1 text-xs rounded bg-green-50 text-green-600">사용 중</span>
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-500">2026.01.10</td>
+              </tr>
+              <tr class="hover:bg-gray-50 cursor-pointer" onclick="openFormEditor('ib-vip')">
+                <td class="px-4 py-3">
+                  <div class="font-medium text-gray-800">I/B VIP 평가표</div>
+                  <div class="text-xs text-gray-500 mt-0.5">VIP 고객 전용 평가표</div>
+                </td>
+                <td class="px-4 py-3">
+                  <span class="px-2 py-1 text-xs rounded bg-blue-50 text-blue-600">I/B</span>
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-600">v1.5</td>
+                <td class="px-4 py-3 text-sm text-gray-600">15개</td>
+                <td class="px-4 py-3 text-sm font-medium text-gray-800">100점</td>
+                <td class="px-4 py-3 text-sm text-gray-600">VIP상담팀</td>
+                <td class="px-4 py-3">
+                  <span class="px-2 py-1 text-xs rounded bg-green-50 text-green-600">사용 중</span>
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-500">2026.01.08</td>
+              </tr>
+              <tr class="hover:bg-gray-50 cursor-pointer" onclick="openFormEditor('ob-telemarketing')">
+                <td class="px-4 py-3">
+                  <div class="font-medium text-gray-800">O/B 텔레마케팅 평가표</div>
+                  <div class="text-xs text-gray-500 mt-0.5">아웃바운드 영업 통화 평가</div>
+                </td>
+                <td class="px-4 py-3">
+                  <span class="px-2 py-1 text-xs rounded bg-purple-50 text-purple-600">O/B</span>
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-600">v1.3</td>
+                <td class="px-4 py-3 text-sm text-gray-600">10개</td>
+                <td class="px-4 py-3 text-sm font-medium text-gray-800">100점</td>
+                <td class="px-4 py-3 text-sm text-gray-600">해피콜팀</td>
+                <td class="px-4 py-3">
+                  <span class="px-2 py-1 text-xs rounded bg-green-50 text-green-600">사용 중</span>
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-500">2025.12.20</td>
+              </tr>
+              <tr class="hover:bg-gray-50 cursor-pointer opacity-60" onclick="openFormEditor('ib-old')">
+                <td class="px-4 py-3">
+                  <div class="font-medium text-gray-800">I/B 일반 상담 평가표 (구)</div>
+                  <div class="text-xs text-gray-500 mt-0.5">이전 버전 평가표</div>
+                </td>
+                <td class="px-4 py-3">
+                  <span class="px-2 py-1 text-xs rounded bg-blue-50 text-blue-600">I/B</span>
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-600">v1.8</td>
+                <td class="px-4 py-3 text-sm text-gray-600">10개</td>
+                <td class="px-4 py-3 text-sm font-medium text-gray-800">100점</td>
+                <td class="px-4 py-3 text-sm text-gray-600">-</td>
+                <td class="px-4 py-3">
+                  <span class="px-2 py-1 text-xs rounded bg-gray-100 text-gray-500">미사용</span>
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-500">2025.06.15</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="flex items-center justify-between mt-4 text-sm text-gray-500">
+          <span>총 4개 평가표</span>
+          <div class="flex items-center gap-2">
+            <button class="px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50">이전</button>
+            <span class="px-3 py-1.5 bg-primary text-white rounded">1</span>
+            <button class="px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50">다음</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 평가표 편집 탭 -->
+      <div id="tab-edit" class="p-6 hidden">
+        <div class="bg-white rounded border border-gray-200">
+          <!-- 편집 헤더 -->
+          <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <div>
+              <h2 class="text-lg font-bold text-gray-800">I/B 일반 상담 평가표</h2>
+              <span class="text-sm text-gray-500">버전 v2.1 | 마지막 수정: 2026.01.10</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button class="px-4 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50" onclick="switchTab('list')">취소</button>
+              <button class="px-4 py-2 text-sm bg-primary text-white rounded hover:bg-primary-dark">저장</button>
+            </div>
+          </div>
+
+          <!-- 편집 탭 -->
+          <div class="border-b border-gray-200">
+            <div class="flex px-6">
+              <button class="edit-sub-tab px-4 py-3 text-sm font-medium border-b-2 border-primary text-primary" onclick="switchEditTab('info')">1. 기본 정보</button>
+              <button class="edit-sub-tab px-4 py-3 text-sm font-medium text-gray-500" onclick="switchEditTab('items')">2. 평가 항목 구성</button>
+              <button class="edit-sub-tab px-4 py-3 text-sm font-medium text-gray-500" onclick="switchEditTab('rules')">3. 적용 규칙</button>
+              <button class="edit-sub-tab px-4 py-3 text-sm font-medium text-gray-500" onclick="switchEditTab('review')">4. 검토</button>
+            </div>
+          </div>
+
+          <!-- 기본 정보 패널 -->
+          <div id="edit-panel-info" class="p-6">
+            <div class="max-w-2xl space-y-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">평가표명 *</label>
+                <input type="text" value="I/B 일반 상담 평가표" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-primary">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">설명</label>
+                <textarea class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-primary h-20">일반 인바운드 상담 평가용</textarea>
+              </div>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">평가 유형 *</label>
+                  <select class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-primary">
+                    <option selected>I/B (인바운드)</option>
+                    <option>O/B (아웃바운드)</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">버전</label>
+                  <input type="text" value="v2.1" class="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50" readonly>
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">상태</label>
+                <div class="flex gap-4">
+                  <label class="flex items-center gap-2">
+                    <input type="radio" name="status" checked class="text-primary">
+                    <span class="text-sm">사용 중</span>
+                  </label>
+                  <label class="flex items-center gap-2">
+                    <input type="radio" name="status" class="text-primary">
+                    <span class="text-sm">미사용</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 평가 항목 구성 패널 -->
+          <div id="edit-panel-items" class="p-6 hidden">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-3">
+                <span class="font-medium text-gray-700">평가 항목 구성</span>
+                <span class="text-sm text-gray-500">(총점: <strong class="text-primary">100점</strong>)</span>
+              </div>
+              <button onclick="openItemSelectModal()" class="px-4 py-2 text-sm border border-primary text-primary rounded hover:bg-primary hover:text-white">+ 항목 라이브러리에서 추가</button>
+            </div>
+
+            <!-- 카테고리 1: 인사 및 안내 -->
+            <div class="border border-gray-200 rounded mb-3">
+              <div class="px-4 py-3 bg-gray-50 flex items-center justify-between cursor-pointer" onclick="toggleFormCategory(this)">
+                <div class="flex items-center gap-3">
+                  <svg class="w-4 h-4 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                  <span class="font-medium text-gray-700">1. 인사 및 안내</span>
+                  <span class="text-sm text-gray-500">(20점)</span>
+                </div>
+                <span class="text-sm text-gray-400">3개 항목</span>
+              </div>
+              <div class="p-4 space-y-3 form-category-items">
+                <div class="flex items-center justify-between py-2 px-3 bg-white border border-gray-100 rounded">
+                  <div class="flex items-center gap-3">
+                    <svg class="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                    <span class="text-sm text-gray-700">인사 적절성</span>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <span class="text-sm font-medium">10점</span>
+                    <span class="px-1.5 py-0.5 text-xs rounded bg-orange-50 text-orange-600 border border-orange-100">AI</span>
+                    <button class="p-1 text-gray-400 hover:text-gray-600">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </button>
+                    <button class="p-1 text-gray-400 hover:text-red-500">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between py-2 px-3 bg-white border border-gray-100 rounded">
+                  <div class="flex items-center gap-3">
+                    <svg class="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                    <span class="text-sm text-gray-700">녹취 안내</span>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <span class="text-sm font-medium">5점</span>
+                    <span class="px-1.5 py-0.5 text-xs rounded bg-blue-50 text-blue-600 border border-blue-100">NLP</span>
+                    <button class="p-1 text-gray-400 hover:text-gray-600">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </button>
+                    <button class="p-1 text-gray-400 hover:text-red-500">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between py-2 px-3 bg-white border border-gray-100 rounded">
+                  <div class="flex items-center gap-3">
+                    <svg class="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                    <span class="text-sm text-gray-700">상담사명 고지</span>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <span class="text-sm font-medium">5점</span>
+                    <span class="px-1.5 py-0.5 text-xs rounded bg-blue-50 text-blue-600 border border-blue-100">NLP</span>
+                    <button class="p-1 text-gray-400 hover:text-gray-600">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </button>
+                    <button class="p-1 text-gray-400 hover:text-red-500">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                  </div>
+                </div>
+                <div class="mt-2 flex items-center gap-2">
+                  <input type="checkbox" id="fail-1" class="text-primary">
+                  <label for="fail-1" class="text-sm text-gray-600">과락 설정</label>
+                  <input type="number" class="w-16 px-2 py-1 text-sm border border-gray-300 rounded" value="10">
+                  <span class="text-sm text-gray-500">점 미만 시 전체 과락</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 카테고리 2: 고객 공감 -->
+            <div class="border border-gray-200 rounded mb-3">
+              <div class="px-4 py-3 bg-gray-50 flex items-center justify-between cursor-pointer" onclick="toggleFormCategory(this)">
+                <div class="flex items-center gap-3">
+                  <svg class="w-4 h-4 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                  <span class="font-medium text-gray-700">2. 고객 공감</span>
+                  <span class="text-sm text-gray-500">(30점)</span>
+                </div>
+                <span class="text-sm text-gray-400">3개 항목</span>
+              </div>
+              <div class="p-4 space-y-3 form-category-items">
+                <div class="flex items-center justify-between py-2 px-3 bg-white border border-gray-100 rounded">
+                  <div class="flex items-center gap-3">
+                    <svg class="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                    <span class="text-sm text-gray-700">공감 표현</span>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <span class="text-sm font-medium">15점</span>
+                    <span class="px-1.5 py-0.5 text-xs rounded bg-orange-50 text-orange-600 border border-orange-100">AI</span>
+                    <button class="p-1 text-gray-400 hover:text-gray-600">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </button>
+                    <button class="p-1 text-gray-400 hover:text-red-500">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between py-2 px-3 bg-white border border-gray-100 rounded">
+                  <div class="flex items-center gap-3">
+                    <svg class="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                    <span class="text-sm text-gray-700">적극적 경청</span>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <span class="text-sm font-medium">10점</span>
+                    <span class="px-1.5 py-0.5 text-xs rounded bg-orange-50 text-orange-600 border border-orange-100">AI</span>
+                    <button class="p-1 text-gray-400 hover:text-gray-600">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </button>
+                    <button class="p-1 text-gray-400 hover:text-red-500">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between py-2 px-3 bg-white border border-gray-100 rounded">
+                  <div class="flex items-center gap-3">
+                    <svg class="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                    <span class="text-sm text-gray-700">감정 전환</span>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <span class="text-sm font-medium">5점</span>
+                    <span class="px-1.5 py-0.5 text-xs rounded bg-orange-50 text-orange-600 border border-orange-100">AI</span>
+                    <button class="p-1 text-gray-400 hover:text-gray-600">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </button>
+                    <button class="p-1 text-gray-400 hover:text-red-500">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                  </div>
+                </div>
+                <div class="mt-2 flex items-center gap-2">
+                  <input type="checkbox" id="fail-2" checked class="text-primary">
+                  <label for="fail-2" class="text-sm text-gray-600">과락 설정</label>
+                  <input type="number" class="w-16 px-2 py-1 text-sm border border-gray-300 rounded" value="20">
+                  <span class="text-sm text-gray-500">점 미만 시 전체 과락</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-4 text-sm text-gray-500">
+              총 <strong>6개 항목</strong> | <strong>50점</strong> (나머지 50점 추가 필요)
+            </div>
+          </div>
+
+          <!-- 적용 규칙 패널 -->
+          <div id="edit-panel-rules" class="p-6 hidden">
+            <div class="max-w-2xl space-y-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">적용 워크스페이스</label>
+                <div class="space-y-2">
+                  <label class="flex items-center gap-2">
+                    <input type="checkbox" checked class="text-primary">
+                    <span class="text-sm">서울센터</span>
+                  </label>
+                  <label class="flex items-center gap-2">
+                    <input type="checkbox" checked class="text-primary">
+                    <span class="text-sm">부산센터</span>
+                  </label>
+                  <label class="flex items-center gap-2">
+                    <input type="checkbox" class="text-primary">
+                    <span class="text-sm">대구센터</span>
+                  </label>
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">적용 팀</label>
+                <div class="space-y-2">
+                  <label class="flex items-center gap-2">
+                    <input type="radio" name="team" checked class="text-primary">
+                    <span class="text-sm">전체 팀</span>
+                  </label>
+                  <label class="flex items-center gap-2">
+                    <input type="radio" name="team" class="text-primary">
+                    <span class="text-sm">특정 팀만</span>
+                  </label>
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">예외 처리</label>
+                <textarea class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-primary h-20" placeholder="예외 사항을 입력하세요..."></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- 검토 패널 -->
+          <div id="edit-panel-review" class="p-6 hidden">
+            <div class="max-w-2xl">
+              <div class="bg-green-50 border border-green-200 rounded p-4 mb-6">
+                <div class="flex items-center gap-2 text-green-700">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  <span class="font-medium">평가표 검증 완료</span>
+                </div>
+                <p class="text-sm text-green-600 mt-1">모든 필수 항목이 입력되었고, 총점이 100점입니다.</p>
+              </div>
+              
+              <div class="space-y-4">
+                <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                  <span class="text-sm text-gray-600">평가표명</span>
+                  <span class="text-sm font-medium text-gray-800">I/B 일반 상담 평가표</span>
+                </div>
+                <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                  <span class="text-sm text-gray-600">평가 유형</span>
+                  <span class="px-2 py-1 text-xs rounded bg-blue-50 text-blue-600">I/B</span>
+                </div>
+                <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                  <span class="text-sm text-gray-600">총 항목 수</span>
+                  <span class="text-sm font-medium text-gray-800">12개</span>
+                </div>
+                <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                  <span class="text-sm text-gray-600">총점</span>
+                  <span class="text-sm font-medium text-primary">100점</span>
+                </div>
+                <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                  <span class="text-sm text-gray-600">적용 대상</span>
+                  <span class="text-sm font-medium text-gray-800">서울센터, 부산센터</span>
+                </div>
+                <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                  <span class="text-sm text-gray-600">과락 항목</span>
+                  <span class="text-sm font-medium text-gray-800">고객 공감 (20점 미만)</span>
+                </div>
+              </div>
+              
+              <div class="mt-6 flex gap-2">
+                <button class="px-4 py-2 text-sm bg-primary text-white rounded hover:bg-primary-dark">저장 및 배포</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- 항목 선택 모달 -->
+  <div id="item-select-modal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center">
+    <div class="bg-white rounded-lg w-[700px] max-h-[80vh] overflow-y-auto">
+      <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+        <h3 class="text-lg font-bold text-gray-800">평가 항목 선택</h3>
+        <button onclick="closeItemSelectModal()" class="text-gray-400 hover:text-gray-600">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="p-6">
+        <input type="text" placeholder="항목 검색..." class="w-full px-3 py-2 border border-gray-300 rounded mb-4 focus:outline-none focus:border-primary">
+        
+        <div class="space-y-4 max-h-96 overflow-y-auto">
+          <!-- 응대품질 카테고리 -->
+          <div>
+            <div class="font-medium text-gray-700 mb-2">응대품질</div>
+            <div class="space-y-2 ml-4">
+              <label class="flex items-center gap-3 py-2 px-3 border border-gray-100 rounded hover:bg-gray-50 cursor-pointer">
+                <input type="checkbox" class="text-primary">
+                <span class="text-sm flex-1">공감 표현</span>
+                <span class="px-1.5 py-0.5 text-xs rounded bg-orange-50 text-orange-600 border border-orange-100">AI</span>
+                <span class="text-sm text-gray-500">기본 15점</span>
+              </label>
+              <label class="flex items-center gap-3 py-2 px-3 border border-gray-100 rounded hover:bg-gray-50 cursor-pointer">
+                <input type="checkbox" class="text-primary">
+                <span class="text-sm flex-1">적극적 경청</span>
+                <span class="px-1.5 py-0.5 text-xs rounded bg-orange-50 text-orange-600 border border-orange-100">AI</span>
+                <span class="text-sm text-gray-500">기본 10점</span>
+              </label>
+              <label class="flex items-center gap-3 py-2 px-3 border border-gray-100 rounded hover:bg-gray-50 cursor-pointer">
+                <input type="checkbox" class="text-primary">
+                <span class="text-sm flex-1">첫인사</span>
+                <span class="px-1.5 py-0.5 text-xs rounded bg-blue-50 text-blue-600 border border-blue-100">NLP</span>
+                <span class="text-sm text-gray-500">기본 6점</span>
+              </label>
+              <label class="flex items-center gap-3 py-2 px-3 border border-gray-100 rounded hover:bg-gray-50 cursor-pointer">
+                <input type="checkbox" class="text-primary">
+                <span class="text-sm flex-1">끝인사</span>
+                <span class="px-1.5 py-0.5 text-xs rounded bg-blue-50 text-blue-600 border border-blue-100">NLP</span>
+                <span class="text-sm text-gray-500">기본 6점</span>
+              </label>
+              <label class="flex items-center gap-3 py-2 px-3 border border-gray-100 rounded bg-red-50 cursor-pointer">
+                <input type="checkbox" class="text-primary">
+                <span class="text-sm flex-1">욕설/금지어</span>
+                <span class="px-1.5 py-0.5 text-xs rounded bg-blue-50 text-blue-600 border border-blue-100">NLP</span>
+                <span class="px-1.5 py-0.5 text-xs rounded bg-red-100 text-red-600">FAIL</span>
+                <span class="text-sm text-gray-500">필수</span>
+              </label>
+            </div>
+          </div>
+          
+          <!-- 응대내용 카테고리 -->
+          <div>
+            <div class="font-medium text-gray-700 mb-2">응대내용</div>
+            <div class="space-y-2 ml-4">
+              <label class="flex items-center gap-3 py-2 px-3 border border-gray-100 rounded hover:bg-gray-50 cursor-pointer">
+                <input type="checkbox" class="text-primary">
+                <span class="text-sm flex-1">문제 해결</span>
+                <span class="px-1.5 py-0.5 text-xs rounded bg-orange-50 text-orange-600 border border-orange-100">AI</span>
+                <span class="text-sm text-gray-500">기본 5점</span>
+              </label>
+              <label class="flex items-center gap-3 py-2 px-3 border border-gray-100 rounded hover:bg-gray-50 cursor-pointer">
+                <input type="checkbox" class="text-primary">
+                <span class="text-sm flex-1">쉬운 설명</span>
+                <span class="px-1.5 py-0.5 text-xs rounded bg-orange-50 text-orange-600 border border-orange-100">AI</span>
+                <span class="text-sm text-gray-500">기본 5점</span>
+              </label>
+              <label class="flex items-center gap-3 py-2 px-3 border border-gray-100 rounded hover:bg-gray-50 cursor-pointer">
+                <input type="checkbox" class="text-primary">
+                <span class="text-sm flex-1">개인정보 확인</span>
+                <span class="px-1.5 py-0.5 text-xs rounded bg-blue-50 text-blue-600 border border-blue-100">NLP</span>
+                <span class="text-sm text-gray-500">기본 5점</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+        <span class="text-sm text-gray-500">선택한 항목: <strong>0개</strong> | 총점: <strong>0점</strong></span>
+        <div class="flex gap-2">
+          <button onclick="closeItemSelectModal()" class="px-4 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50">취소</button>
+          <button class="px-4 py-2 text-sm bg-primary text-white rounded hover:bg-primary-dark">선택 항목 추가</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 새 평가표 모달 -->
+  <div id="new-form-modal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center">
+    <div class="bg-white rounded-lg w-[500px]">
+      <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+        <h3 class="text-lg font-bold text-gray-800">새 평가표 만들기</h3>
+        <button onclick="closeNewFormModal()" class="text-gray-400 hover:text-gray-600">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="p-6 space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">평가표명 *</label>
+          <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-primary" placeholder="예: I/B 일반 상담 평가표">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">평가 유형 *</label>
+          <select class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-primary">
+            <option>I/B (인바운드)</option>
+            <option>O/B (아웃바운드)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">설명</label>
+          <textarea class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-primary h-20" placeholder="평가표에 대한 설명을 입력하세요"></textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">템플릿 선택</label>
+          <div class="space-y-2">
+            <label class="flex items-center gap-2 p-3 border border-gray-200 rounded hover:bg-gray-50 cursor-pointer">
+              <input type="radio" name="template" checked class="text-primary">
+              <div>
+                <span class="text-sm font-medium">빈 평가표</span>
+                <p class="text-xs text-gray-500">처음부터 항목을 추가합니다.</p>
+              </div>
+            </label>
+            <label class="flex items-center gap-2 p-3 border border-gray-200 rounded hover:bg-gray-50 cursor-pointer">
+              <input type="radio" name="template" class="text-primary">
+              <div>
+                <span class="text-sm font-medium">기존 평가표 복사</span>
+                <p class="text-xs text-gray-500">기존 평가표를 복사하여 시작합니다.</p>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-2">
+        <button onclick="closeNewFormModal()" class="px-4 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50">취소</button>
+        <button onclick="createNewForm()" class="px-4 py-2 text-sm bg-primary text-white rounded hover:bg-primary-dark">만들기</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 탭 전환
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('[id^="tab-"]').forEach(panel => panel.classList.add('hidden'));
+      
+      if (tab === 'list') {
+        document.querySelector('.tab-btn:first-child').classList.add('active');
+        document.getElementById('tab-list').classList.remove('hidden');
+      } else {
+        document.getElementById('edit-tab').classList.add('active');
+        document.getElementById('tab-edit').classList.remove('hidden');
+      }
+    }
+
+    // 편집 서브 탭 전환
+    function switchEditTab(panel) {
+      document.querySelectorAll('.edit-sub-tab').forEach(btn => {
+        btn.classList.remove('border-primary', 'text-primary');
+        btn.classList.add('text-gray-500');
+      });
+      document.querySelectorAll('[id^="edit-panel-"]').forEach(p => p.classList.add('hidden'));
+      
+      event.target.classList.add('border-primary', 'text-primary');
+      event.target.classList.remove('text-gray-500');
+      document.getElementById('edit-panel-' + panel).classList.remove('hidden');
+    }
+
+    // 평가표 편집기 열기
+    function openFormEditor(formId) {
+      switchTab('edit');
+      // 실제로는 formId에 따라 데이터 로드
+    }
+
+    // 폼 카테고리 토글
+    function toggleFormCategory(element) {
+      const items = element.parentElement.querySelector('.form-category-items');
+      const arrow = element.querySelector('svg:first-child');
+      
+      if (items) {
+        items.classList.toggle('hidden');
+        arrow.classList.toggle('rotate-[-90deg]');
+      }
+    }
+
+    // 항목 선택 모달 열기
+    function openItemSelectModal() {
+      document.getElementById('item-select-modal').classList.remove('hidden');
+      document.getElementById('item-select-modal').classList.add('flex');
+    }
+
+    // 항목 선택 모달 닫기
+    function closeItemSelectModal() {
+      document.getElementById('item-select-modal').classList.add('hidden');
+      document.getElementById('item-select-modal').classList.remove('flex');
+    }
+
+    // 새 평가표 모달 열기
+    function openNewFormModal() {
+      document.getElementById('new-form-modal').classList.remove('hidden');
+      document.getElementById('new-form-modal').classList.add('flex');
+    }
+
+    // 새 평가표 모달 닫기
+    function closeNewFormModal() {
+      document.getElementById('new-form-modal').classList.add('hidden');
+      document.getElementById('new-form-modal').classList.remove('flex');
+    }
+
+    // 새 평가표 생성
+    function createNewForm() {
+      closeNewFormModal();
+      switchTab('edit');
+    }
+
+    // ========== 서브메뉴 오버레이 제어 ==========
+    const mainMenu = document.getElementById('main-menu');
+    const qaMenuTrigger = document.getElementById('qa-menu-trigger');
+    const qaSubmenu = document.getElementById('qa-submenu');
+    let isHoveringMenu = false;
+    let isHoveringSubmenu = false;
+    let hideTimeout = null;
+
+    function showSubmenu() {
+      clearTimeout(hideTimeout);
+      qaSubmenu.style.display = 'block';
+    }
+
+    function hideSubmenu() {
+      hideTimeout = setTimeout(() => {
+        if (!isHoveringMenu && !isHoveringSubmenu) {
+          qaSubmenu.style.display = 'none';
+        }
+      }, 150);
+    }
+
+    qaMenuTrigger.addEventListener('mouseenter', () => {
+      isHoveringMenu = true;
+      showSubmenu();
+    });
+
+    qaMenuTrigger.addEventListener('mouseleave', () => {
+      isHoveringMenu = false;
+      hideSubmenu();
+    });
+
+    qaSubmenu.addEventListener('mouseenter', () => {
+      isHoveringSubmenu = true;
+      showSubmenu();
+    });
+
+    qaSubmenu.addEventListener('mouseleave', () => {
+      isHoveringSubmenu = false;
+      hideSubmenu();
+    });
+
+    // ESC 키로 모달 닫기
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeItemSelectModal();
+        closeNewFormModal();
+      }
+    });
+  </script>
+</body>
+</html>

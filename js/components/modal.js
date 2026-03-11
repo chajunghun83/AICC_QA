@@ -24,6 +24,7 @@ window.AICC_Modal = {
       md: '640px',
       lg: '800px',
       xl: '1000px',
+      xxl: '1300px',
       full: '90%'
     };
     const maxWidth = sizeMap[options.size || 'lg'] || '800px';

@@ -11,6 +11,7 @@ window.AICC_Sidebar = {
         group: '홈',
         items: [
           { id: 'qa-dashboard', label: 'QA 대시보드', href: '/pages/admin/qa-dashboard.html' },
+          { id: 'integrated-evaluation', label: '통합 평가 현황', href: '/pages/admin/integrated-evaluation.html' },
           { id: 'evaluation-status', label: '자동 평가 현황', href: '/pages/admin/evaluation-status.html' },
           { id: 'manual-evaluation-status', label: '수동 평가 현황', href: '/pages/admin/manual-evaluation-status.html' }
         ]

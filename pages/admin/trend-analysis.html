@@ -26,12 +26,12 @@
       </div>
       <div class="filter-body">
         <div>
-          <label class="form-label">워크스페이스</label>
-          <select class="form-select" id="ws-filter" onchange="applyFilter()">
+          <label class="form-label">센터</label>
+          <select class="form-select" id="center-filter" onchange="applyFilter()">
             <option value="all">전체</option>
-            <option value="ws-1">서울센터</option>
-            <option value="ws-2">부산센터</option>
-            <option value="ws-3">대구센터</option>
+            <option value="ct-1">서울센터</option>
+            <option value="ct-2">부산센터</option>
+            <option value="ct-3">대구센터</option>
           </select>
         </div>
         <div>
@@ -78,7 +78,7 @@
           <thead>
             <tr>
               <th>팀</th>
-              <th>워크스페이스</th>
+              <th>센터</th>
               <th style="text-align:right">현재 평균</th>
               <th style="text-align:right">이전 평균</th>
               <th style="text-align:right">변화</th>
@@ -107,16 +107,16 @@
   <script>
     /* ========== 인라인 더미 데이터 ========== */
     const TEAMS = [
-      { id: 'tm-1', name: 'VIP상담팀', ws: '서울센터', wsId: 'ws-1', color: '#00A3FF' },
-      { id: 'tm-2', name: '일반상담팀', ws: '서울센터', wsId: 'ws-1', color: '#2196F3' },
-      { id: 'tm-3', name: '기술지원팀', ws: '서울센터', wsId: 'ws-1', color: '#FF9800' },
-      { id: 'tm-4', name: '아웃바운드팀', ws: '서울센터', wsId: 'ws-1', color: '#9C27B0' },
-      { id: 'tm-5', name: '고객상담1팀', ws: '부산센터', wsId: 'ws-2', color: '#F44336' },
-      { id: 'tm-6', name: '고객상담2팀', ws: '부산센터', wsId: 'ws-2', color: '#4CAF50' },
-      { id: 'tm-7', name: '영업지원팀', ws: '부산센터', wsId: 'ws-2', color: '#795548' },
-      { id: 'tm-8', name: '종합상담팀', ws: '대구센터', wsId: 'ws-3', color: '#607D8B' },
-      { id: 'tm-9', name: '클레임처리팀', ws: '대구센터', wsId: 'ws-3', color: '#E91E63' },
-      { id: 'tm-10', name: '신규고객팀', ws: '대구센터', wsId: 'ws-3', color: '#00BCD4' }
+      { id: 'tm-1', name: 'VIP상담팀', center: '서울센터', centerId: 'ct-1', color: '#00A3FF' },
+      { id: 'tm-2', name: '일반상담팀', center: '서울센터', centerId: 'ct-1', color: '#2196F3' },
+      { id: 'tm-3', name: '기술지원팀', center: '서울센터', centerId: 'ct-1', color: '#FF9800' },
+      { id: 'tm-4', name: '아웃바운드팀', center: '서울센터', centerId: 'ct-1', color: '#9C27B0' },
+      { id: 'tm-5', name: '고객상담1팀', center: '부산센터', centerId: 'ct-2', color: '#F44336' },
+      { id: 'tm-6', name: '고객상담2팀', center: '부산센터', centerId: 'ct-2', color: '#4CAF50' },
+      { id: 'tm-7', name: '영업지원팀', center: '부산센터', centerId: 'ct-2', color: '#795548' },
+      { id: 'tm-8', name: '종합상담팀', center: '대구센터', centerId: 'ct-3', color: '#607D8B' },
+      { id: 'tm-9', name: '클레임처리팀', center: '대구센터', centerId: 'ct-3', color: '#E91E63' },
+      { id: 'tm-10', name: '신규고객팀', center: '대구센터', centerId: 'ct-3', color: '#00BCD4' }
     ];
 
     // 실제 API 대신 팀별 베이스 점수 기반 시뮬레이션 — 랜덤 변동 + 상승 추세를 합성하여 현실적 시계열 구현
@@ -173,7 +173,7 @@
         return {
           teamId: tid,
           teamName: team.name,
-          ws: team.ws,
+          center: team.center,
           currentAvg: parseFloat(currentAvg.toFixed(1)),
           prevAvg: parseFloat(prevAvg.toFixed(1)),
           diff: parseFloat(diff.toFixed(1)),
@@ -224,12 +224,12 @@
       panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
     }
 
-    /** 드롭다운 버튼 텍스트 + 패널 체크박스를 워크스페이스 그룹별로 렌더링 */
+    /** 드롭다운 버튼 텍스트 + 패널 체크박스를 센터 그룹별로 렌더링 */
     function renderTeamDropdown() {
       const panel = document.getElementById('team-dropdown-panel');
       const label = document.getElementById('team-dropdown-label');
-      const wsFilter = document.getElementById('ws-filter').value;
-      const filteredTeams = wsFilter === 'all' ? TEAMS : TEAMS.filter(t => t.wsId === wsFilter);
+      const centerFilter = document.getElementById('center-filter').value;
+      const filteredTeams = centerFilter === 'all' ? TEAMS : TEAMS.filter(t => t.centerId === centerFilter);
 
       // 버튼 요약 텍스트
       const selNames = filteredTeams.filter(t => selectedTeams.includes(t.id)).map(t => t.name);
@@ -241,16 +241,16 @@
         label.textContent = `${selNames[0]} 외 ${selNames.length - 1}개`;
       }
 
-      // 워크스페이스별 그룹핑
+      // 센터별 그룹핑
       const groups = {};
       filteredTeams.forEach(t => {
-        if (!groups[t.ws]) groups[t.ws] = [];
-        groups[t.ws].push(t);
+        if (!groups[t.center]) groups[t.center] = [];
+        groups[t.center].push(t);
       });
 
       let html = '';
-      Object.entries(groups).forEach(([wsName, teams]) => {
-        html += `<div style="padding:6px 12px 2px;font-size:11px;font-weight:700;color:#757575;border-bottom:1px solid #F0F0F0;">${wsName}</div>`;
+      Object.entries(groups).forEach(([centerName, teams]) => {
+        html += `<div style="padding:6px 12px 2px;font-size:11px;font-weight:700;color:#757575;border-bottom:1px solid #F0F0F0;">${centerName}</div>`;
         teams.forEach(team => {
           const checked = selectedTeams.includes(team.id) ? 'checked' : '';
           const bg = selectedTeams.includes(team.id) ? '#F0F7FF' : 'transparent';
@@ -278,12 +278,12 @@
     }
 
     /* ========== 필터 적용 ========== */
-    // 워크스페이스 변경 시 해당 센터 상위 3팀을 자동 선택하여 빈 차트 방지
+    // 센터 변경 시 해당 센터 상위 3팀을 자동 선택하여 빈 차트 방지
     function applyFilter() {
-      const wsFilter = document.getElementById('ws-filter').value;
-      if (wsFilter !== 'all') {
-        const wsTeams = TEAMS.filter(t => t.wsId === wsFilter);
-        selectedTeams = wsTeams.slice(0, 3).map(t => t.id);
+      const centerFilter = document.getElementById('center-filter').value;
+      if (centerFilter !== 'all') {
+        const centerTeams = TEAMS.filter(t => t.centerId === centerFilter);
+        selectedTeams = centerTeams.slice(0, 3).map(t => t.id);
       } else {
         selectedTeams = ['tm-1', 'tm-2', 'tm-3'];
       }
@@ -433,7 +433,7 @@
                 <span style="font-weight:500;">${row.teamName}</span>
               </div>
             </td>
-            <td style="font-size:12px;color:#757575;">${row.ws}</td>
+            <td style="font-size:12px;color:#757575;">${row.center}</td>
             <td style="text-align:right;">${AICC_Fmt.scoreHtml(row.currentAvg)}</td>
             <td style="text-align:right;font-size:13px;color:#757575;">${AICC_Fmt.score(row.prevAvg)}</td>
             <td style="text-align:right;">${diffHtml}</td>

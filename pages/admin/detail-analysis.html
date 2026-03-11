@@ -10,25 +10,14 @@
 </head>
 <body class="bg-[#F5F5F5] text-[#212121]">
   <div id="page-content">
-    <!-- 페이지 제목 -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+    <!-- 페이지 제목 (embed 모드에서는 숨김) -->
+    <div id="da-page-title" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
       <div>
         <h1 style="font-size:20px;font-weight:700;margin:0;">상세 분석</h1>
-        <p style="font-size:12px;color:#757575;margin:4px 0 0;">워크스페이스 / 팀 / 상담사 단위 드릴다운 분석</p>
+        <p style="font-size:12px;color:#757575;margin:4px 0 0;">센터 / 팀 / 상담사 단위 드릴다운 분석</p>
       </div>
       <div style="display:flex;align-items:center;gap:12px;">
         <div id="period-picker-container"></div>
-        <select class="form-select" id="type-filter" onchange="applyPeriodFilter()">
-          <option value="all">전체 유형</option>
-          <option value="I/B">I/B (인바운드)</option>
-          <option value="O/B">O/B (아웃바운드)</option>
-        </select>
-        <select class="form-select" id="score-range-filter" onchange="applyPeriodFilter()">
-          <option value="all">전체 점수</option>
-          <option value="high">80점 이상</option>
-          <option value="mid">60 ~ 79점</option>
-          <option value="low">60점 미만</option>
-        </select>
       </div>
     </div>
 
@@ -44,14 +33,14 @@
     </div>
 
     <!-- KPI 카드 -->
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px;" id="kpi-cards">
+    <div style="display:grid;grid-template-columns:0.7fr 1.3fr 1.3fr 0.7fr;gap:16px;margin-bottom:20px;" id="kpi-cards">
       <!-- JS로 동적 생성 -->
     </div>
 
     <!-- 데이터 테이블 -->
     <div class="content-card">
       <div class="content-card-header">
-        <span style="font-size:14px;font-weight:600;" id="table-title">워크스페이스별 현황</span>
+        <span style="font-size:14px;font-weight:600;" id="table-title">센터별 현황</span>
         <span style="font-size:12px;color:#757575;" id="table-count"></span>
       </div>
       <div class="content-card-body" style="padding:0;">
@@ -64,6 +53,7 @@
           </tbody>
         </table>
       </div>
+      <div id="table-pagination" class="pagination"></div>
     </div>
   </div>
 
@@ -79,212 +69,959 @@
   <script>
     /* ========== 인라인 더미 데이터 ========== */
     const DUMMY = {
-      workspaces: [
+      centers: [
         {
           id: 'ws-1', name: '서울센터',
-          avgScore: 82.4, totalCalls: 4520, totalEvals: 3980, agentCount: 156, completionRate: 88.1,
+          avgScore: 82.4, avgScore_prev: 80.8, totalCalls: 4520, totalEvals: 3980, agentCount: 156, completionRate: 88.1, avgDuration: '03:35',
+          agentCount_prev: 148, avgDuration_prev: '03:48', excludedAgents: 5, excludedAgents_prev: 3, urgentIssues: 3, urgentIssues_prev: 5,
+          calls_auto_ib: 2100, calls_auto_ib_done: 2050, calls_auto_ob: 1420, calls_auto_ob_done: 1380, calls_manual: 1000, calls_manual_done: 550,
+          calls_auto_ib_prev: 1980, calls_auto_ib_done_prev: 1960, calls_auto_ob_prev: 1350, calls_auto_ob_done_prev: 1330, calls_manual_prev: 1100, calls_manual_done_prev: 690,
+          avg_score_auto_ib: 85.2, avg_score_auto_ib_prev: 84.0, avg_score_auto_ob: 81.3, avg_score_auto_ob_prev: 80.1, avg_score_manual: 79.5, avg_score_manual_prev: 78.2,
+          topDeduction: { item: '첫인사', calls: 19, pct: 10 }, lowScoreCalls: 12, lowScorePct: 5.3,
           teams: [
             {
               id: 'tm-1', name: 'VIP상담팀',
-              avgScore: 86.3, totalCalls: 1120, totalEvals: 1050, agentCount: 32, completionRate: 93.8,
+              avgScore: 86.3, avgScore_prev: 85.0, totalCalls: 1120, totalEvals: 1050, agentCount: 32, agentCount_prev: 30, completionRate: 93.8,
+              avgDuration: '04:12', avgDuration_prev: '04:25', excludedAgents: 1, excludedAgents_prev: 0, urgentIssues: 1, urgentIssues_prev: 1,
+              calls_auto_ib: 520, calls_auto_ib_done: 510, calls_auto_ob: 350, calls_auto_ob_done: 340, calls_manual: 250, calls_manual_done: 200,
+              calls_auto_ib_prev: 490, calls_auto_ib_done_prev: 485, calls_auto_ob_prev: 330, calls_auto_ob_done_prev: 325, calls_manual_prev: 260, calls_manual_done_prev: 240,
+              avg_score_auto_ib: 88.5, avg_score_auto_ib_prev: 87.2, avg_score_auto_ob: 85.1, avg_score_auto_ob_prev: 84.0, avg_score_manual: 83.8, avg_score_manual_prev: 82.5,
+              topDeduction: { item: '상품설명', calls: 5, pct: 6 }, lowScoreCalls: 2, lowScorePct: 1.9,
               agents: [
-                { id: 'ag-1', name: '홍길동', avgScore: 91.2, totalCalls: 45, totalEvals: 43, rank: 1, callType: 'I/B',
-                  evaluations: [
-                    { id: 'EV-2025-00421', date: '2025-01-15', time: '09:12', duration: '04:32', score: 94.5, type: 'AI', confidence: 'High', issue: null },
-                    { id: 'EV-2025-00422', date: '2025-01-15', time: '10:05', duration: '06:11', score: 88.0, type: 'AI', confidence: 'High', issue: null },
-                    { id: 'EV-2025-00423', date: '2025-01-15', time: '11:30', duration: '03:45', score: 92.3, type: 'NLP', confidence: 'High', issue: null },
-                    { id: 'EV-2025-00424', date: '2025-01-14', time: '14:22', duration: '07:18', score: 89.7, type: 'AI', confidence: 'High', issue: null },
-                    { id: 'EV-2025-00425', date: '2025-01-14', time: '15:41', duration: '05:02', score: 91.8, type: 'AI', confidence: 'High', issue: null }
-                  ]
+                {
+                id: 'ag-1', name: '김민수', employeeId: 'S-1001', avgScore: 88.5, totalCalls: 156, totalEvals: 48, rank: 1, callType: 'I/B', avgDuration: '04:32', topDeductionItem: '마무리 인사', issue: null,
+                evaluations: [
+                { id: 'AE-2025-00421', date: '2025-03-10', time: '09:15', duration: '04:22', score: 96, type: 'AI', confidence: 'High', issue: null, callType: 'I/B', category: '배송 > 배송조회 > 한정판 스니커즈', deductionItems: [], urgentIssue: false },
+                { id: 'AE-2025-00422', date: '2025-03-10', time: '10:48', duration: '05:10', score: 93, type: 'NLP', confidence: 'High', issue: null, callType: 'I/B', category: '주문 > 주문확인 > 결제수단 변경', deductionItems: [], urgentIssue: false },
+                { id: 'AE-2025-00423', date: '2025-03-09', time: '09:32', duration: '03:58', score: 91, type: 'AI', confidence: 'Medium', issue: null, callType: 'I/B', category: '교환/반품 > 반품접수 > 사이즈 교환', deductionItems: ['마무리 인사'], urgentIssue: false },
+                { id: 'ME-2025-00424', date: '2025-03-09', time: '11:05', duration: '06:33', score: 88, type: '수동', confidence: 'High', issue: null, callType: 'O/B', category: '해피콜 > 만족도조사 > VIP 정기', deductionItems: ['마무리 인사', '경어 사용'], urgentIssue: false },
+                { id: 'AE-2025-00425', date: '2025-03-08', time: '14:30', duration: '04:50', score: 95, type: 'NLP', confidence: 'High', issue: null, callType: 'I/B', category: '결제 > 결제오류 > 카드 결제 실패', deductionItems: [], urgentIssue: false },
+                { id: 'AE-2025-00426', date: '2025-03-08', time: '16:12', duration: '05:45', score: 90, type: 'AI', confidence: 'High', issue: null, callType: 'I/B', category: '배송 > 배송지연 > 택배사 지연', deductionItems: ['마무리 인사'], urgentIssue: false },
+                { id: 'AE-2025-00427', date: '2025-03-07', time: '09:20', duration: '07:18', score: 85, type: 'NLP', confidence: 'Medium', issue: '스크립트 미준수', callType: 'I/B', category: '교환/반품 > 교환접수 > 불량 교환', deductionItems: ['스크립트 미준수', '경어 사용', '적극적 응대'], urgentIssue: false },
+                { id: 'AE-2025-00428', date: '2025-03-07', time: '11:40', duration: '04:15', score: 92, type: 'AI', confidence: 'High', issue: null, callType: 'I/B', category: '회원 > 회원정보 > 비밀번호 초기화', deductionItems: [], urgentIssue: false },
+                { id: 'ME-2025-00429', date: '2025-03-06', time: '10:05', duration: '08:42', score: 78, type: '수동', confidence: 'High', issue: '고객 불만 처리 미흡', callType: 'I/B', category: '불만/VOC > 서비스불만 > 응대 태도', deductionItems: ['사과 표현', '마무리 인사', '고객 확인 절차', '경어 사용'], urgentIssue: true },
+                { id: 'AE-2025-00430', date: '2025-03-06', time: '14:22', duration: '03:30', score: 94, type: 'NLP', confidence: 'High', issue: null, callType: 'O/B', category: '해피콜 > 사후관리 > 배송완료 확인', deductionItems: [], urgentIssue: false },
+                { id: 'AE-2025-00431', date: '2025-03-05', time: '11:45', duration: '05:55', score: 87, type: 'AI', confidence: 'Medium', issue: null, callType: 'I/B', category: '상품 > 상품문의 > 재입고 일정', deductionItems: ['마무리 인사', '상품설명'], urgentIssue: false },
+                { id: 'AE-2025-00432', date: '2025-03-05', time: '15:30', duration: '06:10', score: 68, type: 'NLP', confidence: 'Medium', issue: '필수항목 누락', callType: 'I/B', category: '교환/반품 > 환불처리 > 카드 환불 지연', deductionItems: ['개인정보 확인', '고객 확인 절차', '마무리 인사'], urgentIssue: true },
+                { id: 'AE-2025-00433', date: '2025-03-04', time: '09:50', duration: '04:40', score: 91, type: 'AI', confidence: 'High', issue: null, callType: 'I/B', category: '배송 > 배송조회 > 해외직구 배송', deductionItems: [], urgentIssue: false },
+                { id: 'ME-2025-00434', date: '2025-03-04', time: '13:15', duration: '09:20', score: 65, type: '수동', confidence: 'High', issue: '과락 - 필수항목 미이행', callType: 'I/B', category: '불만/VOC > 상품불만 > 상품 파손', deductionItems: ['고객 확인 절차', '사과 표현', '개인정보 확인', '마무리 인사', '스크립트 미준수'], urgentIssue: true },
+                { id: 'AE-2025-00435', date: '2025-03-03', time: '10:30', duration: '05:05', score: 89, type: 'NLP', confidence: 'High', issue: null, callType: 'I/B', category: '주문 > 주문취소 > 단순 변심', deductionItems: [], urgentIssue: false },
+                { id: 'AE-2025-00436', date: '2025-03-03', time: '14:55', duration: '07:30', score: 83, type: 'AI', confidence: 'Medium', issue: '마무리 인사 누락', callType: 'O/B', category: '해피콜 > 만족도조사 > 신규회원', deductionItems: ['마무리 인사'], urgentIssue: false },
+                { id: 'AE-2025-00437', date: '2025-03-02', time: '09:40', duration: '04:10', score: 93, type: 'NLP', confidence: 'High', issue: null, callType: 'I/B', category: '결제 > 결제확인 > 무통장입금 확인', deductionItems: [], urgentIssue: false },
+                { id: 'AE-2025-00438', date: '2025-03-02', time: '15:20', duration: '06:50', score: 62, type: 'AI', confidence: 'Medium', issue: '고객 확인 절차 누락', callType: 'I/B', category: '불만/VOC > 배송불만 > 오배송', deductionItems: ['고객 확인 절차', '마무리 인사', '경어 사용'], urgentIssue: false }
+                ]
                 },
-                { id: 'ag-2', name: '김영수', avgScore: 88.7, totalCalls: 38, totalEvals: 36, rank: 2, callType: 'I/B',
-                  evaluations: [
-                    { id: 'EV-2025-00431', date: '2025-01-15', time: '09:30', duration: '05:15', score: 90.1, type: 'AI', confidence: 'High', issue: null },
-                    { id: 'EV-2025-00432', date: '2025-01-15', time: '10:45', duration: '04:22', score: 86.3, type: 'NLP', confidence: 'High', issue: '스크립트 미준수' },
-                    { id: 'EV-2025-00433', date: '2025-01-14', time: '13:10', duration: '08:05', score: 89.8, type: 'AI', confidence: 'High', issue: null }
-                  ]
+                {
+                id: 'ag-2', name: '이서연', employeeId: 'S-1002', avgScore: 92.5, totalCalls: 142, totalEvals: 45, rank: 2, callType: 'I/B', avgDuration: '05:15', topDeductionItem: '첫인사', issue: null,
+                evaluations: [
+                { id: 'ME-2025-00424', date: '2025-03-09', time: '10:20', duration: '05:45', score: 94, type: 'AI', confidence: 'High', issue: null, callType: 'I/B', category: '배송 > 배송조회 > 일반 배송', deductionItem: null, urgentIssue: false },
+                { id: 'AE-2025-00425', date: '2025-03-07', time: '15:10', duration: '04:50', score: 91, type: 'NLP', confidence: 'High', issue: null, callType: 'I/B', category: '주문 > 주문확인 > 배송일 확인', deductionItem: '첫인사', urgentIssue: false }
+                ]
                 },
-                { id: 'ag-3', name: '이미영', avgScore: 85.1, totalCalls: 42, totalEvals: 40, rank: 3, callType: 'I/B',
-                  evaluations: [
-                    { id: 'EV-2025-00441', date: '2025-01-15', time: '09:05', duration: '06:33', score: 84.2, type: 'AI', confidence: 'High', issue: null },
-                    { id: 'EV-2025-00442', date: '2025-01-14', time: '11:15', duration: '04:50', score: 86.0, type: 'AI', confidence: 'Medium', issue: null }
-                  ]
+                {
+                id: 'ag-3', name: '박준호', employeeId: 'S-1003', avgScore: 91.0, totalCalls: 138, totalEvals: 42, rank: 3, callType: 'I/B', avgDuration: '04:48', topDeductionItem: '고객 확인 절차', issue: '통화 중 장시간 보류', urgentIssue: true,
+                evaluations: [
+                { id: 'AE-2025-00426', date: '2025-03-10', time: '13:40', duration: '06:15', score: 88, type: 'AI', confidence: 'High', issue: '통화 중 장시간 보류', callType: 'I/B', category: '교환/반품 > 반품접수 > 단순 변심', deductionItem: '고객 확인 절차', urgentIssue: false },
+                { id: 'AE-2025-00427', date: '2025-03-06', time: '09:55', duration: '04:30', score: 93, type: 'NLP', confidence: 'Medium', issue: null, callType: 'I/B', category: '배송 > 배송조회 > 편의점 택배', deductionItem: null, urgentIssue: false },
+                { id: 'AE-2025-00428', date: '2025-03-03', time: '16:20', duration: '04:10', score: 92, type: 'AI', confidence: 'High', issue: null, callType: 'O/B', category: '해피콜 > 사후관리 > 교환완료 확인', deductionItem: null, urgentIssue: false }
+                ]
                 },
-                { id: 'ag-4', name: '박준호', avgScore: 83.9, totalCalls: 35, totalEvals: 33, rank: 4, callType: 'O/B',
-                  evaluations: [
-                    { id: 'EV-2025-00451', date: '2025-01-15', time: '10:20', duration: '05:40', score: 82.5, type: 'AI', confidence: 'High', issue: '인사말 누락' },
-                    { id: 'EV-2025-00452', date: '2025-01-14', time: '14:30', duration: '07:12', score: 85.3, type: 'NLP', confidence: 'High', issue: null }
-                  ]
+                {
+                id: 'ag-4', name: '정다은', employeeId: 'S-1004', avgScore: 89.3, totalCalls: 127, totalEvals: 40, rank: 4, callType: 'O/B', avgDuration: '06:02', topDeductionItem: '스크립트 미준수', issue: null,
+                evaluations: [
+                { id: 'ME-2025-00429', date: '2025-03-09', time: '11:30', duration: '05:55', score: 90, type: 'NLP', confidence: 'High', issue: null, callType: 'O/B', category: '해피콜 > 만족도조사 > 정기 회원', deductionItem: null, urgentIssue: false },
+                { id: 'AE-2025-00430', date: '2025-03-07', time: '14:15', duration: '06:20', score: 88, type: 'AI', confidence: 'Medium', issue: null, callType: 'O/B', category: '해피콜 > 사후관리 > 반품완료 확인', deductionItem: '스크립트 미준수', urgentIssue: false }
+                ]
+                },
+                {
+                id: 'ag-5', name: '최영호', employeeId: 'S-1005', avgScore: 87.8, totalCalls: 135, totalEvals: 39, rank: 5, callType: 'I/B', avgDuration: '05:30', topDeductionItem: '경어 사용', issue: null,
+                evaluations: [
+                { id: 'AE-2025-00431', date: '2025-03-10', time: '10:05', duration: '05:40', score: 89, type: 'AI', confidence: 'High', issue: null, callType: 'I/B', category: '상품 > 상품문의 > 사이즈 가이드', deductionItem: null, urgentIssue: false },
+                { id: 'AE-2025-00432', date: '2025-03-08', time: '16:45', duration: '05:20', score: 86, type: 'NLP', confidence: 'Medium', issue: null, callType: 'I/B', category: '결제 > 결제오류 > 포인트 차감 오류', deductionItem: '경어 사용', urgentIssue: false },
+                { id: 'AE-2025-00433', date: '2025-03-04', time: '09:30', duration: '05:30', score: 88, type: 'AI', confidence: 'High', issue: null, callType: 'I/B', category: '배송 > 배송조회 > 당일 배송', deductionItem: null, urgentIssue: false }
+                ]
+                },
+                {
+                id: 'ag-6', name: '한수진', employeeId: 'S-1006', avgScore: 86.5, totalCalls: 120, totalEvals: 37, rank: 6, callType: 'I/B', avgDuration: '04:15', topDeductionItem: '상품설명', issue: '상품 설명 부족',
+                evaluations: [
+                { id: 'ME-2025-00434', date: '2025-03-09', time: '15:20', duration: '04:30', score: 84, type: 'AI', confidence: 'High', issue: '상품 설명 부족', callType: 'I/B', category: '상품 > 상품문의 > 소재 정보', deductionItem: '상품설명', urgentIssue: false },
+                { id: 'AE-2025-00435', date: '2025-03-06', time: '10:40', duration: '04:00', score: 89, type: 'NLP', confidence: 'High', issue: null, callType: 'I/B', category: '주문 > 주문변경 > 배송지 변경', deductionItem: null, urgentIssue: false }
+                ]
+                },
+                {
+                id: 'ag-7', name: '강민재', employeeId: 'S-1007', avgScore: 85.1, totalCalls: 118, totalEvals: 35, rank: 7, callType: 'O/B', avgDuration: '05:50', topDeductionItem: '동의 확보', issue: null,
+                evaluations: [
+                { id: 'AE-2025-00436', date: '2025-03-10', time: '14:10', duration: '06:05', score: 86, type: 'NLP', confidence: 'Medium', issue: null, callType: 'O/B', category: '해피콜 > 만족도조사 > 이벤트 참여', deductionItem: '동의 확보', urgentIssue: false },
+                { id: 'AE-2025-00437', date: '2025-03-07', time: '11:25', duration: '05:35', score: 84, type: 'AI', confidence: 'High', issue: null, callType: 'O/B', category: '해피콜 > 사후관리 > 설치완료 확인', deductionItem: null, urgentIssue: false }
+                ]
+                },
+                {
+                id: 'ag-8', name: '오지현', employeeId: 'S-1008', avgScore: 83.7, totalCalls: 115, totalEvals: 33, rank: 8, callType: 'I/B', avgDuration: '04:55', topDeductionItem: '사과 표현', issue: '고객 불만 미해결',
+                evaluations: [
+                { id: 'AE-2025-00438', date: '2025-03-08', time: '09:45', duration: '05:10', score: 82, type: 'AI', confidence: 'Medium', issue: '고객 불만 미해결', callType: 'I/B', category: '불만/VOC > 서비스불만 > 대기시간 불만', deductionItem: '사과 표현', urgentIssue: false },
+                { id: 'AE-2025-00439', date: '2025-03-05', time: '13:55', duration: '04:40', score: 85, type: 'NLP', confidence: 'High', issue: null, callType: 'I/B', category: '교환/반품 > 환불처리 > 계좌 환불', deductionItem: null, urgentIssue: false },
+                { id: 'AE-2025-00440', date: '2025-03-02', time: '15:30', duration: '05:00', score: 84, type: 'AI', confidence: 'High', issue: null, callType: 'I/B', category: '배송 > 배송지연 > 물류센터 지연', deductionItem: null, urgentIssue: false }
+                ]
+                },
+                {
+                id: 'ag-9', name: '윤태호', employeeId: 'S-1009', avgScore: 82.0, totalCalls: 110, totalEvals: 31, rank: 9, callType: 'I/B', avgDuration: '05:10', topDeductionItem: '개인정보 확인', issue: null,
+                evaluations: [
+                { id: 'AE-2025-00441', date: '2025-03-09', time: '16:30', duration: '05:25', score: 83, type: 'NLP', confidence: 'High', issue: null, callType: 'I/B', category: '회원 > 회원탈퇴 > 탈퇴 절차 안내', deductionItem: '개인정보 확인', urgentIssue: false },
+                { id: 'AE-2025-00442', date: '2025-03-06', time: '14:00', duration: '04:55', score: 81, type: 'AI', confidence: 'Medium', issue: null, callType: 'I/B', category: '결제 > 결제확인 > 카드 승인 확인', deductionItem: null, urgentIssue: false },
+                { id: 'AE-2025-00446', date: '2025-03-02', time: '10:30', duration: '07:15', score: 65, type: 'AI', confidence: 'Medium', issue: '필수항목 누락', callType: 'I/B', category: '불만/VOC > 상품불만 > 제품 불량', deductionItem: '개인정보 확인', urgentIssue: false }
+                ]
+                },
+                {
+                id: 'ag-10', name: '서예진', employeeId: 'S-1010', avgScore: 80.4, totalCalls: 105, totalEvals: 29, rank: 10, callType: 'I/B', avgDuration: '06:20', topDeductionItem: '고객 불만 처리', issue: null, excluded: true,
+                evaluations: [
+                { id: 'AE-2025-00443', date: '2025-03-10', time: '11:15', duration: '06:30', score: 82, type: 'AI', confidence: 'High', issue: null, callType: 'I/B', category: '주문 > 주문취소 > 품절 취소', deductionItem: null, urgentIssue: false },
+                { id: 'AE-2025-00444', date: '2025-03-07', time: '09:40', duration: '06:10', score: 79, type: 'NLP', confidence: 'Medium', issue: null, callType: 'I/B', category: '불만/VOC > 배송불만 > 파손 배송', deductionItem: '고객 불만 처리', urgentIssue: false },
+                { id: 'AE-2025-00445', date: '2025-03-04', time: '15:50', duration: '06:25', score: 80, type: 'AI', confidence: 'High', issue: null, callType: 'I/B', category: '배송 > 배송조회 > 반품 수거 조회', deductionItem: null, urgentIssue: false },
+                { id: 'AE-2025-00447', date: '2025-03-01', time: '14:20', duration: '08:05', score: 68, type: 'NLP', confidence: 'Medium', issue: '스크립트 미준수', callType: 'I/B', category: '교환/반품 > 교환접수 > 색상 교환', deductionItem: '고객 불만 처리', urgentIssue: false }
+                ]
                 }
-              ]
+                ]
             },
             {
               id: 'tm-2', name: '일반상담팀',
-              avgScore: 79.8, totalCalls: 1680, totalEvals: 1520, agentCount: 52, completionRate: 90.5,
+              avgScore: 79.8, avgScore_prev: 78.5, totalCalls: 1680, totalEvals: 1520, agentCount: 52, agentCount_prev: 50, completionRate: 90.5,
+              avgDuration: '03:28', avgDuration_prev: '03:40', excludedAgents: 2, excludedAgents_prev: 1, urgentIssues: 1, urgentIssues_prev: 2,
+              calls_auto_ib: 780, calls_auto_ib_done: 760, calls_auto_ob: 520, calls_auto_ob_done: 500, calls_manual: 380, calls_manual_done: 260,
+              calls_auto_ib_prev: 740, calls_auto_ib_done_prev: 730, calls_auto_ob_prev: 490, calls_auto_ob_done_prev: 480, calls_manual_prev: 400, calls_manual_done_prev: 280,
+              avg_score_auto_ib: 82.1, avg_score_auto_ib_prev: 80.8, avg_score_auto_ob: 78.5, avg_score_auto_ob_prev: 77.2, avg_score_manual: 77.0, avg_score_manual_prev: 75.8,
+              topDeduction: { item: '첫인사', calls: 8, pct: 9 }, lowScoreCalls: 4, lowScorePct: 3.8,
               agents: [
-                { id: 'ag-5', name: '정수민', avgScore: 84.6, totalCalls: 40, totalEvals: 38, rank: 1, callType: 'I/B',
-                  evaluations: [
-                    { id: 'EV-2025-00501', date: '2025-01-15', time: '09:22', duration: '04:18', score: 85.3, type: 'AI', confidence: 'High', issue: null },
-                    { id: 'EV-2025-00502', date: '2025-01-15', time: '11:05', duration: '06:44', score: 83.9, type: 'AI', confidence: 'High', issue: null }
-                  ]
+                {
+                id: 'ag-11', name: '임하영', employeeId: 'S-1011', avgScore: 91.3, totalCalls: 148, totalEvals: 46, rank: 1, callType: 'I/B', avgDuration: '04:45', topDeductionItem: '첫인사', issue: null,
+                evaluations: [
+                { id: 'AE-2025-00521', date: '2025-03-10', time: '09:30', duration: '04:50', score: 93, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00522', date: '2025-03-08', time: '13:15', duration: '04:40', score: 90, type: 'NLP', confidence: 'High', issue: null }
+                ]
                 },
-                { id: 'ag-6', name: '최은지', avgScore: 78.2, totalCalls: 36, totalEvals: 34, rank: 2, callType: 'I/B',
-                  evaluations: [
-                    { id: 'EV-2025-00511', date: '2025-01-15', time: '09:40', duration: '05:55', score: 76.8, type: 'AI', confidence: 'Medium', issue: '고객 불만 처리 미흡' },
-                    { id: 'EV-2025-00512', date: '2025-01-14', time: '15:20', duration: '03:28', score: 79.6, type: 'NLP', confidence: 'High', issue: null }
-                  ]
+                {
+                id: 'ag-12', name: '신동현', employeeId: 'S-1012', avgScore: 88.7, totalCalls: 134, totalEvals: 43, rank: 2, callType: 'I/B', avgDuration: '05:30', topDeductionItem: '마무리 인사', issue: null,
+                evaluations: [
+                { id: 'AE-2025-00523', date: '2025-03-09', time: '10:45', duration: '05:20', score: 90, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00524', date: '2025-03-07', time: '15:30', duration: '05:45', score: 87, type: 'NLP', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-00525', date: '2025-03-04', time: '11:20', duration: '05:25', score: 89, type: 'AI', confidence: 'High', issue: null }
+                ]
                 },
-                { id: 'ag-7', name: '한동우', avgScore: 72.5, totalCalls: 33, totalEvals: 30, rank: 3, callType: 'O/B',
-                  evaluations: [
-                    { id: 'EV-2025-00521', date: '2025-01-15', time: '10:10', duration: '07:30', score: 68.4, type: 'AI', confidence: 'High', issue: '필수항목 누락' },
-                    { id: 'EV-2025-00522', date: '2025-01-14', time: '13:50', duration: '04:15', score: 76.6, type: 'AI', confidence: 'Medium', issue: '스크립트 미준수' }
-                  ]
+                {
+                id: 'ag-13', name: '조미래', employeeId: 'S-1013', avgScore: 87.2, totalCalls: 129, totalEvals: 41, rank: 3, callType: 'O/B', avgDuration: '06:10', topDeductionItem: '스크립트 미준수', issue: '스크립트 미준수',
+                evaluations: [
+                { id: 'AE-2025-00526', date: '2025-03-10', time: '14:20', duration: '06:30', score: 85, type: 'NLP', confidence: 'High', issue: '스크립트 미준수' },
+                { id: 'AE-2025-00527', date: '2025-03-06', time: '09:10', duration: '05:50', score: 89, type: 'AI', confidence: 'High', issue: null }
+                ]
+                },
+                {
+                id: 'ag-14', name: '장현우', employeeId: 'S-1014', avgScore: 85.5, totalCalls: 125, totalEvals: 38, rank: 4, callType: 'I/B', avgDuration: '05:05', topDeductionItem: '고객 확인 절차', issue: null,
+                evaluations: [
+                { id: 'AE-2025-00528', date: '2025-03-09', time: '11:55', duration: '05:15', score: 87, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00529', date: '2025-03-07', time: '16:40', duration: '04:55', score: 84, type: 'NLP', confidence: 'Medium', issue: null }
+                ]
+                },
+                {
+                id: 'ag-15', name: '백서윤', employeeId: 'S-1015', avgScore: 83.9, totalCalls: 121, totalEvals: 36, rank: 5, callType: 'I/B', avgDuration: '04:40', topDeductionItem: '경어 사용', issue: null,
+                evaluations: [
+                { id: 'AE-2025-00530', date: '2025-03-10', time: '10:30', duration: '04:50', score: 85, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00531', date: '2025-03-08', time: '14:55', duration: '04:30', score: 83, type: 'NLP', confidence: 'High', issue: null },
+                { id: 'AE-2025-00532', date: '2025-03-05', time: '09:15', duration: '04:40', score: 84, type: 'AI', confidence: 'Medium', issue: null }
+                ]
+                },
+                {
+                id: 'ag-16', name: '류지훈', employeeId: 'S-1016', avgScore: 82.1, totalCalls: 117, totalEvals: 34, rank: 6, callType: 'I/B', avgDuration: '05:25', topDeductionItem: '상품설명', issue: '상품 설명 부족',
+                evaluations: [
+                { id: 'AE-2025-00533', date: '2025-03-09', time: '15:10', duration: '05:40', score: 80, type: 'NLP', confidence: 'Medium', issue: '상품 설명 부족' },
+                { id: 'AE-2025-00534', date: '2025-03-06', time: '11:30', duration: '05:10', score: 84, type: 'AI', confidence: 'High', issue: null }
+                ]
+                },
+                {
+                id: 'ag-17', name: '문채원', employeeId: 'S-1017', avgScore: 80.6, totalCalls: 113, totalEvals: 32, rank: 7, callType: 'O/B', avgDuration: '06:15', topDeductionItem: '동의 확보', issue: null,
+                evaluations: [
+                { id: 'AE-2025-00535', date: '2025-03-10', time: '13:45', duration: '06:25', score: 82, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00536', date: '2025-03-07', time: '10:20', duration: '06:05', score: 79, type: 'NLP', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-00545', date: '2025-03-02', time: '09:15', duration: '06:40', score: 66, type: 'AI', confidence: 'Medium', issue: '첫인사 누락' },
+                ]
+                },
+                {
+                id: 'ag-18', name: '양승민', employeeId: 'S-1018', avgScore: 79.3, totalCalls: 108, totalEvals: 30, rank: 8, callType: 'I/B', avgDuration: '05:50', topDeductionItem: '사과 표현', issue: '고객 불만 미해결', urgentIssue: true,
+                evaluations: [
+                { id: 'AE-2025-00537', date: '2025-03-08', time: '09:55', duration: '06:00', score: 78, type: 'AI', confidence: 'Medium', issue: '고객 불만 미해결' },
+                { id: 'AE-2025-00538', date: '2025-03-05', time: '14:35', duration: '05:40', score: 81, type: 'NLP', confidence: 'High', issue: null },
+                { id: 'AE-2025-00539', date: '2025-03-03', time: '16:10', duration: '05:50', score: 79, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00546', date: '2025-03-01', time: '13:50', duration: '07:20', score: 63, type: 'NLP', confidence: 'Medium', issue: '고객 불만 미해결' },
+                ]
+                },
+                {
+                id: 'ag-19', name: '구나영', employeeId: 'S-1019', avgScore: 77.8, totalCalls: 104, totalEvals: 28, rank: 9, callType: 'I/B', avgDuration: '04:55', topDeductionItem: '개인정보 확인', issue: null, excluded: true,
+                evaluations: [
+                { id: 'AE-2025-00540', date: '2025-03-09', time: '16:25', duration: '05:10', score: 79, type: 'NLP', confidence: 'High', issue: null },
+                { id: 'AE-2025-00541', date: '2025-03-06', time: '13:50', duration: '04:40', score: 77, type: 'AI', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-00547', date: '2025-03-02', time: '15:10', duration: '05:55', score: 69, type: 'AI', confidence: 'Medium', issue: '개인정보 확인 누락' },
+                ]
+                },
+                {
+                id: 'ag-20', name: '홍재석', employeeId: 'S-1020', avgScore: 75.4, totalCalls: 99, totalEvals: 26, rank: 10, callType: 'I/B', avgDuration: '06:30', topDeductionItem: '고객 불만 처리', issue: null, excluded: true,
+                evaluations: [
+                { id: 'AE-2025-00542', date: '2025-03-10', time: '11:40', duration: '06:45', score: 76, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00543', date: '2025-03-07', time: '09:20', duration: '06:15', score: 75, type: 'NLP', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-00544', date: '2025-03-04', time: '15:05', duration: '06:35', score: 75, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00548', date: '2025-03-01', time: '11:30', duration: '08:15', score: 62, type: 'AI', confidence: 'Medium', issue: '과락 - 필수항목 미이행' },
+                ]
                 }
-              ]
+                ]
             },
             {
               id: 'tm-3', name: '기술지원팀',
-              avgScore: 81.5, totalCalls: 920, totalEvals: 810, agentCount: 28, completionRate: 88.0,
+              avgScore: 81.5, avgScore_prev: 80.2, totalCalls: 920, totalEvals: 810, agentCount: 28, agentCount_prev: 26, completionRate: 88.0,
+              avgDuration: '05:10', avgDuration_prev: '05:22', excludedAgents: 1, excludedAgents_prev: 1, urgentIssues: 1, urgentIssues_prev: 0,
+              calls_auto_ib: 450, calls_auto_ib_done: 430, calls_auto_ob: 250, calls_auto_ob_done: 230, calls_manual: 220, calls_manual_done: 150,
+              calls_auto_ib_prev: 420, calls_auto_ib_done_prev: 410, calls_auto_ob_prev: 240, calls_auto_ob_done_prev: 230, calls_manual_prev: 230, calls_manual_done_prev: 170,
+              avg_score_auto_ib: 83.8, avg_score_auto_ib_prev: 82.5, avg_score_auto_ob: 80.2, avg_score_auto_ob_prev: 79.0, avg_score_manual: 79.0, avg_score_manual_prev: 77.8,
+              topDeduction: { item: '기술용어 설명', calls: 4, pct: 7 }, lowScoreCalls: 3, lowScorePct: 3.7,
               agents: [
-                { id: 'ag-8', name: '오세진', avgScore: 87.3, totalCalls: 28, totalEvals: 26, rank: 1, callType: 'I/B',
-                  evaluations: [
-                    { id: 'EV-2025-00601', date: '2025-01-15', time: '09:50', duration: '08:12', score: 88.1, type: 'AI', confidence: 'High', issue: null },
-                    { id: 'EV-2025-00602', date: '2025-01-14', time: '14:05', duration: '06:30', score: 86.5, type: 'NLP', confidence: 'High', issue: null }
-                  ]
+                {
+                id: 'ag-21', name: '송지은', employeeId: 'S-1021', avgScore: 87.5, totalCalls: 141, totalEvals: 44, rank: 1, callType: 'I/B', avgDuration: '06:40', topDeductionItem: '기술용어 설명', issue: null,
+                evaluations: [
+                { id: 'AE-2025-00621', date: '2025-03-10', time: '09:20', duration: '06:50', score: 89, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00622', date: '2025-03-08', time: '14:05', duration: '06:30', score: 86, type: 'NLP', confidence: 'High', issue: null }
+                ]
                 },
-                { id: 'ag-9', name: '강지윤', avgScore: 80.1, totalCalls: 31, totalEvals: 28, rank: 2, callType: 'I/B',
-                  evaluations: [
-                    { id: 'EV-2025-00611', date: '2025-01-15', time: '10:35', duration: '05:48', score: 81.2, type: 'AI', confidence: 'Medium', issue: null },
-                    { id: 'EV-2025-00612', date: '2025-01-14', time: '16:00', duration: '04:55', score: 79.0, type: 'AI', confidence: 'Medium', issue: '기술용어 설명 부족' }
-                  ]
+                {
+                id: 'ag-22', name: '권도현', employeeId: 'S-1022', avgScore: 85.8, totalCalls: 136, totalEvals: 42, rank: 2, callType: 'I/B', avgDuration: '07:10', topDeductionItem: '스크립트 미준수', issue: null,
+                evaluations: [
+                { id: 'AE-2025-00623', date: '2025-03-09', time: '10:50', duration: '07:20', score: 87, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00624', date: '2025-03-07', time: '15:40', duration: '06:55', score: 84, type: 'NLP', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-00625', date: '2025-03-04', time: '11:30', duration: '07:15', score: 86, type: 'AI', confidence: 'High', issue: null }
+                ]
+                },
+                {
+                id: 'ag-23', name: '배소영', employeeId: 'S-1023', avgScore: 84.1, totalCalls: 130, totalEvals: 40, rank: 3, callType: 'I/B', avgDuration: '06:55', topDeductionItem: '첫인사', issue: '개인정보 확인 누락',
+                evaluations: [
+                { id: 'AE-2025-00626', date: '2025-03-10', time: '14:35', duration: '07:05', score: 82, type: 'NLP', confidence: 'High', issue: '개인정보 확인 누락' },
+                { id: 'AE-2025-00627', date: '2025-03-06', time: '09:25', duration: '06:45', score: 86, type: 'AI', confidence: 'High', issue: null }
+                ]
+                },
+                {
+                id: 'ag-24', name: '전우진', employeeId: 'S-1024', avgScore: 82.3, totalCalls: 124, totalEvals: 37, rank: 4, callType: 'I/B', avgDuration: '07:25', topDeductionItem: '마무리 인사', issue: null,
+                evaluations: [
+                { id: 'AE-2025-00628', date: '2025-03-09', time: '11:15', duration: '07:35', score: 83, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00629', date: '2025-03-07', time: '16:20', duration: '07:10', score: 81, type: 'NLP', confidence: 'Medium', issue: null }
+                ]
+                },
+                {
+                id: 'ag-25', name: '허민지', employeeId: 'S-1025', avgScore: 80.7, totalCalls: 119, totalEvals: 35, rank: 5, callType: 'O/B', avgDuration: '06:30', topDeductionItem: '경어 사용', issue: null,
+                evaluations: [
+                { id: 'AE-2025-00630', date: '2025-03-10', time: '10:45', duration: '06:40', score: 82, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00631', date: '2025-03-08', time: '15:15', duration: '06:20', score: 79, type: 'NLP', confidence: 'High', issue: null },
+                { id: 'AE-2025-00632', date: '2025-03-05', time: '09:50', duration: '06:30', score: 81, type: 'AI', confidence: 'Medium', issue: null }
+                ]
+                },
+                {
+                id: 'ag-26', name: '남기태', employeeId: 'S-1026', avgScore: 78.9, totalCalls: 114, totalEvals: 33, rank: 6, callType: 'I/B', avgDuration: '07:45', topDeductionItem: '기술용어 설명', issue: '기술 설명 미흡',
+                evaluations: [
+                { id: 'AE-2025-00633', date: '2025-03-09', time: '15:30', duration: '08:00', score: 77, type: 'NLP', confidence: 'Medium', issue: '기술 설명 미흡' },
+                { id: 'AE-2025-00634', date: '2025-03-06', time: '11:40', duration: '07:30', score: 81, type: 'AI', confidence: 'High', issue: null }
+                ]
+                },
+                {
+                id: 'ag-27', name: '유하은', employeeId: 'S-1027', avgScore: 77.2, totalCalls: 109, totalEvals: 31, rank: 7, callType: 'I/B', avgDuration: '06:50', topDeductionItem: '동의 확보', issue: null,
+                evaluations: [
+                { id: 'AE-2025-00635', date: '2025-03-10', time: '13:55', duration: '07:00', score: 78, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00636', date: '2025-03-07', time: '10:30', duration: '06:40', score: 76, type: 'NLP', confidence: 'Medium', issue: null }
+                ]
+                },
+                {
+                id: 'ag-28', name: '안성준', employeeId: 'S-1028', avgScore: 75.5, totalCalls: 106, totalEvals: 29, rank: 8, callType: 'I/B', avgDuration: '07:15', topDeductionItem: '사과 표현', issue: '고객 불만 미해결', urgentIssue: true,
+                evaluations: [
+                { id: 'AE-2025-00637', date: '2025-03-08', time: '09:40', duration: '07:25', score: 74, type: 'AI', confidence: 'Medium', issue: '고객 불만 미해결' },
+                { id: 'AE-2025-00638', date: '2025-03-05', time: '14:50', duration: '07:05', score: 77, type: 'NLP', confidence: 'High', issue: null },
+                { id: 'AE-2025-00639', date: '2025-03-03', time: '16:35', duration: '07:20', score: 75, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00645', date: '2025-03-02', time: '10:00', duration: '08:30', score: 64, type: 'AI', confidence: 'Medium', issue: '고객 불만 미해결' },
+                ]
+                },
+                {
+                id: 'ag-29', name: '변서현', employeeId: 'S-1029', avgScore: 73.8, totalCalls: 101, totalEvals: 27, rank: 9, callType: 'I/B', avgDuration: '06:35', topDeductionItem: '개인정보 확인', issue: null,
+                evaluations: [
+                { id: 'AE-2025-00640', date: '2025-03-09', time: '16:10', duration: '06:45', score: 75, type: 'NLP', confidence: 'High', issue: null },
+                { id: 'AE-2025-00641', date: '2025-03-06', time: '14:20', duration: '06:25', score: 73, type: 'AI', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-00646', date: '2025-03-01', time: '14:15', duration: '07:45', score: 67, type: 'NLP', confidence: 'Medium', issue: '기술용어 설명 부족' },
+                ]
+                },
+                {
+                id: 'ag-30', name: '진민호', employeeId: 'S-1030', avgScore: 71.3, totalCalls: 96, totalEvals: 25, rank: 10, callType: 'O/B', avgDuration: '08:05', topDeductionItem: '고객 불만 처리', issue: null, excluded: true,
+                evaluations: [
+                { id: 'AE-2025-00642', date: '2025-03-10', time: '11:50', duration: '08:15', score: 72, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00643', date: '2025-03-07', time: '09:15', duration: '07:50', score: 71, type: 'NLP', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-00644', date: '2025-03-04', time: '15:25', duration: '08:10', score: 71, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00647', date: '2025-03-02', time: '16:00', duration: '09:10', score: 61, type: 'AI', confidence: 'Medium', issue: '과락 - 필수항목 미이행' },
+                ]
                 }
-              ]
+                ]
             },
             {
               id: 'tm-4', name: '아웃바운드팀',
-              avgScore: 77.6, totalCalls: 800, totalEvals: 600, agentCount: 44, completionRate: 75.0,
+              avgScore: 77.6, avgScore_prev: 76.0, totalCalls: 800, totalEvals: 600, agentCount: 44, agentCount_prev: 42, completionRate: 75.0,
+              avgDuration: '02:55', avgDuration_prev: '03:05', excludedAgents: 1, excludedAgents_prev: 1, urgentIssues: 1, urgentIssues_prev: 2,
+              calls_auto_ib: 350, calls_auto_ib_done: 340, calls_auto_ob: 300, calls_auto_ob_done: 280, calls_manual: 150, calls_manual_done: 80,
+              calls_auto_ib_prev: 330, calls_auto_ib_done_prev: 325, calls_auto_ob_prev: 290, calls_auto_ob_done_prev: 275, calls_manual_prev: 160, calls_manual_done_prev: 100,
+              avg_score_auto_ib: 80.5, avg_score_auto_ib_prev: 79.2, avg_score_auto_ob: 76.0, avg_score_auto_ob_prev: 74.8, avg_score_manual: 74.2, avg_score_manual_prev: 73.0,
+              topDeduction: { item: '동의 확보', calls: 6, pct: 11 }, lowScoreCalls: 3, lowScorePct: 5.0,
               agents: [
-                { id: 'ag-10', name: '윤석호', avgScore: 82.4, totalCalls: 25, totalEvals: 22, rank: 1, callType: 'O/B',
-                  evaluations: [
-                    { id: 'EV-2025-00701', date: '2025-01-15', time: '09:15', duration: '03:40', score: 83.6, type: 'AI', confidence: 'High', issue: null },
-                    { id: 'EV-2025-00702', date: '2025-01-14', time: '11:20', duration: '04:10', score: 81.2, type: 'AI', confidence: 'Medium', issue: null }
-                  ]
+                {
+                id: 'ag-31', name: '황예린', employeeId: 'S-1031', avgScore: 88.2, totalCalls: 152, totalEvals: 47, rank: 1, callType: 'O/B', avgDuration: '03:45', topDeductionItem: '동의 확보', issue: null,
+                evaluations: [
+                { id: 'AE-2025-00721', date: '2025-03-10', time: '09:10', duration: '03:50', score: 90, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00722', date: '2025-03-08', time: '13:30', duration: '03:40', score: 87, type: 'NLP', confidence: 'High', issue: null }
+                ]
                 },
-                { id: 'ag-11', name: '서다은', avgScore: 74.8, totalCalls: 30, totalEvals: 25, rank: 2, callType: 'O/B',
-                  evaluations: [
-                    { id: 'EV-2025-00711', date: '2025-01-15', time: '10:00', duration: '05:25', score: 72.3, type: 'AI', confidence: 'Medium', issue: '동의 확보 미흡' },
-                    { id: 'EV-2025-00712', date: '2025-01-14', time: '14:40', duration: '06:10', score: 77.3, type: 'NLP', confidence: 'High', issue: null }
-                  ]
+                {
+                id: 'ag-32', name: '노정우', employeeId: 'S-1032', avgScore: 86.0, totalCalls: 145, totalEvals: 44, rank: 2, callType: 'O/B', avgDuration: '04:10', topDeductionItem: '스크립트 미준수', issue: null,
+                evaluations: [
+                { id: 'AE-2025-00723', date: '2025-03-09', time: '10:25', duration: '04:15', score: 88, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00724', date: '2025-03-07', time: '15:50', duration: '04:05', score: 84, type: 'NLP', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-00725', date: '2025-03-04', time: '11:10', duration: '04:10', score: 86, type: 'AI', confidence: 'High', issue: null }
+                ]
+                },
+                {
+                id: 'ag-33', name: '추가영', employeeId: 'S-1033', avgScore: 83.7, totalCalls: 137, totalEvals: 41, rank: 3, callType: 'O/B', avgDuration: '03:55', topDeductionItem: '첫인사', issue: '동의 확보 미흡',
+                evaluations: [
+                { id: 'AE-2025-00726', date: '2025-03-10', time: '14:45', duration: '04:00', score: 82, type: 'NLP', confidence: 'High', issue: '동의 확보 미흡' },
+                { id: 'AE-2025-00727', date: '2025-03-06', time: '09:35', duration: '03:50', score: 85, type: 'AI', confidence: 'High', issue: null }
+                ]
+                },
+                {
+                id: 'ag-34', name: '감민석', employeeId: 'S-1034', avgScore: 81.5, totalCalls: 131, totalEvals: 39, rank: 4, callType: 'O/B', avgDuration: '04:25', topDeductionItem: '마무리 인사', issue: null,
+                evaluations: [
+                { id: 'AE-2025-00728', date: '2025-03-09', time: '11:40', duration: '04:30', score: 83, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00729', date: '2025-03-07', time: '16:05', duration: '04:20', score: 80, type: 'NLP', confidence: 'Medium', issue: null }
+                ]
+                },
+                {
+                id: 'ag-35', name: '피서윤', employeeId: 'S-1035', avgScore: 79.8, totalCalls: 123, totalEvals: 36, rank: 5, callType: 'O/B', avgDuration: '03:30', topDeductionItem: '경어 사용', issue: null,
+                evaluations: [
+                { id: 'AE-2025-00730', date: '2025-03-10', time: '10:15', duration: '03:35', score: 81, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00731', date: '2025-03-08', time: '14:40', duration: '03:25', score: 79, type: 'NLP', confidence: 'High', issue: null },
+                { id: 'AE-2025-00732', date: '2025-03-05', time: '09:05', duration: '03:30', score: 79, type: 'AI', confidence: 'Medium', issue: null }
+                ]
+                },
+                {
+                id: 'ag-36', name: '탁지원', employeeId: 'S-1036', avgScore: 78.1, totalCalls: 116, totalEvals: 34, rank: 6, callType: 'O/B', avgDuration: '04:35', topDeductionItem: '상품설명', issue: '상품 설명 부족',
+                evaluations: [
+                { id: 'AE-2025-00733', date: '2025-03-09', time: '15:25', duration: '04:45', score: 76, type: 'NLP', confidence: 'Medium', issue: '상품 설명 부족' },
+                { id: 'AE-2025-00734', date: '2025-03-06', time: '11:50', duration: '04:25', score: 80, type: 'AI', confidence: 'High', issue: null }
+                ]
+                },
+                {
+                id: 'ag-37', name: '하승우', employeeId: 'S-1037', avgScore: 76.4, totalCalls: 111, totalEvals: 32, rank: 7, callType: 'O/B', avgDuration: '03:50', topDeductionItem: '동의 확보', issue: null,
+                evaluations: [
+                { id: 'AE-2025-00735', date: '2025-03-10', time: '13:30', duration: '03:55', score: 78, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00736', date: '2025-03-07', time: '10:10', duration: '03:45', score: 75, type: 'NLP', confidence: 'Medium', issue: null }
+                ]
+                },
+                {
+                id: 'ag-38', name: '마예은', employeeId: 'S-1038', avgScore: 74.6, totalCalls: 107, totalEvals: 30, rank: 8, callType: 'O/B', avgDuration: '04:50', topDeductionItem: '사과 표현', issue: null,
+                evaluations: [
+                { id: 'AE-2025-00737', date: '2025-03-08', time: '09:50', duration: '05:00', score: 73, type: 'AI', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-00738', date: '2025-03-05', time: '14:25', duration: '04:40', score: 76, type: 'NLP', confidence: 'High', issue: null },
+                { id: 'AE-2025-00739', date: '2025-03-03', time: '16:50', duration: '04:55', score: 75, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00745', date: '2025-03-02', time: '09:30', duration: '05:40', score: 66, type: 'AI', confidence: 'Medium', issue: '동의 확보 미흡' },
+                ]
+                },
+                {
+                id: 'ag-39', name: '곽태현', employeeId: 'S-1039', avgScore: 72.9, totalCalls: 102, totalEvals: 28, rank: 9, callType: 'O/B', avgDuration: '04:05', topDeductionItem: '개인정보 확인', issue: '개인정보 확인 누락', urgentIssue: true,
+                evaluations: [
+                { id: 'AE-2025-00740', date: '2025-03-09', time: '16:40', duration: '04:10', score: 74, type: 'NLP', confidence: 'High', issue: '개인정보 확인 누락' },
+                { id: 'AE-2025-00741', date: '2025-03-06', time: '13:35', duration: '03:55', score: 72, type: 'AI', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-00746', date: '2025-03-01', time: '13:20', duration: '04:55', score: 63, type: 'NLP', confidence: 'Medium', issue: '개인정보 확인 누락' },
+                ]
+                },
+                {
+                id: 'ag-40', name: '성나래', employeeId: 'S-1040', avgScore: 70.5, totalCalls: 97, totalEvals: 26, rank: 10, callType: 'O/B', avgDuration: '05:10', topDeductionItem: '고객 불만 처리', issue: null, excluded: true,
+                evaluations: [
+                { id: 'AE-2025-00742', date: '2025-03-10', time: '11:25', duration: '05:20', score: 71, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00743', date: '2025-03-07', time: '09:45', duration: '05:00', score: 70, type: 'NLP', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-00744', date: '2025-03-04', time: '15:40', duration: '05:15', score: 71, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00747', date: '2025-03-02', time: '15:45', duration: '06:10', score: 59, type: 'AI', confidence: 'Medium', issue: '과락 - 필수항목 미이행' },
+                ]
                 }
-              ]
+                ]
             }
           ]
         },
         {
           id: 'ws-2', name: '부산센터',
-          avgScore: 78.9, totalCalls: 2810, totalEvals: 2450, agentCount: 98, completionRate: 87.2,
+          avgScore: 78.9, avgScore_prev: 77.0, totalCalls: 2810, totalEvals: 2450, agentCount: 98, completionRate: 87.2, avgDuration: '03:48',
+          agentCount_prev: 92, avgDuration_prev: '04:01', excludedAgents: 3, excludedAgents_prev: 2, urgentIssues: 5, urgentIssues_prev: 4,
+          calls_auto_ib: 1200, calls_auto_ib_done: 1150, calls_auto_ob: 860, calls_auto_ob_done: 820, calls_manual: 750, calls_manual_done: 480,
+          calls_auto_ib_prev: 1130, calls_auto_ib_done_prev: 1110, calls_auto_ob_prev: 810, calls_auto_ob_done_prev: 790, calls_manual_prev: 800, calls_manual_done_prev: 550,
+          avg_score_auto_ib: 81.5, avg_score_auto_ib_prev: 80.3, avg_score_auto_ob: 77.8, avg_score_auto_ob_prev: 76.5, avg_score_manual: 75.2, avg_score_manual_prev: 74.0,
+          topDeduction: { item: '마무리 인사', calls: 24, pct: 14 }, lowScoreCalls: 18, lowScorePct: 7.3,
           teams: [
             {
               id: 'tm-5', name: '고객상담1팀',
-              avgScore: 80.5, totalCalls: 980, totalEvals: 870, agentCount: 35, completionRate: 88.8,
+              avgScore: 80.5, avgScore_prev: 79.2, totalCalls: 980, totalEvals: 870, agentCount: 35, agentCount_prev: 33, completionRate: 88.8,
+              avgDuration: '03:42', avgDuration_prev: '03:55', excludedAgents: 1, excludedAgents_prev: 1, urgentIssues: 2, urgentIssues_prev: 1,
+              calls_auto_ib: 450, calls_auto_ib_done: 430, calls_auto_ob: 300, calls_auto_ob_done: 285, calls_manual: 230, calls_manual_done: 155,
+              calls_auto_ib_prev: 420, calls_auto_ib_done_prev: 415, calls_auto_ob_prev: 280, calls_auto_ob_done_prev: 270, calls_manual_prev: 240, calls_manual_done_prev: 175,
+              avg_score_auto_ib: 83.2, avg_score_auto_ib_prev: 82.0, avg_score_auto_ob: 79.5, avg_score_auto_ob_prev: 78.2, avg_score_manual: 77.0, avg_score_manual_prev: 75.8,
+              topDeduction: { item: '마무리 인사', calls: 9, pct: 12 }, lowScoreCalls: 5, lowScorePct: 5.7,
               agents: [
-                { id: 'ag-12', name: '배수현', avgScore: 85.6, totalCalls: 32, totalEvals: 30, rank: 1, callType: 'I/B',
-                  evaluations: [
-                    { id: 'EV-2025-00801', date: '2025-01-15', time: '09:08', duration: '04:50', score: 87.2, type: 'AI', confidence: 'High', issue: null },
-                    { id: 'EV-2025-00802', date: '2025-01-14', time: '10:30', duration: '05:15', score: 84.0, type: 'AI', confidence: 'High', issue: null }
-                  ]
+                {
+                id: 'ag-41', name: '정수현', employeeId: 'S-1041', avgScore: 87.9, totalCalls: 144, totalEvals: 45, rank: 1, callType: 'I/B', avgDuration: '05:00', topDeductionItem: '첫인사', issue: null,
+                evaluations: [
+                { id: 'AE-2025-00821', date: '2025-03-10', time: '09:25', duration: '05:10', score: 89, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00822', date: '2025-03-08', time: '13:50', duration: '04:50', score: 87, type: 'NLP', confidence: 'High', issue: null }
+                ]
                 },
-                { id: 'ag-13', name: '임재영', avgScore: 77.3, totalCalls: 28, totalEvals: 25, rank: 2, callType: 'I/B',
-                  evaluations: [
-                    { id: 'EV-2025-00811', date: '2025-01-15', time: '09:55', duration: '06:20', score: 75.8, type: 'AI', confidence: 'Medium', issue: '경어 사용 부족' },
-                    { id: 'EV-2025-00812', date: '2025-01-14', time: '13:40', duration: '04:05', score: 78.8, type: 'NLP', confidence: 'High', issue: null }
-                  ]
+                {
+                id: 'ag-42', name: '이동혁', employeeId: 'S-1042', avgScore: 85.6, totalCalls: 137, totalEvals: 43, rank: 2, callType: 'I/B', avgDuration: '05:35', topDeductionItem: '마무리 인사', issue: null,
+                evaluations: [
+                { id: 'AE-2025-00823', date: '2025-03-09', time: '10:35', duration: '05:45', score: 87, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00824', date: '2025-03-07', time: '15:20', duration: '05:25', score: 84, type: 'NLP', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-00825', date: '2025-03-04', time: '11:45', duration: '05:40', score: 86, type: 'AI', confidence: 'High', issue: null }
+                ]
+                },
+                {
+                id: 'ag-43', name: '김하늘', employeeId: 'S-1043', avgScore: 83.4, totalCalls: 128, totalEvals: 40, rank: 3, callType: 'I/B', avgDuration: '04:50', topDeductionItem: '스크립트 미준수', issue: '스크립트 미준수', urgentIssue: true,
+                evaluations: [
+                { id: 'AE-2025-00826', date: '2025-03-10', time: '14:10', duration: '05:00', score: 81, type: 'NLP', confidence: 'High', issue: '스크립트 미준수' },
+                { id: 'AE-2025-00827', date: '2025-03-06', time: '09:45', duration: '04:40', score: 86, type: 'AI', confidence: 'High', issue: null }
+                ]
+                },
+                {
+                id: 'ag-44', name: '박성민', employeeId: 'S-1044', avgScore: 81.7, totalCalls: 122, totalEvals: 37, rank: 4, callType: 'O/B', avgDuration: '05:50', topDeductionItem: '고객 확인 절차', issue: null,
+                evaluations: [
+                { id: 'AE-2025-00828', date: '2025-03-09', time: '11:20', duration: '06:00', score: 83, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00829', date: '2025-03-07', time: '16:30', duration: '05:40', score: 80, type: 'NLP', confidence: 'Medium', issue: null }
+                ]
+                },
+                {
+                id: 'ag-45', name: '최유진', employeeId: 'S-1045', avgScore: 80.0, totalCalls: 118, totalEvals: 35, rank: 5, callType: 'I/B', avgDuration: '04:30', topDeductionItem: '경어 사용', issue: null,
+                evaluations: [
+                { id: 'AE-2025-00830', date: '2025-03-10', time: '10:55', duration: '04:40', score: 81, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00831', date: '2025-03-08', time: '15:05', duration: '04:20', score: 79, type: 'NLP', confidence: 'High', issue: null },
+                { id: 'AE-2025-00832', date: '2025-03-05', time: '09:40', duration: '04:35', score: 80, type: 'AI', confidence: 'Medium', issue: null }
+                ]
+                },
+                {
+                id: 'ag-46', name: '강도윤', employeeId: 'S-1046', avgScore: 78.3, totalCalls: 112, totalEvals: 33, rank: 6, callType: 'I/B', avgDuration: '05:20', topDeductionItem: '상품설명', issue: '상품 설명 부족',
+                evaluations: [
+                { id: 'AE-2025-00833', date: '2025-03-09', time: '15:45', duration: '05:30', score: 76, type: 'NLP', confidence: 'Medium', issue: '상품 설명 부족' },
+                { id: 'AE-2025-00834', date: '2025-03-06', time: '11:10', duration: '05:10', score: 81, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00845', date: '2025-03-02', time: '09:00', duration: '06:20', score: 65, type: 'AI', confidence: 'Medium', issue: '상품 설명 부족' },
+                ]
+                },
+                {
+                id: 'ag-47', name: '장미소', employeeId: 'S-1047', avgScore: 76.5, totalCalls: 108, totalEvals: 31, rank: 7, callType: 'I/B', avgDuration: '06:05', topDeductionItem: '마무리 인사', issue: null,
+                evaluations: [
+                { id: 'AE-2025-00835', date: '2025-03-10', time: '13:20', duration: '06:15', score: 78, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00836', date: '2025-03-07', time: '10:40', duration: '05:55', score: 75, type: 'NLP', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-00846', date: '2025-03-01', time: '11:10', duration: '07:00', score: 68, type: 'NLP', confidence: 'Medium', issue: '마무리 인사 누락' },
+                ]
+                },
+                {
+                id: 'ag-48', name: '윤재현', employeeId: 'S-1048', avgScore: 74.8, totalCalls: 104, totalEvals: 29, rank: 8, callType: 'I/B', avgDuration: '05:40', topDeductionItem: '사과 표현', issue: null,
+                evaluations: [
+                { id: 'AE-2025-00837', date: '2025-03-08', time: '09:35', duration: '05:50', score: 74, type: 'AI', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-00838', date: '2025-03-05', time: '14:15', duration: '05:30', score: 76, type: 'NLP', confidence: 'High', issue: null },
+                { id: 'AE-2025-00839', date: '2025-03-03', time: '16:45', duration: '05:45', score: 74, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00847', date: '2025-03-02', time: '14:30', duration: '06:45', score: 62, type: 'AI', confidence: 'Medium', issue: '사과 표현 부족' },
+                ]
+                },
+                {
+                id: 'ag-49', name: '서민아', employeeId: 'S-1049', avgScore: 73.1, totalCalls: 100, totalEvals: 27, rank: 9, callType: 'I/B', avgDuration: '04:45', topDeductionItem: '개인정보 확인', issue: '개인정보 확인 누락', urgentIssue: true,
+                evaluations: [
+                { id: 'AE-2025-00840', date: '2025-03-09', time: '16:15', duration: '04:55', score: 74, type: 'NLP', confidence: 'High', issue: '개인정보 확인 누락' },
+                { id: 'AE-2025-00841', date: '2025-03-06', time: '13:40', duration: '04:35', score: 72, type: 'AI', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-00848', date: '2025-03-01', time: '16:20', duration: '05:30', score: 67, type: 'NLP', confidence: 'Medium', issue: '개인정보 확인 누락' },
+                ]
+                },
+                {
+                id: 'ag-50', name: '한지호', employeeId: 'S-1050', avgScore: 70.8, totalCalls: 95, totalEvals: 25, rank: 10, callType: 'O/B', avgDuration: '06:25', topDeductionItem: '고객 불만 처리', issue: null, excluded: true,
+                evaluations: [
+                { id: 'AE-2025-00842', date: '2025-03-10', time: '11:30', duration: '06:35', score: 72, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00843', date: '2025-03-07', time: '09:50', duration: '06:15', score: 70, type: 'NLP', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-00844', date: '2025-03-04', time: '15:15', duration: '06:30', score: 70, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00849', date: '2025-03-02', time: '10:40', duration: '07:50', score: 58, type: 'AI', confidence: 'Medium', issue: '과락 - 필수항목 미이행' },
+                ]
                 }
-              ]
+                ]
             },
             {
               id: 'tm-6', name: '고객상담2팀',
-              avgScore: 76.2, totalCalls: 1050, totalEvals: 920, agentCount: 38, completionRate: 87.6,
+              avgScore: 76.2, avgScore_prev: 74.8, totalCalls: 1050, totalEvals: 920, agentCount: 38, agentCount_prev: 36, completionRate: 87.6,
+              avgDuration: '03:50', avgDuration_prev: '04:02', excludedAgents: 1, excludedAgents_prev: 0, urgentIssues: 2, urgentIssues_prev: 2,
+              calls_auto_ib: 480, calls_auto_ib_done: 460, calls_auto_ob: 320, calls_auto_ob_done: 300, calls_manual: 250, calls_manual_done: 160,
+              calls_auto_ib_prev: 450, calls_auto_ib_done_prev: 440, calls_auto_ob_prev: 300, calls_auto_ob_done_prev: 290, calls_manual_prev: 260, calls_manual_done_prev: 180,
+              avg_score_auto_ib: 79.0, avg_score_auto_ib_prev: 77.5, avg_score_auto_ob: 74.8, avg_score_auto_ob_prev: 73.5, avg_score_manual: 73.0, avg_score_manual_prev: 71.8,
+              topDeduction: { item: '고객 불만 처리', calls: 11, pct: 15 }, lowScoreCalls: 8, lowScorePct: 8.7,
               agents: [
-                { id: 'ag-14', name: '조민서', avgScore: 81.9, totalCalls: 34, totalEvals: 32, rank: 1, callType: 'I/B',
-                  evaluations: [
-                    { id: 'EV-2025-00901', date: '2025-01-15', time: '09:18', duration: '05:33', score: 83.4, type: 'AI', confidence: 'High', issue: null },
-                    { id: 'EV-2025-00902', date: '2025-01-14', time: '11:50', duration: '04:40', score: 80.4, type: 'AI', confidence: 'Medium', issue: null }
-                  ]
+                {
+                id: 'ag-51', name: '장서윤', employeeId: 'S-1051', avgScore: 93.5, totalCalls: 162, totalEvals: 50, rank: 1, callType: 'I/B', avgDuration: '04:18', topDeductionItem: '마무리 인사', issue: null,
+                evaluations: [
+                { id: 'AE-2025-00921', date: '2025-03-10', time: '09:05', duration: '04:10', score: 95, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00922', date: '2025-03-08', time: '14:25', duration: '04:35', score: 92, type: 'NLP', confidence: 'High', issue: null },
+                { id: 'AE-2025-00923', date: '2025-03-05', time: '11:50', duration: '04:10', score: 94, type: 'AI', confidence: 'High', issue: null }
+                ]
                 },
-                { id: 'ag-15', name: '김태희', avgScore: 70.5, totalCalls: 29, totalEvals: 26, rank: 2, callType: 'I/B',
-                  evaluations: [
-                    { id: 'EV-2025-00911', date: '2025-01-15', time: '10:25', duration: '07:45', score: 68.2, type: 'AI', confidence: 'High', issue: '고객 불만 처리 미흡' },
-                    { id: 'EV-2025-00912', date: '2025-01-14', time: '15:10', duration: '03:55', score: 72.8, type: 'NLP', confidence: 'High', issue: '필수항목 누락' }
-                  ]
+                {
+                id: 'ag-52', name: '배현준', employeeId: 'S-1052', avgScore: 91.2, totalCalls: 149, totalEvals: 47, rank: 2, callType: 'I/B', avgDuration: '05:05', topDeductionItem: '첫인사', issue: null,
+                evaluations: [
+                { id: 'AE-2025-00924', date: '2025-03-09', time: '10:30', duration: '05:15', score: 92, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00925', date: '2025-03-07', time: '15:40', duration: '04:55', score: 90, type: 'NLP', confidence: 'High', issue: null }
+                ]
+                },
+                {
+                id: 'ag-53', name: '황수아', employeeId: 'S-1053', avgScore: 89.0, totalCalls: 140, totalEvals: 44, rank: 3, callType: 'I/B', avgDuration: '04:42', topDeductionItem: '고객 확인 절차', issue: '본인 확인 누락', urgentIssue: true,
+                evaluations: [
+                { id: 'AE-2025-00926', date: '2025-03-10', time: '13:15', duration: '05:00', score: 87, type: 'AI', confidence: 'High', issue: '본인 확인 누락' },
+                { id: 'AE-2025-00927', date: '2025-03-06', time: '10:10', duration: '04:30', score: 91, type: 'NLP', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-00928', date: '2025-03-03', time: '16:05', duration: '04:35', score: 89, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00946', date: '2025-03-02', time: '09:20', duration: '05:50', score: 66, type: 'AI', confidence: 'Medium', issue: '본인 확인 누락' },
+                ]
+                },
+                {
+                id: 'ag-54', name: '고재민', employeeId: 'S-1054', avgScore: 87.4, totalCalls: 131, totalEvals: 41, rank: 4, callType: 'O/B', avgDuration: '05:55', topDeductionItem: '스크립트 미준수', issue: null,
+                evaluations: [
+                { id: 'AE-2025-00929', date: '2025-03-09', time: '11:45', duration: '06:05', score: 88, type: 'NLP', confidence: 'High', issue: null },
+                { id: 'AE-2025-00930', date: '2025-03-07', time: '14:20', duration: '05:45', score: 87, type: 'AI', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-00947', date: '2025-03-01', time: '11:40', duration: '06:30', score: 69, type: 'NLP', confidence: 'Medium', issue: '스크립트 미준수' },
+                ]
+                },
+                {
+                id: 'ag-55', name: '문하린', employeeId: 'S-1055', avgScore: 85.6, totalCalls: 137, totalEvals: 39, rank: 5, callType: 'I/B', avgDuration: '05:22', topDeductionItem: '경어 사용', issue: null,
+                evaluations: [
+                { id: 'AE-2025-00931', date: '2025-03-10', time: '10:20', duration: '05:30', score: 87, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00932', date: '2025-03-08', time: '16:35', duration: '05:15', score: 84, type: 'NLP', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-00933', date: '2025-03-04', time: '09:45', duration: '05:20', score: 86, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00948', date: '2025-03-02', time: '14:00', duration: '06:10', score: 64, type: 'AI', confidence: 'Medium', issue: '경어 사용 부족' },
+                ]
+                },
+                {
+                id: 'ag-56', name: '나경민', employeeId: 'S-1056', avgScore: 83.8, totalCalls: 122, totalEvals: 37, rank: 6, callType: 'I/B', avgDuration: '04:10', topDeductionItem: '고객 불만 처리', issue: '상품 설명 부족',
+                evaluations: [
+                { id: 'AE-2025-00934', date: '2025-03-09', time: '15:10', duration: '04:25', score: 82, type: 'AI', confidence: 'High', issue: '상품 설명 부족' },
+                { id: 'AE-2025-00935', date: '2025-03-06', time: '10:50', duration: '03:55', score: 86, type: 'NLP', confidence: 'High', issue: null },
+                { id: 'AE-2025-00949', date: '2025-03-01', time: '15:30', duration: '05:20', score: 61, type: 'NLP', confidence: 'Medium', issue: '고객 불만 처리 미흡' },
+                ]
+                },
+                {
+                id: 'ag-57', name: '유다은', employeeId: 'S-1057', avgScore: 81.5, totalCalls: 116, totalEvals: 34, rank: 7, callType: 'O/B', avgDuration: '06:00', topDeductionItem: '동의 확보', issue: null,
+                evaluations: [
+                { id: 'AE-2025-00936', date: '2025-03-10', time: '14:00', duration: '06:10', score: 83, type: 'NLP', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-00937', date: '2025-03-07', time: '11:35', duration: '05:50', score: 80, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00950', date: '2025-03-02', time: '10:10', duration: '07:15', score: 67, type: 'AI', confidence: 'Medium', issue: '동의 확보 미흡' },
+                ]
+                },
+                {
+                id: 'ag-58', name: '전승우', employeeId: 'S-1058', avgScore: 79.3, totalCalls: 113, totalEvals: 32, rank: 8, callType: 'I/B', avgDuration: '05:10', topDeductionItem: '고객 불만 처리', issue: null,
+                evaluations: [
+                { id: 'AE-2025-00938', date: '2025-03-08', time: '09:55', duration: '05:20', score: 78, type: 'AI', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-00939', date: '2025-03-05', time: '13:40', duration: '05:00', score: 81, type: 'NLP', confidence: 'High', issue: null },
+                { id: 'AE-2025-00940', date: '2025-03-02', time: '15:25', duration: '05:10', score: 79, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00951', date: '2025-03-01', time: '13:00', duration: '06:40', score: 63, type: 'NLP', confidence: 'Medium', issue: '사과 표현 부족' },
+                ]
+                },
+                {
+                id: 'ag-59', name: '권지수', employeeId: 'S-1059', avgScore: 76.7, totalCalls: 108, totalEvals: 30, rank: 9, callType: 'I/B', avgDuration: '05:35', topDeductionItem: '개인정보 확인', issue: '개인정보 확인 누락', urgentIssue: true,
+                evaluations: [
+                { id: 'AE-2025-00941', date: '2025-03-09', time: '16:20', duration: '05:45', score: 75, type: 'NLP', confidence: 'High', issue: '개인정보 확인 누락' },
+                { id: 'AE-2025-00942', date: '2025-03-06', time: '14:10', duration: '05:25', score: 78, type: 'AI', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-00952', date: '2025-03-02', time: '16:30', duration: '06:50', score: 60, type: 'AI', confidence: 'Medium', issue: '개인정보 확인 누락' },
+                ]
+                },
+                {
+                id: 'ag-60', name: '양태현', employeeId: 'S-1060', avgScore: 74.2, totalCalls: 102, totalEvals: 28, rank: 10, callType: 'I/B', avgDuration: '06:15', topDeductionItem: '고객 불만 처리', issue: null, excluded: true,
+                evaluations: [
+                { id: 'AE-2025-00943', date: '2025-03-10', time: '11:10', duration: '06:25', score: 76, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00944', date: '2025-03-07', time: '09:30', duration: '06:05', score: 73, type: 'NLP', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-00945', date: '2025-03-04', time: '15:45', duration: '06:20', score: 74, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-00953', date: '2025-03-01', time: '09:45', duration: '07:30', score: 57, type: 'AI', confidence: 'Medium', issue: '과락 - 필수항목 미이행' },
+                ]
                 }
-              ]
+                ]
             },
             {
               id: 'tm-7', name: '영업지원팀',
-              avgScore: 79.8, totalCalls: 780, totalEvals: 660, agentCount: 25, completionRate: 84.6,
+              avgScore: 79.8, avgScore_prev: 78.5, totalCalls: 780, totalEvals: 660, agentCount: 25, agentCount_prev: 23, completionRate: 84.6,
+              avgDuration: '03:55', avgDuration_prev: '04:08', excludedAgents: 1, excludedAgents_prev: 1, urgentIssues: 1, urgentIssues_prev: 1,
+              calls_auto_ib: 270, calls_auto_ib_done: 255, calls_auto_ob: 240, calls_auto_ob_done: 225, calls_manual: 270, calls_manual_done: 180,
+              calls_auto_ib_prev: 260, calls_auto_ib_done_prev: 250, calls_auto_ob_prev: 230, calls_auto_ob_done_prev: 220, calls_manual_prev: 280, calls_manual_done_prev: 195,
+              avg_score_auto_ib: 82.5, avg_score_auto_ib_prev: 81.2, avg_score_auto_ob: 78.8, avg_score_auto_ob_prev: 77.5, avg_score_manual: 76.5, avg_score_manual_prev: 75.2,
+              topDeduction: { item: '경어 사용', calls: 4, pct: 8 }, lowScoreCalls: 5, lowScorePct: 7.6,
               agents: [
-                { id: 'ag-16', name: '이현우', avgScore: 83.7, totalCalls: 36, totalEvals: 33, rank: 1, callType: 'O/B',
-                  evaluations: [
-                    { id: 'EV-2025-01001', date: '2025-01-15', time: '09:35', duration: '04:28', score: 85.1, type: 'AI', confidence: 'High', issue: null },
-                    { id: 'EV-2025-01002', date: '2025-01-14', time: '14:15', duration: '05:50', score: 82.3, type: 'AI', confidence: 'Medium', issue: null }
-                  ]
+                {
+                id: 'ag-61', name: '안소희', employeeId: 'S-1061', avgScore: 95.1, totalCalls: 158, totalEvals: 52, rank: 1, callType: 'I/B', avgDuration: '04:25', topDeductionItem: '첫인사', issue: null,
+                evaluations: [
+                { id: 'AE-2025-01021', date: '2025-03-10', time: '09:10', duration: '04:15', score: 96, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-01022', date: '2025-03-08', time: '13:50', duration: '04:35', score: 94, type: 'NLP', confidence: 'High', issue: null }
+                ]
+                },
+                {
+                id: 'ag-62', name: '류진우', employeeId: 'S-1062', avgScore: 92.8, totalCalls: 145, totalEvals: 48, rank: 2, callType: 'I/B', avgDuration: '05:10', topDeductionItem: '마무리 인사', issue: '감정 대응 미흡',
+                evaluations: [
+                { id: 'AE-2025-01023', date: '2025-03-09', time: '10:40', duration: '05:20', score: 91, type: 'AI', confidence: 'High', issue: '감정 대응 미흡' },
+                { id: 'AE-2025-01024', date: '2025-03-07', time: '15:15', duration: '05:00', score: 94, type: 'NLP', confidence: 'High', issue: null },
+                { id: 'AE-2025-01025', date: '2025-03-04', time: '11:30', duration: '05:10', score: 93, type: 'AI', confidence: 'Medium', issue: null }
+                ]
+                },
+                {
+                id: 'ag-63', name: '손예나', employeeId: 'S-1063', avgScore: 90.3, totalCalls: 139, totalEvals: 45, rank: 3, callType: 'O/B', avgDuration: '06:05', topDeductionItem: '스크립트 미준수', issue: null,
+                evaluations: [
+                { id: 'AE-2025-01026', date: '2025-03-10', time: '14:30', duration: '06:20', score: 89, type: 'NLP', confidence: 'High', issue: null },
+                { id: 'AE-2025-01027', date: '2025-03-06', time: '09:55', duration: '05:50', score: 92, type: 'AI', confidence: 'High', issue: null }
+                ]
+                },
+                {
+                id: 'ag-64', name: '김태훈', employeeId: 'S-1064', avgScore: 88.6, totalCalls: 132, totalEvals: 42, rank: 4, callType: 'I/B', avgDuration: '04:50', topDeductionItem: '고객 확인 절차', issue: null,
+                evaluations: [
+                { id: 'AE-2025-01028', date: '2025-03-09', time: '11:20', duration: '04:55', score: 90, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-01029', date: '2025-03-07', time: '14:45', duration: '04:45', score: 87, type: 'NLP', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-01030', date: '2025-03-04', time: '10:15', duration: '04:50', score: 89, type: 'AI', confidence: 'High', issue: null }
+                ]
+                },
+                {
+                id: 'ag-65', name: '이지민', employeeId: 'S-1065', avgScore: 86.4, totalCalls: 128, totalEvals: 40, rank: 5, callType: 'I/B', avgDuration: '05:30', topDeductionItem: '경어 사용', issue: '경어 사용 부적절', urgentIssue: true,
+                evaluations: [
+                { id: 'AE-2025-01031', date: '2025-03-10', time: '10:05', duration: '05:40', score: 85, type: 'AI', confidence: 'Medium', issue: '경어 사용 부적절' },
+                { id: 'AE-2025-01032', date: '2025-03-08', time: '16:20', duration: '05:20', score: 88, type: 'NLP', confidence: 'High', issue: null }
+                ]
+                },
+                {
+                id: 'ag-66', name: '박성현', employeeId: 'S-1066', avgScore: 84.0, totalCalls: 121, totalEvals: 38, rank: 6, callType: 'I/B', avgDuration: '04:20', topDeductionItem: '상품설명', issue: null,
+                evaluations: [
+                { id: 'AE-2025-01033', date: '2025-03-09', time: '15:35', duration: '04:30', score: 85, type: 'NLP', confidence: 'High', issue: null },
+                { id: 'AE-2025-01034', date: '2025-03-06', time: '11:15', duration: '04:10', score: 83, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-01045', date: '2025-03-02', time: '09:10', duration: '05:00', score: 65, type: 'AI', confidence: 'Medium', issue: '상품 설명 부족' },
+                ]
+                },
+                {
+                id: 'ag-67', name: '정유리', employeeId: 'S-1067', avgScore: 82.1, totalCalls: 117, totalEvals: 35, rank: 7, callType: 'O/B', avgDuration: '05:45', topDeductionItem: '동의 확보', issue: null,
+                evaluations: [
+                { id: 'AE-2025-01035', date: '2025-03-10', time: '13:55', duration: '05:55', score: 83, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-01036', date: '2025-03-07', time: '10:30', duration: '05:35', score: 81, type: 'NLP', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-01037', date: '2025-03-04', time: '15:10', duration: '05:50', score: 82, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-01046', date: '2025-03-01', time: '11:50', duration: '06:20', score: 68, type: 'NLP', confidence: 'Medium', issue: '동의 확보 미흡' },
+                ]
+                },
+                {
+                id: 'ag-68', name: '최동원', employeeId: 'S-1068', avgScore: 79.8, totalCalls: 112, totalEvals: 33, rank: 8, callType: 'I/B', avgDuration: '05:15', topDeductionItem: '사과 표현', issue: '사과 표현 부재',
+                evaluations: [
+                { id: 'AE-2025-01038', date: '2025-03-08', time: '09:40', duration: '05:25', score: 78, type: 'AI', confidence: 'Medium', issue: '사과 표현 부재' },
+                { id: 'AE-2025-01039', date: '2025-03-05', time: '14:05', duration: '05:05', score: 82, type: 'NLP', confidence: 'High', issue: null },
+                { id: 'AE-2025-01047', date: '2025-03-02', time: '14:40', duration: '06:00', score: 62, type: 'AI', confidence: 'Medium', issue: '사과 표현 부재' },
+                ]
+                },
+                {
+                id: 'ag-69', name: '한서진', employeeId: 'S-1069', avgScore: 77.3, totalCalls: 106, totalEvals: 31, rank: 9, callType: 'I/B', avgDuration: '05:50', topDeductionItem: '경어 사용', issue: null,
+                evaluations: [
+                { id: 'AE-2025-01040', date: '2025-03-09', time: '16:40', duration: '06:00', score: 78, type: 'NLP', confidence: 'High', issue: null },
+                { id: 'AE-2025-01041', date: '2025-03-06', time: '13:25', duration: '05:40', score: 76, type: 'AI', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-01042', date: '2025-03-03', time: '10:50', duration: '05:55', score: 78, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-01048', date: '2025-03-01', time: '16:50', duration: '06:30', score: 67, type: 'NLP', confidence: 'Medium', issue: '개인정보 확인 누락' },
+                ]
+                },
+                {
+                id: 'ag-70', name: '강민서', employeeId: 'S-1070', avgScore: 74.9, totalCalls: 100, totalEvals: 28, rank: 10, callType: 'I/B', avgDuration: '06:20', topDeductionItem: '고객 불만 처리', issue: null, excluded: true,
+                evaluations: [
+                { id: 'AE-2025-01043', date: '2025-03-10', time: '11:25', duration: '06:30', score: 76, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-01044', date: '2025-03-07', time: '09:15', duration: '06:10', score: 74, type: 'NLP', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-01049', date: '2025-03-02', time: '10:20', duration: '07:40', score: 58, type: 'AI', confidence: 'Medium', issue: '과락 - 필수항목 미이행' },
+                ]
                 }
-              ]
+                ]
             }
           ]
         },
         {
           id: 'ws-3', name: '대구센터',
-          avgScore: 75.3, totalCalls: 1890, totalEvals: 1580, agentCount: 72, completionRate: 83.6,
+          avgScore: 75.3, avgScore_prev: 73.6, totalCalls: 1890, totalEvals: 1580, agentCount: 72, completionRate: 83.6, avgDuration: '04:02',
+          agentCount_prev: 68, avgDuration_prev: '04:15', excludedAgents: 4, excludedAgents_prev: 3, urgentIssues: 7, urgentIssues_prev: 6,
+          calls_auto_ib: 850, calls_auto_ib_done: 800, calls_auto_ob: 540, calls_auto_ob_done: 490, calls_manual: 500, calls_manual_done: 290,
+          calls_auto_ib_prev: 800, calls_auto_ib_done_prev: 780, calls_auto_ob_prev: 510, calls_auto_ob_done_prev: 495, calls_manual_prev: 520, calls_manual_done_prev: 310,
+          avg_score_auto_ib: 78.1, avg_score_auto_ib_prev: 77.0, avg_score_auto_ob: 74.5, avg_score_auto_ob_prev: 73.2, avg_score_manual: 71.8, avg_score_manual_prev: 70.5,
+          topDeduction: { item: '고객 확인 절차', calls: 31, pct: 18 }, lowScoreCalls: 25, lowScorePct: 9.8,
           teams: [
             {
               id: 'tm-8', name: '종합상담팀',
-              avgScore: 77.1, totalCalls: 820, totalEvals: 690, agentCount: 30, completionRate: 84.1,
+              avgScore: 77.1, avgScore_prev: 75.8, totalCalls: 820, totalEvals: 690, agentCount: 30, agentCount_prev: 28, completionRate: 84.1,
+              avgDuration: '04:05', avgDuration_prev: '04:18', excludedAgents: 2, excludedAgents_prev: 1, urgentIssues: 3, urgentIssues_prev: 2,
+              calls_auto_ib: 380, calls_auto_ib_done: 360, calls_auto_ob: 220, calls_auto_ob_done: 200, calls_manual: 220, calls_manual_done: 130,
+              calls_auto_ib_prev: 360, calls_auto_ib_done_prev: 350, calls_auto_ob_prev: 210, calls_auto_ob_done_prev: 200, calls_manual_prev: 230, calls_manual_done_prev: 145,
+              avg_score_auto_ib: 80.0, avg_score_auto_ib_prev: 78.8, avg_score_auto_ob: 75.5, avg_score_auto_ob_prev: 74.2, avg_score_manual: 73.8, avg_score_manual_prev: 72.5,
+              topDeduction: { item: '고객 확인 절차', calls: 12, pct: 16 }, lowScoreCalls: 9, lowScorePct: 11.0,
               agents: [
-                { id: 'ag-17', name: '송민준', avgScore: 81.5, totalCalls: 30, totalEvals: 28, rank: 1, callType: 'I/B',
-                  evaluations: [
-                    { id: 'EV-2025-01101', date: '2025-01-15', time: '09:25', duration: '05:10', score: 82.8, type: 'AI', confidence: 'High', issue: null },
-                    { id: 'EV-2025-01102', date: '2025-01-14', time: '11:40', duration: '06:25', score: 80.2, type: 'NLP', confidence: 'High', issue: null }
-                  ]
+                {
+                id: 'ag-71', name: '오하늘', employeeId: 'S-1071', avgScore: 92.7, totalCalls: 155, totalEvals: 49, rank: 1, callType: 'O/B', avgDuration: '03:55', topDeductionItem: '고객 확인 절차', issue: null,
+                evaluations: [
+                { id: 'AE-2025-01121', date: '2025-03-10', time: '09:20', duration: '04:05', score: 94, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-01122', date: '2025-03-08', time: '14:10', duration: '03:45', score: 91, type: 'NLP', confidence: 'High', issue: null },
+                { id: 'AE-2025-01123', date: '2025-03-05', time: '11:35', duration: '03:55', score: 93, type: 'AI', confidence: 'High', issue: null }
+                ]
                 },
-                { id: 'ag-18', name: '황서연', avgScore: 73.8, totalCalls: 27, totalEvals: 24, rank: 2, callType: 'I/B',
-                  evaluations: [
-                    { id: 'EV-2025-01111', date: '2025-01-15', time: '10:15', duration: '04:35', score: 71.5, type: 'AI', confidence: 'Medium', issue: '고객 확인 절차 누락' },
-                    { id: 'EV-2025-01112', date: '2025-01-14', time: '15:30', duration: '05:50', score: 76.1, type: 'AI', confidence: 'Medium', issue: null }
-                  ]
+                {
+                id: 'ag-72', name: '장준혁', employeeId: 'S-1072', avgScore: 90.4, totalCalls: 147, totalEvals: 46, rank: 2, callType: 'O/B', avgDuration: '04:15', topDeductionItem: '첫인사', issue: null,
+                evaluations: [
+                { id: 'AE-2025-01124', date: '2025-03-09', time: '10:15', duration: '04:25', score: 91, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-01125', date: '2025-03-07', time: '15:50', duration: '04:05', score: 90, type: 'NLP', confidence: 'High', issue: null },
+                { id: 'AE-2025-01145', date: '2025-03-02', time: '09:00', duration: '04:40', score: 69, type: 'AI', confidence: 'Medium', issue: '첫인사 누락' },
+                ]
+                },
+                {
+                id: 'ag-73', name: '임소연', employeeId: 'S-1073', avgScore: 88.1, totalCalls: 141, totalEvals: 43, rank: 3, callType: 'O/B', avgDuration: '04:35', topDeductionItem: '스크립트 미준수', issue: null,
+                evaluations: [
+                { id: 'AE-2025-01126', date: '2025-03-10', time: '13:30', duration: '04:45', score: 89, type: 'NLP', confidence: 'High', issue: null },
+                { id: 'AE-2025-01127', date: '2025-03-06', time: '10:25', duration: '04:25', score: 87, type: 'AI', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-01128', date: '2025-03-03', time: '16:15', duration: '04:35', score: 88, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-01146', date: '2025-03-01', time: '11:20', duration: '05:10', score: 66, type: 'NLP', confidence: 'Medium', issue: '스크립트 미준수' },
+                ]
+                },
+                {
+                id: 'ag-74', name: '신재영', employeeId: 'S-1074', avgScore: 86.3, totalCalls: 130, totalEvals: 40, rank: 4, callType: 'O/B', avgDuration: '05:00', topDeductionItem: '고객 확인 절차', issue: '안내 정보 오류', urgentIssue: true,
+                evaluations: [
+                { id: 'AE-2025-01129', date: '2025-03-09', time: '11:55', duration: '05:10', score: 84, type: 'AI', confidence: 'High', issue: '안내 정보 오류' },
+                { id: 'AE-2025-01130', date: '2025-03-07', time: '14:35', duration: '04:50', score: 89, type: 'NLP', confidence: 'High', issue: null },
+                { id: 'AE-2025-01147', date: '2025-03-02', time: '13:50', duration: '05:30', score: 63, type: 'AI', confidence: 'Medium', issue: '고객 확인 절차 누락' },
+                ]
+                },
+                {
+                id: 'ag-75', name: '조예은', employeeId: 'S-1075', avgScore: 84.0, totalCalls: 126, totalEvals: 38, rank: 5, callType: 'O/B', avgDuration: '04:40', topDeductionItem: '경어 사용', issue: null,
+                evaluations: [
+                { id: 'AE-2025-01131', date: '2025-03-10', time: '10:35', duration: '04:50', score: 85, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-01132', date: '2025-03-08', time: '16:00', duration: '04:30', score: 83, type: 'NLP', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-01148', date: '2025-03-01', time: '15:00', duration: '05:50', score: 67, type: 'NLP', confidence: 'Medium', issue: '경어 사용 부족' },
+                ]
+                },
+                {
+                id: 'ag-76', name: '배동하', employeeId: 'S-1076', avgScore: 81.6, totalCalls: 119, totalEvals: 36, rank: 6, callType: 'O/B', avgDuration: '05:20', topDeductionItem: '고객 확인 절차', issue: null,
+                evaluations: [
+                { id: 'AE-2025-01133', date: '2025-03-09', time: '15:25', duration: '05:30', score: 82, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-01134', date: '2025-03-06', time: '11:00', duration: '05:10', score: 81, type: 'NLP', confidence: 'High', issue: null },
+                { id: 'AE-2025-01135', date: '2025-03-03', time: '14:40', duration: '05:25', score: 82, type: 'AI', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-01149', date: '2025-03-02', time: '10:30', duration: '06:20', score: 64, type: 'AI', confidence: 'Medium', issue: '마무리 인사 누락' },
+                ]
+                },
+                {
+                id: 'ag-77', name: '홍수민', employeeId: 'S-1077', avgScore: 79.2, totalCalls: 114, totalEvals: 34, rank: 7, callType: 'O/B', avgDuration: '04:55', topDeductionItem: '동의 확보', issue: '동의 절차 누락', urgentIssue: true,
+                evaluations: [
+                { id: 'AE-2025-01136', date: '2025-03-10', time: '14:15', duration: '05:05', score: 78, type: 'NLP', confidence: 'Medium', issue: '동의 절차 누락' },
+                { id: 'AE-2025-01137', date: '2025-03-07', time: '11:50', duration: '04:45', score: 80, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-01150', date: '2025-03-01', time: '14:10', duration: '05:20', score: 61, type: 'NLP', confidence: 'Medium', issue: '동의 절차 누락' },
+                ]
+                },
+                {
+                id: 'ag-78', name: '남진호', employeeId: 'S-1078', avgScore: 76.8, totalCalls: 109, totalEvals: 31, rank: 8, callType: 'O/B', avgDuration: '05:35', topDeductionItem: '사과 표현', issue: null,
+                evaluations: [
+                { id: 'AE-2025-01138', date: '2025-03-08', time: '09:30', duration: '05:45', score: 75, type: 'AI', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-01139', date: '2025-03-05', time: '13:50', duration: '05:25', score: 79, type: 'NLP', confidence: 'High', issue: null },
+                { id: 'AE-2025-01140', date: '2025-03-02', time: '16:10', duration: '05:40', score: 76, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-01151', date: '2025-03-02', time: '16:00', duration: '06:40', score: 65, type: 'AI', confidence: 'Medium', issue: '사과 표현 부족' },
+                ]
+                },
+                {
+                id: 'ag-79', name: '유서아', employeeId: 'S-1079', avgScore: 73.5, totalCalls: 103, totalEvals: 29, rank: 9, callType: 'O/B', avgDuration: '04:20', topDeductionItem: '개인정보 확인', issue: null, excluded: true,
+                evaluations: [
+                { id: 'AE-2025-01141', date: '2025-03-09', time: '16:05', duration: '04:30', score: 74, type: 'NLP', confidence: 'High', issue: null },
+                { id: 'AE-2025-01142', date: '2025-03-06', time: '13:35', duration: '04:10', score: 73, type: 'AI', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-01152', date: '2025-03-01', time: '09:40', duration: '05:00', score: 62, type: 'NLP', confidence: 'Medium', issue: '개인정보 확인 누락' },
+                ]
+                },
+                {
+                id: 'ag-80', name: '서지원', employeeId: 'S-1080', avgScore: 70.9, totalCalls: 97, totalEvals: 26, rank: 10, callType: 'O/B', avgDuration: '05:50', topDeductionItem: '고객 불만 처리', issue: '고객 요청 미반영', urgentIssue: true, excluded: true,
+                evaluations: [
+                { id: 'AE-2025-01143', date: '2025-03-10', time: '11:40', duration: '06:00', score: 72, type: 'AI', confidence: 'High', issue: '고객 요청 미반영' },
+                { id: 'AE-2025-01144', date: '2025-03-07', time: '09:20', duration: '05:40', score: 70, type: 'NLP', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-01153', date: '2025-03-02', time: '11:50', duration: '07:10', score: 55, type: 'AI', confidence: 'Medium', issue: '과락 - 필수항목 미이행' },
+                ]
                 }
-              ]
+                ]
             },
             {
               id: 'tm-9', name: '클레임처리팀',
-              avgScore: 72.8, totalCalls: 650, totalEvals: 540, agentCount: 22, completionRate: 83.1,
+              avgScore: 72.8, avgScore_prev: 71.5, totalCalls: 650, totalEvals: 540, agentCount: 22, agentCount_prev: 20, completionRate: 83.1,
+              avgDuration: '04:20', avgDuration_prev: '04:35', excludedAgents: 1, excludedAgents_prev: 1, urgentIssues: 3, urgentIssues_prev: 3,
+              calls_auto_ib: 300, calls_auto_ib_done: 280, calls_auto_ob: 180, calls_auto_ob_done: 160, calls_manual: 170, calls_manual_done: 100,
+              calls_auto_ib_prev: 280, calls_auto_ib_done_prev: 270, calls_auto_ob_prev: 170, calls_auto_ob_done_prev: 160, calls_manual_prev: 180, calls_manual_done_prev: 115,
+              avg_score_auto_ib: 76.0, avg_score_auto_ib_prev: 74.8, avg_score_auto_ob: 71.5, avg_score_auto_ob_prev: 70.2, avg_score_manual: 69.2, avg_score_manual_prev: 67.8,
+              topDeduction: { item: '사과 표현', calls: 15, pct: 20 }, lowScoreCalls: 10, lowScorePct: 15.4,
               agents: [
-                { id: 'ag-19', name: '노재원', avgScore: 78.2, totalCalls: 26, totalEvals: 23, rank: 1, callType: 'I/B',
-                  evaluations: [
-                    { id: 'EV-2025-01201', date: '2025-01-15', time: '09:45', duration: '08:20', score: 79.6, type: 'AI', confidence: 'High', issue: null },
-                    { id: 'EV-2025-01202', date: '2025-01-14', time: '13:25', duration: '06:45', score: 76.8, type: 'AI', confidence: 'Medium', issue: '사과 표현 부족' }
-                  ]
+                {
+                id: 'ag-81', name: '문태준', employeeId: 'S-1081', avgScore: 93.8, totalCalls: 160, totalEvals: 51, rank: 1, callType: 'I/B', avgDuration: '04:30', topDeductionItem: '사과 표현', issue: null,
+                evaluations: [
+                { id: 'AE-2025-01221', date: '2025-03-10', time: '09:00', duration: '04:20', score: 95, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-01222', date: '2025-03-08', time: '14:40', duration: '04:40', score: 93, type: 'NLP', confidence: 'High', issue: null },
+                { id: 'AE-2025-01245', date: '2025-03-02', time: '09:30', duration: '05:10', score: 69, type: 'AI', confidence: 'Medium', issue: '첫인사 누락' },
+                ]
                 },
-                { id: 'ag-20', name: '문지혜', avgScore: 67.4, totalCalls: 24, totalEvals: 20, rank: 2, callType: 'I/B',
-                  evaluations: [
-                    { id: 'EV-2025-01211', date: '2025-01-15', time: '10:50', duration: '09:15', score: 64.2, type: 'AI', confidence: 'High', issue: '과락 - 필수항목 미이행' },
-                    { id: 'EV-2025-01212', date: '2025-01-14', time: '14:55', duration: '05:30', score: 70.6, type: 'NLP', confidence: 'High', issue: '스크립트 미준수' }
-                  ]
+                {
+                id: 'ag-82', name: '권하은', employeeId: 'S-1082', avgScore: 91.5, totalCalls: 151, totalEvals: 48, rank: 2, callType: 'I/B', avgDuration: '05:00', topDeductionItem: '마무리 인사', issue: null,
+                evaluations: [
+                { id: 'AE-2025-01223', date: '2025-03-09', time: '10:25', duration: '05:10', score: 93, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-01224', date: '2025-03-07', time: '15:30', duration: '04:50', score: 90, type: 'NLP', confidence: 'High', issue: null },
+                { id: 'AE-2025-01225', date: '2025-03-04', time: '11:15', duration: '05:05', score: 92, type: 'AI', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-01246', date: '2025-03-01', time: '11:00', duration: '05:50', score: 66, type: 'NLP', confidence: 'Medium', issue: '마무리 인사 누락' },
+                ]
+                },
+                {
+                id: 'ag-83', name: '양성진', employeeId: 'S-1083', avgScore: 89.2, totalCalls: 143, totalEvals: 44, rank: 3, callType: 'I/B', avgDuration: '04:45', topDeductionItem: '고객 확인 절차', issue: '통화 중 장시간 보류', urgentIssue: true,
+                evaluations: [
+                { id: 'AE-2025-01226', date: '2025-03-10', time: '13:45', duration: '05:15', score: 87, type: 'AI', confidence: 'High', issue: '통화 중 장시간 보류' },
+                { id: 'AE-2025-01227', date: '2025-03-06', time: '10:00', duration: '04:35', score: 91, type: 'NLP', confidence: 'High', issue: null },
+                { id: 'AE-2025-01247', date: '2025-03-02', time: '13:30', duration: '06:30', score: 63, type: 'AI', confidence: 'Medium', issue: '통화 중 장시간 보류' },
+                ]
+                },
+                {
+                id: 'ag-84', name: '고미연', employeeId: 'S-1084', avgScore: 87.0, totalCalls: 136, totalEvals: 41, rank: 4, callType: 'O/B', avgDuration: '06:10', topDeductionItem: '스크립트 미준수', issue: null,
+                evaluations: [
+                { id: 'AE-2025-01228', date: '2025-03-09', time: '11:35', duration: '06:20', score: 88, type: 'NLP', confidence: 'High', issue: null },
+                { id: 'AE-2025-01229', date: '2025-03-07', time: '14:50', duration: '06:00', score: 86, type: 'AI', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-01248', date: '2025-03-01', time: '15:20', duration: '07:00', score: 67, type: 'NLP', confidence: 'Medium', issue: '스크립트 미준수' },
+                ]
+                },
+                {
+                id: 'ag-85', name: '전지훈', employeeId: 'S-1085', avgScore: 84.7, totalCalls: 133, totalEvals: 39, rank: 5, callType: 'I/B', avgDuration: '05:25', topDeductionItem: '사과 표현', issue: null,
+                evaluations: [
+                { id: 'AE-2025-01230', date: '2025-03-10', time: '10:10', duration: '05:35', score: 86, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-01231', date: '2025-03-08', time: '16:25', duration: '05:15', score: 83, type: 'NLP', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-01232', date: '2025-03-04', time: '09:50', duration: '05:30', score: 85, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-01249', date: '2025-03-02', time: '10:10', duration: '06:10', score: 64, type: 'AI', confidence: 'Medium', issue: '사과 표현 부족' },
+                ]
+                },
+                {
+                id: 'ag-86', name: '나서영', employeeId: 'S-1086', avgScore: 82.3, totalCalls: 124, totalEvals: 37, rank: 6, callType: 'I/B', avgDuration: '04:15', topDeductionItem: '상품설명', issue: '상품 설명 부족', urgentIssue: true,
+                evaluations: [
+                { id: 'AE-2025-01233', date: '2025-03-09', time: '15:00', duration: '04:25', score: 80, type: 'AI', confidence: 'High', issue: '상품 설명 부족' },
+                { id: 'AE-2025-01234', date: '2025-03-06', time: '10:45', duration: '04:05', score: 85, type: 'NLP', confidence: 'High', issue: null },
+                { id: 'AE-2025-01250', date: '2025-03-01', time: '14:40', duration: '05:30', score: 61, type: 'NLP', confidence: 'Medium', issue: '상품 설명 부족' },
+                ]
+                },
+                {
+                id: 'ag-87', name: '황재원', employeeId: 'S-1087', avgScore: 80.5, totalCalls: 118, totalEvals: 35, rank: 7, callType: 'O/B', avgDuration: '05:55', topDeductionItem: '동의 확보', issue: null,
+                evaluations: [
+                { id: 'AE-2025-01235', date: '2025-03-10', time: '14:05', duration: '06:05', score: 82, type: 'NLP', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-01236', date: '2025-03-07', time: '11:40', duration: '05:45', score: 79, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-01237', date: '2025-03-04', time: '15:20', duration: '05:55', score: 81, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-01251', date: '2025-03-02', time: '16:20', duration: '06:50', score: 65, type: 'AI', confidence: 'Medium', issue: '동의 확보 미흡' },
+                ]
+                },
+                {
+                id: 'ag-88', name: '김도연', employeeId: 'S-1088', avgScore: 78.1, totalCalls: 111, totalEvals: 32, rank: 8, callType: 'I/B', avgDuration: '05:10', topDeductionItem: '사과 표현', issue: null,
+                evaluations: [
+                { id: 'AE-2025-01238', date: '2025-03-08', time: '09:50', duration: '05:20', score: 77, type: 'AI', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-01239', date: '2025-03-05', time: '13:30', duration: '05:00', score: 79, type: 'NLP', confidence: 'High', issue: null },
+                { id: 'AE-2025-01252', date: '2025-03-01', time: '09:50', duration: '06:00', score: 62, type: 'NLP', confidence: 'Medium', issue: '고객 확인 절차 누락' },
+                ]
+                },
+                {
+                id: 'ag-89', name: '이민혁', employeeId: 'S-1089', avgScore: 75.4, totalCalls: 105, totalEvals: 30, rank: 9, callType: 'I/B', avgDuration: '05:40', topDeductionItem: '개인정보 확인', issue: '개인정보 확인 누락', urgentIssue: true,
+                evaluations: [
+                { id: 'AE-2025-01240', date: '2025-03-09', time: '16:30', duration: '05:50', score: 74, type: 'NLP', confidence: 'High', issue: '개인정보 확인 누락' },
+                { id: 'AE-2025-01241', date: '2025-03-06', time: '14:20', duration: '05:30', score: 77, type: 'AI', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-01253', date: '2025-03-02', time: '11:40', duration: '07:20', score: 58, type: 'AI', confidence: 'Medium', issue: '개인정보 확인 누락' },
+                ]
+                },
+                {
+                id: 'ag-90', name: '박지은', employeeId: 'S-1090', avgScore: 72.6, totalCalls: 98, totalEvals: 27, rank: 10, callType: 'I/B', avgDuration: '06:25', topDeductionItem: '고객 불만 처리', issue: null, excluded: true,
+                evaluations: [
+                { id: 'AE-2025-01242', date: '2025-03-10', time: '11:20', duration: '06:35', score: 74, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-01243', date: '2025-03-07', time: '09:45', duration: '06:15', score: 71, type: 'NLP', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-01244', date: '2025-03-04', time: '15:35', duration: '06:30', score: 73, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-01254', date: '2025-03-01', time: '13:10', duration: '08:00', score: 54, type: 'AI', confidence: 'Medium', issue: '과락 - 필수항목 미이행' },
+                ]
                 }
-              ]
+                ]
             },
             {
               id: 'tm-10', name: '신규고객팀',
-              avgScore: 76.5, totalCalls: 420, totalEvals: 350, agentCount: 20, completionRate: 83.3,
+              avgScore: 76.5, avgScore_prev: 75.0, totalCalls: 420, totalEvals: 350, agentCount: 20, agentCount_prev: 20, completionRate: 83.3,
+              avgDuration: '03:30', avgDuration_prev: '03:42', excludedAgents: 1, excludedAgents_prev: 0, urgentIssues: 1, urgentIssues_prev: 1,
+              calls_auto_ib: 170, calls_auto_ib_done: 160, calls_auto_ob: 140, calls_auto_ob_done: 130, calls_manual: 110, calls_manual_done: 60,
+              calls_auto_ib_prev: 160, calls_auto_ib_done_prev: 155, calls_auto_ob_prev: 130, calls_auto_ob_done_prev: 125, calls_manual_prev: 120, calls_manual_done_prev: 70,
+              avg_score_auto_ib: 79.5, avg_score_auto_ib_prev: 78.2, avg_score_auto_ob: 75.0, avg_score_auto_ob_prev: 73.8, avg_score_manual: 73.5, avg_score_manual_prev: 72.0,
+              topDeduction: { item: '상품설명', calls: 6, pct: 14 }, lowScoreCalls: 6, lowScorePct: 8.6,
               agents: [
-                { id: 'ag-21', name: '유하린', avgScore: 80.9, totalCalls: 22, totalEvals: 20, rank: 1, callType: 'O/B',
-                  evaluations: [
-                    { id: 'EV-2025-01301', date: '2025-01-15', time: '09:58', duration: '04:05', score: 82.3, type: 'AI', confidence: 'High', issue: null },
-                    { id: 'EV-2025-01302', date: '2025-01-14', time: '11:10', duration: '05:20', score: 79.5, type: 'AI', confidence: 'Medium', issue: null }
-                  ]
+                {
+                id: 'ag-91', name: '최수현', employeeId: 'S-1091', avgScore: 91.9, totalCalls: 153, totalEvals: 49, rank: 1, callType: 'I/B', avgDuration: '05:05', topDeductionItem: '상품설명', issue: null,
+                evaluations: [
+                { id: 'AE-2025-01321', date: '2025-03-10', time: '09:15', duration: '05:15', score: 93, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-01322', date: '2025-03-08', time: '13:55', duration: '04:55', score: 91, type: 'NLP', confidence: 'High', issue: null },
+                { id: 'AE-2025-01323', date: '2025-03-05', time: '11:40', duration: '05:10', score: 92, type: 'AI', confidence: 'High', issue: null }
+                ]
+                },
+                {
+                id: 'ag-92', name: '정현서', employeeId: 'S-1092', avgScore: 89.7, totalCalls: 144, totalEvals: 46, rank: 2, callType: 'I/B', avgDuration: '05:30', topDeductionItem: '첫인사', issue: '감정 대응 미흡', urgentIssue: true,
+                evaluations: [
+                { id: 'AE-2025-01324', date: '2025-03-09', time: '10:35', duration: '05:40', score: 88, type: 'AI', confidence: 'High', issue: '감정 대응 미흡' },
+                { id: 'AE-2025-01325', date: '2025-03-07', time: '15:20', duration: '05:20', score: 91, type: 'NLP', confidence: 'High', issue: null }
+                ]
+                },
+                {
+                id: 'ag-93', name: '한유빈', employeeId: 'S-1093', avgScore: 87.8, totalCalls: 138, totalEvals: 43, rank: 3, callType: 'I/B', avgDuration: '04:50', topDeductionItem: '스크립트 미준수', issue: null,
+                evaluations: [
+                { id: 'AE-2025-01326', date: '2025-03-10', time: '14:20', duration: '05:00', score: 89, type: 'NLP', confidence: 'High', issue: null },
+                { id: 'AE-2025-01327', date: '2025-03-06', time: '09:45', duration: '04:40', score: 87, type: 'AI', confidence: 'Medium', issue: null }
+                ]
+                },
+                {
+                id: 'ag-94', name: '강태민', employeeId: 'S-1094', avgScore: 85.4, totalCalls: 129, totalEvals: 40, rank: 4, callType: 'O/B', avgDuration: '06:15', topDeductionItem: '고객 확인 절차', issue: null,
+                evaluations: [
+                { id: 'AE-2025-01328', date: '2025-03-09', time: '11:50', duration: '06:25', score: 87, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-01329', date: '2025-03-07', time: '14:30', duration: '06:05', score: 84, type: 'NLP', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-01330', date: '2025-03-04', time: '10:20', duration: '06:15', score: 85, type: 'AI', confidence: 'High', issue: null }
+                ]
+                },
+                {
+                id: 'ag-95', name: '윤지혜', employeeId: 'S-1095', avgScore: 83.1, totalCalls: 125, totalEvals: 38, rank: 5, callType: 'I/B', avgDuration: '05:15', topDeductionItem: '경어 사용', issue: '경어 사용 부적절',
+                evaluations: [
+                { id: 'AE-2025-01331', date: '2025-03-10', time: '10:00', duration: '05:25', score: 82, type: 'AI', confidence: 'Medium', issue: '경어 사용 부적절' },
+                { id: 'AE-2025-01332', date: '2025-03-08', time: '16:40', duration: '05:05', score: 84, type: 'NLP', confidence: 'High', issue: null },
+                { id: 'AE-2025-01345', date: '2025-03-02', time: '09:20', duration: '06:00', score: 66, type: 'AI', confidence: 'Medium', issue: '경어 사용 부적절' },
+                ]
+                },
+                {
+                id: 'ag-96', name: '송동건', employeeId: 'S-1096', avgScore: 80.8, totalCalls: 120, totalEvals: 36, rank: 6, callType: 'I/B', avgDuration: '04:25', topDeductionItem: '상품설명', issue: null,
+                evaluations: [
+                { id: 'AE-2025-01333', date: '2025-03-09', time: '15:15', duration: '04:35', score: 82, type: 'NLP', confidence: 'High', issue: null },
+                { id: 'AE-2025-01334', date: '2025-03-06', time: '11:05', duration: '04:15', score: 80, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-01335', date: '2025-03-03', time: '14:50', duration: '04:30', score: 80, type: 'AI', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-01346', date: '2025-03-01', time: '11:30', duration: '05:20', score: 69, type: 'NLP', confidence: 'Medium', issue: '상품설명 부족' },
+                ]
+                },
+                {
+                id: 'ag-97', name: '조예진', employeeId: 'S-1097', avgScore: 78.5, totalCalls: 115, totalEvals: 33, rank: 7, callType: 'O/B', avgDuration: '05:50', topDeductionItem: '동의 확보', issue: null,
+                evaluations: [
+                { id: 'AE-2025-01336', date: '2025-03-10', time: '13:40', duration: '06:00', score: 80, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-01337', date: '2025-03-07', time: '10:55', duration: '05:40', score: 77, type: 'NLP', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-01347', date: '2025-03-02', time: '14:00', duration: '06:40', score: 63, type: 'AI', confidence: 'Medium', issue: '동의 확보 미흡' },
+                ]
+                },
+                {
+                id: 'ag-98', name: '임현우', employeeId: 'S-1098', avgScore: 75.9, totalCalls: 110, totalEvals: 31, rank: 8, callType: 'I/B', avgDuration: '05:20', topDeductionItem: '사과 표현', issue: '사과 표현 부재',
+                evaluations: [
+                { id: 'AE-2025-01338', date: '2025-03-08', time: '09:35', duration: '05:30', score: 74, type: 'AI', confidence: 'Medium', issue: '사과 표현 부재' },
+                { id: 'AE-2025-01339', date: '2025-03-05', time: '14:00', duration: '05:10', score: 78, type: 'NLP', confidence: 'High', issue: null },
+                { id: 'AE-2025-01348', date: '2025-03-01', time: '16:10', duration: '06:10', score: 65, type: 'NLP', confidence: 'Medium', issue: '사과 표현 부재' },
+                ]
+                },
+                {
+                id: 'ag-99', name: '신다영', employeeId: 'S-1099', avgScore: 73.2, totalCalls: 104, totalEvals: 28, rank: 9, callType: 'I/B', avgDuration: '05:45', topDeductionItem: '상품설명', issue: null,
+                evaluations: [
+                { id: 'AE-2025-01340', date: '2025-03-09', time: '16:15', duration: '05:55', score: 74, type: 'NLP', confidence: 'High', issue: null },
+                { id: 'AE-2025-01341', date: '2025-03-06', time: '13:45', duration: '05:35', score: 72, type: 'AI', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-01342', date: '2025-03-03', time: '10:30', duration: '05:50', score: 74, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-01349', date: '2025-03-02', time: '10:50', duration: '07:00', score: 61, type: 'AI', confidence: 'Medium', issue: '개인정보 확인 누락' },
+                ]
+                },
+                {
+                id: 'ag-100', name: '류서준', employeeId: 'S-1100', avgScore: 70.5, totalCalls: 96, totalEvals: 25, rank: 10, callType: 'I/B', avgDuration: '06:30', topDeductionItem: '고객 불만 처리', issue: null, excluded: true,
+                evaluations: [
+                { id: 'AE-2025-01343', date: '2025-03-10', time: '11:30', duration: '06:40', score: 72, type: 'AI', confidence: 'High', issue: null },
+                { id: 'AE-2025-01344', date: '2025-03-07', time: '09:10', duration: '06:20', score: 69, type: 'NLP', confidence: 'Medium', issue: null },
+                { id: 'AE-2025-01350', date: '2025-03-01', time: '13:40', duration: '07:30', score: 56, type: 'AI', confidence: 'Medium', issue: '과락 - 필수항목 미이행' },
+                ]
                 }
-              ]
+                ]
             }
           ]
         }
@@ -292,22 +1029,114 @@
     };
 
     /* ========== 상태 관리 ========== */
-    let currentLevel = 0; // 0=전체, 1=워크스페이스, 2=팀, 3=상담사
+    let currentLevel = 0; // 0=전체, 1=센터, 2=팀, 3=상담사
     let navStack = []; // [{level, label, data}]
+    let activeFilter = null;
 
-    // URL 파라미터(?ws=&team=) 기반 딥링크를 지원하여, 다른 페이지에서 특정 팀으로 바로 진입 가능
-    document.addEventListener('DOMContentLoaded', () => {
+    const FILTER_LABELS = {
+      urgentIssue: '긴급 이슈',
+      topDeduction: '최다 감점 항목',
+      lowScore: '70점 이하 콜',
+      excluded: '평가 제외 상담사'
+    };
+
+    function filterByCard(filterKey) {
+      if (currentLevel !== 2 && currentLevel !== 3) return;
+      const ctx = navStack[navStack.length - 1]?.data;
+      if (!ctx) return;
+
+      if (currentLevel === 2) {
+        const { ws, team } = ctx;
+        const agents = team.agents;
+        if (activeFilter === filterKey) {
+          activeFilter = null;
+          renderLevel2Table(ws, team, agents);
+          updateCardHighlight(null);
+          return;
+        }
+        activeFilter = filterKey;
+        let filtered;
+        switch (filterKey) {
+          case 'urgentIssue': filtered = agents.filter(a => a.urgentIssue); break;
+          case 'topDeduction': filtered = agents.filter(a => a.topDeductionItem === team.topDeduction.item); break;
+          case 'lowScore': filtered = agents.filter(a => a.evaluations?.some(e => e.score <= 70)); break;
+          case 'excluded': filtered = agents.filter(a => a.excluded); break;
+          default: filtered = agents;
+        }
+        renderLevel2Table(ws, team, filtered, FILTER_LABELS[filterKey]);
+        updateCardHighlight(filterKey);
+        return;
+      }
+
+      // Level 3: 상담사 평가 이력 필터
+      const { ws, team, agent } = ctx;
+      const evals = agent.evaluations;
+      if (activeFilter === filterKey) {
+        activeFilter = null;
+        renderLevel3Table(ws, team, agent, evals);
+        updateCardHighlight(null);
+        return;
+      }
+      activeFilter = filterKey;
+      let filtered;
+      const deductionMap = {};
+      evals.forEach(e => {
+        const items = e.deductionItems || (e.deductionItem ? [e.deductionItem] : []);
+        items.forEach(item => { deductionMap[item] = (deductionMap[item] || 0) + 1; });
+      });
+      let topItem = '';
+      let topCnt = 0;
+      Object.entries(deductionMap).forEach(([item, cnt]) => { if (cnt > topCnt) { topItem = item; topCnt = cnt; } });
+
+      switch (filterKey) {
+        case 'urgentIssue': filtered = evals.filter(e => e.urgentIssue); break;
+        case 'topDeduction': filtered = evals.filter(e => (e.deductionItems || (e.deductionItem ? [e.deductionItem] : [])).includes(topItem)); break;
+        case 'lowScore': filtered = evals.filter(e => e.score <= 70); break;
+        default: filtered = evals;
+      }
+      renderLevel3Table(ws, team, agent, filtered, FILTER_LABELS[filterKey]);
+      updateCardHighlight(filterKey);
+    }
+
+    function updateCardHighlight(activeKey) {
+      document.querySelectorAll('#kpi-cards [data-filter-key]').forEach(el => {
+        const key = el.getAttribute('data-filter-key');
+        const icon = el.querySelector('svg');
+        if (key === activeKey) {
+          el.style.border = '2px solid #3b82f6';
+          el.style.boxShadow = '0 0 0 1px #3b82f6';
+          if (icon) icon.setAttribute('stroke', '#3b82f6');
+        } else {
+          el.style.border = '';
+          el.style.boxShadow = '';
+          if (icon) icon.setAttribute('stroke', '#BDBDBD');
+        }
+      });
+    }
+    let dashboardSummary = null;
+
+    // URL 파라미터(?ct=&team=) 기반 딥링크를 지원하여, 다른 페이지에서 특정 팀으로 바로 진입 가능
+    document.addEventListener('DOMContentLoaded', async () => {
+      const params = new URLSearchParams(window.location.search);
+      // iframe embed 모드: 페이지 제목 숨김, 배경 투명 처리
+      if (params.has('embed')) {
+        const titleEl = document.getElementById('da-page-title');
+        if (titleEl) titleEl.style.display = 'none';
+        document.body.style.background = 'transparent';
+      }
+
       AICC_PeriodPicker.create('period-picker-container', {
         defaultPeriod: 'monthly',
         onChange: function() { applyPeriodFilter(); }
       });
 
-      const params = new URLSearchParams(window.location.search);
-      const wsName = params.get('ws');
+      const dsData = await AICC_DataLoader.load('dashboard-stats.json');
+      if (dsData) dashboardSummary = dsData.summary;
+      const wsName = params.get('ct');
       const teamName = params.get('team');
 
       if (wsName && teamName) {
-        const ws = DUMMY.workspaces.find(w => w.name === wsName);
+        const ws = DUMMY.centers.find(w => w.name === wsName);
         if (ws) {
           const team = ws.teams.find(t => t.name === teamName);
           if (team) {
@@ -362,72 +1191,317 @@
       }
     }
 
+    /* ========== 페이지네이션 렌더링 ========== */
+    function renderPagination(totalItems, currentPage, pageSize) {
+      const container = document.getElementById('table-pagination');
+      if (!container) return;
+      const totalPages = 5;
+
+      let html = '';
+      html += `<button class="pagination-btn">&laquo;</button>`;
+      for (let p = 1; p <= totalPages; p++) {
+        html += `<button class="pagination-btn${p === currentPage ? ' active' : ''}">${p}</button>`;
+      }
+      html += `<button class="pagination-btn">&raquo;</button>`;
+      html += `<span style="margin-left:16px;font-size:12px;color:#757575;">페이지당:
+        <select class="form-select" style="min-width:60px;padding:2px 24px 2px 8px;">
+          <option>10</option>
+          <option selected>20</option>
+          <option>50</option>
+        </select>
+      </span>`;
+
+      container.innerHTML = html;
+    }
+
     /* ========== KPI 카드 렌더링 ========== */
     // 범용 KPI 렌더러 — 레벨별로 다른 지표를 동일한 카드 형태로 표현하기 위해 items 배열 기반 설계
     function renderKPI(items) {
       const container = document.getElementById('kpi-cards');
+      container.style.display = 'grid';
+      container.style.gridTemplateColumns = '0.7fr 1.3fr 1.3fr 0.7fr';
+      container.style.flexDirection = '';
       container.innerHTML = items.map(card => {
-        const scoreStyle = card.isScore ? `color:${AICC_Fmt.scoreColor(card.rawValue)}` : '';
+        let trendHtml = '';
+        if (card.isDuration) {
+          const toSec = (s) => { const p = s.split(':'); return parseInt(p[0])*60 + parseInt(p[1]); };
+          const cur = toSec(card.current), prev = toSec(card.prev);
+          const diffSec = cur - prev;
+          if (diffSec !== 0) {
+            const arrow = diffSec < 0 ? '↓' : '↑';
+            const color = diffSec < 0 ? '#4CAF50' : '#F44336';
+            const absDiff = Math.abs(diffSec);
+            const m = Math.floor(absDiff / 60), s = absDiff % 60;
+            trendHtml = `<span style="font-size:12px;color:${color};">${arrow} ${m > 0 ? m + '분 ' : ''}${s}초</span>`;
+          }
+        } else if (card.current !== undefined && card.prev !== undefined) {
+          trendHtml = AICC_Fmt.trend(card.current, card.prev);
+        }
+
+        if (card.isCallBreakdown) {
+          const pct = (done, total) => total > 0 ? Math.round(done / total * 100) : 0;
+          const bd = [
+            { label: '자동/IB', total: card.autoIB, done: card.autoIB_done, totalPrev: card.autoIB_prev, donePrev: card.autoIB_done_prev },
+            { label: '자동/OB', total: card.autoOB, done: card.autoOB_done, totalPrev: card.autoOB_prev, donePrev: card.autoOB_done_prev },
+            { label: '수동',    total: card.manual,  done: card.manual_done, totalPrev: card.manual_prev, donePrev: card.manual_done_prev }
+          ];
+          const maxNum = Math.max(...bd.map(b => Math.max(b.total, b.done)));
+          const curFs = maxNum >= 100000 ? 9 : maxNum >= 10000 ? 10 : 12;
+          const prevMax = Math.max(...bd.map(b => Math.max(b.totalPrev, b.donePrev)));
+          const prevFs = prevMax >= 100000 ? 8 : prevMax >= 10000 ? 9 : 10;
+          const colHeaders = bd.map(b => `<span style="text-align:center;font-size:11px;color:#9E9E9E;">${b.label}</span>`).join('');
+          const colCurrent = bd.map(b => {
+            const numPart = `<span style="white-space:nowrap;"><span style="color:#42A5F5;">${AICC_Fmt.number(b.total)}</span> <span style="color:#BDBDBD;">/</span> <span style="color:#424242;font-weight:600;">${AICC_Fmt.number(b.done)}건</span></span>`;
+            const pctPart = `<span style="color:#424242;font-weight:600;">(${pct(b.done, b.total)}%)</span>`;
+            return `<span style="text-align:center;font-size:${curFs}px;">${numPart}<br>${pctPart}</span>`;
+          }).join('');
+          const colPrev = bd.map(b => {
+            const numPart = `<span style="white-space:nowrap;"><span style="color:#90CAF9;">${AICC_Fmt.number(b.totalPrev)}</span> <span style="color:#D5D5D5;">/</span> <span style="color:#BDBDBD;">${AICC_Fmt.number(b.donePrev)}건</span></span>`;
+            const pctPart = `<span style="color:#BDBDBD;">(${pct(b.donePrev, b.totalPrev)}%)</span>`;
+            return `<span style="text-align:center;font-size:${prevFs}px;">${numPart}<br>${pctPart}</span>`;
+          }).join('');
+          return `
+          <div class="kpi-card fade-in">
+            <div style="display:flex;align-items:flex-start;gap:12px;">
+              <div style="flex-shrink:0;">
+                <div style="font-size:12px;color:#757575;margin-bottom:8px;">${card.label}</div>
+                <div style="display:flex;align-items:baseline;gap:8px;">
+                  <span style="font-size:28px;font-weight:700;">${card.value}</span>
+                  ${trendHtml}
+                </div>
+                <div style="font-size:11px;color:#9E9E9E;margin-top:8px;">${card.prevLabel}: ${AICC_Fmt.number(card.prev)}${card.unit}</div>
+              </div>
+              <div style="flex:1;min-width:0;display:grid;grid-template-columns:repeat(3,1fr);row-gap:4px;margin-top:2px;">
+                ${colHeaders}
+                ${colCurrent}
+                ${colPrev}
+              </div>
+            </div>
+          </div>
+          `;
+        }
+
+        if (card.isScoreBreakdown) {
+          const sb = [
+            { label: '자동/IB', score: card.scoreIB, scorePrev: card.scoreIB_prev },
+            { label: '자동/OB', score: card.scoreOB, scorePrev: card.scoreOB_prev },
+            { label: '수동',    score: card.scoreManual, scorePrev: card.scoreManual_prev }
+          ];
+          const sHeaders = sb.map(s => `<span style="text-align:center;font-size:11px;color:#9E9E9E;">${s.label}</span>`).join('');
+          const sScores = sb.map(s => `<span style="text-align:center;font-size:12px;font-weight:600;white-space:nowrap;color:#424242;">${AICC_Fmt.score(s.score)}점</span>`).join('');
+          const sPrev = sb.map(s => `<span style="text-align:center;font-size:10px;white-space:nowrap;color:#BDBDBD;">${AICC_Fmt.score(s.scorePrev)}점</span>`).join('');
+          return `
+          <div class="kpi-card fade-in">
+            <div style="display:flex;align-items:flex-start;gap:12px;">
+              <div style="flex-shrink:0;">
+                <div style="font-size:12px;color:#757575;margin-bottom:8px;">${card.label}</div>
+                <div style="display:flex;align-items:baseline;gap:8px;">
+                  <span style="font-size:28px;font-weight:700;">${card.value}</span>
+                  ${trendHtml}
+                </div>
+                <div style="font-size:11px;color:#9E9E9E;margin-top:8px;">${card.prevLabel}: ${AICC_Fmt.number(card.prev)}${card.unit}</div>
+              </div>
+              <div style="flex:1;min-width:0;display:grid;grid-template-columns:repeat(3,1fr);row-gap:4px;margin-top:2px;">
+                ${sHeaders}
+                ${sScores}
+                ${sPrev}
+              </div>
+            </div>
+          </div>
+          `;
+        }
+
+        if (card.isTopDeduction) {
+          const td = card.deductionData;
+          return `
+          <div class="kpi-card fade-in">
+            <div style="font-size:12px;color:#757575;margin-bottom:8px;">${card.label}</div>
+            <div style="font-size:18px;font-weight:700;color:#424242;margin-top:4px;">${td.item}</div>
+            <div style="font-size:13px;color:#F44336;font-weight:600;margin-top:6px;">${td.calls}콜 (${td.pct}%)</div>
+          </div>
+          `;
+        }
+
+        if (card.isLowScore) {
+          return `
+          <div class="kpi-card fade-in">
+            <div style="font-size:12px;color:#757575;margin-bottom:8px;">${card.label}</div>
+            <div style="display:flex;align-items:baseline;gap:6px;margin-top:4px;">
+              <span style="font-size:28px;font-weight:700;color:#F44336;">${card.lowCalls}콜</span>
+              <span style="font-size:14px;font-weight:600;color:#757575;">(${card.lowPct}%)</span>
+            </div>
+          </div>
+          `;
+        }
+
+        const scoreColor = card.isScore ? `color:${AICC_Fmt.scoreColor(card.current)}` : '';
         return `
           <div class="kpi-card fade-in">
             <div style="font-size:12px;color:#757575;margin-bottom:8px;">${card.label}</div>
-            <div style="font-size:28px;font-weight:700;${scoreStyle}">${card.value}</div>
+            <div style="display:flex;align-items:baseline;gap:8px;">
+              <span style="font-size:28px;font-weight:700;${scoreColor}">${card.value}</span>
+              ${trendHtml}
+            </div>
             ${card.sub ? `<div style="font-size:11px;color:#9E9E9E;margin-top:8px;">${card.sub}</div>` : ''}
+            ${card.prevLabel ? `<div style="font-size:11px;color:#9E9E9E;margin-top:4px;">${card.prevLabel}: ${typeof card.prev === 'number' ? AICC_Fmt.number(card.prev) : card.prev}${card.unit || ''}</div>` : ''}
           </div>
         `;
       }).join('');
     }
 
-    /* ========== Level 0: 워크스페이스 목록 ========== */
-    // 최상위 뷰: 전체 워크스페이스를 집계하여 KPI와 테이블을 동시에 갱신
+    // 2행 KPI 카드 렌더링 — row1/row2 배열을 받아 #kpi-cards에 2행 그리드로 표현
+    function renderKpiTwoRows(row1, row2, customGridCols) {
+      const container = document.getElementById('kpi-cards');
+      const cols = customGridCols || '0.9fr 1.3fr 0.9fr 0.9fr';
+      const gridStyle = `display:grid;grid-template-columns:${cols};gap:16px;`;
+      const searchIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#BDBDBD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;top:10px;right:10px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`;
+      const cardOpen = (card) => {
+        if (card.filterKey) {
+          return `<div class="kpi-card fade-in" data-filter-key="${card.filterKey}" onclick="filterByCard('${card.filterKey}')" style="position:relative;cursor:pointer;">${searchIcon}`;
+        }
+        return `<div class="kpi-card fade-in">`;
+      };
+      const cardClose = '</div>';
+
+      const renderRow = (items) => items.map(card => {
+        let trendHtml = '';
+        if (card.isDuration) {
+          const toSec = (s) => { const p = s.split(':'); return parseInt(p[0])*60 + parseInt(p[1]); };
+          const cur = toSec(card.current), prev = toSec(card.prev);
+          const diffSec = cur - prev;
+          if (diffSec !== 0) {
+            const arrow = diffSec < 0 ? '↓' : '↑';
+            const color = diffSec < 0 ? '#4CAF50' : '#F44336';
+            const absDiff = Math.abs(diffSec);
+            const m = Math.floor(absDiff / 60), s = absDiff % 60;
+            trendHtml = `<span style="font-size:12px;color:${color};">${arrow} ${m > 0 ? m + '분 ' : ''}${s}초</span>`;
+          }
+        } else if (card.current !== undefined && card.prev !== undefined && !card.isTopDeduction && !card.isLowScore) {
+          trendHtml = AICC_Fmt.trend(card.current, card.prev);
+        }
+        if (card.isCallBreakdown) {
+          const pct = (done, total) => total > 0 ? Math.round(done / total * 100) : 0;
+          const bd = [
+            { label: '자동/IB', total: card.autoIB, done: card.autoIB_done, totalPrev: card.autoIB_prev, donePrev: card.autoIB_done_prev },
+            { label: '자동/OB', total: card.autoOB, done: card.autoOB_done, totalPrev: card.autoOB_prev, donePrev: card.autoOB_done_prev },
+            { label: '수동',    total: card.manual,  done: card.manual_done, totalPrev: card.manual_prev, donePrev: card.manual_done_prev }
+          ];
+          const maxNum = Math.max(...bd.map(b => Math.max(b.total, b.done)));
+          const curFs = maxNum >= 100000 ? 9 : maxNum >= 10000 ? 10 : 12;
+          const prevMax = Math.max(...bd.map(b => Math.max(b.totalPrev, b.donePrev)));
+          const prevFs = prevMax >= 100000 ? 8 : prevMax >= 10000 ? 9 : 10;
+          const colHeaders = bd.map(b => `<span style="text-align:center;font-size:11px;color:#9E9E9E;">${b.label}</span>`).join('');
+          const colCurrent = bd.map(b => {
+            const numPart = `<span style="white-space:nowrap;"><span style="color:#42A5F5;">${AICC_Fmt.number(b.total)}</span> <span style="color:#BDBDBD;">/</span> <span style="color:#424242;font-weight:600;">${AICC_Fmt.number(b.done)}건</span></span>`;
+            const pctPart = `<span style="color:#424242;font-weight:600;">(${pct(b.done, b.total)}%)</span>`;
+            return `<span style="text-align:center;font-size:${curFs}px;">${numPart}<br>${pctPart}</span>`;
+          }).join('');
+          const colPrev = bd.map(b => {
+            const numPart = `<span style="white-space:nowrap;"><span style="color:#90CAF9;">${AICC_Fmt.number(b.totalPrev)}</span> <span style="color:#D5D5D5;">/</span> <span style="color:#BDBDBD;">${AICC_Fmt.number(b.donePrev)}건</span></span>`;
+            const pctPart = `<span style="color:#BDBDBD;">(${pct(b.donePrev, b.totalPrev)}%)</span>`;
+            return `<span style="text-align:center;font-size:${prevFs}px;">${numPart}<br>${pctPart}</span>`;
+          }).join('');
+          return `${cardOpen(card)}<div style="display:flex;align-items:flex-start;gap:12px;"><div style="flex-shrink:0;"><div style="font-size:12px;color:#757575;margin-bottom:8px;">${card.label}</div><div style="display:flex;align-items:baseline;gap:8px;"><span style="font-size:28px;font-weight:700;">${card.value}</span>${trendHtml}</div><div style="font-size:11px;color:#9E9E9E;margin-top:8px;">${card.prevLabel}: ${AICC_Fmt.number(card.prev)}${card.unit}</div></div><div style="flex:1;min-width:0;display:grid;grid-template-columns:repeat(3,1fr);row-gap:4px;margin-top:2px;">${colHeaders}${colCurrent}${colPrev}</div></div>${cardClose}`;
+        }
+        if (card.isScoreBreakdown) {
+          const sb = [
+            { label: '자동/IB', score: card.scoreIB, scorePrev: card.scoreIB_prev },
+            { label: '자동/OB', score: card.scoreOB, scorePrev: card.scoreOB_prev },
+            { label: '수동',    score: card.scoreManual, scorePrev: card.scoreManual_prev }
+          ];
+          const sHeaders = sb.map(s => `<span style="text-align:center;font-size:11px;color:#9E9E9E;">${s.label}</span>`).join('');
+          const sScores = sb.map(s => `<span style="text-align:center;font-size:12px;font-weight:600;white-space:nowrap;color:#424242;">${AICC_Fmt.score(s.score)}점</span>`).join('');
+          const sPrev = sb.map(s => `<span style="text-align:center;font-size:10px;white-space:nowrap;color:#BDBDBD;">${AICC_Fmt.score(s.scorePrev)}점</span>`).join('');
+          return `${cardOpen(card)}<div style="display:flex;align-items:flex-start;gap:12px;"><div style="flex-shrink:0;"><div style="font-size:12px;color:#757575;margin-bottom:8px;">${card.label}</div><div style="display:flex;align-items:baseline;gap:8px;"><span style="font-size:28px;font-weight:700;">${card.value}</span>${trendHtml}</div><div style="font-size:11px;color:#9E9E9E;margin-top:8px;">${card.prevLabel}: ${AICC_Fmt.number(card.prev)}${card.unit}</div></div><div style="flex:1;min-width:0;display:grid;grid-template-columns:repeat(3,1fr);row-gap:4px;margin-top:2px;">${sHeaders}${sScores}${sPrev}</div></div>${cardClose}`;
+        }
+        if (card.isTopDeduction) {
+          const td = card.deductionData;
+          return `${cardOpen(card)}<div style="font-size:12px;color:#757575;margin-bottom:8px;">${card.label}</div><div style="font-size:18px;font-weight:700;color:#424242;margin-top:4px;">${td.item}</div><div style="font-size:13px;color:#F44336;font-weight:600;margin-top:6px;">${td.calls}콜 (${td.pct}%)</div>${cardClose}`;
+        }
+        if (card.isLowScore) {
+          return `${cardOpen(card)}<div style="font-size:12px;color:#757575;margin-bottom:8px;">${card.label}</div><div style="display:flex;align-items:baseline;gap:6px;margin-top:4px;"><span style="font-size:28px;font-weight:700;color:#F44336;">${card.lowCalls}콜</span><span style="font-size:14px;font-weight:600;color:#757575;">(${card.lowPct}%)</span></div>${cardClose}`;
+        }
+        return `${cardOpen(card)}<div style="font-size:12px;color:#757575;margin-bottom:8px;">${card.label}</div><div style="display:flex;align-items:baseline;gap:8px;"><span style="font-size:28px;font-weight:700;">${card.value}</span>${trendHtml}</div>${card.sub ? `<div style="font-size:11px;color:#9E9E9E;margin-top:8px;">${card.sub}</div>` : ''}${card.prevLabel ? `<div style="font-size:11px;color:#9E9E9E;margin-top:4px;">${card.prevLabel}: ${typeof card.prev === 'number' ? AICC_Fmt.number(card.prev) : card.prev}${card.unit || ''}</div>` : ''}${cardClose}`;
+      }).join('');
+      container.style.display = 'flex';
+      container.style.flexDirection = 'column';
+      container.style.gridTemplateColumns = '';
+      container.style.gap = '16px';
+      container.innerHTML = `<div style="${gridStyle}">${renderRow(row1)}</div><div style="${gridStyle}">${renderRow(row2)}</div>`;
+    }
+
+    /* ========== Level 0: 센터 목록 ========== */
+    // 최상위 뷰: 전체 센터를 집계하여 KPI와 테이블을 동시에 갱신
     function renderLevel0() {
       currentLevel = 0;
       navStack = [];
       updateBreadcrumb();
 
-      const ws = DUMMY.workspaces;
-      const totalCalls = ws.reduce((s, w) => s + w.totalCalls, 0);
-      const totalEvals = ws.reduce((s, w) => s + w.totalEvals, 0);
-      const avgScore = ws.reduce((s, w) => s + w.avgScore, 0) / ws.length;
+      const ws = DUMMY.centers;
+      const totalAgents = ws.reduce((s, w) => s + w.agentCount, 0);
+      const ds = dashboardSummary || {};
 
-      renderKPI([
-        { label: '총 상담 건수', value: AICC_Fmt.number(totalCalls), sub: `${ws.length}개 워크스페이스` },
-        { label: '총 평가 건수', value: AICC_Fmt.number(totalEvals), sub: `완료율 ${((totalEvals / totalCalls) * 100).toFixed(1)}%` },
-        { label: '전체 평균 점수', value: AICC_Fmt.score(avgScore), rawValue: avgScore, isScore: true, sub: '전 워크스페이스 기준' }
-      ]);
+      const kpiCards = [
+        { label: '평가 상담사', value: AICC_Fmt.number(ds.total_agents || totalAgents), current: ds.total_agents || totalAgents, prev: ds.total_agents_prev || 0, unit: '명', prevLabel: '전월', sub: `${ws.length}개 센터` },
+        { label: '평가 건수', value: AICC_Fmt.number(ds.total_calls || 0), current: ds.total_calls || 0, prev: ds.total_calls_prev || 0, unit: '건', prevLabel: '전월',
+          isCallBreakdown: true,
+          autoIB: ds.calls_auto_ib || 0, autoIB_done: ds.calls_auto_ib_done || 0,
+          autoOB: ds.calls_auto_ob || 0, autoOB_done: ds.calls_auto_ob_done || 0,
+          manual: ds.calls_manual || 0, manual_done: ds.calls_manual_done || 0,
+          autoIB_prev: ds.calls_auto_ib_prev || 0, autoIB_done_prev: ds.calls_auto_ib_done_prev || 0,
+          autoOB_prev: ds.calls_auto_ob_prev || 0, autoOB_done_prev: ds.calls_auto_ob_done_prev || 0,
+          manual_prev: ds.calls_manual_prev || 0, manual_done_prev: ds.calls_manual_done_prev || 0 },
+        { label: '평균 평가 점수', value: AICC_Fmt.score(ds.avg_score || 0), current: ds.avg_score || 0, prev: ds.avg_score_prev || 0, unit: '점', prevLabel: '전월',
+          isScoreBreakdown: true,
+          scoreIB: ds.avg_score_auto_ib || 0, scoreIB_prev: ds.avg_score_auto_ib_prev || 0,
+          scoreOB: ds.avg_score_auto_ob || 0, scoreOB_prev: ds.avg_score_auto_ob_prev || 0,
+          scoreManual: ds.avg_score_manual || 0, scoreManual_prev: ds.avg_score_manual_prev || 0 },
+        { label: '상담사 평균 통화시간', value: ds.avg_duration || '03:42', current: ds.avg_duration || '03:42', prev: ds.avg_duration_prev || '03:55', unit: '', isDuration: true, prevLabel: '전월' }
+      ];
 
-      document.getElementById('table-title').textContent = '워크스페이스별 현황';
+      renderKPI(kpiCards);
+
+      document.getElementById('table-title').textContent = '센터별 현황';
       document.getElementById('table-count').textContent = `총 ${ws.length}개`;
+
+      const table = document.querySelector('.data-table');
+      table.style.tableLayout = 'fixed';
 
       const thead = document.getElementById('table-head');
       thead.innerHTML = `
         <tr>
-          <th>워크스페이스</th>
-          <th style="text-align:right">상담사 수</th>
-          <th style="text-align:right">상담 건수</th>
-          <th style="text-align:right">평가 건수</th>
-          <th style="text-align:right">완료율</th>
-          <th style="text-align:right">평균 점수</th>
+          <th style="text-align:center;width:5%;">NO.</th>
+          <th style="text-align:center;width:35%;">센터</th>
+          <th style="text-align:center;width:10%;">상담사 수</th>
+          <th style="text-align:center;width:10%;">상담 건수</th>
+          <th style="text-align:center;width:10%;">평가 건수</th>
+          <th style="text-align:center;width:10%;">완료율</th>
+          <th style="text-align:center;width:10%;">평균 점수</th>
+          <th style="text-align:center;width:10%;">평균 통화시간</th>
         </tr>
       `;
 
       const tbody = document.getElementById('table-body');
-      tbody.innerHTML = ws.map(w => `
-        <tr onclick="drillToWorkspace('${w.id}')" class="fade-in">
-          <td style="font-weight:500;">${w.name}</td>
-          <td style="text-align:right;">${AICC_Fmt.number(w.agentCount)}명</td>
-          <td style="text-align:right;">${AICC_Fmt.number(w.totalCalls)}</td>
-          <td style="text-align:right;">${AICC_Fmt.number(w.totalEvals)}</td>
-          <td style="text-align:right;">${AICC_Fmt.percent(w.completionRate)}</td>
-          <td style="text-align:right;">${AICC_Fmt.scoreHtml(w.avgScore)}</td>
+      tbody.innerHTML = ws.map((w, idx) => `
+        <tr onclick="drillToCenter('${w.id}')" class="fade-in">
+          <td style="text-align:center;">${idx + 1}</td>
+          <td style="font-weight:500;text-align:center;">${w.name}</td>
+          <td style="text-align:center;">${AICC_Fmt.number(w.agentCount)}명</td>
+          <td style="text-align:center;">${AICC_Fmt.number(w.totalCalls)}</td>
+          <td style="text-align:center;">${AICC_Fmt.number(w.totalEvals)}</td>
+          <td style="text-align:center;">${AICC_Fmt.percent(w.completionRate)}</td>
+          <td style="text-align:center;">${AICC_Fmt.scoreHtml(w.avgScore)}</td>
+          <td style="text-align:center;">${w.avgDuration || '-'}</td>
         </tr>
       `).join('');
+
+      renderPagination(ws.length, 1, 10);
     }
 
-    /* ========== Level 1: 팀 목록 (워크스페이스 내) ========== */
-    // 테이블 행 클릭 진입점 — navStack에 워크스페이스 컨텍스트를 push한 뒤 팀 목록 렌더링
-    function drillToWorkspace(wsId) {
-      const ws = DUMMY.workspaces.find(w => w.id === wsId);
+    /* ========== Level 1: 팀 목록 (센터 내) ========== */
+    // 테이블 행 클릭 진입점 — navStack에 센터 컨텍스트를 push한 뒤 팀 목록 렌더링
+    function drillToCenter(wsId) {
+      const ws = DUMMY.centers.find(w => w.id === wsId);
       if (!ws) return;
 
       currentLevel = 1;
@@ -436,48 +1510,71 @@
       updateBreadcrumb();
     }
 
-    // 워크스페이스 내 팀별 비교 뷰 렌더링
+    // 센터 내 팀별 비교 뷰 렌더링
     function renderLevel1(ws) {
       const teams = ws.teams;
 
-      renderKPI([
-        { label: '팀 수', value: teams.length + '개', sub: `상담사 ${AICC_Fmt.number(ws.agentCount)}명` },
-        { label: '상담 건수', value: AICC_Fmt.number(ws.totalCalls), sub: `평가 ${AICC_Fmt.number(ws.totalEvals)}건` },
-        { label: '평균 점수', value: AICC_Fmt.score(ws.avgScore), rawValue: ws.avgScore, isScore: true, sub: ws.name + ' 기준' }
-      ]);
+      const kpiCards = [
+        { label: '평가 상담사', value: AICC_Fmt.number(ws.agentCount), current: ws.agentCount, prev: ws.agentCount_prev || 0, unit: '명', prevLabel: '전월', sub: `${teams.length}개 팀` },
+        { label: '평가 건수', value: AICC_Fmt.number(ws.totalCalls), current: ws.totalCalls, prev: (ws.calls_auto_ib_prev || 0) + (ws.calls_auto_ob_prev || 0) + (ws.calls_manual_prev || 0), unit: '건', prevLabel: '전월',
+          isCallBreakdown: true,
+          autoIB: ws.calls_auto_ib || 0, autoIB_done: ws.calls_auto_ib_done || 0,
+          autoOB: ws.calls_auto_ob || 0, autoOB_done: ws.calls_auto_ob_done || 0,
+          manual: ws.calls_manual || 0, manual_done: ws.calls_manual_done || 0,
+          autoIB_prev: ws.calls_auto_ib_prev || 0, autoIB_done_prev: ws.calls_auto_ib_done_prev || 0,
+          autoOB_prev: ws.calls_auto_ob_prev || 0, autoOB_done_prev: ws.calls_auto_ob_done_prev || 0,
+          manual_prev: ws.calls_manual_prev || 0, manual_done_prev: ws.calls_manual_done_prev || 0 },
+        { label: '평균 평가 점수', value: AICC_Fmt.score(ws.avgScore), current: ws.avgScore, prev: ws.avgScore_prev || 0, unit: '점', prevLabel: '전월',
+          isScoreBreakdown: true,
+          scoreIB: ws.avg_score_auto_ib || 0, scoreIB_prev: ws.avg_score_auto_ib_prev || 0,
+          scoreOB: ws.avg_score_auto_ob || 0, scoreOB_prev: ws.avg_score_auto_ob_prev || 0,
+          scoreManual: ws.avg_score_manual || 0, scoreManual_prev: ws.avg_score_manual_prev || 0 },
+        { label: '상담사 평균 통화시간', value: ws.avgDuration || '00:00', current: ws.avgDuration || '00:00', prev: ws.avgDuration_prev || '00:00', unit: '', isDuration: true, prevLabel: '전월' }
+      ];
+
+      renderKPI(kpiCards);
 
       document.getElementById('table-title').textContent = ws.name + ' - 팀별 현황';
       document.getElementById('table-count').textContent = `총 ${teams.length}개 팀`;
 
+      const table = document.querySelector('.data-table');
+      table.style.tableLayout = 'fixed';
+
       const thead = document.getElementById('table-head');
       thead.innerHTML = `
         <tr>
-          <th>팀명</th>
-          <th style="text-align:right">상담사 수</th>
-          <th style="text-align:right">상담 건수</th>
-          <th style="text-align:right">평가 건수</th>
-          <th style="text-align:right">완료율</th>
-          <th style="text-align:right">평균 점수</th>
+          <th style="text-align:center;width:5%;">NO.</th>
+          <th style="text-align:center;width:35%;">팀명</th>
+          <th style="text-align:center;width:10%;">상담사 수</th>
+          <th style="text-align:center;width:10%;">상담 건수</th>
+          <th style="text-align:center;width:10%;">평가 건수</th>
+          <th style="text-align:center;width:10%;">완료율</th>
+          <th style="text-align:center;width:10%;">평균 점수</th>
+          <th style="text-align:center;width:10%;">평균 통화시간</th>
         </tr>
       `;
 
       const tbody = document.getElementById('table-body');
-      tbody.innerHTML = teams.map(t => `
+      tbody.innerHTML = teams.map((t, idx) => `
         <tr onclick="drillToTeam('${ws.id}','${t.id}')" class="fade-in">
-          <td style="font-weight:500;">${t.name}</td>
-          <td style="text-align:right;">${t.agentCount}명</td>
-          <td style="text-align:right;">${AICC_Fmt.number(t.totalCalls)}</td>
-          <td style="text-align:right;">${AICC_Fmt.number(t.totalEvals)}</td>
-          <td style="text-align:right;">${AICC_Fmt.percent(t.completionRate)}</td>
-          <td style="text-align:right;">${AICC_Fmt.scoreHtml(t.avgScore)}</td>
+          <td style="text-align:center;">${idx + 1}</td>
+          <td style="font-weight:500;text-align:center;">${t.name}</td>
+          <td style="text-align:center;">${t.agentCount}명</td>
+          <td style="text-align:center;">${AICC_Fmt.number(t.totalCalls)}</td>
+          <td style="text-align:center;">${AICC_Fmt.number(t.totalEvals)}</td>
+          <td style="text-align:center;">${AICC_Fmt.percent(t.completionRate)}</td>
+          <td style="text-align:center;">${AICC_Fmt.scoreHtml(t.avgScore)}</td>
+          <td style="text-align:center;">${t.avgDuration || '-'}</td>
         </tr>
       `).join('');
+
+      renderPagination(teams.length, 1, 10);
     }
 
     /* ========== Level 2: 상담사 목록 (팀 내) ========== */
     // ws→team 2단계 navStack을 한 번에 구성 — 딥링크 및 직접 클릭 모두 지원
     function drillToTeam(wsId, teamId) {
-      const ws = DUMMY.workspaces.find(w => w.id === wsId);
+      const ws = DUMMY.centers.find(w => w.id === wsId);
       if (!ws) return;
       const team = ws.teams.find(t => t.id === teamId);
       if (!team) return;
@@ -496,44 +1593,94 @@
       const { ws, team } = ctx;
       const agents = team.agents;
 
-      renderKPI([
-        { label: '상담사 수', value: agents.length + '명', sub: team.name },
-        { label: '상담 건수', value: AICC_Fmt.number(team.totalCalls), sub: `평가 ${AICC_Fmt.number(team.totalEvals)}건` },
-        { label: '팀 평균 점수', value: AICC_Fmt.score(team.avgScore), rawValue: team.avgScore, isScore: true, sub: `완료율 ${AICC_Fmt.percent(team.completionRate)}` }
-      ]);
+      const row1 = [
+        { label: '평가 상담사', value: AICC_Fmt.number(team.agentCount), current: team.agentCount, prev: team.agentCount_prev || 0, unit: '명', prevLabel: '전월', sub: team.name },
+        { label: '평가 건수', value: AICC_Fmt.number(team.totalCalls), current: team.totalCalls, prev: (team.calls_auto_ib_prev || 0) + (team.calls_auto_ob_prev || 0) + (team.calls_manual_prev || 0), unit: '건', prevLabel: '전월',
+          isCallBreakdown: true,
+          autoIB: team.calls_auto_ib || 0, autoIB_done: team.calls_auto_ib_done || 0,
+          autoOB: team.calls_auto_ob || 0, autoOB_done: team.calls_auto_ob_done || 0,
+          manual: team.calls_manual || 0, manual_done: team.calls_manual_done || 0,
+          autoIB_prev: team.calls_auto_ib_prev || 0, autoIB_done_prev: team.calls_auto_ib_done_prev || 0,
+          autoOB_prev: team.calls_auto_ob_prev || 0, autoOB_done_prev: team.calls_auto_ob_done_prev || 0,
+          manual_prev: team.calls_manual_prev || 0, manual_done_prev: team.calls_manual_done_prev || 0 },
+        { label: '긴급 이슈', value: team.urgentIssues || 0, current: team.urgentIssues || 0, prev: team.urgentIssues_prev || 0, unit: '건', prevLabel: '전월', filterKey: 'urgentIssue' },
+        { label: '상담사 평균 통화시간', value: team.avgDuration || '00:00', current: team.avgDuration || '00:00', prev: team.avgDuration_prev || '00:00', unit: '', isDuration: true, prevLabel: '전월' }
+      ];
+      const row2 = [
+        { label: '평가 제외 상담사', value: AICC_Fmt.number(team.excludedAgents || 0), current: team.excludedAgents || 0, prev: team.excludedAgents_prev || 0, unit: '명', prevLabel: '전월', filterKey: 'excluded' },
+        { label: '평균 평가 점수', value: AICC_Fmt.score(team.avgScore), current: team.avgScore, prev: team.avgScore_prev || 0, unit: '점', prevLabel: '전월',
+          isScoreBreakdown: true,
+          scoreIB: team.avg_score_auto_ib || 0, scoreIB_prev: team.avg_score_auto_ib_prev || 0,
+          scoreOB: team.avg_score_auto_ob || 0, scoreOB_prev: team.avg_score_auto_ob_prev || 0,
+          scoreManual: team.avg_score_manual || 0, scoreManual_prev: team.avg_score_manual_prev || 0 },
+        { label: '최다 감점 항목', isTopDeduction: true, deductionData: team.topDeduction || { item: '-', calls: 0, pct: 0 }, filterKey: 'topDeduction' },
+        { label: '70점 이하 콜', isLowScore: true, lowCalls: team.lowScoreCalls || 0, lowPct: team.lowScorePct || 0, filterKey: 'lowScore' }
+      ];
 
-      document.getElementById('table-title').textContent = team.name + ' - 상담사별 현황';
-      document.getElementById('table-count').textContent = `총 ${agents.length}명`;
+      renderKpiTwoRows(row1, row2);
+      activeFilter = null;
+      renderLevel2Table(ws, team, agents);
+    }
+
+    function renderLevel2Table(ws, team, agentList, filterLabel) {
+      const titleEl = document.getElementById('table-title');
+      const baseTitle = team.name + ' - 상담사별 현황';
+      if (filterLabel) {
+        titleEl.innerHTML = `${baseTitle} <span onclick="filterByCard(activeFilter)" style="display:inline-block;margin-left:8px;padding:2px 10px;background:#eff6ff;color:#3b82f6;border-radius:12px;font-size:11px;font-weight:600;cursor:pointer;">
+          ${filterLabel} ✕</span>`;
+      } else {
+        titleEl.textContent = baseTitle;
+      }
+      document.getElementById('table-count').textContent = `총 ${agentList.length}명`;
+
+      const table = document.querySelector('.data-table');
+      table.style.tableLayout = 'fixed';
 
       const thead = document.getElementById('table-head');
       thead.innerHTML = `
         <tr>
-          <th style="width:40px">순위</th>
-          <th>상담사</th>
-          <th>통화유형</th>
-          <th style="text-align:right">상담 건수</th>
-          <th style="text-align:right">평가 건수</th>
-          <th style="text-align:right">평균 점수</th>
+          <th style="text-align:center;width:5%;">NO.</th>
+          <th style="text-align:center;width:12%;">상담사</th>
+          <th style="text-align:center;width:10%;">사번</th>
+          <th style="text-align:center;width:12%;">총 상담건수</th>
+          <th style="text-align:center;width:12%;">평균 통화시간</th>
+          <th style="text-align:center;width:17%;">최다 감점항목</th>
+          <th style="text-align:center;width:12%;">평균 점수</th>
+          <th style="text-align:center;width:20%;">이슈</th>
         </tr>
       `;
 
       const tbody = document.getElementById('table-body');
-      tbody.innerHTML = agents.map(a => `
+      tbody.innerHTML = agentList.map((a, idx) => {
+        let issueTd = '-';
+        if (a.excluded) {
+          issueTd = '<span style="display:inline-block;padding:2px 8px;background:#f3f4f6;color:#6b7280;border-radius:4px;font-size:12px;">평가 제외</span>';
+        } else if (a.urgentIssue && a.issue) {
+          issueTd = '<span style="display:inline-block;padding:2px 8px;background:#fee2e2;color:#dc2626;border-radius:4px;font-size:12px;">' + a.issue + '</span>' +
+                    ' <span style="display:inline-block;padding:1px 6px;background:#dc2626;color:#fff;border-radius:4px;font-size:10px;font-weight:600;">긴급</span>';
+        } else if (a.issue) {
+          issueTd = '<span style="display:inline-block;padding:2px 8px;background:#fee2e2;color:#dc2626;border-radius:4px;font-size:12px;">' + a.issue + '</span>';
+        }
+        return `
         <tr onclick="drillToAgent('${ws.id}','${team.id}','${a.id}')" class="fade-in">
-          <td style="font-weight:600;color:#757575;text-align:center;">${a.rank}</td>
-          <td style="font-weight:500;">${a.name}</td>
-          <td>${a.callType === 'I/B' ? '<span class="badge badge-nlp">I/B</span>' : '<span class="badge badge-ai">O/B</span>'}</td>
-          <td style="text-align:right;">${AICC_Fmt.number(a.totalCalls)}</td>
-          <td style="text-align:right;">${AICC_Fmt.number(a.totalEvals)}</td>
-          <td style="text-align:right;">${AICC_Fmt.scoreHtml(a.avgScore)}</td>
-        </tr>
-      `).join('');
+          <td style="text-align:center;">${idx + 1}</td>
+          <td style="font-weight:500;text-align:center;">${a.name}</td>
+          <td style="text-align:center;">${a.employeeId || '-'}</td>
+          <td style="text-align:center;">${AICC_Fmt.number(a.totalCalls)}</td>
+          <td style="text-align:center;">${a.avgDuration || '-'}</td>
+          <td style="text-align:center;">${a.topDeductionItem || '-'}</td>
+          <td style="text-align:center;">${AICC_Fmt.scoreHtml(a.avgScore)}</td>
+          <td style="text-align:center;">${issueTd}</td>
+        </tr>`;
+      }).join('');
+
+      renderPagination(agentList.length, 1, 10);
     }
 
     /* ========== Level 3: 평가 목록 (상담사) ========== */
     // ws→team→agent 3단계 navStack을 한 번에 구성하여 모달에서 컨텍스트 참조 가능하게 함
     function drillToAgent(wsId, teamId, agentId) {
-      const ws = DUMMY.workspaces.find(w => w.id === wsId);
+      const ws = DUMMY.centers.find(w => w.id === wsId);
       if (!ws) return;
       const team = ws.teams.find(t => t.id === teamId);
       if (!team) return;
@@ -550,57 +1697,140 @@
       updateBreadcrumb();
     }
 
-    // 개별 상담사의 평가 이력 뷰 — 이슈 건수를 별도 KPI로 표시하여 주의 필요 상담 즉시 파악 가능
     function renderLevel3(ctx) {
       const { ws, team, agent } = ctx;
       const evals = agent.evaluations;
       const avgScore = evals.reduce((s, e) => s + e.score, 0) / evals.length;
+      const urgentCount = evals.filter(e => e.urgentIssue).length;
+      const lowScoreCount = evals.filter(e => e.score <= 70).length;
+      const lowScorePct = evals.length > 0 ? Math.round(lowScoreCount / evals.length * 100) : 0;
 
-      renderKPI([
-        { label: '평가 건수', value: evals.length + '건', sub: agent.name + ' (' + team.name + ')' },
-        { label: '평균 점수', value: AICC_Fmt.score(avgScore), rawValue: avgScore, isScore: true, sub: '개인 평균' },
-        { label: '이슈 건수', value: evals.filter(e => e.issue).length + '건', sub: '주의 필요 항목' }
-      ]);
+      // 최다 감점항목 계산 — deductionItems(배열) 우선, deductionItem(단일) 폴백
+      const deductionMap = {};
+      evals.forEach(e => {
+        const items = e.deductionItems || (e.deductionItem ? [e.deductionItem] : []);
+        items.forEach(item => { deductionMap[item] = (deductionMap[item] || 0) + 1; });
+      });
+      let topDeductionItem = '-', topDeductionCalls = 0;
+      Object.entries(deductionMap).forEach(([item, cnt]) => {
+        if (cnt > topDeductionCalls) { topDeductionItem = item; topDeductionCalls = cnt; }
+      });
+      const topDeductionPct = evals.length > 0 ? Math.round(topDeductionCalls / evals.length * 100) : 0;
 
-      document.getElementById('table-title').textContent = agent.name + ' - 평가 이력';
-      document.getElementById('table-count').textContent = `총 ${evals.length}건`;
+      // 자동IB / 자동OB / 수동 건수 집계
+      const autoIB = evals.filter(e => e.type !== '수동' && e.callType === 'I/B');
+      const autoOB = evals.filter(e => e.type !== '수동' && e.callType === 'O/B');
+      const manual = evals.filter(e => e.type === '수동');
+      const avgOf = (arr) => arr.length > 0 ? arr.reduce((s, e) => s + e.score, 0) / arr.length : 0;
+      const prevRand = (v, lo, hi) => Math.max(0, v + Math.floor(Math.random() * (hi - lo + 1)) + lo);
+
+      const prevEvalCount = Math.round(evals.length * 0.9);
+      const prevAvgScore = parseFloat((avgScore + (Math.random() > 0.5 ? 1.5 : -1.2)).toFixed(1));
+      const prevUrgent = Math.max(0, urgentCount - 1);
+
+      const row1 = [
+        { label: '평가 건수', value: AICC_Fmt.number(evals.length) + '건', current: evals.length, prev: prevEvalCount, unit: '건', prevLabel: '전월',
+          isCallBreakdown: true,
+          autoIB: autoIB.length, autoIB_done: autoIB.length,
+          autoOB: autoOB.length, autoOB_done: autoOB.length,
+          manual: manual.length, manual_done: manual.length,
+          autoIB_prev: prevRand(autoIB.length, -2, 1), autoIB_done_prev: prevRand(autoIB.length, -3, 0),
+          autoOB_prev: prevRand(autoOB.length, -1, 1), autoOB_done_prev: prevRand(autoOB.length, -2, 0),
+          manual_prev: prevRand(manual.length, -1, 1), manual_done_prev: prevRand(manual.length, -1, 0) },
+        { label: '긴급 이슈', value: urgentCount, current: urgentCount, prev: prevUrgent, unit: '건', prevLabel: '전월', filterKey: 'urgentIssue' },
+        { label: '상담사 평균 통화시간', value: agent.avgDuration || '00:00', current: agent.avgDuration || '00:00', prev: '04:50', unit: '', isDuration: true, prevLabel: '전월' }
+      ];
+      const row2 = [
+        { label: '평균 평가 점수', value: AICC_Fmt.score(avgScore), current: avgScore, prev: prevAvgScore, unit: '점', prevLabel: '전월',
+          isScoreBreakdown: true,
+          scoreIB: avgOf(autoIB), scoreIB_prev: parseFloat((avgOf(autoIB) + (Math.random() > 0.5 ? 1.3 : -0.8)).toFixed(1)),
+          scoreOB: avgOf(autoOB), scoreOB_prev: parseFloat((avgOf(autoOB) + (Math.random() > 0.5 ? 0.9 : -1.1)).toFixed(1)),
+          scoreManual: avgOf(manual), scoreManual_prev: parseFloat((avgOf(manual) + (Math.random() > 0.5 ? 1.0 : -1.5)).toFixed(1)) },
+        { label: '최다 감점 항목', isTopDeduction: true, deductionData: { item: topDeductionItem, calls: topDeductionCalls, pct: topDeductionPct }, filterKey: 'topDeduction' },
+        { label: '70점 이하 콜', isLowScore: true, lowCalls: lowScoreCount, lowPct: lowScorePct, filterKey: 'lowScore' }
+      ];
+
+      renderKpiTwoRows(row1, row2, '1.4fr 0.8fr 0.8fr');
+      activeFilter = null;
+      renderLevel3Table(ws, team, agent, evals);
+    }
+
+    function renderLevel3Table(ws, team, agent, evalList, filterLabel) {
+      const titleEl = document.getElementById('table-title');
+      const baseTitle = agent.name + ' - 평가 이력';
+      if (filterLabel) {
+        titleEl.innerHTML = `${baseTitle} <span onclick="filterByCard(activeFilter)" style="display:inline-block;margin-left:8px;padding:2px 10px;background:#eff6ff;color:#3b82f6;border-radius:12px;font-size:11px;font-weight:600;cursor:pointer;">${filterLabel} ✕</span>`;
+      } else {
+        titleEl.textContent = baseTitle;
+      }
+      document.getElementById('table-count').textContent = `총 ${evalList.length}건`;
+
+      const table = document.querySelector('.data-table');
+      table.style.tableLayout = 'fixed';
+
+      const callType = agent.callType || 'I/B';
+      const teamLabel = team.name || '';
+      const simEvalFormForTable = callType === 'O/B' ? 'O/B 텔레마케팅 평가표 v1.3'
+        : teamLabel.includes('VIP') ? 'I/B VIP 평가표 v1.0' : 'I/B 일반 상담 평가표 v2.1';
 
       const thead = document.getElementById('table-head');
       thead.innerHTML = `
         <tr>
-          <th>평가 ID</th>
-          <th>일시</th>
-          <th>통화시간</th>
-          <th>평가방식</th>
-          <th>신뢰도</th>
-          <th style="text-align:right">점수</th>
-          <th>이슈</th>
+          <th style="text-align:center;width:9%;">평가 ID</th>
+          <th style="text-align:center;width:11%;">일시</th>
+          <th style="text-align:center;width:16%;">상담 유형</th>
+          <th style="text-align:center;width:5%;">유형</th>
+          <th style="text-align:center;width:6%;">평가방식</th>
+          <th style="text-align:center;width:14%;">평가표</th>
+          <th style="text-align:center;width:6%;">통화시간</th>
+          <th style="text-align:center;width:6%;">신뢰도</th>
+          <th style="text-align:center;width:6%;">점수</th>
+          <th style="text-align:center;width:21%;">이슈</th>
         </tr>
       `;
 
       const tbody = document.getElementById('table-body');
-      tbody.innerHTML = evals.map(ev => {
-        // 신뢰도 High/Mid에 따라 시각적 배지 구분 — 낮은 신뢰도 평가는 수동 검증 우선순위 판단에 활용
+      tbody.innerHTML = evalList.map(ev => {
         const confBadge = ev.confidence === 'High'
           ? '<span class="badge badge-active">High</span>'
           : '<span class="badge badge-pending">Mid</span>';
 
-        const issueHtml = ev.issue
-          ? `<span style="font-size:11px;color:#F57F17;">${ev.issue}</span>`
-          : '<span style="color:#9E9E9E;font-size:11px;">-</span>';
+        const callTypeBadge = ev.callType === 'I/B'
+          ? '<span style="display:inline-block;padding:2px 8px;background:#e8f5e9;color:#2e7d32;border-radius:4px;font-size:11px;font-weight:600;">I/B</span>'
+          : '<span style="display:inline-block;padding:2px 8px;background:#fff3e0;color:#e65100;border-radius:4px;font-size:11px;font-weight:600;">O/B</span>';
+
+        // 이슈 셀: 긴급 배지 + 이슈 텍스트 + 감점항목 통합
+        const items = ev.deductionItems || (ev.deductionItem ? [ev.deductionItem] : []);
+        const deductionDisplay = items.length > 3 ? items.slice(0, 3).join(', ') + ', ...' : items.join(', ');
+        const deductionTooltip = items.join(', ');
+        let issueLines = [];
+        if (ev.urgentIssue) {
+          issueLines.push('<span style="display:inline-block;padding:2px 8px;background:#fee2e2;color:#dc2626;border-radius:4px;font-size:11px;font-weight:600;">긴급</span>' + (ev.issue ? ' <span style="font-size:11px;color:#F57F17;">' + ev.issue + '</span>' : ''));
+        } else if (ev.issue) {
+          issueLines.push('<span style="font-size:11px;color:#F57F17;">' + ev.issue + '</span>');
+        }
+        if (deductionDisplay) {
+          issueLines.push('<span style="font-size:11px;color:#9E9E9E;" title="' + deductionTooltip + '">감점: ' + deductionDisplay + '</span>');
+        }
+        const issueHtml = issueLines.length > 0 ? issueLines.join('<br>') : '<span style="color:#9E9E9E;font-size:11px;">-</span>';
 
         return `
           <tr onclick="showEvalDetail('${ev.id}')" class="fade-in">
-            <td style="font-size:12px;font-family:monospace;">${ev.id}</td>
-            <td style="font-size:12px;">${ev.date} ${ev.time}</td>
-            <td style="font-size:12px;">${ev.duration}</td>
-            <td>${AICC_Fmt.typeBadge(ev.type)}</td>
-            <td>${confBadge}</td>
-            <td style="text-align:right;">${AICC_Fmt.scoreHtml(ev.score)}</td>
-            <td style="max-width:150px;">${issueHtml}</td>
+            <td style="text-align:center;font-size:12px;font-family:monospace;">${ev.id}</td>
+            <td style="text-align:center;font-size:12px;white-space:nowrap;">${ev.date} ${ev.time}</td>
+            <td style="text-align:center;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${ev.category || '-'}">${ev.category || '-'}</td>
+            <td style="text-align:center;">${ev.callType ? callTypeBadge : '-'}</td>
+            <td style="text-align:center;">${AICC_Fmt.typeBadge(ev.type)}</td>
+            <td style="text-align:center;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${simEvalFormForTable}">${simEvalFormForTable}</td>
+            <td style="text-align:center;font-size:12px;">${ev.duration}</td>
+            <td style="text-align:center;">${confBadge}</td>
+            <td style="text-align:center;">${AICC_Fmt.scoreHtml(ev.score)}</td>
+            <td style="text-align:left;">${issueHtml}</td>
           </tr>
         `;
       }).join('');
+
+      renderPagination(evalList.length, 1, 5);
     }
 
     /* ========== 평가 상세 모달 ========== */
@@ -646,7 +1876,29 @@
     }
 
     // 데모용 고정 시나리오 스크립트 — 실제 서비스에서는 STT API 응답으로 대체
-    function generateSimTranscript(agentName) {
+    function generateSimTranscript(agentName, evalId) {
+      if (evalId === 'AE-2025-00421') {
+        return [
+          { speaker: 'agent', time: '00:01', text: `안녕하세요, ${agentName}입니다. 무엇을 도와드릴까요?` },
+          { speaker: 'customer', time: '00:05', text: '네, 안녕하세요. 지난주에 주문한 한정판 스니커즈 배송이 어떻게 되고 있는지 확인 좀 부탁드릴게요.' },
+          { speaker: 'agent', time: '00:12', text: '네, 배송 확인 도와드리겠습니다. 주문번호 확인 부탁드리겠습니다.' },
+          { speaker: 'customer', time: '00:18', text: '주문번호는 ORD-2025-00382입니다.' },
+          { speaker: 'agent', time: '00:22', text: '확인하겠습니다. 잠시만 기다려주세요.' },
+          { speaker: 'agent', time: '00:35', text: '네, 확인되었습니다. 현재 배송 중이며 내일 오전 도착 예정입니다. CJ대한통운으로 발송되었고 송장번호는 6023-4567-8901입니다.' },
+          { speaker: 'customer', time: '00:48', text: '아, 감사합니다. 그런데 혹시 배송 시간 지정이 가능한가요? 오전에 집에 없을 수도 있어서요.' },
+          { speaker: 'agent', time: '00:55', text: '네, 배송 시간 지정은 CJ대한통운 앱이나 웹사이트에서 직접 변경하실 수 있습니다. 송장번호로 조회하시면 배송 시간 변경 옵션이 있으실 거예요.' },
+          { speaker: 'customer', time: '01:08', text: '아 그렇군요. 그리고 혹시 이 상품 교환이나 반품은 어떻게 되나요? 사이즈가 안 맞을 수도 있어서요.' },
+          { speaker: 'agent', time: '01:15', text: '한정판 스니커즈의 경우 수령 후 7일 이내에 교환/반품 신청이 가능합니다. 단, 착용 흔적이 없어야 하며 택과 박스가 모두 보존되어야 합니다.' },
+          { speaker: 'customer', time: '01:28', text: '네, 알겠습니다. 그러면 사이즈 교환도 같은 조건인가요?' },
+          { speaker: 'agent', time: '01:33', text: '네 맞습니다. 사이즈 교환도 동일한 조건이 적용됩니다. 다만 한정판 제품 특성상 동일 사이즈 재고가 없을 경우 교환이 어려울 수 있는 점 양해 부탁드립니다.' },
+          { speaker: 'customer', time: '01:48', text: '아, 재고가 없으면 교환이 안 되는 거군요. 그러면 반품만 가능한 건가요?' },
+          { speaker: 'agent', time: '01:55', text: '네, 교환 재고가 없는 경우에는 반품 후 환불 처리가 진행됩니다. 환불은 반품 상품 확인 후 영업일 기준 3~5일 내에 원결제 수단으로 환불됩니다.' },
+          { speaker: 'customer', time: '02:10', text: '네, 잘 알겠습니다. 일단 받아보고 사이즈 확인해볼게요.' },
+          { speaker: 'agent', time: '02:15', text: '네, 알겠습니다. 혹시 추가로 도움이 필요한 부분 있으신가요?' },
+          { speaker: 'customer', time: '02:22', text: '아니요, 다 확인됐습니다. 감사합니다.' },
+          { speaker: 'agent', time: '02:25', text: '네, 감사합니다. 좋은 하루 되세요! 이용해 주셔서 감사합니다.' }
+        ];
+      }
       return [
         { speaker: 'agent', time: '00:01', text: `안녕하세요, ${agentName}입니다. 무엇을 도와드릴까요?` },
         { speaker: 'customer', time: '00:05', text: '네, 안녕하세요. 주문 건 확인 좀 부탁드릴게요.' },
@@ -681,7 +1933,7 @@
       const teamName = navStack[1].label;
       const callType = navStack[2].data.agent.callType || 'I/B';
 
-      // 통화유형·팀명으로 평가표 분기 — 실제로는 워크스페이스별 설정에서 매핑
+      // 통화유형·팀명으로 평가표 분기 — 실제로는 센터별 설정에서 매핑
       const simEvalForm = callType === 'O/B' ? 'O/B 텔레마케팅 평가표 v1.3'
         : teamName.includes('VIP') ? 'I/B VIP 평가표 v1.0' : 'I/B 일반 상담 평가표 v2.1';
       const simConsultTypes = [
@@ -697,37 +1949,39 @@
       const simConsultType = simConsultTypes[parseInt(evalId.replace(/\D/g,'')) % simConsultTypes.length];
 
       const simScores = generateSimScores(ev.score);
-      const simTranscript = generateSimTranscript(agentName);
+      const simTranscript = generateSimTranscript(agentName, ev.id);
       const simFeedback = generateSimFeedback(ev.score);
 
-      const scoreRows = simScores.map(d => {
+      // 항목별 점수 행 — 클릭 시 스크립트 해당 구간으로 이동하도록 인덱스 부여
+      const scoreRows = simScores.map((d, idx) => {
         const statusCls = d.status === 'pass' ? 'score-good' : d.status === 'warn' ? 'score-warn' : 'score-danger';
         const statusText = d.status === 'pass' ? '통과' : d.status === 'warn' ? '주의' : '미달';
         const confHtml = d.confidence ? `<span style="font-size:11px;color:#757575;">${d.confidence}%</span>` : '';
         const reasonHtml = d.reason ? `<div style="font-size:10px;color:#F57F17;margin-top:2px;">${d.reason}</div>` : '';
         return `
-          <tr style="cursor:default;">
-            <td style="font-size:12px;">${d.name}</td>
-            <td>${AICC_Fmt.typeBadge(d.type)}</td>
-            <td style="text-align:right;font-weight:500;">${d.score} / ${d.max}</td>
-            <td><span class="${statusCls}" style="font-size:12px;">${statusText}</span>${reasonHtml}</td>
-            <td>${confHtml}</td>
+          <tr style="cursor:pointer;" onclick="scrollToTranscript(${idx})" title="클릭하면 해당 구간으로 이동합니다">
+            <td style="font-size:11px;padding:6px 4px;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.name}</td>
+            <td style="padding:6px 4px;text-align:center;">${AICC_Fmt.typeBadge(d.type)}</td>
+            <td style="text-align:center;font-weight:500;font-size:11px;padding:6px 4px;">${d.score}/${d.max}</td>
+            <td style="padding:6px 4px;text-align:center;">${confHtml}</td>
+            <td style="padding:6px 4px;text-align:center;"><span class="${statusCls}" style="font-size:11px;">${statusText}</span>${reasonHtml}</td>
           </tr>
         `;
       }).join('');
 
-      const transcriptHtml = simTranscript.map(t => {
+      // 스크립트 라인 — data-idx로 항목별 점수와 매핑
+      const transcriptHtml = simTranscript.map((t, idx) => {
         const isAgent = t.speaker === 'agent';
         const bg = isAgent ? '#E3F2FD' : '#F5F5F5';
         const hoverBg = isAgent ? '#B3E5FC' : '#EEEEEE';
         const label = isAgent ? '상담사' : '고객';
         return `
-          <div class="transcript-line" style="display:flex;gap:12px;padding:8px 0;cursor:pointer;border-radius:6px;transition:background 0.15s;" onclick="playSegment(this, '${t.time}')" onmouseenter="this.style.background='${hoverBg}'" onmouseleave="if(!this.classList.contains('playing'))this.style.background=''">
-            <div style="min-width:50px;font-size:11px;color:#757575;padding-top:2px;">${t.time}</div>
+          <div class="transcript-line" data-idx="${idx}" style="display:flex;gap:10px;padding:6px 4px;cursor:pointer;border-radius:6px;transition:background 0.15s;" onclick="playSegment(this, '${t.time}')" onmouseenter="this.style.background='${hoverBg}'" onmouseleave="if(!this.classList.contains('playing'))this.style.background=''">
+            <div style="min-width:40px;font-size:10px;color:#757575;padding-top:2px;">${t.time}</div>
             <div style="flex:1;">
-              <div style="font-size:11px;font-weight:600;color:${isAgent ? '#00A3FF' : '#424242'};margin-bottom:2px;">${label}</div>
-              <div style="background:${bg};padding:8px 12px;border-radius:6px;font-size:13px;line-height:1.5;display:flex;align-items:start;gap:8px;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="${isAgent ? '#00A3FF' : '#757575'}" style="flex-shrink:0;margin-top:3px;opacity:0.5;"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <div style="font-size:10px;font-weight:600;color:${isAgent ? '#00A3FF' : '#424242'};margin-bottom:2px;">${label}</div>
+              <div style="background:${bg};padding:6px 10px;border-radius:6px;font-size:12px;line-height:1.5;display:flex;align-items:start;gap:6px;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="${isAgent ? '#00A3FF' : '#757575'}" style="flex-shrink:0;margin-top:3px;opacity:0.5;"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                 <span>${t.text}</span>
               </div>
             </div>
@@ -736,63 +1990,100 @@
       }).join('');
 
       const scoreColor = ev.score >= 80 ? 'color:#4CAF50' : ev.score >= 60 ? 'color:#FFC107' : 'color:#F44336';
+      const confBadge = ev.confidence === 'High'
+        ? '<span class="badge badge-active">High</span>'
+        : '<span class="badge badge-pending">Mid</span>';
+      const callTypeBadge = (ev.callType || callType) === 'I/B'
+        ? '<span style="display:inline-block;padding:2px 8px;background:#e8f5e9;color:#2e7d32;border-radius:4px;font-size:11px;font-weight:600;">I/B</span>'
+        : '<span style="display:inline-block;padding:2px 8px;background:#fff3e0;color:#e65100;border-radius:4px;font-size:11px;font-weight:600;">O/B</span>';
+
+      // 이슈 + 감점항목
+      const items = ev.deductionItems || (ev.deductionItem ? [ev.deductionItem] : []);
+      const deductionDisplay = items.length > 3 ? items.slice(0,3).join(', ') + ', ...' : items.join(', ');
+      let issueText = '';
+      if (ev.urgentIssue) issueText += '<span style="display:inline-block;padding:2px 6px;background:#fee2e2;color:#dc2626;border-radius:4px;font-size:10px;font-weight:600;">긴급</span> ';
+      if (ev.issue) issueText += '<span style="font-size:11px;color:#F57F17;">' + ev.issue + '</span>';
+      if (deductionDisplay) issueText += (issueText ? '<br>' : '') + '<span style="font-size:10px;color:#9E9E9E;" title="' + items.join(', ') + '">감점: ' + deductionDisplay + '</span>';
+      if (!issueText) issueText = '<span style="color:#9E9E9E;font-size:11px;">-</span>';
+
+      const infoRow = (label, value) => `<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:6px 0;border-bottom:1px solid #F0F0F0;"><span style="font-size:11px;color:#9E9E9E;white-space:nowrap;">${label}</span><span style="font-size:12px;font-weight:500;text-align:right;margin-left:8px;">${value}</span></div>`;
 
       AICC_Modal.open({
         title: `평가 상세 - ${ev.id}`,
-        size: 'xl',
+        size: 'xxl',
         content: `
-          <div style="display:flex;gap:32px;margin-bottom:20px;flex-wrap:wrap;padding:16px 20px;background:#FAFAFA;border-radius:8px;border:1px solid #EEEEEE;">
-            <div><span style="font-size:11px;color:#9E9E9E;display:block;margin-bottom:4px;">상담사</span><strong style="font-size:14px;">${agentName}</strong></div>
-            <div><span style="font-size:11px;color:#9E9E9E;display:block;margin-bottom:4px;">팀</span><strong style="font-size:14px;">${wsName} &gt; ${teamName}</strong></div>
-            <div><span style="font-size:11px;color:#9E9E9E;display:block;margin-bottom:4px;">유형</span><span class="badge ${callType === 'I/B' ? 'badge-nlp' : 'badge-ai'}" style="font-size:12px;margin-top:2px;">${callType}</span></div>
-            <div><span style="font-size:11px;color:#9E9E9E;display:block;margin-bottom:4px;">일시</span><strong style="font-size:14px;">${ev.date} ${ev.time}</strong></div>
-            <div><span style="font-size:11px;color:#9E9E9E;display:block;margin-bottom:4px;">통화시간</span><strong style="font-size:14px;">${ev.duration}</strong></div>
-            <div><span style="font-size:11px;color:#9E9E9E;display:block;margin-bottom:4px;">총점</span><strong style="font-size:20px;${scoreColor}">${AICC_Fmt.score(ev.score)}점</strong></div>
-            <div><span style="font-size:11px;color:#9E9E9E;display:block;margin-bottom:4px;">평가표</span><strong style="font-size:13px;">${simEvalForm}</strong></div>
-            <div><span style="font-size:11px;color:#9E9E9E;display:block;margin-bottom:4px;">상담유형</span><strong style="font-size:13px;">${simConsultType}</strong></div>
-          </div>
+          <div style="display:grid;grid-template-columns:300px 1fr 400px;gap:20px;height:calc(90vh - 140px);max-height:650px;">
+            <!-- 왼쪽: 콜 정보 -->
+            <div style="overflow-y:auto;padding-right:8px;min-height:0;">
+              <div style="font-size:13px;font-weight:700;color:#424242;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #424242;">콜 정보</div>
+              ${infoRow('평가 ID', '<span style="font-family:monospace;font-size:11px;">' + ev.id + '</span>')}
+              ${infoRow('일시', ev.date + ' ' + ev.time)}
+              ${infoRow('센터', wsName)}
+              ${infoRow('팀', teamName)}
+              ${infoRow('상담사', agentName)}
+              ${infoRow('상담 유형', '<span style="font-size:11px;">' + (ev.category || simConsultType) + '</span>')}
+              ${infoRow('유형', callTypeBadge)}
+              ${infoRow('평가방식', AICC_Fmt.typeBadge(ev.type))}
+              ${infoRow('평가표', '<span style="font-size:11px;">' + simEvalForm + '</span>')}
+              ${infoRow('통화시간', ev.duration)}
+              ${infoRow('신뢰도', confBadge)}
+              ${infoRow('점수', '<strong style="font-size:16px;' + scoreColor + '">' + AICC_Fmt.score(ev.score) + '점</strong>')}
+              <div style="padding:6px 0;">${infoRow('이슈', issueText)}</div>
 
-          <div style="background:#F5F5F5;border-radius:6px;padding:12px 16px;margin-bottom:16px;font-size:13px;line-height:1.6;"><strong>AI 피드백:</strong> ${simFeedback}</div>
-
-          <div class="tab-nav" style="margin-bottom:16px;">
-            <div class="tab-item active" onclick="switchDetailTab(this, 'scores-tab')">항목별 점수</div>
-            <div class="tab-item" onclick="switchDetailTab(this, 'script-tab')">스크립트</div>
-          </div>
-
-          <div id="scores-tab">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>평가 항목</th>
-                  <th>방식</th>
-                  <th style="text-align:right">점수</th>
-                  <th>상태</th>
-                  <th>신뢰도</th>
-                </tr>
-              </thead>
-              <tbody>${scoreRows}</tbody>
-            </table>
-          </div>
-
-          <div id="script-tab" style="display:none;">
-            <div style="background:#FAFAFA;border:1px solid #E0E0E0;border-radius:8px;padding:16px;max-height:350px;overflow-y:auto;">
-              ${transcriptHtml}
+              <div style="margin-top:12px;background:#F5F5F5;border-radius:6px;padding:10px 12px;font-size:11px;line-height:1.6;">
+                <strong style="color:#424242;">AI 피드백</strong><br>
+                <span style="color:#757575;">${simFeedback}</span>
+              </div>
             </div>
-            <div style="margin-top:12px;background:#F5F5F5;border:1px solid #E0E0E0;border-radius:8px;padding:12px 16px;">
-              <div style="display:flex;align-items:center;gap:12px;">
-                <button onclick="togglePlay(this)" style="background:none;border:none;cursor:pointer;padding:0;">
-                  <svg id="play-btn-icon" width="22" height="22" viewBox="0 0 24 24" fill="#424242"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                </button>
-                <div style="flex:1;">
-                  <div style="width:100%;height:4px;background:#BDBDBD;border-radius:2px;position:relative;cursor:pointer;" onclick="seekBar(event)">
-                    <div id="player-progress" style="width:0%;height:100%;background:#00A3FF;border-radius:2px;transition:width 0.2s;"></div>
+
+            <!-- 중간: 스크립트 + 플레이어 -->
+            <div style="display:flex;flex-direction:column;min-width:0;min-height:0;">
+              <div style="font-size:13px;font-weight:700;color:#424242;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #424242;flex-shrink:0;">스크립트</div>
+              <div id="transcript-container" style="flex:1;min-height:0;background:#FAFAFA;border:1px solid #E0E0E0;border-radius:8px;padding:12px;overflow-y:auto;">
+                ${transcriptHtml}
+              </div>
+              <div style="margin-top:10px;background:#F5F5F5;border:1px solid #E0E0E0;border-radius:8px;padding:10px 14px;flex-shrink:0;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <button onclick="togglePlay(this)" style="background:none;border:none;cursor:pointer;padding:0;">
+                    <svg id="play-btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="#424242"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  </button>
+                  <div style="flex:1;">
+                    <div style="width:100%;height:4px;background:#BDBDBD;border-radius:2px;position:relative;cursor:pointer;" onclick="seekBar(event)">
+                      <div id="player-progress" style="width:0%;height:100%;background:#00A3FF;border-radius:2px;transition:width 0.2s;"></div>
+                    </div>
                   </div>
                 </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;padding-left:30px;">
+                  <span id="player-time" style="font-size:10px;color:#757575;">0:00</span>
+                  <span id="player-segment-label" style="font-size:10px;color:#00A3FF;"></span>
+                  <span style="font-size:10px;color:#757575;">${ev.duration || '0:00'}</span>
+                </div>
               </div>
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;padding-left:34px;">
-                <span id="player-time" style="font-size:11px;color:#757575;">0:00</span>
-                <span id="player-segment-label" style="font-size:11px;color:#00A3FF;"></span>
-                <span style="font-size:11px;color:#757575;">${ev.duration || '0:00'}</span>
+            </div>
+
+            <!-- 오른쪽: 항목별 점수 -->
+            <div style="display:flex;flex-direction:column;min-width:0;min-height:0;">
+              <div style="font-size:13px;font-weight:700;color:#424242;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #424242;flex-shrink:0;">항목별 점수</div>
+              <div style="flex:1;min-height:0;overflow-y:auto;">
+                <table class="data-table" style="font-size:11px;table-layout:fixed;width:100%;">
+                  <colgroup>
+                    <col style="width:30%;">
+                    <col style="width:15%;">
+                    <col style="width:15%;">
+                    <col style="width:15%;">
+                    <col style="width:25%;">
+                  </colgroup>
+                  <thead>
+                    <tr>
+                      <th style="padding:6px 4px;text-align:center;">평가 항목</th>
+                      <th style="padding:6px 4px;text-align:center;">방식</th>
+                      <th style="padding:6px 4px;text-align:center;">점수</th>
+                      <th style="padding:6px 4px;text-align:center;">신뢰도</th>
+                      <th style="padding:6px 4px;text-align:center;">상태</th>
+                    </tr>
+                  </thead>
+                  <tbody>${scoreRows}</tbody>
+                </table>
               </div>
             </div>
           </div>
@@ -804,12 +2095,30 @@
       });
     }
 
-    // 모달 내 탭 전환 — display 토글 방식으로 탭 상태를 유지하여 재렌더링 방지
+    // 항목별 점수 행 클릭 → 스크립트 영역의 해당 구간으로 스크롤 + 자동 재생
+    function scrollToTranscript(scoreIdx) {
+      const container = document.getElementById('transcript-container');
+      if (!container) return;
+      const lines = container.querySelectorAll('.transcript-line');
+      if (!lines.length) return;
+      // 모달 내 점수 테이블의 tbody tr 수로 총 항목 수를 파악하여 비율 매핑
+      const scoreRowCount = document.querySelectorAll('.modal-container .data-table tbody tr').length || 1;
+      const mappedIdx = Math.min(Math.floor(scoreIdx * (lines.length / scoreRowCount)), lines.length - 1);
+      const targetLine = lines[Math.max(0, mappedIdx)];
+      if (!targetLine) return;
+      targetLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const time = targetLine.querySelector('div')?.textContent?.trim() || '0:00';
+      playSegment(targetLine, time);
+    }
+
+    // 모달 내 탭 전환 — 3컬럼에서는 사용하지 않지만 하위 호환 유지
     function switchDetailTab(btn, tabId) {
       btn.parentElement.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
       btn.classList.add('active');
-      document.getElementById('scores-tab').style.display = tabId === 'scores-tab' ? '' : 'none';
-      document.getElementById('script-tab').style.display = tabId === 'script-tab' ? '' : 'none';
+      const scores = document.getElementById('scores-tab');
+      const script = document.getElementById('script-tab');
+      if (scores) scores.style.display = tabId === 'scores-tab' ? '' : 'none';
+      if (script) script.style.display = tabId === 'script-tab' ? '' : 'none';
     }
 
     // 스크립트 라인 클릭 시 해당 구간 재생 시뮬레이션 — 이전 하이라이트를 해제하고 현재 라인만 활성화

@@ -46,24 +46,24 @@
   <script src="../../../js/components/modal.js"></script>
   <script src="../../../js/components/toast.js"></script>
   <script>
-    let workspacesData = [];
+    let centersData = [];
     let usersData = [];
     let currentTab = 'agent';
 
     /* ── 더미 데이터 ── */
     const agentExclusions = [
-      { no: 1, agents: ['최수진'], workspace: '서울센터', team: '기술지원팀',
+      { no: 1, agents: ['최수진'], center: '서울센터', team: '기술지원팀',
         reason: '신입사원 교육 기간', periodStart: '2025-01-15', periodEnd: '2025-03-31', isActive: true },
-      { no: 2, agents: ['홍길동', '이영희'], workspace: '서울센터', team: 'VIP상담팀',
+      { no: 2, agents: ['홍길동', '이영희'], center: '서울센터', team: 'VIP상담팀',
         reason: '특별 프로젝트 투입', periodStart: '2025-02-01', periodEnd: '2025-02-28', isActive: true },
-      { no: 3, agents: ['최수진', '박상현'], workspace: '서울센터', team: '일반상담팀',
+      { no: 3, agents: ['최수진', '박상현'], center: '서울센터', team: '일반상담팀',
         reason: '[수동 평가 전환] 2025년 1분기 신입 상담사 수동 평가', periodStart: '2025-01-01', periodEnd: '2025-03-31', isActive: true }
     ];
 
     const teamExclusions = [
-      { no: 1, workspace: '서울센터', team: '기술지원팀',
+      { no: 1, center: '서울센터', team: '기술지원팀',
         reason: '시스템 마이그레이션', periodStart: '2025-02-01', periodEnd: '2025-02-15', isActive: true },
-      { no: 2, workspace: '부산센터', team: '해피콜팀',
+      { no: 2, center: '부산센터', team: '해피콜팀',
         reason: '조직 개편 기간', periodStart: '2025-03-01', periodEnd: '2025-03-15', isActive: false }
     ];
 
@@ -71,7 +71,7 @@
       { no: 1, periodStart: '2025-01-28', periodEnd: '2025-01-30', scope: 'all', scopeLabel: '전체',
         reason: '설 연휴 시스템 점검', isActive: false },
       { no: 2, periodStart: '2025-03-01', periodEnd: '2025-03-01', scope: 'specific',
-        scopeLabel: '부산센터 > 일반상담팀', workspace: '부산센터', teams: ['일반상담팀'],
+        scopeLabel: '부산센터 > 일반상담팀', center: '부산센터', teams: ['일반상담팀'],
         reason: '부산센터 네트워크 점검', isActive: true }
     ];
 
@@ -125,7 +125,7 @@
           <tr onclick="openDetail('agent', ${r.no})">
             <td>${r.no}</td>
             <td style="font-weight:500;">${r.agents.join(', ')}</td>
-            <td>${r.workspace} > ${r.team}</td>
+            <td>${r.center} > ${r.team}</td>
             <td>${r.reason}</td>
             <td style="font-size:12px;color:#757575;">${r.periodStart} ~ ${r.periodEnd}</td>
             <td>${statusBadge(r.isActive)}</td>
@@ -136,7 +136,7 @@
         tbody.innerHTML = data.map(r => `
           <tr onclick="openDetail('team', ${r.no})">
             <td>${r.no}</td>
-            <td style="font-weight:500;">${r.workspace} > ${r.team}</td>
+            <td style="font-weight:500;">${r.center} > ${r.team}</td>
             <td>${r.reason}</td>
             <td style="font-size:12px;color:#757575;">${r.periodStart} ~ ${r.periodEnd}</td>
             <td>${statusBadge(r.isActive)}</td>
@@ -173,22 +173,22 @@
       }
     }
 
-    /* ── 워크스페이스/팀/상담사 연동 헬퍼 ── */
-    // 워크스페이스 select의 option HTML 생성 — 편집 시 기존값 selected 처리를 위해 비교 로직 포함
+    /* ── 센터/팀/상담사 연동 헬퍼 ── */
+    // 센터 select의 option HTML 생성 — 편집 시 기존값 selected 처리를 위해 비교 로직 포함
     function wsOptions(selected) {
       return '<option value="">선택하세요</option>' +
-        workspacesData.map(ws => `<option value="${ws.name}"${ws.name === selected ? ' selected' : ''}>${ws.name}</option>`).join('');
+        centersData.map(ws => `<option value="${ws.name}"${ws.name === selected ? ' selected' : ''}>${ws.name}</option>`).join('');
     }
 
-    // 워크스페이스 내 팀 목록 조회 — 존재하지 않을 경우 빈 배열 반환으로 안전하게 처리
+    // 센터 내 팀 목록 조회 — 존재하지 않을 경우 빈 배열 반환으로 안전하게 처리
     function getTeamsForWs(wsName) {
-      const ws = workspacesData.find(w => w.name === wsName);
+      const ws = centersData.find(w => w.name === wsName);
       return ws ? ws.teams : [];
     }
 
     // role이 AGENT인 사용자만 필터링 — 관리자/QA 담당자는 평가 제외 대상이 아니므로
     function getAgentsForTeam(wsName, teamName) {
-      return usersData.filter(u => u.role === 'AGENT' && u.workspace === wsName && u.team === teamName);
+      return usersData.filter(u => u.role === 'AGENT' && u.center === wsName && u.team === teamName);
     }
 
     /* ── 듀얼리스트박스 공용 ── */
@@ -285,13 +285,13 @@
       return st ? [...st.selected] : [];
     }
 
-    /* ── 워크스페이스/팀 연동 ── */
-    // extra 파라미터로 렌더링 방식을 분기 — 같은 워크스페이스 변경 이벤트를 여러 폼에서 재사용하기 위함
+    /* ── 센터/팀 연동 ── */
+    // extra 파라미터로 렌더링 방식을 분기 — 같은 센터 변경 이벤트를 여러 폼에서 재사용하기 위함
     function onWsChange(wsSelectId, teamAreaId, extra) {
       const wsName = document.getElementById(wsSelectId)?.value;
       const area = document.getElementById(teamAreaId);
       if (!area) return;
-      if (!wsName) { area.innerHTML = '<span style="color:#BDBDBD;font-size:12px;">워크스페이스를 먼저 선택하세요</span>'; return; }
+      if (!wsName) { area.innerHTML = '<span style="color:#BDBDBD;font-size:12px;">센터를 먼저 선택하세요</span>'; return; }
       const teams = getTeamsForWs(wsName);
       if (extra === 'team-dlb') {
         const teamNames = teams.map(t => t.name);
@@ -339,17 +339,17 @@
       });
     }
 
-    // 상담사 제외 폼 — 워크스페이스→팀→상담사 계단식 선택 구조로 구성
+    // 상담사 제외 폼 — 센터→팀→상담사 계단식 선택 구조로 구성
     function buildAgentForm(data) {
       const d = data || {};
       return `<div style="display:flex;flex-direction:column;gap:14px;">
         <div>
-          <label class="form-label">워크스페이스 *</label>
+          <label class="form-label">센터 *</label>
           <select id="exc-ws" class="form-select" style="width:100%;" onchange="onWsChange('exc-ws','exc-team-area','team-select')">
-            ${wsOptions(d.workspace || '')}
+            ${wsOptions(d.center || '')}
           </select>
         </div>
-        <div id="exc-team-area">${d.workspace ? buildAgentTeamArea(d) : '<span style="color:#BDBDBD;font-size:12px;">워크스페이스를 먼저 선택하세요</span>'}</div>
+        <div id="exc-team-area">${d.center ? buildAgentTeamArea(d) : '<span style="color:#BDBDBD;font-size:12px;">센터를 먼저 선택하세요</span>'}</div>
         <div style="display:flex;gap:12px;">
           <div style="flex:1;"><label class="form-label">시작일 *</label><input type="date" id="exc-start" class="form-input" style="width:100%;" value="${d.periodStart || ''}"></div>
           <div style="flex:1;"><label class="form-label">종료일 *</label><input type="date" id="exc-end" class="form-input" style="width:100%;" value="${d.periodEnd || ''}"></div>
@@ -360,9 +360,9 @@
 
     // 편집 모드에서 기존 선택값을 복원하기 위해 팀/상담사 영역을 사전 구성
     function buildAgentTeamArea(d) {
-      const teams = getTeamsForWs(d.workspace);
+      const teams = getTeamsForWs(d.center);
       const selectedTeam = d.team || '';
-      const agents = selectedTeam ? getAgentsForTeam(d.workspace, selectedTeam) : [];
+      const agents = selectedTeam ? getAgentsForTeam(d.center, selectedTeam) : [];
       let html = `<select id="exc-team-select" class="form-select" style="width:100%;" onchange="onTeamSelectChange()">
         <option value="">팀 선택</option>
         ${teams.map(t => `<option value="${t.name}"${t.name === selectedTeam ? ' selected' : ''}>${t.name}</option>`).join('')}
@@ -381,22 +381,22 @@
     // 팀 제외 폼 — 듀얼리스트박스로 복수 팀 선택 지원
     function buildTeamForm(data) {
       const d = data || {};
-      const selectedWs = d.workspace || '';
+      const selectedWs = d.center || '';
       const teams = selectedWs ? getTeamsForWs(selectedWs) : [];
       // 단일 팀(team) 또는 복수 팀(teams) 모두 호환 — 상세/편집 데이터 구조 차이 대응
       const selectedTeams = d.team ? [d.team] : (d.teams || []);
       let teamsHtml = '';
       if (selectedWs && teams.length > 0) {
         const allTeamNames = teams.map(t => t.name);
-        // 기존 선택된 팀이 현재 워크스페이스에 없을 수 있으므로 교차 필터링 후 폴백으로 전체 선택
+        // 기존 선택된 팀이 현재 센터에 없을 수 있으므로 교차 필터링 후 폴백으로 전체 선택
         const sel = selectedTeams.filter(n => allTeamNames.includes(n));
         teamsHtml = renderDualListbox('dlb-team', allTeamNames, sel.length > 0 ? sel : allTeamNames);
       } else {
-        teamsHtml = '<span style="color:#BDBDBD;font-size:12px;">워크스페이스를 먼저 선택하세요</span>';
+        teamsHtml = '<span style="color:#BDBDBD;font-size:12px;">센터를 먼저 선택하세요</span>';
       }
       return `<div style="display:flex;flex-direction:column;gap:14px;">
         <div>
-          <label class="form-label">워크스페이스 *</label>
+          <label class="form-label">센터 *</label>
           <select id="exc-ws" class="form-select" style="width:100%;" onchange="onWsChange('exc-ws','exc-team-area','team-dlb')">
             ${wsOptions(selectedWs)}
           </select>
@@ -410,11 +410,11 @@
       </div>`;
     }
 
-    // 기간 제외 폼 — 대상 범위(전체/특정)에 따라 워크스페이스·팀 선택 영역을 동적 표시
+    // 기간 제외 폼 — 대상 범위(전체/특정)에 따라 센터·팀 선택 영역을 동적 표시
     function buildPeriodForm(data) {
       const d = data || {};
       const scope = d.scope || 'all';
-      const selectedWs = d.workspace || '';
+      const selectedWs = d.center || '';
       const teams = selectedWs ? getTeamsForWs(selectedWs) : [];
       const selectedTeams = d.teams || [];
 
@@ -431,7 +431,7 @@
       } else if (scope === 'specific') {
         scopeDetailHtml = `<div id="exc-scope-detail" style="margin-top:8px;">
           <select id="exc-ws" class="form-select" style="width:100%;" onchange="onWsChange('exc-ws','exc-scope-teams','team-checkbox')">${wsOptions('')}</select>
-          <div id="exc-scope-teams" style="margin-top:8px;"><span style="color:#BDBDBD;font-size:12px;">워크스페이스를 먼저 선택하세요</span></div>
+          <div id="exc-scope-teams" style="margin-top:8px;"><span style="color:#BDBDBD;font-size:12px;">센터를 먼저 선택하세요</span></div>
         </div>`;
       } else {
         scopeDetailHtml = '<div id="exc-scope-detail"></div>';
@@ -466,7 +466,7 @@
       if (scope === 'specific') {
         detail.innerHTML = `
           <select id="exc-ws" class="form-select" style="width:100%;margin-bottom:8px;" onchange="onWsChange('exc-ws','exc-scope-teams','team-checkbox')">${wsOptions('')}</select>
-          <div id="exc-scope-teams"><span style="color:#BDBDBD;font-size:12px;">워크스페이스를 먼저 선택하세요</span></div>`;
+          <div id="exc-scope-teams"><span style="color:#BDBDBD;font-size:12px;">센터를 먼저 선택하세요</span></div>`;
       } else {
         detail.innerHTML = '';
       }
@@ -514,9 +514,9 @@
         const agents = getSelectedItems('dlb-agent');
         const s = document.getElementById('exc-start')?.value;
         const e = document.getElementById('exc-end')?.value;
-        if (!ws || !team || agents.length === 0) { AICC_Toast.show('워크스페이스, 팀, 상담사를 선택하세요.'); return; }
+        if (!ws || !team || agents.length === 0) { AICC_Toast.show('센터, 팀, 상담사를 선택하세요.'); return; }
         if (!s || !e) { AICC_Toast.show('적용 기간을 입력하세요.'); return; }
-        const obj = { workspace: ws, team, agents, reason, periodStart: s, periodEnd: e, isActive: true };
+        const obj = { center: ws, team, agents, reason, periodStart: s, periodEnd: e, isActive: true };
         if (isEdit) { Object.assign(arr.find(r => r.no === editNo), obj); }
         else { obj.no = getNextNo(tab); arr.push(obj); }
       } else if (tab === 'team') {
@@ -524,14 +524,14 @@
         const teams = getSelectedItems('dlb-team');
         const s = document.getElementById('exc-start')?.value;
         const e = document.getElementById('exc-end')?.value;
-        if (!ws || teams.length === 0) { AICC_Toast.show('워크스페이스와 팀을 선택하세요.'); return; }
+        if (!ws || teams.length === 0) { AICC_Toast.show('센터와 팀을 선택하세요.'); return; }
         if (!s || !e) { AICC_Toast.show('적용 기간을 입력하세요.'); return; }
         // 복수 팀 선택 시 각 팀마다 개별 규칙 레코드를 생성 — 팀별 독립 관리를 위해
         teams.forEach(t => {
           if (isEdit) {
-            Object.assign(arr.find(r => r.no === editNo), { workspace: ws, team: t, reason, periodStart: s, periodEnd: e });
+            Object.assign(arr.find(r => r.no === editNo), { center: ws, team: t, reason, periodStart: s, periodEnd: e });
           } else {
-            arr.push({ no: getNextNo(tab), workspace: ws, team: t, reason, periodStart: s, periodEnd: e, isActive: true });
+            arr.push({ no: getNextNo(tab), center: ws, team: t, reason, periodStart: s, periodEnd: e, isActive: true });
           }
         });
       } else if (tab === 'period') {
@@ -544,10 +544,10 @@
           ws = document.getElementById('exc-ws')?.value || '';
           // 체크된 팀 체크박스에서 값을 수집 — 듀얼리스트박스가 아닌 체크박스 방식이므로 DOM 직접 조회
           selTeams = [...document.querySelectorAll('input[name="exc-team"]:checked')].map(el => el.value);
-          if (!ws) { AICC_Toast.show('대상 워크스페이스를 선택하세요.'); return; }
+          if (!ws) { AICC_Toast.show('대상 센터를 선택하세요.'); return; }
           scopeLabel = selTeams.length > 0 ? ws + ' > ' + selTeams.join(', ') : ws;
         }
-        const obj = { periodStart: s, periodEnd: e, scope, scopeLabel, reason, isActive: true, workspace: ws, teams: selTeams };
+        const obj = { periodStart: s, periodEnd: e, scope, scopeLabel, reason, isActive: true, center: ws, teams: selTeams };
         if (isEdit) { Object.assign(arr.find(r => r.no === editNo), obj); }
         else { obj.no = getNextNo(tab); arr.push(obj); }
       } else {
@@ -576,7 +576,7 @@
         infoHtml = `
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
             <div><div class="form-label">상담사</div><div style="font-size:13px;font-weight:500;">${r.agents.join(', ')}</div></div>
-            <div><div class="form-label">소속</div><div style="font-size:13px;">${r.workspace} > ${r.team}</div></div>
+            <div><div class="form-label">소속</div><div style="font-size:13px;">${r.center} > ${r.team}</div></div>
             <div><div class="form-label">적용 기간</div><div style="font-size:13px;">${r.periodStart} ~ ${r.periodEnd}</div></div>
             <div><div class="form-label">상태</div><div style="font-size:13px;">${statusBadge(r.isActive)}</div></div>
           </div>
@@ -584,7 +584,7 @@
       } else if (tab === 'team') {
         infoHtml = `
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-            <div><div class="form-label">팀</div><div style="font-size:13px;font-weight:500;">${r.workspace} > ${r.team}</div></div>
+            <div><div class="form-label">팀</div><div style="font-size:13px;font-weight:500;">${r.center} > ${r.team}</div></div>
             <div><div class="form-label">적용 기간</div><div style="font-size:13px;">${r.periodStart} ~ ${r.periodEnd}</div></div>
             <div><div class="form-label">상태</div><div style="font-size:13px;">${statusBadge(r.isActive)}</div></div>
           </div>
@@ -672,11 +672,11 @@
     }
 
     /* ── 초기화 ── */
-    // 워크스페이스·사용자 데이터를 비동기 로드한 뒤 기본 탭(상담사) 렌더링
+    // 센터·사용자 데이터를 비동기 로드한 뒤 기본 탭(상담사) 렌더링
     // 데이터 로드 실패 시에도 빈 배열로 동작하도록 조건부 할당
     document.addEventListener('DOMContentLoaded', async () => {
-      const wsRaw = await AICC_DataLoader.load('workspaces.json');
-      if (wsRaw) workspacesData = wsRaw;
+      const wsRaw = await AICC_DataLoader.load('centers.json');
+      if (wsRaw) centersData = wsRaw;
       const usRaw = await AICC_DataLoader.load('users.json');
       if (usRaw) usersData = usRaw;
       renderTab('agent');

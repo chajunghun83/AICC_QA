@@ -25,7 +25,7 @@
       </div>
       <div class="filter-body">
         <div>
-          <label class="form-label">워크스페이스</label>
+          <label class="form-label">센터</label>
           <select class="form-select" id="ws-filter" onchange="filterUsers()">
             <option value="all">전체</option>
           </select>
@@ -74,7 +74,7 @@
             <tr>
               <th style="width:40px;">No</th>
               <th>이름</th>
-              <th>워크스페이스</th>
+              <th>센터</th>
               <th>팀</th>
               <th>접근 범위</th>
               <th>접속 권한</th>
@@ -175,25 +175,25 @@
     }
 
     const users = [
-      { no: 1, name: '김철수', email: 'cskim@company.com', workspace: '서울센터', team: '전체', status: 'active', statusText: '활성', joinDate: '2023-03-15',
+      { no: 1, name: '김철수', email: 'cskim@company.com', center: '서울센터', team: '전체', status: 'active', statusText: '활성', joinDate: '2023-03-15',
         permissions: getAllIds(PERM_TREE) },
-      { no: 2, name: '박영희', email: 'yhpark@company.com', workspace: '부산센터', team: '전체', status: 'active', statusText: '활성', joinDate: '2023-05-20',
+      { no: 2, name: '박영희', email: 'yhpark@company.com', center: '부산센터', team: '전체', status: 'active', statusText: '활성', joinDate: '2023-05-20',
         permissions: ['admin','admin-dashboard','qa-dashboard','admin-eval','auto-eval-status','manual-eval-status','admin-analysis','detail-analysis','trend-analysis','report-gen','dispute-inbox','data-scope','data-busan','data-busan-general','data-busan-happycall'] },
-      { no: 3, name: '이준호', email: 'jhlee@company.com', workspace: '서울센터', team: '고객지원1팀', status: 'active', statusText: '활성', joinDate: '2023-08-01',
+      { no: 3, name: '이준호', email: 'jhlee@company.com', center: '서울센터', team: '고객지원1팀', status: 'active', statusText: '활성', joinDate: '2023-08-01',
         permissions: ['admin','admin-dashboard','qa-dashboard','admin-eval','auto-eval-status','manual-eval-status','admin-analysis','detail-analysis','trend-analysis','data-scope','data-seoul','data-seoul-vip','data-seoul-general'] },
-      { no: 4, name: '김민수', email: 'mskim@company.com', workspace: '서울센터', team: '고객지원1팀', status: 'active', statusText: '활성', joinDate: '2024-01-10',
+      { no: 4, name: '김민수', email: 'mskim@company.com', center: '서울센터', team: '고객지원1팀', status: 'active', statusText: '활성', joinDate: '2024-01-10',
         permissions: ['agent','my-dashboard','my-evaluations','my-disputes','data-scope','data-seoul','data-seoul-vip'] },
-      { no: 5, name: '이서연', email: 'sylee@company.com', workspace: '서울센터', team: '고객지원2팀', status: 'active', statusText: '활성', joinDate: '2024-02-15',
+      { no: 5, name: '이서연', email: 'sylee@company.com', center: '서울센터', team: '고객지원2팀', status: 'active', statusText: '활성', joinDate: '2024-02-15',
         permissions: ['agent','my-dashboard','my-evaluations','my-disputes','data-scope','data-seoul','data-seoul-general'] },
-      { no: 6, name: '박지훈', email: 'jhpark@company.com', workspace: '서울센터', team: '기술지원팀', status: 'active', statusText: '활성', joinDate: '2024-03-01',
+      { no: 6, name: '박지훈', email: 'jhpark@company.com', center: '서울센터', team: '기술지원팀', status: 'active', statusText: '활성', joinDate: '2024-03-01',
         permissions: ['agent','my-dashboard','my-evaluations','my-disputes','data-scope','data-seoul','data-seoul-tech'] },
-      { no: 7, name: '최유진', email: 'yjchoi@company.com', workspace: '부산센터', team: '고객지원1팀', status: 'active', statusText: '활성', joinDate: '2024-04-20',
+      { no: 7, name: '최유진', email: 'yjchoi@company.com', center: '부산센터', team: '고객지원1팀', status: 'active', statusText: '활성', joinDate: '2024-04-20',
         permissions: ['agent','my-dashboard','my-evaluations','my-disputes','data-scope','data-busan','data-busan-general'] },
-      { no: 8, name: '정다은', email: 'dejung@company.com', workspace: '부산센터', team: '영업지원팀', status: 'active', statusText: '활성', joinDate: '2024-05-10',
+      { no: 8, name: '정다은', email: 'dejung@company.com', center: '부산센터', team: '영업지원팀', status: 'active', statusText: '활성', joinDate: '2024-05-10',
         permissions: ['agent','my-dashboard','my-evaluations','my-disputes','data-scope','data-busan','data-busan-happycall'] },
-      { no: 9, name: '한승우', email: 'swhan@company.com', workspace: '서울센터', team: '고객지원2팀', status: 'inactive', statusText: '비활성', joinDate: '2024-06-01',
+      { no: 9, name: '한승우', email: 'swhan@company.com', center: '서울센터', team: '고객지원2팀', status: 'inactive', statusText: '비활성', joinDate: '2024-06-01',
         permissions: ['agent','my-dashboard','my-evaluations','data-scope','data-seoul','data-seoul-general'] },
-      { no: 10, name: '윤하나', email: 'hnyoon@company.com', workspace: '부산센터', team: '기술지원팀', status: 'inactive', statusText: '비활성', joinDate: '2024-07-15',
+      { no: 10, name: '윤하나', email: 'hnyoon@company.com', center: '부산센터', team: '기술지원팀', status: 'inactive', statusText: '비활성', joinDate: '2024-07-15',
         permissions: ['agent','my-dashboard','my-evaluations','data-scope','data-busan','data-busan-happycall'] }
     ];
 
@@ -205,7 +205,7 @@
         <tr onclick="openDetail(${u.no})">
           <td>${u.no}</td>
           <td style="font-weight:500;">${u.name}</td>
-          <td>${u.workspace}</td>
+          <td>${u.center}</td>
           <td>${u.team}</td>
           <td style="max-width:260px;">${permBadges(u.permissions)}</td>
           <td>${AICC_Fmt.statusBadge(u.status, u.statusText)}</td>
@@ -221,7 +221,7 @@
       const teamVal = document.getElementById('team-filter').value;
       const emailSearch = (document.getElementById('email-search').value || '').trim().toLowerCase();
       let filtered = users;
-      if (wsVal !== 'all') filtered = filtered.filter(u => u.workspace === wsVal);
+      if (wsVal !== 'all') filtered = filtered.filter(u => u.center === wsVal);
       if (teamVal !== 'all') filtered = filtered.filter(u => u.team === teamVal);
       if (statusVal !== 'all') filtered = filtered.filter(u => u.status === statusVal);
       if (searchVal) filtered = filtered.filter(u => u.name.toLowerCase().includes(searchVal));
@@ -359,8 +359,8 @@
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px;">
           <div>
-            <div class="form-label">워크스페이스</div>
-            <div style="font-size:14px;padding:8px 0;">${u.workspace}</div>
+            <div class="form-label">센터</div>
+            <div style="font-size:14px;padding:8px 0;">${u.center}</div>
           </div>
           <div>
             <div class="form-label">팀</div>
@@ -401,10 +401,10 @@
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px;">
           <div>
-            <div class="form-label">워크스페이스</div>
+            <div class="form-label">센터</div>
             <select class="form-select" id="uf-ws" style="width:100%;">
-              <option value="서울센터" ${u.workspace === '서울센터' ? 'selected' : ''}>서울센터</option>
-              <option value="부산센터" ${u.workspace === '부산센터' ? 'selected' : ''}>부산센터</option>
+              <option value="서울센터" ${u.center === '서울센터' ? 'selected' : ''}>서울센터</option>
+              <option value="부산센터" ${u.center === '부산센터' ? 'selected' : ''}>부산센터</option>
             </select>
           </div>
           <div>
@@ -492,9 +492,9 @@
       renderTable(users);
     }
 
-    // 사용자 데이터에서 워크스페이스/팀 목록을 동적 추출해 필터 옵션 생성
+    // 사용자 데이터에서 센터/팀 목록을 동적 추출해 필터 옵션 생성
     document.addEventListener('DOMContentLoaded', () => {
-      const wsList = [...new Set(users.map(u => u.workspace).filter(Boolean))];
+      const wsList = [...new Set(users.map(u => u.center).filter(Boolean))];
       const wsSel = document.getElementById('ws-filter');
       wsList.forEach(w => { wsSel.innerHTML += '<option value="' + w + '">' + w + '</option>'; });
       const teamList = [...new Set(users.map(u => u.team).filter(t => t && t !== '전체'))];

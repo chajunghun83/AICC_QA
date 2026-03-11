@@ -4,12 +4,12 @@
  * 모든 JSON 더미 데이터를 window.AICC_DATA에 인라인으로 할당
  * DataLoader가 이 객체를 우선 참조하여 로컬 환경에서도 정상 동작
  *
- * 포함 데이터: workspaces, users, dashboard-stats,
+ * 포함 데이터: centers, users, dashboard-stats,
  *   evaluation-items, evaluation-forms, evaluations
  */
 window.AICC_DATA = {};
 
-window.AICC_DATA['workspaces.json'] = 
+window.AICC_DATA['centers.json'] = 
 [
   {
     "id": "ws-seoul",
@@ -41,16 +41,16 @@ window.AICC_DATA['workspaces.json'] =
 
 window.AICC_DATA['users.json'] = 
 [
-  { "id": "admin001", "name": "김관리자", "role": "ADMIN", "team": "QA팀", "workspace": "전체", "status": "active" },
-  { "id": "admin002", "name": "박팀장", "role": "QA_MANAGER", "team": "QA팀", "workspace": "서울센터", "status": "active" },
-  { "id": "agent001", "name": "홍길동", "role": "AGENT", "team": "VIP상담팀", "team_id": "team-vip", "workspace": "서울센터", "workspace_id": "ws-seoul", "status": "active" },
-  { "id": "agent002", "name": "이영희", "role": "AGENT", "team": "VIP상담팀", "team_id": "team-vip", "workspace": "서울센터", "workspace_id": "ws-seoul", "status": "active" },
-  { "id": "agent003", "name": "김철수", "role": "AGENT", "team": "일반상담팀", "team_id": "team-general", "workspace": "서울센터", "workspace_id": "ws-seoul", "status": "active" },
-  { "id": "agent004", "name": "박지민", "role": "AGENT", "team": "일반상담팀", "team_id": "team-general", "workspace": "서울센터", "workspace_id": "ws-seoul", "status": "active" },
-  { "id": "agent005", "name": "최수진", "role": "AGENT", "team": "기술지원팀", "team_id": "team-tech", "workspace": "서울센터", "workspace_id": "ws-seoul", "status": "active" },
-  { "id": "agent006", "name": "정민호", "role": "AGENT", "team": "기술지원팀", "team_id": "team-tech", "workspace": "서울센터", "workspace_id": "ws-seoul", "status": "active" },
-  { "id": "agent007", "name": "강현우", "role": "AGENT", "team": "일반상담팀", "team_id": "team-general2", "workspace": "부산센터", "workspace_id": "ws-busan", "status": "active" },
-  { "id": "agent008", "name": "윤서연", "role": "AGENT", "team": "해피콜팀", "team_id": "team-happycall", "workspace": "부산센터", "workspace_id": "ws-busan", "status": "active" }
+  { "id": "admin001", "name": "김관리자", "role": "ADMIN", "team": "QA팀", "center": "전체", "status": "active" },
+  { "id": "admin002", "name": "박팀장", "role": "QA_MANAGER", "team": "QA팀", "center": "서울센터", "status": "active" },
+  { "id": "agent001", "name": "홍길동", "role": "AGENT", "team": "VIP상담팀", "team_id": "team-vip", "center": "서울센터", "center_id": "ct-seoul", "status": "active" },
+  { "id": "agent002", "name": "이영희", "role": "AGENT", "team": "VIP상담팀", "team_id": "team-vip", "center": "서울센터", "center_id": "ct-seoul", "status": "active" },
+  { "id": "agent003", "name": "김철수", "role": "AGENT", "team": "일반상담팀", "team_id": "team-general", "center": "서울센터", "center_id": "ct-seoul", "status": "active" },
+  { "id": "agent004", "name": "박지민", "role": "AGENT", "team": "일반상담팀", "team_id": "team-general", "center": "서울센터", "center_id": "ct-seoul", "status": "active" },
+  { "id": "agent005", "name": "최수진", "role": "AGENT", "team": "기술지원팀", "team_id": "team-tech", "center": "서울센터", "center_id": "ct-seoul", "status": "active" },
+  { "id": "agent006", "name": "정민호", "role": "AGENT", "team": "기술지원팀", "team_id": "team-tech", "center": "서울센터", "center_id": "ct-seoul", "status": "active" },
+  { "id": "agent007", "name": "강현우", "role": "AGENT", "team": "일반상담팀", "team_id": "team-general2", "center": "부산센터", "center_id": "ct-busan", "status": "active" },
+  { "id": "agent008", "name": "윤서연", "role": "AGENT", "team": "해피콜팀", "team_id": "team-happycall", "center": "부산센터", "center_id": "ct-busan", "status": "active" }
 ]
 ;
 
@@ -61,10 +61,35 @@ window.AICC_DATA['dashboard-stats.json'] =
     "total_agents_prev": 45,
     "total_calls": 1523,
     "total_calls_prev": 1487,
+    "calls_auto_ib": 890,
+    "calls_auto_ib_done": 869,
+    "calls_auto_ib_prev": 838,
+    "calls_auto_ib_done_prev": 838,
+    "calls_auto_ob": 357,
+    "calls_auto_ob_done": 342,
+    "calls_auto_ob_prev": 339,
+    "calls_auto_ob_done_prev": 336,
+    "calls_manual": 276,
+    "calls_manual_done": 120,
+    "calls_manual_prev": 310,
+    "calls_manual_done_prev": 270,
     "avg_score": 82.5,
     "avg_score_prev": 81.2,
+    "avg_score_auto_ib": 84.3,
+    "avg_score_auto_ib_prev": 83.1,
+    "avg_score_auto_ob": 80.7,
+    "avg_score_auto_ob_prev": 79.5,
+    "avg_score_manual": 78.2,
+    "avg_score_manual_prev": 76.8,
     "avg_duration": "6:32",
-    "avg_duration_prev": "6:48"
+    "avg_duration_prev": "6:48",
+    "excluded_agents": 12,
+    "excluded_agents_prev": 8,
+    "urgent_issues": 15,
+    "urgent_issues_prev": 11,
+    "top_deduction": { "item": "첫인사", "calls": 74, "pct": 8 },
+    "low_score_calls": 55,
+    "low_score_pct": 6.2
   },
   "channel_distribution": {
     "IB": 890,
@@ -102,12 +127,14 @@ window.AICC_DATA['dashboard-stats.json'] =
   "fail_agents": [
     { "name": "최수진", "team": "기술지원팀", "score": 45.2, "reason": "공감 부족 + 과락" },
     { "name": "정민호", "team": "기술지원팀", "score": 52.1, "reason": "신속성 미달" },
-    { "name": "이영희", "team": "VIP상담팀", "score": 58.0, "reason": "FAIL(금지어)" }
+    { "name": "이영희", "team": "VIP상담팀", "score": 58.0, "reason": "FAIL(금지어)" },
+    { "name": "박지훈", "team": "CS상담팀", "score": 62.4, "reason": "해결력 부족" },
+    { "name": "김하늘", "team": "일반상담팀", "score": 65.7, "reason": "인사 멘트 누락" }
   ],
   "improvement_needed_top5": [
     {
       "rank": 1,
-      "workspace": "서울센터",
+      "center": "서울센터",
       "team": "기술지원팀",
       "team_id": "team-tech",
       "item": "긍/부정 공감",
@@ -118,7 +145,7 @@ window.AICC_DATA['dashboard-stats.json'] =
     },
     {
       "rank": 2,
-      "workspace": "서울센터",
+      "center": "서울센터",
       "team": "VIP상담팀",
       "team_id": "team-vip",
       "item": "전문적 상담 화법",
@@ -129,7 +156,7 @@ window.AICC_DATA['dashboard-stats.json'] =
     },
     {
       "rank": 3,
-      "workspace": "서울센터",
+      "center": "서울센터",
       "team": "기술지원팀",
       "team_id": "team-tech",
       "item": "신속한 응대",
@@ -140,7 +167,7 @@ window.AICC_DATA['dashboard-stats.json'] =
     },
     {
       "rank": 4,
-      "workspace": "서울센터",
+      "center": "서울센터",
       "team": "일반상담팀",
       "team_id": "team-general",
       "item": "고객 불편 공감",
@@ -151,7 +178,7 @@ window.AICC_DATA['dashboard-stats.json'] =
     },
     {
       "rank": 5,
-      "workspace": "서울센터",
+      "center": "서울센터",
       "team": "VIP상담팀",
       "team_id": "team-vip",
       "item": "쉬운 설명",
@@ -163,8 +190,8 @@ window.AICC_DATA['dashboard-stats.json'] =
   ],
   "teams": [
     {
-      "workspace": "서울센터",
-      "workspace_id": "ws-seoul",
+      "center": "서울센터",
+      "center_id": "ct-seoul",
       "team": "VIP상담팀",
       "team_id": "team-vip",
       "calls": 380,
@@ -174,8 +201,8 @@ window.AICC_DATA['dashboard-stats.json'] =
       "issues": [{ "type": "FAIL(금지어)", "count": 1 }]
     },
     {
-      "workspace": "서울센터",
-      "workspace_id": "ws-seoul",
+      "center": "서울센터",
+      "center_id": "ct-seoul",
       "team": "일반상담팀",
       "team_id": "team-general",
       "calls": 702,
@@ -185,8 +212,8 @@ window.AICC_DATA['dashboard-stats.json'] =
       "issues": [{ "type": "공감 부족", "count": 2 }]
     },
     {
-      "workspace": "서울센터",
-      "workspace_id": "ws-seoul",
+      "center": "서울센터",
+      "center_id": "ct-seoul",
       "team": "기술지원팀",
       "team_id": "team-tech",
       "calls": 268,
@@ -196,8 +223,8 @@ window.AICC_DATA['dashboard-stats.json'] =
       "issues": [{ "type": "과락", "count": 3 }]
     },
     {
-      "workspace": "부산센터",
-      "workspace_id": "ws-busan",
+      "center": "부산센터",
+      "center_id": "ct-busan",
       "team": "일반상담팀",
       "team_id": "team-general2",
       "calls": 520,
@@ -207,8 +234,8 @@ window.AICC_DATA['dashboard-stats.json'] =
       "issues": []
     },
     {
-      "workspace": "부산센터",
-      "workspace_id": "ws-busan",
+      "center": "부산센터",
+      "center_id": "ct-busan",
       "team": "해피콜팀",
       "team_id": "team-happycall",
       "calls": 185,
@@ -218,8 +245,8 @@ window.AICC_DATA['dashboard-stats.json'] =
       "issues": []
     },
     {
-      "workspace": "대구센터",
-      "workspace_id": "ws-daegu",
+      "center": "대구센터",
+      "center_id": "ct-daegu",
       "team": "CS상담팀",
       "team_id": "team-cs",
       "calls": 310,
@@ -229,8 +256,8 @@ window.AICC_DATA['dashboard-stats.json'] =
       "issues": [{ "type": "공감 부족", "count": 1 }]
     },
     {
-      "workspace": "대구센터",
-      "workspace_id": "ws-daegu",
+      "center": "대구센터",
+      "center_id": "ct-daegu",
       "team": "아웃바운드팀",
       "team_id": "team-ob",
       "calls": 158,
@@ -528,11 +555,11 @@ window.AICC_DATA['evaluation-forms.json'] =
 window.AICC_DATA['evaluations.json'] = 
 [
   {
-    "id": "2024-01-10-0001",
+    "id": "AE-2024-00001",
     "agent_id": "agent001",
     "agent_name": "홍길동",
-    "workspace": "서울센터",
-    "workspace_id": "ws-seoul",
+    "center": "서울센터",
+    "center_id": "ct-seoul",
     "team": "VIP상담팀",
     "team_id": "team-vip",
     "call_type": "I/B",
@@ -718,11 +745,11 @@ window.AICC_DATA['evaluations.json'] =
     "consultation_type": "배송 > 배송조회 > 한정판 스니커즈"
   },
   {
-    "id": "2024-01-10-0002",
+    "id": "AE-2024-00002",
     "agent_id": "agent002",
     "agent_name": "이영희",
-    "workspace": "서울센터",
-    "workspace_id": "ws-seoul",
+    "center": "서울센터",
+    "center_id": "ct-seoul",
     "team": "VIP상담팀",
     "team_id": "team-vip",
     "call_type": "I/B",
@@ -925,11 +952,11 @@ window.AICC_DATA['evaluations.json'] =
     "consultation_type": "결제 > 환불처리 > 환불지연"
   },
   {
-    "id": "2024-01-11-0003",
+    "id": "AE-2024-00003",
     "agent_id": "agent003",
     "agent_name": "김철수",
-    "workspace": "서울센터",
-    "workspace_id": "ws-seoul",
+    "center": "서울센터",
+    "center_id": "ct-seoul",
     "team": "일반상담팀",
     "team_id": "team-general",
     "call_type": "I/B",
@@ -1144,11 +1171,11 @@ window.AICC_DATA['evaluations.json'] =
     "consultation_type": "교환/반품 > 사이즈교환"
   },
   {
-    "id": "2024-01-11-0004",
+    "id": "AE-2024-00004",
     "agent_id": "agent004",
     "agent_name": "박지민",
-    "workspace": "서울센터",
-    "workspace_id": "ws-seoul",
+    "center": "서울센터",
+    "center_id": "ct-seoul",
     "team": "일반상담팀",
     "team_id": "team-general",
     "call_type": "I/B",
@@ -1294,11 +1321,11 @@ window.AICC_DATA['evaluations.json'] =
     "consultation_type": "상품문의 > 의류 > 사이즈안내"
   },
   {
-    "id": "2024-01-12-0005",
+    "id": "AE-2024-00005",
     "agent_id": "agent005",
     "agent_name": "최수진",
-    "workspace": "서울센터",
-    "workspace_id": "ws-seoul",
+    "center": "서울센터",
+    "center_id": "ct-seoul",
     "team": "기술지원팀",
     "team_id": "team-tech",
     "call_type": "I/B",
@@ -1450,11 +1477,11 @@ window.AICC_DATA['evaluations.json'] =
     "consultation_type": "기술지원 > 앱오류 > 로그인실패"
   },
   {
-    "id": "2024-01-12-0006",
+    "id": "AE-2024-00006",
     "agent_id": "agent006",
     "agent_name": "정민호",
-    "workspace": "서울센터",
-    "workspace_id": "ws-seoul",
+    "center": "서울센터",
+    "center_id": "ct-seoul",
     "team": "기술지원팀",
     "team_id": "team-tech",
     "call_type": "I/B",
@@ -1609,11 +1636,11 @@ window.AICC_DATA['evaluations.json'] =
     "consultation_type": "기술지원 > 결제오류 > 카드결제"
   },
   {
-    "id": "2024-01-13-0007",
+    "id": "AE-2024-00007",
     "agent_id": "agent007",
     "agent_name": "강현우",
-    "workspace": "부산센터",
-    "workspace_id": "ws-busan",
+    "center": "부산센터",
+    "center_id": "ct-busan",
     "team": "일반상담팀",
     "team_id": "team-general2",
     "call_type": "I/B",
@@ -1772,11 +1799,11 @@ window.AICC_DATA['evaluations.json'] =
     "consultation_type": "배송 > 배송비 > 추가배송비 외 2건"
   },
   {
-    "id": "2024-01-13-0008",
+    "id": "AE-2024-00008",
     "agent_id": "agent008",
     "agent_name": "윤서연",
-    "workspace": "부산센터",
-    "workspace_id": "ws-busan",
+    "center": "부산센터",
+    "center_id": "ct-busan",
     "team": "해피콜팀",
     "team_id": "team-happycall",
     "call_type": "O/B",
@@ -1916,11 +1943,11 @@ window.AICC_DATA['evaluations.json'] =
     "consultation_type": "해피콜 > 만족도조사 > 배송완료"
   },
   {
-    "id": "2024-01-14-0009",
+    "id": "AE-2024-00009",
     "agent_id": "agent001",
     "agent_name": "홍길동",
-    "workspace": "서울센터",
-    "workspace_id": "ws-seoul",
+    "center": "서울센터",
+    "center_id": "ct-seoul",
     "team": "VIP상담팀",
     "team_id": "team-vip",
     "call_type": "O/B",
@@ -2062,11 +2089,11 @@ window.AICC_DATA['evaluations.json'] =
     "consultation_type": "VIP관리 > 프로모션안내 > 시즌할인"
   },
   {
-    "id": "2024-01-14-0010",
+    "id": "AE-2024-00010",
     "agent_id": "agent003",
     "agent_name": "김철수",
-    "workspace": "서울센터",
-    "workspace_id": "ws-seoul",
+    "center": "서울센터",
+    "center_id": "ct-seoul",
     "team": "일반상담팀",
     "team_id": "team-general",
     "call_type": "I/B",
@@ -2229,11 +2256,11 @@ window.AICC_DATA['evaluations.json'] =
     "consultation_type": "교환/반품 > 반품접수 > 불량상품"
   },
   {
-    "id": "2024-01-15-0011",
+    "id": "AE-2024-00011",
     "agent_id": "agent002",
     "agent_name": "이영희",
-    "workspace": "서울센터",
-    "workspace_id": "ws-seoul",
+    "center": "서울센터",
+    "center_id": "ct-seoul",
     "team": "VIP상담팀",
     "team_id": "team-vip",
     "call_type": "I/B",
@@ -2377,11 +2404,11 @@ window.AICC_DATA['evaluations.json'] =
     "consultation_type": "상품문의 > 신발 > 재입고문의"
   },
   {
-    "id": "2024-01-15-0012",
+    "id": "AE-2024-00012",
     "agent_id": "agent004",
     "agent_name": "박지민",
-    "workspace": "서울센터",
-    "workspace_id": "ws-seoul",
+    "center": "서울센터",
+    "center_id": "ct-seoul",
     "team": "일반상담팀",
     "team_id": "team-general",
     "call_type": "O/B",
@@ -2529,11 +2556,11 @@ window.AICC_DATA['evaluations.json'] =
     "consultation_type": "프로모션 > 쿠폰안내 > 생일쿠폰"
   },
   {
-    "id": "2024-01-16-0013",
+    "id": "AE-2024-00013",
     "agent_id": "agent005",
     "agent_name": "최수진",
-    "workspace": "서울센터",
-    "workspace_id": "ws-seoul",
+    "center": "서울센터",
+    "center_id": "ct-seoul",
     "team": "기술지원팀",
     "team_id": "team-tech",
     "call_type": "I/B",
@@ -2689,11 +2716,11 @@ window.AICC_DATA['evaluations.json'] =
     "consultation_type": "기술지원 > 시스템장애 > 주문내역조회"
   },
   {
-    "id": "2024-01-16-0014",
+    "id": "AE-2024-00014",
     "agent_id": "agent007",
     "agent_name": "강현우",
-    "workspace": "부산센터",
-    "workspace_id": "ws-busan",
+    "center": "부산센터",
+    "center_id": "ct-busan",
     "team": "일반상담팀",
     "team_id": "team-general2",
     "call_type": "I/B",
@@ -2862,11 +2889,11 @@ window.AICC_DATA['evaluations.json'] =
     "consultation_type": "결제 > 결제취소 > 중복결제"
   },
   {
-    "id": "2024-01-17-0015",
+    "id": "AE-2024-00015",
     "agent_id": "agent008",
     "agent_name": "윤서연",
-    "workspace": "부산센터",
-    "workspace_id": "ws-busan",
+    "center": "부산센터",
+    "center_id": "ct-busan",
     "team": "해피콜팀",
     "team_id": "team-happycall",
     "call_type": "O/B",
@@ -3012,11 +3039,11 @@ window.AICC_DATA['evaluations.json'] =
     "consultation_type": "해피콜 > 서비스개선 > 배송피드백"
   },
   {
-    "id": "2024-01-17-0016",
+    "id": "AE-2024-00016",
     "agent_id": "agent006",
     "agent_name": "정민호",
-    "workspace": "서울센터",
-    "workspace_id": "ws-seoul",
+    "center": "서울센터",
+    "center_id": "ct-seoul",
     "team": "기술지원팀",
     "team_id": "team-tech",
     "call_type": "I/B",
@@ -3166,11 +3193,11 @@ window.AICC_DATA['evaluations.json'] =
     "consultation_type": "기술지원 > 앱오류 > 장바구니오류"
   },
   {
-    "id": "2024-01-18-0017",
+    "id": "AE-2024-00017",
     "agent_id": "agent001",
     "agent_name": "홍길동",
-    "workspace": "서울센터",
-    "workspace_id": "ws-seoul",
+    "center": "서울센터",
+    "center_id": "ct-seoul",
     "team": "VIP상담팀",
     "team_id": "team-vip",
     "call_type": "I/B",
@@ -3310,11 +3337,11 @@ window.AICC_DATA['evaluations.json'] =
     "consultation_type": "상품문의 > 가방 > 정품확인"
   },
   {
-    "id": "2024-01-18-0018",
+    "id": "AE-2024-00018",
     "agent_id": "agent003",
     "agent_name": "김철수",
-    "workspace": "서울센터",
-    "workspace_id": "ws-seoul",
+    "center": "서울센터",
+    "center_id": "ct-seoul",
     "team": "일반상담팀",
     "team_id": "team-general",
     "call_type": "I/B",
@@ -3476,11 +3503,11 @@ window.AICC_DATA['evaluations.json'] =
     "consultation_type": "배송 > 배송지연 > 택배분실 외 1건"
   },
   {
-    "id": "2024-01-19-0019",
+    "id": "AE-2024-00019",
     "agent_id": "agent004",
     "agent_name": "박지민",
-    "workspace": "서울센터",
-    "workspace_id": "ws-seoul",
+    "center": "서울센터",
+    "center_id": "ct-seoul",
     "team": "일반상담팀",
     "team_id": "team-general",
     "call_type": "I/B",
@@ -3628,11 +3655,11 @@ window.AICC_DATA['evaluations.json'] =
     "consultation_type": "회원 > 정보변경 > 배송지변경"
   },
   {
-    "id": "2024-01-20-0020",
+    "id": "AE-2024-00020",
     "agent_id": "agent007",
     "agent_name": "강현우",
-    "workspace": "부산센터",
-    "workspace_id": "ws-busan",
+    "center": "부산센터",
+    "center_id": "ct-busan",
     "team": "일반상담팀",
     "team_id": "team-general2",
     "call_type": "O/B",
@@ -3802,4 +3829,427 @@ window.AICC_DATA['evaluations.json'] =
     "consultation_type": "프로모션 > 멤버십안내 > 등급혜택"
   }
 ]
+;
+
+window.AICC_DATA["manual-evaluations.json"] = 
+[
+  {
+    "id": "ME-2025-00001",
+    "date": "2025-01-27",
+    "call_time": "09:15",
+    "center": "서울센터",
+    "center_id": "ws-seoul",
+    "team": "VIP상담팀",
+    "team_id": "team-vip",
+    "agent_name": "김신입",
+    "call_type": "I/B",
+    "duration": "06:42",
+    "total_score": 0,
+    "eval_form": "I/B VIP 평가표 v1.0",
+    "consultation_type": "상품문의 > 의류 > 사이즈안내",
+    "manual_plan": "2025년 1분기 신입 상담사 수동 평가",
+    "manual_plan_criteria": "근무일수 30일 미만",
+    "eval_status": "pending",
+    "issues": [],
+    "ai_feedback": "AI 자동 평가 점수: 72점. 신입 상담사로 수동 평가 대상입니다.",
+    "scores": {
+      "item-greeting": { "type": "NLP", "score": 8, "max": 10, "status": "pass", "confidence": 92 },
+      "item-empathy": { "type": "AI", "score": 7, "max": 10, "status": "warn", "confidence": 78 },
+      "item-solution": { "type": "AI", "score": 6, "max": 15, "status": "warn", "confidence": 65 },
+      "item-closing": { "type": "NLP", "score": 9, "max": 10, "status": "pass", "confidence": 95 },
+      "item-forbidden": { "type": "NLP", "score": 10, "max": 10, "status": "pass", "confidence": 99 }
+    },
+    "transcript": [
+      { "time": "0:00", "speaker": "agent", "text": "안녕하세요, VIP상담팀 김신입입니다." },
+      { "time": "0:05", "speaker": "customer", "text": "네, 사이즈 문의 좀 하려고요." },
+      { "time": "0:12", "speaker": "agent", "text": "네, 어떤 상품 사이즈가 궁금하신가요?" },
+      { "time": "0:20", "speaker": "customer", "text": "이번에 나온 겨울 코트 M사이즈 실측이 어떻게 되나요?" },
+      { "time": "0:30", "speaker": "agent", "text": "확인해 드리겠습니다. 잠시만 기다려 주세요." }
+    ]
+  },
+  {
+    "id": "ME-2025-00002",
+    "date": "2025-01-27",
+    "call_time": "10:32",
+    "center": "서울센터",
+    "center_id": "ws-seoul",
+    "team": "일반상담팀",
+    "team_id": "team-general",
+    "agent_name": "박신입",
+    "call_type": "I/B",
+    "duration": "09:18",
+    "total_score": 0,
+    "eval_form": "I/B 일반 상담 평가표 v2.1",
+    "consultation_type": "배송 > 배송조회 > 한정판 스니커즈",
+    "manual_plan": "2025년 1분기 신입 상담사 수동 평가",
+    "manual_plan_criteria": "근무일수 30일 미만",
+    "eval_status": "pending",
+    "issues": [],
+    "ai_feedback": "AI 자동 평가 점수: 65점. 신입 상담사로 수동 평가 대상입니다.",
+    "scores": {
+      "item-greeting": { "type": "NLP", "score": 7, "max": 10, "status": "warn", "confidence": 88 },
+      "item-empathy": { "type": "AI", "score": 5, "max": 10, "status": "warn", "confidence": 70 },
+      "item-solution": { "type": "AI", "score": 8, "max": 15, "status": "pass", "confidence": 72 },
+      "item-closing": { "type": "NLP", "score": 7, "max": 10, "status": "warn", "confidence": 85 },
+      "item-forbidden": { "type": "NLP", "score": 10, "max": 10, "status": "pass", "confidence": 99 }
+    },
+    "transcript": [
+      { "time": "0:00", "speaker": "agent", "text": "안녕하세요, 일반상담팀 박신입입니다." },
+      { "time": "0:04", "speaker": "customer", "text": "제 택배가 어디쯤 왔는지 확인 좀 해주세요." },
+      { "time": "0:10", "speaker": "agent", "text": "주문번호 알려주시면 확인해 드리겠습니다." }
+    ]
+  },
+  {
+    "id": "ME-2025-00003",
+    "date": "2025-01-26",
+    "call_time": "14:05",
+    "center": "서울센터",
+    "center_id": "ws-seoul",
+    "team": "VIP상담팀",
+    "team_id": "team-vip",
+    "agent_name": "홍길동",
+    "call_type": "I/B",
+    "duration": "12:03",
+    "total_score": 88,
+    "eval_form": "I/B VIP 평가표 v1.0",
+    "consultation_type": "교환/반품 > 사이즈교환",
+    "manual_plan": "2025년 2월 품질 샘플링 검증",
+    "manual_plan_criteria": "샘플링 10%",
+    "eval_status": "completed",
+    "issues": [],
+    "ai_feedback": "AI 자동 평가 점수: 91점. 샘플링에 의해 수동 평가 대상으로 선별되었습니다.",
+    "scores": {
+      "item-greeting": { "type": "NLP", "score": 9, "max": 10, "status": "pass", "confidence": 95 },
+      "item-empathy": { "type": "AI", "score": 9, "max": 10, "status": "pass", "confidence": 88 },
+      "item-solution": { "type": "AI", "score": 12, "max": 15, "status": "pass", "confidence": 82 },
+      "item-closing": { "type": "NLP", "score": 8, "max": 10, "status": "pass", "confidence": 90 },
+      "item-forbidden": { "type": "NLP", "score": 10, "max": 10, "status": "pass", "confidence": 99 }
+    },
+    "transcript": [
+      { "time": "0:00", "speaker": "agent", "text": "안녕하세요, VIP상담팀 홍길동입니다. 무엇을 도와드릴까요?" },
+      { "time": "0:06", "speaker": "customer", "text": "사이즈가 안 맞아서 교환하고 싶어요." },
+      { "time": "0:12", "speaker": "agent", "text": "네, 교환 접수 도와드리겠습니다. 주문번호 확인 부탁드립니다." }
+    ],
+    "manual_review": {
+      "reviewed_at": "2025-01-28 11:30",
+      "reviewer": "김팀장",
+      "modified_items": [{ "item_id": "item-empathy", "original_score": 9, "new_score": 8 }],
+      "comment": "공감 표현은 양호하나 적극성이 다소 부족"
+    }
+  },
+  {
+    "id": "ME-2025-00004",
+    "date": "2025-01-26",
+    "call_time": "15:20",
+    "center": "서울센터",
+    "center_id": "ws-seoul",
+    "team": "일반상담팀",
+    "team_id": "team-general",
+    "agent_name": "이영희",
+    "call_type": "O/B",
+    "duration": "05:45",
+    "total_score": 82,
+    "eval_form": "O/B 텔레마케팅 평가표 v1.3",
+    "consultation_type": "프로모션 > 쿠폰안내 > 생일쿠폰",
+    "manual_plan": "2025년 2월 품질 샘플링 검증",
+    "manual_plan_criteria": "샘플링 10%",
+    "eval_status": "completed",
+    "issues": [],
+    "ai_feedback": "AI 자동 평가 점수: 85점. 샘플링에 의해 수동 평가 대상으로 선별되었습니다.",
+    "scores": {
+      "item-greeting": { "type": "NLP", "score": 9, "max": 10, "status": "pass", "confidence": 93 },
+      "item-empathy": { "type": "AI", "score": 8, "max": 10, "status": "pass", "confidence": 85 },
+      "item-solution": { "type": "AI", "score": 10, "max": 15, "status": "warn", "confidence": 75 },
+      "item-closing": { "type": "NLP", "score": 8, "max": 10, "status": "pass", "confidence": 91 },
+      "item-forbidden": { "type": "NLP", "score": 10, "max": 10, "status": "pass", "confidence": 99 }
+    },
+    "transcript": [
+      { "time": "0:00", "speaker": "agent", "text": "안녕하세요, 이영희입니다. 생일 축하 쿠폰 안내 드리려고 연락드렸어요." },
+      { "time": "0:08", "speaker": "customer", "text": "아 네, 감사합니다." }
+    ],
+    "manual_review": {
+      "reviewed_at": "2025-01-28 14:10",
+      "reviewer": "김팀장",
+      "modified_items": [],
+      "comment": "전반적으로 양호"
+    }
+  },
+  {
+    "id": "ME-2025-00005",
+    "date": "2025-01-25",
+    "call_time": "11:42",
+    "center": "서울센터",
+    "center_id": "ws-seoul",
+    "team": "기술지원팀",
+    "team_id": "team-tech",
+    "agent_name": "최수진",
+    "call_type": "I/B",
+    "duration": "18:25",
+    "total_score": 0,
+    "eval_form": "기술지원 전문 평가표",
+    "consultation_type": "기술지원 > 앱오류 > 로그인실패",
+    "manual_plan": "특정 상담사 집중 모니터링",
+    "manual_plan_criteria": "특정 상담사 지정",
+    "eval_status": "pending",
+    "issues": [],
+    "ai_feedback": "AI 자동 평가 점수: 58점. 특정 상담사 모니터링 대상입니다.",
+    "scores": {
+      "item-greeting": { "type": "NLP", "score": 6, "max": 10, "status": "warn", "confidence": 80 },
+      "item-empathy": { "type": "AI", "score": 5, "max": 10, "status": "warn", "confidence": 60 },
+      "item-solution": { "type": "AI", "score": 7, "max": 15, "status": "warn", "confidence": 55 },
+      "item-closing": { "type": "NLP", "score": 6, "max": 10, "status": "warn", "confidence": 78 },
+      "item-forbidden": { "type": "NLP", "score": 10, "max": 10, "status": "pass", "confidence": 99 }
+    },
+    "transcript": [
+      { "time": "0:00", "speaker": "agent", "text": "기술지원팀 최수진입니다." },
+      { "time": "0:04", "speaker": "customer", "text": "로그인이 안 돼요. 비밀번호를 몇 번이나 입력했는데..." },
+      { "time": "0:12", "speaker": "agent", "text": "계정 확인해 드릴게요. 가입하신 이메일 주소 알려주세요." }
+    ]
+  },
+  {
+    "id": "ME-2025-00006",
+    "date": "2025-01-25",
+    "call_time": "13:10",
+    "center": "서울센터",
+    "center_id": "ws-seoul",
+    "team": "기술지원팀",
+    "team_id": "team-tech",
+    "agent_name": "박상현",
+    "call_type": "I/B",
+    "duration": "14:50",
+    "total_score": 0,
+    "eval_form": "기술지원 전문 평가표",
+    "consultation_type": "기술지원 > 결제오류 > 카드결제",
+    "manual_plan": "특정 상담사 집중 모니터링",
+    "manual_plan_criteria": "특정 상담사 지정",
+    "eval_status": "pending",
+    "issues": [],
+    "ai_feedback": "AI 자동 평가 점수: 62점. 특정 상담사 모니터링 대상입니다.",
+    "scores": {
+      "item-greeting": { "type": "NLP", "score": 7, "max": 10, "status": "warn", "confidence": 82 },
+      "item-empathy": { "type": "AI", "score": 6, "max": 10, "status": "warn", "confidence": 65 },
+      "item-solution": { "type": "AI", "score": 9, "max": 15, "status": "pass", "confidence": 70 },
+      "item-closing": { "type": "NLP", "score": 7, "max": 10, "status": "warn", "confidence": 80 },
+      "item-forbidden": { "type": "NLP", "score": 10, "max": 10, "status": "pass", "confidence": 99 }
+    },
+    "transcript": [
+      { "time": "0:00", "speaker": "agent", "text": "기술지원팀 박상현입니다." },
+      { "time": "0:05", "speaker": "customer", "text": "카드 결제가 계속 실패해요." },
+      { "time": "0:10", "speaker": "agent", "text": "어떤 카드로 시도하셨나요? 결제 오류 코드가 보이시나요?" }
+    ]
+  },
+  {
+    "id": "ME-2025-00007",
+    "date": "2025-01-24",
+    "call_time": "16:30",
+    "center": "서울센터",
+    "center_id": "ws-seoul",
+    "team": "VIP상담팀",
+    "team_id": "team-vip",
+    "agent_name": "정대리",
+    "call_type": "I/B",
+    "duration": "07:12",
+    "total_score": 55,
+    "eval_form": "I/B VIP 평가표 v1.0",
+    "consultation_type": "VIP관리 > 프로모션안내 > 시즌할인",
+    "manual_plan": "2025년 2월 AI 저점수 재평가",
+    "manual_plan_criteria": "AI 점수 60점 미만",
+    "eval_status": "completed",
+    "issues": ["과락"],
+    "ai_feedback": "AI 자동 평가 점수: 52점. AI 저점수로 수동 재평가 대상입니다.",
+    "scores": {
+      "item-greeting": { "type": "NLP", "score": 5, "max": 10, "status": "warn", "confidence": 75 },
+      "item-empathy": { "type": "AI", "score": 4, "max": 10, "status": "fail", "confidence": 55 },
+      "item-solution": { "type": "AI", "score": 6, "max": 15, "status": "warn", "confidence": 50 },
+      "item-closing": { "type": "NLP", "score": 5, "max": 10, "status": "warn", "confidence": 72 },
+      "item-forbidden": { "type": "NLP", "score": 10, "max": 10, "status": "pass", "confidence": 99 }
+    },
+    "transcript": [
+      { "time": "0:00", "speaker": "agent", "text": "안녕하세요, 정대리입니다." },
+      { "time": "0:04", "speaker": "customer", "text": "시즌 할인 언제까지인가요?" },
+      { "time": "0:08", "speaker": "agent", "text": "이번 달 말까지입니다." }
+    ],
+    "manual_review": {
+      "reviewed_at": "2025-01-26 09:00",
+      "reviewer": "이평가",
+      "modified_items": [
+        { "item_id": "item-empathy", "original_score": 4, "new_score": 5 },
+        { "item_id": "item-solution", "original_score": 6, "new_score": 7 }
+      ],
+      "comment": "AI 점수보다 실제 상담 품질이 약간 나음. 다만 인사 멘트 개선 필요."
+    }
+  },
+  {
+    "id": "ME-2025-00008",
+    "date": "2025-01-24",
+    "call_time": "09:50",
+    "center": "서울센터",
+    "center_id": "ws-seoul",
+    "team": "일반상담팀",
+    "team_id": "team-general",
+    "agent_name": "한과장",
+    "call_type": "I/B",
+    "duration": "10:05",
+    "total_score": 0,
+    "eval_form": "I/B 일반 상담 평가표 v2.1",
+    "consultation_type": "결제 > 환불처리 > 환불지연",
+    "manual_plan": "2025년 2월 AI 저점수 재평가",
+    "manual_plan_criteria": "AI 점수 60점 미만",
+    "eval_status": "pending",
+    "issues": ["과락"],
+    "ai_feedback": "AI 자동 평가 점수: 48점. AI 저점수로 수동 재평가 대상입니다.",
+    "scores": {
+      "item-greeting": { "type": "NLP", "score": 4, "max": 10, "status": "fail", "confidence": 70 },
+      "item-empathy": { "type": "AI", "score": 3, "max": 10, "status": "fail", "confidence": 50 },
+      "item-solution": { "type": "AI", "score": 5, "max": 15, "status": "fail", "confidence": 45 },
+      "item-closing": { "type": "NLP", "score": 5, "max": 10, "status": "warn", "confidence": 68 },
+      "item-forbidden": { "type": "NLP", "score": 10, "max": 10, "status": "pass", "confidence": 99 }
+    },
+    "transcript": [
+      { "time": "0:00", "speaker": "agent", "text": "네, 말씀하세요." },
+      { "time": "0:03", "speaker": "customer", "text": "환불 신청한 지 2주가 넘었는데 아직 안 들어왔어요." },
+      { "time": "0:10", "speaker": "agent", "text": "확인해 보겠습니다. 주문번호 알려주세요." }
+    ]
+  },
+  {
+    "id": "ME-2025-00009",
+    "date": "2025-01-23",
+    "call_time": "11:20",
+    "center": "부산센터",
+    "center_id": "ws-busan",
+    "team": "일반상담팀",
+    "team_id": "team-general2",
+    "agent_name": "강신입",
+    "call_type": "I/B",
+    "duration": "08:33",
+    "total_score": 0,
+    "eval_form": "I/B 일반 상담 평가표 v2.1",
+    "consultation_type": "상품문의 > 신발 > 재입고문의",
+    "manual_plan": "2025년 1분기 신입 상담사 수동 평가",
+    "manual_plan_criteria": "근무일수 30일 미만",
+    "eval_status": "pending",
+    "issues": [],
+    "ai_feedback": "AI 자동 평가 점수: 70점. 신입 상담사로 수동 평가 대상입니다.",
+    "scores": {
+      "item-greeting": { "type": "NLP", "score": 8, "max": 10, "status": "pass", "confidence": 90 },
+      "item-empathy": { "type": "AI", "score": 6, "max": 10, "status": "warn", "confidence": 68 },
+      "item-solution": { "type": "AI", "score": 8, "max": 15, "status": "pass", "confidence": 70 },
+      "item-closing": { "type": "NLP", "score": 7, "max": 10, "status": "warn", "confidence": 82 },
+      "item-forbidden": { "type": "NLP", "score": 10, "max": 10, "status": "pass", "confidence": 99 }
+    },
+    "transcript": [
+      { "time": "0:00", "speaker": "agent", "text": "안녕하세요, 부산센터 강신입입니다." },
+      { "time": "0:05", "speaker": "customer", "text": "재입고 언제 되나요?" },
+      { "time": "0:10", "speaker": "agent", "text": "어떤 상품이신지 알려주시면 확인해 드리겠습니다." }
+    ]
+  },
+  {
+    "id": "ME-2025-00010",
+    "date": "2025-01-23",
+    "call_time": "14:45",
+    "center": "부산센터",
+    "center_id": "ws-busan",
+    "team": "해피콜팀",
+    "team_id": "team-happycall",
+    "agent_name": "윤해피",
+    "call_type": "O/B",
+    "duration": "04:20",
+    "total_score": 90,
+    "eval_form": "O/B 텔레마케팅 평가표 v1.3",
+    "consultation_type": "해피콜 > 만족도조사 > 배송완료",
+    "manual_plan": "2025년 2월 품질 샘플링 검증",
+    "manual_plan_criteria": "샘플링 10%",
+    "eval_status": "completed",
+    "issues": [],
+    "ai_feedback": "AI 자동 평가 점수: 93점. 샘플링에 의해 수동 평가 대상으로 선별되었습니다.",
+    "scores": {
+      "item-greeting": { "type": "NLP", "score": 10, "max": 10, "status": "pass", "confidence": 98 },
+      "item-empathy": { "type": "AI", "score": 9, "max": 10, "status": "pass", "confidence": 90 },
+      "item-solution": { "type": "AI", "score": 13, "max": 15, "status": "pass", "confidence": 85 },
+      "item-closing": { "type": "NLP", "score": 9, "max": 10, "status": "pass", "confidence": 94 },
+      "item-forbidden": { "type": "NLP", "score": 10, "max": 10, "status": "pass", "confidence": 99 }
+    },
+    "transcript": [
+      { "time": "0:00", "speaker": "agent", "text": "안녕하세요, 해피콜팀 윤해피입니다. 배송 받으신 상품 만족하셨나요?" },
+      { "time": "0:08", "speaker": "customer", "text": "네, 잘 받았어요. 감사합니다." }
+    ],
+    "manual_review": {
+      "reviewed_at": "2025-01-25 10:20",
+      "reviewer": "김팀장",
+      "modified_items": [],
+      "comment": "매우 우수한 상담"
+    }
+  },
+  {
+    "id": "ME-2025-00011",
+    "date": "2025-01-22",
+    "call_time": "10:15",
+    "center": "서울센터",
+    "center_id": "ws-seoul",
+    "team": "VIP상담팀",
+    "team_id": "team-vip",
+    "agent_name": "김신입",
+    "call_type": "I/B",
+    "duration": "11:28",
+    "total_score": 0,
+    "eval_form": "I/B VIP 평가표 v1.0",
+    "consultation_type": "교환/반품 > 반품접수 > 불량상품",
+    "manual_plan": "2025년 1분기 신입 상담사 수동 평가",
+    "manual_plan_criteria": "근무일수 30일 미만",
+    "eval_status": "pending",
+    "issues": [],
+    "ai_feedback": "AI 자동 평가 점수: 68점. 신입 상담사로 수동 평가 대상입니다.",
+    "scores": {
+      "item-greeting": { "type": "NLP", "score": 7, "max": 10, "status": "warn", "confidence": 85 },
+      "item-empathy": { "type": "AI", "score": 6, "max": 10, "status": "warn", "confidence": 72 },
+      "item-solution": { "type": "AI", "score": 7, "max": 15, "status": "warn", "confidence": 60 },
+      "item-closing": { "type": "NLP", "score": 8, "max": 10, "status": "pass", "confidence": 88 },
+      "item-forbidden": { "type": "NLP", "score": 10, "max": 10, "status": "pass", "confidence": 99 }
+    },
+    "transcript": [
+      { "time": "0:00", "speaker": "agent", "text": "안녕하세요, VIP상담팀 김신입입니다." },
+      { "time": "0:05", "speaker": "customer", "text": "받은 상품에 불량이 있어서 반품하고 싶어요." },
+      { "time": "0:12", "speaker": "agent", "text": "불편을 드려 죄송합니다. 반품 접수 도와드리겠습니다." }
+    ]
+  },
+  {
+    "id": "ME-2025-00012",
+    "date": "2025-01-22",
+    "call_time": "15:40",
+    "center": "서울센터",
+    "center_id": "ws-seoul",
+    "team": "기술지원팀",
+    "team_id": "team-tech",
+    "agent_name": "최수진",
+    "call_type": "I/B",
+    "duration": "22:10",
+    "total_score": 60,
+    "eval_form": "기술지원 전문 평가표",
+    "consultation_type": "기술지원 > 앱오류 > 결제화면",
+    "manual_plan": "특정 상담사 집중 모니터링",
+    "manual_plan_criteria": "특정 상담사 지정",
+    "eval_status": "completed",
+    "issues": [],
+    "ai_feedback": "AI 자동 평가 점수: 55점. 특정 상담사 모니터링 대상입니다.",
+    "scores": {
+      "item-greeting": { "type": "NLP", "score": 6, "max": 10, "status": "warn", "confidence": 78 },
+      "item-empathy": { "type": "AI", "score": 5, "max": 10, "status": "warn", "confidence": 58 },
+      "item-solution": { "type": "AI", "score": 8, "max": 15, "status": "pass", "confidence": 62 },
+      "item-closing": { "type": "NLP", "score": 7, "max": 10, "status": "warn", "confidence": 80 },
+      "item-forbidden": { "type": "NLP", "score": 10, "max": 10, "status": "pass", "confidence": 99 }
+    },
+    "transcript": [
+      { "time": "0:00", "speaker": "agent", "text": "기술지원팀 최수진입니다." },
+      { "time": "0:04", "speaker": "customer", "text": "결제 화면에서 자꾸 오류가 나요." },
+      { "time": "0:10", "speaker": "agent", "text": "어떤 브라우저를 사용하고 계신가요?" }
+    ],
+    "manual_review": {
+      "reviewed_at": "2025-01-24 16:00",
+      "reviewer": "박관리자",
+      "modified_items": [{ "item_id": "item-solution", "original_score": 8, "new_score": 9 }],
+      "comment": "기술적 해결 과정은 양호. 인사 및 공감 표현 개선 필요."
+    }
+  }
+]
+
 ;

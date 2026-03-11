@@ -95,7 +95,8 @@ window.AICC_Fmt = {
     const map = {
       'AI': '<span class="badge badge-ai">AI</span>',
       'NLP': '<span class="badge badge-nlp">NLP</span>',
-      'Manual': '<span class="badge badge-manual">수동</span>'
+      'Manual': '<span class="badge badge-manual">수동</span>',
+      '수동': '<span class="badge badge-manual">수동</span>'
     };
     return map[type] || type;
   },
@@ -125,6 +126,8 @@ window.AICC_Fmt = {
     if (Math.abs(diff) < 0.1) return '<span style="color:#757575">-</span>';
     const arrow = diff > 0 ? '&#9650;' : '&#9660;';
     const color = diff > 0 ? '#4CAF50' : '#F44336';
-    return `<span style="color:${color}">${arrow} ${Math.abs(diff).toFixed(1)}</span>`;
+    const absDiff = Math.abs(diff);
+    const diffText = Number.isInteger(absDiff) ? absDiff.toString() : absDiff.toFixed(1);
+    return `<span style="color:${color}">${arrow} ${diffText}</span>`;
   }
 };

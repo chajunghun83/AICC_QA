@@ -98,7 +98,7 @@
     let formsData = null;
     let evaluationsData = [];
     let consultTypeTree = {};
-    let workspacesData = [
+    let centersData = [
       { id: 'ws-seoul', name: '서울센터', teams: [
         { id: 'team-vip', name: 'VIP상담팀' },
         { id: 'team-general', name: '일반상담팀' },
@@ -134,7 +134,7 @@
         repeat: '매월',
         forms: ['표준 QA 평가표 v2.1'],
         target: '서울센터 > 전체',
-        targetDetail: { workspace: '서울센터', teams: ['VIP상담팀', '일반상담팀', '기술지원팀'], inbound: true, outbound: true },
+        targetDetail: { center: '서울센터', teams: ['VIP상담팀', '일반상담팀', '기술지원팀'], inbound: true, outbound: true },
         criteriaType: 'workingDays',
         criteriaValue: { days: 30 },
         assignee: '박관리자',
@@ -148,7 +148,7 @@
         repeat: '매월',
         forms: ['표준 QA 평가표 v2.1'],
         target: '서울센터 > VIP상담팀',
-        targetDetail: { workspace: '서울센터', teams: ['VIP상담팀'], inbound: true, outbound: true },
+        targetDetail: { center: '서울센터', teams: ['VIP상담팀'], inbound: true, outbound: true },
         criteriaType: 'sampling',
         criteriaValue: { rate: 10 },
         assignee: '김팀장',
@@ -162,7 +162,7 @@
         repeat: '1회성',
         forms: ['표준 QA 평가표 v2.1'],
         target: '서울센터 > 전체',
-        targetDetail: { workspace: '서울센터', teams: ['VIP상담팀', '일반상담팀', '기술지원팀'], inbound: true, outbound: true },
+        targetDetail: { center: '서울센터', teams: ['VIP상담팀', '일반상담팀', '기술지원팀'], inbound: true, outbound: true },
         criteriaType: 'scoreThreshold',
         criteriaValue: { score: 60 },
         assignee: '이평가',
@@ -176,7 +176,7 @@
         repeat: '매월',
         forms: ['기술지원 전문 평가표'],
         target: '서울센터 > 기술지원팀',
-        targetDetail: { workspace: '서울센터', teams: ['기술지원팀'], inbound: true, outbound: false },
+        targetDetail: { center: '서울센터', teams: ['기술지원팀'], inbound: true, outbound: false },
         criteriaType: 'specificAgents',
         criteriaValue: { agents: ['최수진', '박상현'] },
         assignee: '박관리자',
@@ -223,12 +223,12 @@
     }
 
     // 전체 팀 선택 시 "전체"로 축약하여 라벨 간결화
-    function buildTargetLabel(workspace, teams) {
-      if (!workspace) return '미지정';
-      const ws = workspacesData.find(w => w.name === workspace);
-      if (ws && teams.length === ws.teams.length) return workspace + ' > 전체';
-      if (teams.length === 0) return workspace;
-      return workspace + ' > ' + teams.join(', ');
+    function buildTargetLabel(center, teams) {
+      if (!center) return '미지정';
+      const ws = centersData.find(w => w.name === center);
+      if (ws && teams.length === ws.teams.length) return center + ' > 전체';
+      if (teams.length === 0) return center;
+      return center + ' > ' + teams.join(', ');
     }
 
     /* ── 테이블 렌더링 ── */
@@ -294,7 +294,7 @@
       const isActive = cs.status === 'active';
       const isPending = cs.status === 'pending';
       const periodEndDisplay = p.periodEnd ? AICC_Fmt.date(p.periodEnd) : '-';
-      const teamsDisplay = td.teams.map(t => td.workspace + ' > ' + t).join(', ');
+      const teamsDisplay = td.teams.map(t => td.center + ' > ' + t).join(', ');
       // 레거시(단일 조건)와 신규(다중 조건) 데이터 구조 모두 호환
       const criteriaList = p.criteria || (p.criteriaType ? [{ type: p.criteriaType, value: p.criteriaValue || {} }] : []);
       const criteriaHtml = criteriaList.length > 0
@@ -342,8 +342,8 @@
           <div class="form-label" style="margin-bottom:12px;font-size:13px;font-weight:700;color:#212121;">대상 설정</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
             <div>
-              <div class="form-label">워크스페이스</div>
-              <div style="font-size:13px;">${td.workspace || '-'}</div>
+              <div class="form-label">센터</div>
+              <div style="font-size:13px;">${td.center || '-'}</div>
             </div>
             <div>
               <div class="form-label">팀</div>
@@ -544,10 +544,10 @@
           return `<div style="margin-top:8px;">
             <div style="display:flex;gap:12px;margin-bottom:8px;">
               <div style="flex:1;">
-                <label class="form-label">워크스페이스</label>
+                <label class="form-label">센터</label>
                 <select id="criteria-ws" class="form-select" style="width:100%;" onchange="onCriteriaWsChange()">
                   <option value="">선택하세요</option>
-                  ${workspacesData.map(ws => `<option value="${ws.name}">${ws.name}</option>`).join('')}
+                  ${centersData.map(ws => `<option value="${ws.name}">${ws.name}</option>`).join('')}
                 </select>
               </div>
               <div style="flex:1;">
@@ -716,13 +716,13 @@
       return tree;
     }
 
-    // 워크스페이스 변경 시 하위 팀·상담사 선택을 초기화하여 정합성 유지
+    // 센터 변경 시 하위 팀·상담사 선택을 초기화하여 정합성 유지
     function onCriteriaWsChange() {
       const wsName = document.getElementById('criteria-ws')?.value;
       const teamSel = document.getElementById('criteria-team');
       if (!teamSel) return;
       if (!wsName) { teamSel.innerHTML = '<option value="">팀 선택</option>'; return; }
-      const ws = workspacesData.find(w => w.name === wsName);
+      const ws = centersData.find(w => w.name === wsName);
       if (!ws) return;
       teamSel.innerHTML = '<option value="">팀 선택</option>' +
         ws.teams.map(t => `<option value="${t.name}">${t.name}</option>`).join('');
@@ -735,7 +735,7 @@
       const teamName = document.getElementById('criteria-team')?.value;
       const area = document.getElementById('criteria-agent-area');
       if (!area || !wsName || !teamName) { if (area) area.innerHTML = ''; return; }
-      const agents = usersData.filter(u => u.role === 'AGENT' && u.workspace === wsName && u.team === teamName);
+      const agents = usersData.filter(u => u.role === 'AGENT' && u.center === wsName && u.team === teamName);
       if (agents.length === 0) {
         area.innerHTML = '<span style="color:#BDBDBD;font-size:12px;">해당 팀에 상담사가 없습니다.</span>';
         return;
@@ -748,18 +748,18 @@
     // plan 유무로 생성/편집 폼을 동일 함수로 처리하여 코드 재사용
     function buildFormHtml(plan) {
       const p = plan || {};
-      const td = p.targetDetail || { workspace: '', teams: [], inbound: true, outbound: true };
-      const selectedWs = td.workspace || '';
+      const td = p.targetDetail || { center: '', teams: [], inbound: true, outbound: true };
+      const selectedWs = td.center || '';
       const repeatVal = p.repeat || '지속';
       const isOneTime = repeatVal === '1회성' || repeatVal === '지속';
 
-      const wsOptions = workspacesData.map(ws =>
+      const wsOptions = centersData.map(ws =>
         `<option value="${ws.name}"${ws.name === selectedWs ? ' selected' : ''}>${ws.name}</option>`
       ).join('');
 
       let teamsHtml = '';
       if (selectedWs) {
-        const ws = workspacesData.find(w => w.name === selectedWs);
+        const ws = centersData.find(w => w.name === selectedWs);
         if (ws) {
           teamsHtml = ws.teams.map(t => `
             <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
@@ -838,8 +838,8 @@
             <div class="form-label" style="font-weight:700;margin-bottom:10px;">대상 설정</div>
             <div style="display:flex;gap:16px;">
               <div style="flex:1;">
-                <label class="form-label">워크스페이스</label>
-                <select id="pf-ws" class="form-select" style="width:100%;margin-top:4px;" onchange="onWorkspaceChange()">
+                <label class="form-label">센터</label>
+                <select id="pf-ws" class="form-select" style="width:100%;margin-top:4px;" onchange="onCenterChange()">
                   <option value="">선택하세요</option>
                   ${wsOptions}
                 </select>
@@ -847,7 +847,7 @@
               <div style="flex:2;">
                 <label class="form-label">팀</label>
                 <div id="pf-teams-area" style="display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:4px;">
-                  ${teamsHtml || '<span style="color:#BDBDBD;font-size:12px;">워크스페이스를 먼저 선택하세요</span>'}
+                  ${teamsHtml || '<span style="color:#BDBDBD;font-size:12px;">센터를 먼저 선택하세요</span>'}
                 </div>
               </div>
               <div style="flex:1;">
@@ -897,16 +897,16 @@
       }
     }
 
-    // 워크스페이스 변경 시 해당 센터의 팀 체크박스를 동적 반영
-    function onWorkspaceChange() {
+    // 센터 변경 시 해당 센터의 팀 체크박스를 동적 반영
+    function onCenterChange() {
       const wsName = document.getElementById('pf-ws')?.value;
       const area = document.getElementById('pf-teams-area');
       if (!area) return;
       if (!wsName) {
-        area.innerHTML = '<span style="color:#BDBDBD;font-size:12px;">워크스페이스를 먼저 선택하세요</span>';
+        area.innerHTML = '<span style="color:#BDBDBD;font-size:12px;">센터를 먼저 선택하세요</span>';
         return;
       }
-      const ws = workspacesData.find(w => w.name === wsName);
+      const ws = centersData.find(w => w.name === wsName);
       if (!ws) return;
       area.innerHTML = ws.teams.map(t => `
         <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
@@ -948,7 +948,7 @@
       const periodEnd = (repeat === '1회성' || repeat === '지속') ? '' : (document.getElementById('pf-end')?.value || '');
       if (repeat !== '1회성' && repeat !== '지속' && !periodEnd) { AICC_Toast.show('종료일을 입력하세요.'); return null; }
 
-      const workspace = document.getElementById('pf-ws')?.value || '';
+      const center = document.getElementById('pf-ws')?.value || '';
       const teams = [...document.querySelectorAll('input[name="pf-team"]:checked')].map(el => el.value);
       const inbound = document.getElementById('pf-ib')?.checked ?? true;
       const outbound = document.getElementById('pf-ob')?.checked ?? true;
@@ -1020,12 +1020,12 @@
       const criteriaValue = criteria.length > 0 ? criteria[0].value : {};
 
       const assignee = document.getElementById('pf-assignee')?.value?.trim() || '';
-      const targetLabel = buildTargetLabel(workspace, teams);
+      const targetLabel = buildTargetLabel(center, teams);
 
       return {
         name, periodStart, periodEnd, repeat,
         target: targetLabel,
-        targetDetail: { workspace, teams, inbound, outbound },
+        targetDetail: { center, teams, inbound, outbound },
         forms, criteriaType, criteriaValue, criteria, assignee
       };
     }
@@ -1127,8 +1127,8 @@
     // 비동기 데이터 로드 완료 후 필터 옵션 동적 생성 및 테이블 초기화
     document.addEventListener('DOMContentLoaded', async () => {
       formsData = await AICC_DataLoader.load('evaluation-forms.json');
-      const wsRaw = await AICC_DataLoader.load('workspaces.json');
-      if (wsRaw) workspacesData = wsRaw;
+      const wsRaw = await AICC_DataLoader.load('centers.json');
+      if (wsRaw) centersData = wsRaw;
       const usRaw = await AICC_DataLoader.load('users.json');
       if (usRaw) usersData = usRaw;
       const evRaw = await AICC_DataLoader.load('evaluations.json');
