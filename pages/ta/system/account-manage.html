@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>권한 관리 - AICC Quality Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../../../css/styles.css">
+</head>
+<body class="bg-[#F5F5F5] text-[#212121]">
+  <div id="page-content">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <h1 style="font-size:20px;font-weight:700;margin:0;">권한 관리</h1>
+        <p style="font-size:12px;color:#757575;margin:4px 0 0;">사용자 접근 권한 관리</p>
+      </div>
+    </div>
+
+    <!-- 필터 -->
+    <div class="filter-section">
+      <div class="filter-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'flex':'none'">
+        <span>검색조건</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#757575" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+      <div class="filter-body">
+        <div>
+          <label class="form-label">역할</label>
+          <select class="form-select" id="role-filter" onchange="filterUsers()">
+            <option value="">전체</option>
+            <option value="관리자">관리자</option>
+            <option value="슈퍼바이저">슈퍼바이저</option>
+            <option value="분석가">분석가</option>
+            <option value="조회자">조회자</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">이름 검색</label>
+          <input type="text" class="form-input" id="name-search" placeholder="이름을 입력하세요" oninput="filterUsers()" style="min-width:160px;">
+        </div>
+        <div>
+          <label class="form-label">&nbsp;</label>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('role-filter').value='';document.getElementById('name-search').value='';filterUsers()">초기화</button>
+            <button class="btn btn-primary btn-sm" onclick="filterUsers()">검색</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 역할별 요약 -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
+      <div class="content-card" style="padding:16px;text-align:center;">
+        <div style="font-size:11px;color:#757575;">관리자</div>
+        <div style="font-size:22px;font-weight:700;color:#1565C0;margin:4px 0;">1</div>
+      </div>
+      <div class="content-card" style="padding:16px;text-align:center;">
+        <div style="font-size:11px;color:#757575;">슈퍼바이저</div>
+        <div style="font-size:22px;font-weight:700;color:#00A3FF;margin:4px 0;">2</div>
+      </div>
+      <div class="content-card" style="padding:16px;text-align:center;">
+        <div style="font-size:11px;color:#757575;">분석가</div>
+        <div style="font-size:22px;font-weight:700;color:#4CAF50;margin:4px 0;">1</div>
+      </div>
+      <div class="content-card" style="padding:16px;text-align:center;">
+        <div style="font-size:11px;color:#757575;">조회자</div>
+        <div style="font-size:22px;font-weight:700;color:#9E9E9E;margin:4px 0;">1</div>
+      </div>
+    </div>
+
+    <!-- 사용자 테이블 -->
+    <div class="content-card">
+      <div class="content-card-header" style="display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:14px;font-weight:600;">사용자 목록</span>
+        <button class="btn btn-primary btn-sm" onclick="openAddUserModal()">+ 사용자 추가</button>
+      </div>
+      <div class="content-card-body" style="padding:0;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>이름</th>
+              <th>이메일</th>
+              <th>역할</th>
+              <th>워크스페이스</th>
+              <th>상태</th>
+              <th>마지막 접속</th>
+              <th>관리</th>
+            </tr>
+          </thead>
+          <tbody id="user-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 사용자 추가 모달 -->
+  <div id="add-user-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:white;border-radius:12px;width:480px;box-shadow:0 8px 32px rgba(0,0,0,0.18);">
+      <div style="padding:20px 24px;border-bottom:1px solid #E0E0E0;display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-size:16px;font-weight:700;">사용자 추가</div>
+        <button onclick="closeAddUserModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#757575;">×</button>
+      </div>
+      <div style="padding:20px 24px;">
+        <div style="margin-bottom:16px;">
+          <label class="form-label">이름</label>
+          <input type="text" class="form-input" style="width:100%;" placeholder="이름을 입력하세요">
+        </div>
+        <div style="margin-bottom:16px;">
+          <label class="form-label">이메일</label>
+          <input type="email" class="form-input" style="width:100%;" placeholder="이메일을 입력하세요">
+        </div>
+        <div style="margin-bottom:16px;">
+          <label class="form-label">역할</label>
+          <select class="form-select" style="width:100%;">
+            <option>관리자</option><option>슈퍼바이저</option><option>분석가</option><option>조회자</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">워크스페이스</label>
+          <select class="form-select" style="width:100%;">
+            <option>전체</option><option>WS-01 고객센터</option><option>WS-02 기술지원</option>
+          </select>
+        </div>
+      </div>
+      <div style="padding:16px 24px;border-top:1px solid #E0E0E0;display:flex;justify-content:flex-end;gap:8px;">
+        <button class="btn btn-secondary" onclick="closeAddUserModal()">취소</button>
+        <button class="btn btn-primary" onclick="AICC_Toast.show('사용자가 추가되었습니다.');closeAddUserModal()">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../../assets/dummy-data/all-data.js"></script>
+  <script src="../../../js/utils/data-loader.js"></script>
+  <script src="../../../js/utils/auth-simulator.js"></script>
+  <script src="../../../js/utils/formatters.js"></script>
+  <script src="../../../js/components/sidebar.js"></script>
+  <script src="../../../js/components/layout.js"></script>
+  <script src="../../../js/components/modal.js"></script>
+  <script src="../../../js/components/toast.js"></script>
+  <script>
+    const users = [
+      { no:1, name:'관리자', email:'admin@aicc.co.kr', role:'관리자', workspace:'전체', status:'활성', lastAccess:'2025-01-27 16:42' },
+      { no:2, name:'홍길동', email:'hong@aicc.co.kr', role:'슈퍼바이저', workspace:'WS-01 고객센터', status:'활성', lastAccess:'2025-01-27 14:30' },
+      { no:3, name:'김철수', email:'kim@aicc.co.kr', role:'슈퍼바이저', workspace:'WS-02 기술지원', status:'활성', lastAccess:'2025-01-26 09:15' },
+      { no:4, name:'이영희', email:'lee@aicc.co.kr', role:'분석가', workspace:'WS-01 고객센터', status:'활성', lastAccess:'2025-01-25 11:00' },
+      { no:5, name:'박상현', email:'park@aicc.co.kr', role:'조회자', workspace:'WS-01 고객센터', status:'비활성', lastAccess:'2025-01-10 17:22' }
+    ];
+
+    const roleColors = { '관리자':'#1565C0', '슈퍼바이저':'#00A3FF', '분석가':'#4CAF50', '조회자':'#9E9E9E' };
+    const roleBg = { '관리자':'rgba(21,101,192,0.1)', '슈퍼바이저':'rgba(0,163,255,0.1)', '분석가':'rgba(76,175,80,0.1)', '조회자':'rgba(158,158,158,0.1)' };
+    const statusColor = { '활성':'#4CAF50', '비활성':'#9E9E9E' };
+    const statusBg = { '활성':'rgba(76,175,80,0.1)', '비활성':'rgba(158,158,158,0.1)' };
+
+    function renderUsers(list) {
+      document.getElementById('user-tbody').innerHTML = list.map(u => `
+        <tr>
+          <td>${u.no}</td>
+          <td style="font-weight:600;">${u.name}</td>
+          <td style="font-size:12px;color:#757575;">${u.email}</td>
+          <td><span style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:600;color:${roleColors[u.role]};background:${roleBg[u.role]};">${u.role}</span></td>
+          <td style="font-size:12px;color:#757575;">${u.workspace}</td>
+          <td><span style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:600;color:${statusColor[u.status]};background:${statusBg[u.status]};">${u.status}</span></td>
+          <td style="font-size:12px;color:#9E9E9E;">${u.lastAccess}</td>
+          <td>
+            <button class="btn btn-secondary btn-sm" onclick="AICC_Toast.show('${u.name} 권한을 수정합니다.')">수정</button>
+            <button class="btn btn-sm" style="background:${u.status==='활성'?'#FFF3F3':'#F1F8E9'};color:${u.status==='활성'?'#F44336':'#4CAF50'};border:1px solid ${u.status==='활성'?'#FFCDD2':'#C8E6C9'};margin-left:4px;" onclick="AICC_Toast.show('${u.name} 계정이 ${u.status==='활성'?'비활성화':'활성화'}되었습니다.')">${u.status==='활성'?'비활성화':'활성화'}</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function filterUsers() {
+      const role = document.getElementById('role-filter').value;
+      const name = document.getElementById('name-search').value.trim().toLowerCase();
+      const filtered = users.filter(u => {
+        const roleMatch = !role || u.role === role;
+        const nameMatch = !name || u.name.toLowerCase().includes(name) || u.email.toLowerCase().includes(name);
+        return roleMatch && nameMatch;
+      });
+      renderUsers(filtered);
+    }
+
+    function openAddUserModal() {
+      document.getElementById('add-user-modal').style.display = 'flex';
+    }
+    function closeAddUserModal() {
+      document.getElementById('add-user-modal').style.display = 'none';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderUsers(users);
+
+      document.getElementById('add-user-modal').addEventListener('click', function(e) {
+        if (e.target === this) closeAddUserModal();
+      });
+    });
+  </script>
+</body>
+</html>

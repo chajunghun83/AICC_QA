@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TA 대시보드 - AICC Quality Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body class="bg-[#F5F5F5] text-[#212121]">
+  <div id="page-content">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <h1 style="font-size:20px;font-weight:700;margin:0;">TA 대시보드</h1>
+        <p style="font-size:12px;color:#757575;margin:4px 0 0;">텍스트 분석 현황 종합 대시보드</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div id="period-picker"></div>
+        <select class="form-select" id="ws-filter"><option value="">전체</option></select>
+        <button class="btn btn-primary btn-sm" onclick="AICC_Toast.show('필터가 적용되었습니다.')">검색</button>
+      </div>
+    </div>
+
+    <!-- KPI 카드 -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;">
+      <div class="content-card" style="padding:20px;text-align:center;">
+        <div style="font-size:12px;color:#757575;">전체 콜</div>
+        <div style="font-size:28px;font-weight:700;color:#212121;margin:8px 0;">1,842</div>
+        <div style="font-size:12px;color:#4CAF50;">▲ 12.3% vs 전기간</div>
+      </div>
+      <div class="content-card" style="padding:20px;text-align:center;">
+        <div style="font-size:12px;color:#757575;">이슈 콜</div>
+        <div style="font-size:28px;font-weight:700;color:#F57F17;margin:8px 0;">127</div>
+        <div style="font-size:12px;color:#F44336;">▲ 8.5%</div>
+      </div>
+      <div class="content-card" style="padding:20px;text-align:center;">
+        <div style="font-size:12px;color:#757575;">초과 콜</div>
+        <div style="font-size:28px;font-weight:700;color:#1565C0;margin:8px 0;">45</div>
+        <div style="font-size:12px;color:#4CAF50;">▼ 3.2%</div>
+      </div>
+      <div class="content-card" style="padding:20px;text-align:center;">
+        <div style="font-size:12px;color:#757575;">재인입 콜</div>
+        <div style="font-size:28px;font-weight:700;color:#E65100;margin:8px 0;">89</div>
+        <div style="font-size:12px;color:#F44336;">▲ 15.7%</div>
+      </div>
+    </div>
+
+    <!-- 급상승 키워드 + 위험 키워드 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
+      <div class="content-card">
+        <div class="content-card-header"><span style="font-size:14px;font-weight:600;">급상승 키워드 Top 5</span></div>
+        <div class="content-card-body" style="padding:0;">
+          <table class="data-table">
+            <thead><tr><th>순위</th><th>키워드</th><th>건수</th><th>증감률</th></tr></thead>
+            <tbody id="rising-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="content-card">
+        <div class="content-card-header"><span style="font-size:14px;font-weight:600;">위험 키워드</span></div>
+        <div class="content-card-body">
+          <div style="display:flex;flex-wrap:wrap;gap:8px;" id="risk-badges"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 상담유형 히트맵 -->
+    <div class="content-card" style="margin-bottom:24px;">
+      <div class="content-card-header"><span style="font-size:14px;font-weight:600;">상담유형 히트맵</span></div>
+      <div class="content-card-body">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;" id="heatmap-grid"></div>
+      </div>
+    </div>
+
+    <!-- 시간대별 콜 분포 -->
+    <div class="content-card" style="margin-bottom:24px;">
+      <div class="content-card-header"><span style="font-size:14px;font-weight:600;">시간대별 콜 분포</span></div>
+      <div class="content-card-body"><div style="height:280px;"><canvas id="hourly-chart"></canvas></div></div>
+    </div>
+
+    <!-- 고빈도 키워드 -->
+    <div class="content-card">
+      <div class="content-card-header"><span style="font-size:14px;font-weight:600;">고빈도 키워드</span></div>
+      <div class="content-card-body">
+        <div style="display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:center;min-height:120px;" id="wordcloud"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../assets/dummy-data/all-data.js"></script>
+  <script src="../../js/utils/data-loader.js"></script>
+  <script src="../../js/utils/auth-simulator.js"></script>
+  <script src="../../js/utils/formatters.js"></script>
+  <script src="../../js/components/sidebar.js"></script>
+  <script src="../../js/components/layout.js"></script>
+  <script src="../../js/components/modal.js"></script>
+  <script src="../../js/components/toast.js"></script>
+  <script src="../../js/components/period-picker.js"></script>
+  <script>
+    /* ── 드릴다운 더미 데이터 ── */
+    const callListData = [
+      { id:'CALL-2025-08421', date:'2025-01-27 16:42', agent:'홍길동', type:'상품문의', duration:'08:32', keyword:'환불' },
+      { id:'CALL-2025-08418', date:'2025-01-27 15:18', agent:'김철수', type:'배송문의', duration:'05:15', keyword:'배송지연' },
+      { id:'CALL-2025-08415', date:'2025-01-27 14:05', agent:'이영희', type:'기술지원', duration:'12:48', keyword:'품절' },
+      { id:'CALL-2025-08410', date:'2025-01-27 11:33', agent:'박상현', type:'결제/환불', duration:'06:22', keyword:'카드결제오류' },
+      { id:'CALL-2025-08407', date:'2025-01-27 10:07', agent:'최수진', type:'교환/반품', duration:'15:44', keyword:'사이즈교환' },
+      { id:'CALL-2025-08401', date:'2025-01-27 09:25', agent:'홍길동', type:'회원관리', duration:'04:10', keyword:'회원탈퇴' },
+      { id:'CALL-2025-08395', date:'2025-01-26 17:02', agent:'김철수', type:'배송문의', duration:'09:55', keyword:'배송지연' },
+      { id:'CALL-2025-08390', date:'2025-01-26 15:38', agent:'이영희', type:'프로모션', duration:'07:20', keyword:'적립금' }
+    ];
+
+    function genHourlyDetail(keyword) {
+      return Array.from({length:24}, (_, h) => Math.round(Math.random() * 20 + (h >= 9 && h <= 17 ? 15 : 2)));
+    }
+
+    /* ── 1단계: 키워드 상세 모달 (시간대별 분포 차트 + 콜 리스트 버튼) ── */
+    function openKeywordDetail(keyword, count, extra) {
+      const hourly = genHourlyDetail(keyword);
+      const prevHourly = hourly.map(v => Math.round(v * (0.7 + Math.random() * 0.4)));
+      const chartId = 'kw-detail-chart-' + Date.now();
+      const content = `
+        <div style="margin-bottom:16px;">
+          <div style="display:flex;gap:16px;margin-bottom:12px;">
+            <div style="background:#F9F9F9;border-radius:8px;padding:12px 20px;flex:1;text-align:center;">
+              <div style="font-size:11px;color:#757575;">총 건수</div>
+              <div style="font-size:22px;font-weight:700;color:#00A3FF;">${count || '-'}</div>
+            </div>
+            <div style="background:#F9F9F9;border-radius:8px;padding:12px 20px;flex:1;text-align:center;">
+              <div style="font-size:11px;color:#757575;">전기간 대비</div>
+              <div style="font-size:22px;font-weight:700;color:#F44336;">▲ ${extra || Math.round(Math.random()*50+10)}%</div>
+            </div>
+          </div>
+          ${extra && extra.includes && extra.includes('>') ? '<div style="font-size:12px;color:#757575;margin-bottom:8px;">상담유형: ' + extra + '</div>' : ''}
+        </div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:8px;">시간대별 분포 (클릭 시 콜 리스트)</div>
+        <div style="height:220px;"><canvas id="${chartId}"></canvas></div>
+      `;
+      AICC_Modal.open({
+        title: '키워드 상세 - ' + keyword,
+        content: content,
+        footer: '<button class="btn btn-secondary" onclick="openCallList(&quot;'+keyword+'&quot;)">콜 리스트 보기</button><button class="btn btn-secondary" onclick="AICC_Modal.close()">닫기</button>',
+        size: 'lg'
+      });
+      setTimeout(() => {
+        const canvas = document.getElementById(chartId);
+        if (canvas) {
+          new Chart(canvas, {
+            type: 'bar',
+            data: {
+              labels: Array.from({length:24}, (_, i) => i+'시'),
+              datasets: [
+                { label: '현재', data: hourly, backgroundColor: 'rgba(0,163,255,0.7)', borderRadius: 3, order: 1 },
+                { label: '전기간', data: prevHourly, type:'line', borderColor:'#BDBDBD', borderDash:[4,4], pointRadius:0, tension:0.3, order:0 }
+              ]
+            },
+            options: {
+              responsive:true, maintainAspectRatio:false,
+              onClick: (e, elements) => { if (elements.length > 0) { const hour = elements[0].index; openCallList(keyword, hour+'시'); } },
+              plugins: { legend: { position:'top', labels:{font:{size:11}} } },
+              scales: { y:{beginAtZero:true, grid:{color:'#F0F0F0'}}, x:{grid:{display:false}} }
+            }
+          });
+        }
+      }, 100);
+    }
+
+    /* ── 2단계: 콜 리스트 모달 ── */
+    function openCallList(keyword, hour) {
+      const filtered = keyword ? callListData.filter(c => c.keyword === keyword || Math.random() > 0.3) : callListData;
+      const title = hour ? '콜 리스트 - ' + keyword + ' (' + hour + ')' : '콜 리스트' + (keyword ? ' - ' + keyword : '');
+      const rows = filtered.map((c, i) => `
+        <tr onclick="openCallDetail('${c.id}')">
+          <td>${i+1}</td>
+          <td style="font-size:12px;color:#757575;">${c.date}</td>
+          <td style="font-weight:500;">${c.agent}</td>
+          <td style="font-family:monospace;font-size:12px;">${c.id}</td>
+          <td>${c.type}</td>
+          <td>${c.duration}</td>
+        </tr>`).join('');
+      AICC_Modal.open({
+        title: title,
+        content: `<div style="font-size:12px;color:#757575;margin-bottom:8px;">총 ${filtered.length}건</div>
+          <table class="data-table"><thead><tr><th>No</th><th>상담일시</th><th>상담사</th><th>콜 ID</th><th>상담유형</th><th>통화시간</th></tr></thead>
+          <tbody>${rows}</tbody></table>`,
+        footer: '<button class="btn btn-secondary" onclick="AICC_Modal.close()">닫기</button>',
+        size: 'lg'
+      });
+    }
+
+    /* ── 3단계: 콜 상세 모달 ── */
+    function openCallDetail(callId) {
+      const call = callListData.find(c => c.id === callId) || callListData[0];
+      AICC_Modal.open({
+        title: '콜 상세 - ' + call.id,
+        content: `
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;background:#FAFAFA;border:1px solid #EEEEEE;border-radius:8px;padding:16px;margin-bottom:16px;">
+            <div><div style="font-size:11px;color:#757575;">상담일시</div><div style="font-size:13px;font-weight:500;">${call.date}</div></div>
+            <div><div style="font-size:11px;color:#757575;">상담사</div><div style="font-size:13px;font-weight:500;">${call.agent}</div></div>
+            <div><div style="font-size:11px;color:#757575;">상담유형</div><div style="font-size:13px;font-weight:500;">${call.type}</div></div>
+            <div><div style="font-size:11px;color:#757575;">통화시간</div><div style="font-size:13px;font-weight:500;">${call.duration}</div></div>
+          </div>
+          <div style="font-size:13px;font-weight:600;margin-bottom:8px;">감지된 키워드</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;">
+            <span class="badge badge-active">${call.keyword}</span>
+            <span class="badge badge-pending">상담</span>
+            <span class="badge badge-pending">접수</span>
+          </div>
+          <div style="font-size:13px;font-weight:600;margin-bottom:8px;">통화 스크립트 (요약)</div>
+          <div style="background:#F5F5F5;border-radius:6px;padding:12px;font-size:12px;line-height:1.7;max-height:200px;overflow-y:auto;">
+            <div style="margin-bottom:8px;"><span style="color:#00A3FF;font-weight:600;">상담사:</span> 안녕하세요, ${call.agent}입니다. 무엇을 도와드릴까요?</div>
+            <div style="margin-bottom:8px;"><span style="color:#424242;font-weight:600;">고객:</span> 네, ${call.keyword} 관련해서 문의드립니다...</div>
+            <div style="margin-bottom:8px;"><span style="color:#00A3FF;font-weight:600;">상담사:</span> 네, 확인해드리겠습니다. ${call.type} 건으로 접수하겠습니다.</div>
+            <div><span style="color:#424242;font-weight:600;">고객:</span> 감사합니다.</div>
+          </div>`,
+        footer: '<button class="btn btn-secondary" onclick="AICC_Modal.close()">닫기</button>',
+        size: 'lg'
+      });
+    }
+
+    const risingKeywords = [
+      { keyword: '환불', count: 342, rate: 85.2 },
+      { keyword: '배송지연', count: 287, rate: 62.3 },
+      { keyword: '품절', count: 198, rate: 45.1 },
+      { keyword: '카드결제오류', count: 156, rate: 38.7 },
+      { keyword: '교환접수', count: 134, rate: 28.9 }
+    ];
+
+    const riskKeywords = [
+      { keyword: '법적조치', level: 'high' },
+      { keyword: '소비자원', level: 'high' },
+      { keyword: '해킹', level: 'high' },
+      { keyword: '개인정보유출', level: 'high' },
+      { keyword: '불만접수', level: 'medium' },
+      { keyword: '환불거부', level: 'medium' },
+      { keyword: '서비스해지', level: 'medium' },
+      { keyword: '품질불량', level: 'low' }
+    ];
+
+    const categories = [
+      { name: '상품문의', count: 342, heat: 0.95 },
+      { name: '배송문의', count: 287, heat: 0.82 },
+      { name: '교환/반품', count: 198, heat: 0.68 },
+      { name: '결제/환불', count: 156, heat: 0.58 },
+      { name: '회원관리', count: 134, heat: 0.50 },
+      { name: 'A/S접수', count: 112, heat: 0.42 },
+      { name: '프로모션', count: 98, heat: 0.35 },
+      { name: '기술지원', count: 87, heat: 0.30 },
+      { name: '불만/클레임', count: 76, heat: 0.25 },
+      { name: '계약관련', count: 65, heat: 0.20 },
+      { name: '예약/방문', count: 54, heat: 0.15 },
+      { name: '기타', count: 43, heat: 0.10 }
+    ];
+
+    const hourlyData = [12,8,5,3,2,4,15,45,87,102,98,89,76,82,95,103,97,88,72,56,42,35,28,18];
+
+    const freqKeywords = [
+      { keyword: '환불', size: 32 }, { keyword: '배송', size: 28 }, { keyword: '교환', size: 26 },
+      { keyword: '결제', size: 24 }, { keyword: '사이즈', size: 22 }, { keyword: '품절', size: 20 },
+      { keyword: '적립금', size: 18 }, { keyword: '무료배송', size: 17 }, { keyword: '카드', size: 16 },
+      { keyword: 'AS', size: 15 }, { keyword: '회원탈퇴', size: 14 }, { keyword: '비밀번호', size: 13 },
+      { keyword: '쿠폰', size: 16 }, { keyword: '재입고', size: 15 }, { keyword: '포장', size: 12 }
+    ];
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // 급상승 키워드 테이블
+      const risingEl = document.getElementById('rising-tbody');
+      if (risingEl) {
+        risingEl.innerHTML = risingKeywords.map((k, i) => `
+          <tr onclick="openKeywordDetail('${k.keyword}', ${k.count}, '${k.rate}')">
+            <td style="font-weight:600;color:#00A3FF;">${i + 1}</td>
+            <td style="font-weight:500;">${k.keyword}</td>
+            <td>${k.count}</td>
+            <td style="color:#F44336;">▲ ${k.rate}%</td>
+          </tr>
+        `).join('');
+      }
+
+      // 위험 키워드 배지
+      const riskColors = { high: '#F44336', medium: '#F57F17', low: '#757575' };
+      const riskEl = document.getElementById('risk-badges');
+      if (riskEl) {
+        riskEl.innerHTML = riskKeywords.map(k =>
+          `<span style="display:inline-block;padding:6px 14px;border-radius:16px;font-size:12px;font-weight:600;color:white;background:${riskColors[k.level]};cursor:pointer;"
+            onclick="openKeywordDetail('${k.keyword}', ${Math.round(Math.random()*50+10)})">${k.keyword}</span>`
+        ).join('');
+      }
+
+      // 히트맵
+      const heatEl = document.getElementById('heatmap-grid');
+      if (heatEl) {
+        heatEl.innerHTML = categories.map(c => {
+          const r = Math.round(0 + (1 - c.heat) * 200);
+          const g = Math.round(120 + (1 - c.heat) * 135);
+          const b = Math.round(255);
+          const bg = `rgba(${r},${g},${b},${0.15 + c.heat * 0.6})`;
+          return `<div style="background:${bg};border-radius:8px;padding:16px;text-align:center;cursor:pointer;"
+            onclick="openKeywordDetail('${c.name}', ${c.count}, '${c.name}')">
+            <div style="font-size:13px;font-weight:600;">${c.name}</div>
+            <div style="font-size:18px;font-weight:700;margin-top:4px;">${c.count}</div>
+          </div>`;
+        }).join('');
+      }
+
+      // 시간대별 차트
+      const hourlyCanvas = document.getElementById('hourly-chart');
+      if (hourlyCanvas) {
+        new Chart(hourlyCanvas, {
+          type: 'bar',
+          data: {
+            labels: Array.from({length:24}, (_, i) => `${String(i).padStart(2,'0')}시`),
+            datasets: [{
+              label: '콜 건수',
+              data: hourlyData,
+              backgroundColor: 'rgba(0,163,255,0.6)',
+              borderRadius: 4
+            }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            onClick: (e, elements) => { if (elements.length > 0) { openCallList(null, elements[0].index + '시'); } },
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, grid: { color: '#F0F0F0' } }, x: { grid: { display: false } } }
+          }
+        });
+      }
+
+      // 워드클라우드
+      const colors = ['#00A3FF','#1565C0','#4CAF50','#F57F17','#E65100','#9C27B0','#F44336'];
+      const wcEl = document.getElementById('wordcloud');
+      if (wcEl) {
+        wcEl.innerHTML = freqKeywords.map((k, i) =>
+          `<span style="font-size:${k.size}px;font-weight:${k.size > 20 ? 700 : 500};color:${colors[i % colors.length]};cursor:pointer;transition:transform 0.2s;"
+            onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'"
+            onclick="openKeywordDetail('${k.keyword}', ${Math.round(k.size * 12)})">${k.keyword}</span>`
+        ).join('');
+      }
+
+      if (typeof AICC_PeriodPicker !== 'undefined') {
+        AICC_PeriodPicker.create('period-picker', { mode: 'monthly' });
+      }
+    });
+  </script>
+</body>
+</html>

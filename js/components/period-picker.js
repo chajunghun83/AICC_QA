@@ -339,6 +339,10 @@ const AICC_PeriodPicker = (function() {
       s.viewMonth = s.selectedDate.getMonth();
       s.yearBase = Math.floor(s.viewYear / 12) * 12;
       popup.style.display = 'flex';
+      // 팝업이 화면 밖으로 넘치면 방향 자동 전환
+      popup.style.right = '0'; popup.style.left = 'auto';
+      var popupRect = popup.getBoundingClientRect();
+      if (popupRect.left < 0) { popup.style.right = 'auto'; popup.style.left = '0'; }
       // 사이드바 active 상태 동기화
       sidebar.querySelectorAll('.pp-tab').forEach(function(b) { b.classList.toggle('active', b.dataset.key === s.periodType); });
       renderBody();

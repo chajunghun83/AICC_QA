@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>상담 유형 - AICC Quality Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body class="bg-[#F5F5F5] text-[#212121]">
+  <div id="page-content">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <h1 style="font-size:20px;font-weight:700;margin:0;">상담 유형</h1>
+        <p style="font-size:12px;color:#757575;margin:4px 0 0;">상담 유형별 분석</p>
+      </div>
+    </div>
+
+    <!-- 필터 -->
+    <div class="filter-section">
+      <div class="filter-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'flex':'none'">
+        <span>검색조건</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#757575" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+      <div class="filter-body">
+        <div><label class="form-label">기간</label><div id="period-picker"></div></div>
+        <div>
+          <label class="form-label">워크스페이스</label>
+          <select class="form-select"><option value="">전체</option><option>WS-01 고객센터</option><option>WS-02 기술지원</option></select>
+        </div>
+        <div>
+          <label class="form-label">분류 depth</label>
+          <select class="form-select" id="depth-filter">
+            <option value="depth1">depth1</option>
+            <option value="depth2">depth2</option>
+            <option value="depth3">depth3</option>
+            <option value="depth4">depth4</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">&nbsp;</label>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-secondary btn-sm" onclick="AICC_Toast.show('초기화되었습니다.')">초기화</button>
+            <button class="btn btn-primary btn-sm" onclick="AICC_Toast.show('필터가 적용되었습니다.')">검색</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 가로 막대 차트 -->
+    <div class="content-card" style="margin-bottom:24px;">
+      <div class="content-card-header"><span style="font-size:14px;font-weight:600;">상담 유형 Top 10</span></div>
+      <div class="content-card-body">
+        <div style="height:320px;"><canvas id="type-chart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- 데이터 테이블 -->
+    <div class="content-card">
+      <div class="content-card-header">
+        <span style="font-size:14px;font-weight:600;">상담 유형 상세</span>
+        <span style="font-size:12px;color:#757575;margin-left:8px;">행 클릭 시 하위 분류 확인</span>
+      </div>
+      <div class="content-card-body" style="padding:0;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>순위</th>
+              <th>상담유형</th>
+              <th>콜 건수</th>
+              <th>평균 통화시간</th>
+              <th>평균 묵음시간</th>
+              <th>주요 키워드</th>
+            </tr>
+          </thead>
+          <tbody id="type-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 하위 분류 모달 -->
+  <div id="subcategory-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:white;border-radius:12px;width:560px;max-height:80vh;overflow:auto;box-shadow:0 8px 32px rgba(0,0,0,0.18);">
+      <div style="padding:20px 24px;border-bottom:1px solid #E0E0E0;display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div id="modal-category-title" style="font-size:16px;font-weight:700;"></div>
+          <div style="font-size:12px;color:#757575;margin-top:2px;">하위 분류 상세</div>
+        </div>
+        <button onclick="closeSubModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#757575;">×</button>
+      </div>
+      <div style="padding:20px 24px;">
+        <table class="data-table">
+          <thead><tr><th>하위 분류</th><th>콜 건수</th><th>비율</th><th>평균 통화시간</th></tr></thead>
+          <tbody id="sub-tbody"></tbody>
+        </table>
+      </div>
+      <div style="padding:16px 24px;border-top:1px solid #E0E0E0;display:flex;justify-content:flex-end;">
+        <button class="btn btn-secondary" onclick="closeSubModal()">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../assets/dummy-data/all-data.js"></script>
+  <script src="../../js/utils/data-loader.js"></script>
+  <script src="../../js/utils/auth-simulator.js"></script>
+  <script src="../../js/utils/formatters.js"></script>
+  <script src="../../js/components/sidebar.js"></script>
+  <script src="../../js/components/layout.js"></script>
+  <script src="../../js/components/modal.js"></script>
+  <script src="../../js/components/toast.js"></script>
+  <script src="../../js/components/period-picker.js"></script>
+  <script>
+    const typeData = [
+      { rank:1, name:'상품문의', count:342, talk:'04:52', silence:'00:32', keywords:'상품, 재고, 사이즈, 색상', subs:[{name:'상품정보',count:145},{name:'재고문의',count:98},{name:'옵션변경',count:65},{name:'묶음배송',count:34}] },
+      { rank:2, name:'배송문의', count:287, talk:'05:18', silence:'00:38', keywords:'배송, 배송지연, 택배, 운송장', subs:[{name:'배송추적',count:110},{name:'배송지연',count:87},{name:'배송지변경',count:55},{name:'재배송',count:35}] },
+      { rank:3, name:'교환/반품', count:198, talk:'06:45', silence:'00:51', keywords:'교환, 반품, 불량, 파손', subs:[{name:'교환신청',count:82},{name:'반품신청',count:76},{name:'파손/불량',count:40}] },
+      { rank:4, name:'결제/환불', count:156, talk:'07:12', silence:'00:44', keywords:'결제, 환불, 카드, 취소', subs:[{name:'결제취소',count:65},{name:'환불처리',count:55},{name:'결제오류',count:36}] },
+      { rank:5, name:'회원관리', count:134, talk:'03:28', silence:'00:22', keywords:'회원, 비밀번호, 탈퇴, 로그인', subs:[{name:'비밀번호재설정',count:58},{name:'회원탈퇴',count:42},{name:'정보수정',count:34}] },
+      { rank:6, name:'A/S접수', count:112, talk:'08:35', silence:'01:12', keywords:'수리, A/S, 파손, 보증', subs:[{name:'방문수리',count:48},{name:'택배수리',count:42},{name:'무상보증',count:22}] },
+      { rank:7, name:'프로모션', count:98, talk:'03:55', silence:'00:28', keywords:'쿠폰, 할인, 이벤트, 적립', subs:[{name:'쿠폰사용',count:42},{name:'포인트적립',count:35},{name:'이벤트문의',count:21}] },
+      { rank:8, name:'기술지원', count:87, talk:'09:22', silence:'01:28', keywords:'오류, 설치, 설정, 앱', subs:[{name:'앱오류',count:38},{name:'설치지원',count:32},{name:'설정문의',count:17}] },
+      { rank:9, name:'불만/클레임', count:76, talk:'11:48', silence:'01:05', keywords:'불만, 클레임, 항의, 보상', subs:[{name:'서비스불만',count:38},{name:'상품불만',count:28},{name:'직원불만',count:10}] },
+      { rank:10, name:'기타', count:43, talk:'04:02', silence:'00:35', keywords:'기타, 일반문의', subs:[{name:'일반문의',count:28},{name:'기타',count:15}] }
+    ];
+
+    function openSubModal(idx) {
+      const d = typeData[idx];
+      document.getElementById('modal-category-title').textContent = d.name + ' 하위 분류';
+      const total = d.subs.reduce((s, x) => s + x.count, 0);
+      document.getElementById('sub-tbody').innerHTML = d.subs.map(s => `
+        <tr>
+          <td style="font-weight:500;">${s.name}</td>
+          <td>${s.count}</td>
+          <td style="color:#00A3FF;">${Math.round(s.count / total * 100)}%</td>
+          <td>${d.talk}</td>
+        </tr>
+      `).join('');
+      document.getElementById('subcategory-modal').style.display = 'flex';
+    }
+
+    function closeSubModal() {
+      document.getElementById('subcategory-modal').style.display = 'none';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // 가로 막대 차트
+      new Chart(document.getElementById('type-chart'), {
+        type: 'bar',
+        data: {
+          labels: typeData.map(d => d.name),
+          datasets: [{
+            label: '콜 건수',
+            data: typeData.map(d => d.count),
+            backgroundColor: [
+              'rgba(0,163,255,0.75)','rgba(0,163,255,0.68)','rgba(0,163,255,0.62)',
+              'rgba(0,163,255,0.55)','rgba(0,163,255,0.50)','rgba(0,163,255,0.44)',
+              'rgba(0,163,255,0.38)','rgba(0,163,255,0.32)','rgba(0,163,255,0.27)','rgba(0,163,255,0.22)'
+            ],
+            borderRadius: 4
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { beginAtZero: true, grid: { color: '#F0F0F0' } },
+            y: { grid: { display: false } }
+          }
+        }
+      });
+
+      // 테이블
+      document.getElementById('type-tbody').innerHTML = typeData.map(d => `
+        <tr style="cursor:pointer;" onclick="openSubModal(${d.rank - 1})">
+          <td style="font-weight:600;color:#00A3FF;">${d.rank}</td>
+          <td style="font-weight:500;">${d.name}</td>
+          <td>${d.count.toLocaleString()}</td>
+          <td>${d.talk}</td>
+          <td>${d.silence}</td>
+          <td style="font-size:12px;color:#757575;">${d.keywords}</td>
+        </tr>
+      `).join('');
+
+      document.getElementById('subcategory-modal').addEventListener('click', function(e) {
+        if (e.target === this) closeSubModal();
+      });
+
+      if (typeof AICC_PeriodPicker !== 'undefined') {
+        AICC_PeriodPicker.create('period-picker', { mode: 'monthly' });
+      }
+    });
+  </script>
+</body>
+</html>

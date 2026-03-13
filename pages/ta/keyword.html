@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>키워드 - AICC Quality Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body class="bg-[#F5F5F5] text-[#212121]">
+  <div id="page-content">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <h1 style="font-size:20px;font-weight:700;margin:0;">키워드</h1>
+        <p style="font-size:12px;color:#757575;margin:4px 0 0;">키워드 분석</p>
+      </div>
+    </div>
+
+    <!-- 필터 -->
+    <div class="filter-section">
+      <div class="filter-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'flex':'none'">
+        <span>검색조건</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#757575" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+      <div class="filter-body">
+        <div><label class="form-label">기간</label><div id="period-picker"></div></div>
+        <div>
+          <label class="form-label">워크스페이스</label>
+          <select class="form-select"><option value="">전체</option><option>WS-01 고객센터</option><option>WS-02 기술지원</option></select>
+        </div>
+        <div>
+          <label class="form-label">&nbsp;</label>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-secondary btn-sm" onclick="AICC_Toast.show('초기화되었습니다.')">초기화</button>
+            <button class="btn btn-primary btn-sm" onclick="AICC_Toast.show('필터가 적용되었습니다.')">검색</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 탭 -->
+    <div class="content-card">
+      <div class="content-card-body" style="padding:0;">
+        <div style="display:flex;align-items:center;padding:0 16px;border-bottom:2px solid #E0E0E0;">
+          <div class="tab-nav" style="border-bottom:none;">
+            <div class="tab-item active" onclick="switchTab('rising')">급상승</div>
+            <div class="tab-item" onclick="switchTab('frequent')">고빈도</div>
+            <div class="tab-item" onclick="switchTab('monitoring')">모니터링</div>
+          </div>
+        </div>
+
+        <!-- 급상승 탭 -->
+        <div id="tab-rising" style="padding:20px;">
+          <div style="height:240px;margin-bottom:20px;"><canvas id="rising-chart"></canvas></div>
+          <div style="font-size:14px;font-weight:600;margin-bottom:12px;">급상승 키워드 목록</div>
+          <table class="data-table">
+            <thead>
+              <tr><th>순위</th><th>키워드</th><th>건수</th><th>증감률</th><th>대표 상담유형</th></tr>
+            </thead>
+            <tbody id="rising-tbody"></tbody>
+          </table>
+        </div>
+
+        <!-- 고빈도 탭 -->
+        <div id="tab-frequent" style="display:none;padding:20px;">
+          <div style="height:240px;margin-bottom:20px;"><canvas id="frequent-chart"></canvas></div>
+          <div style="font-size:14px;font-weight:600;margin-bottom:12px;">고빈도 키워드 목록</div>
+          <table class="data-table">
+            <thead>
+              <tr><th>순위</th><th>키워드</th><th>건수</th><th>점유율</th><th>대표 상담유형</th></tr>
+            </thead>
+            <tbody id="frequent-tbody"></tbody>
+          </table>
+        </div>
+
+        <!-- 모니터링 탭 -->
+        <div id="tab-monitoring" style="display:none;padding:20px;">
+          <div style="font-size:13px;color:#757575;margin-bottom:16px;">등록된 모니터링 키워드의 추이를 추적합니다.</div>
+          <table class="data-table">
+            <thead>
+              <tr><th>키워드</th><th>등록일</th><th>금일 건수</th><th>전일 대비</th><th>주간 추이</th><th>등록자</th></tr>
+            </thead>
+            <tbody id="monitoring-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../assets/dummy-data/all-data.js"></script>
+  <script src="../../js/utils/data-loader.js"></script>
+  <script src="../../js/utils/auth-simulator.js"></script>
+  <script src="../../js/utils/formatters.js"></script>
+  <script src="../../js/components/sidebar.js"></script>
+  <script src="../../js/components/layout.js"></script>
+  <script src="../../js/components/modal.js"></script>
+  <script src="../../js/components/toast.js"></script>
+  <script src="../../js/components/period-picker.js"></script>
+  <script>
+    const risingData = [
+      { rank:1, keyword:'환불', count:342, rate:85.2, category:'결제/환불' },
+      { rank:2, keyword:'배송지연', count:287, rate:62.3, category:'배송문의' },
+      { rank:3, keyword:'품절', count:198, rate:45.1, category:'상품문의' },
+      { rank:4, keyword:'카드결제오류', count:156, rate:38.7, category:'결제/환불' },
+      { rank:5, keyword:'교환접수', count:134, rate:28.9, category:'교환/반품' },
+      { rank:6, keyword:'무료반품', count:112, rate:22.4, category:'교환/반품' },
+      { rank:7, keyword:'앱오류', count:98, rate:18.6, category:'기술지원' },
+      { rank:8, keyword:'포인트소멸', count:87, rate:15.3, category:'회원관리' }
+    ];
+
+    const frequentData = [
+      { rank:1, keyword:'배송', count:1245, share:18.5, category:'배송문의' },
+      { rank:2, keyword:'환불', count:987, share:14.7, category:'결제/환불' },
+      { rank:3, keyword:'교환', count:876, share:13.0, category:'교환/반품' },
+      { rank:4, keyword:'결제', count:743, share:11.0, category:'결제/환불' },
+      { rank:5, keyword:'상품', count:654, share:9.7, category:'상품문의' },
+      { rank:6, keyword:'취소', count:532, share:7.9, category:'결제/환불' },
+      { rank:7, keyword:'쿠폰', count:412, share:6.1, category:'프로모션' },
+      { rank:8, keyword:'적립금', count:387, share:5.7, category:'회원관리' }
+    ];
+
+    const monitoringData = [
+      { keyword:'소비자원', regDate:'2025-01-10', today:8, diff:'+3', trend:'▲▲▲▲▼▲▲▲', registrant:'관리자' },
+      { keyword:'법적조치', regDate:'2025-01-10', today:5, diff:'+1', trend:'▲▼▲▲▲▲▼▲', registrant:'관리자' },
+      { keyword:'개인정보유출', regDate:'2025-01-15', today:3, diff:'-2', trend:'▲▲▲▼▼▼▲▼', registrant:'시스템' },
+      { keyword:'해킹', regDate:'2025-01-15', today:1, diff:'0', trend:'▼▲▼▼▲▼▼▲', registrant:'시스템' },
+      { keyword:'환불거부', regDate:'2025-01-20', today:12, diff:'+5', trend:'▲▲▲▲▲▲▲▲', registrant:'홍길동' }
+    ];
+
+    function switchTab(tab) {
+      ['rising','frequent','monitoring'].forEach(t => {
+        document.getElementById('tab-' + t).style.display = t === tab ? '' : 'none';
+      });
+      document.querySelectorAll('.tab-item').forEach((el, i) => {
+        const tabs = ['rising','frequent','monitoring'];
+        el.classList.toggle('active', tabs[i] === tab);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // 급상승 차트
+      new Chart(document.getElementById('rising-chart'), {
+        type: 'line',
+        data: {
+          labels: ['1/21','1/22','1/23','1/24','1/25','1/26','1/27'],
+          datasets: [
+            { label:'환불', data:[180,210,245,290,310,325,342], borderColor:'#F44336', tension:0.3 },
+            { label:'배송지연', data:[150,175,200,230,260,275,287], borderColor:'#F57F17', tension:0.3 },
+            { label:'품절', data:[90,110,130,155,172,185,198], borderColor:'#00A3FF', tension:0.3 }
+          ]
+        },
+        options: {
+          responsive:true, maintainAspectRatio:false,
+          plugins:{ legend:{ display:true, position:'top' } },
+          scales:{ y:{ beginAtZero:true } }
+        }
+      });
+
+      // 고빈도 차트
+      new Chart(document.getElementById('frequent-chart'), {
+        type: 'bar',
+        data: {
+          labels: frequentData.map(d => d.keyword),
+          datasets: [{
+            label: '건수',
+            data: frequentData.map(d => d.count),
+            backgroundColor: 'rgba(0,163,255,0.65)',
+            borderRadius: 4
+          }]
+        },
+        options: {
+          responsive:true, maintainAspectRatio:false,
+          plugins:{ legend:{ display:false } },
+          scales:{ y:{ beginAtZero:true, grid:{ color:'#F0F0F0' } }, x:{ grid:{ display:false } } }
+        }
+      });
+
+      // 급상승 테이블
+      document.getElementById('rising-tbody').innerHTML = risingData.map(d => `
+        <tr onclick="AICC_Toast.show('${d.keyword} 키워드 상세 조회')">
+          <td style="font-weight:600;color:#00A3FF;">${d.rank}</td>
+          <td style="font-weight:600;">${d.keyword}</td>
+          <td>${d.count.toLocaleString()}</td>
+          <td style="color:#F44336;font-weight:600;">▲ ${d.rate}%</td>
+          <td style="font-size:12px;color:#757575;">${d.category}</td>
+        </tr>
+      `).join('');
+
+      // 고빈도 테이블
+      document.getElementById('frequent-tbody').innerHTML = frequentData.map(d => `
+        <tr onclick="AICC_Toast.show('${d.keyword} 키워드 상세 조회')">
+          <td style="font-weight:600;color:#00A3FF;">${d.rank}</td>
+          <td style="font-weight:600;">${d.keyword}</td>
+          <td>${d.count.toLocaleString()}</td>
+          <td style="color:#1565C0;font-weight:500;">${d.share}%</td>
+          <td style="font-size:12px;color:#757575;">${d.category}</td>
+        </tr>
+      `).join('');
+
+      // 모니터링 테이블
+      document.getElementById('monitoring-tbody').innerHTML = monitoringData.map(d => {
+        const diffColor = d.diff.startsWith('+') ? '#F44336' : (d.diff.startsWith('-') ? '#4CAF50' : '#757575');
+        const diffIcon = d.diff.startsWith('+') ? '▲' : (d.diff.startsWith('-') ? '▼' : '-');
+        return `
+          <tr onclick="AICC_Toast.show('${d.keyword} 모니터링 추이 조회')">
+            <td style="font-weight:600;">${d.keyword}</td>
+            <td style="font-size:12px;color:#757575;">${d.regDate}</td>
+            <td style="font-weight:700;">${d.today}</td>
+            <td style="color:${diffColor};font-weight:600;">${diffIcon} ${d.diff.replace(/[+-]/,'')}</td>
+            <td style="font-size:13px;letter-spacing:2px;color:#00A3FF;">${d.trend}</td>
+            <td style="font-size:12px;color:#757575;">${d.registrant}</td>
+          </tr>
+        `;
+      }).join('');
+
+      if (typeof AICC_PeriodPicker !== 'undefined') {
+        AICC_PeriodPicker.create('period-picker', { mode: 'monthly' });
+      }
+    });
+  </script>
+</body>
+</html>

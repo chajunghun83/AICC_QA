@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>콜 상담 - AICC Quality Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body class="bg-[#F5F5F5] text-[#212121]">
+  <div id="page-content">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <h1 style="font-size:20px;font-weight:700;margin:0;">콜 상담</h1>
+        <p style="font-size:12px;color:#757575;margin:4px 0 0;">콜 상담 현황 분석</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div id="period-picker"></div>
+        <select class="form-select"><option>전체</option></select>
+        <button class="btn btn-primary btn-sm" onclick="AICC_Toast.show('필터 적용됨')">검색</button>
+      </div>
+    </div>
+
+    <div class="content-card">
+      <div class="content-card-body" style="padding:0;">
+        <div style="display:flex;align-items:center;padding:0 16px;border-bottom:2px solid #E0E0E0;">
+          <div class="tab-nav" style="border-bottom:none;">
+            <div class="tab-item active" onclick="switchTab('total')">전체 콜</div>
+            <div class="tab-item" onclick="switchTab('reentry')">재인입</div>
+            <div class="tab-item" onclick="switchTab('silence')">묵음</div>
+            <div class="tab-item" onclick="switchTab('issue')">이슈</div>
+          </div>
+        </div>
+
+        <!-- 전체 콜 -->
+        <div id="tab-total" style="padding:20px;">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px;">
+            <div style="background:#F9F9F9;border-radius:8px;padding:16px;text-align:center;">
+              <div style="font-size:11px;color:#757575;">전체 콜</div>
+              <div style="font-size:24px;font-weight:700;">1,842건</div>
+            </div>
+            <div style="background:#F9F9F9;border-radius:8px;padding:16px;text-align:center;">
+              <div style="font-size:11px;color:#757575;">평균 통화시간</div>
+              <div style="font-size:24px;font-weight:700;">05:23</div>
+            </div>
+            <div style="background:#F9F9F9;border-radius:8px;padding:16px;text-align:center;">
+              <div style="font-size:11px;color:#757575;">평균 묵음시간</div>
+              <div style="font-size:24px;font-weight:700;">00:42</div>
+            </div>
+          </div>
+          <div style="height:240px;margin-bottom:20px;"><canvas id="total-chart"></canvas></div>
+          <table class="data-table">
+            <thead><tr><th>No</th><th>일시</th><th>상담사</th><th>통화시간</th><th>묵음시간</th><th>상담유형</th><th>이슈</th></tr></thead>
+            <tbody id="total-tbody"></tbody>
+          </table>
+        </div>
+
+        <!-- 재인입 -->
+        <div id="tab-reentry" style="display:none;padding:20px;">
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:20px;">
+            <div style="background:#F9F9F9;border-radius:8px;padding:16px;text-align:center;">
+              <div style="font-size:11px;color:#757575;">재인입 콜</div>
+              <div style="font-size:24px;font-weight:700;color:#E65100;">89건</div>
+            </div>
+            <div style="background:#F9F9F9;border-radius:8px;padding:16px;text-align:center;">
+              <div style="font-size:11px;color:#757575;">재인입률</div>
+              <div style="font-size:24px;font-weight:700;color:#E65100;">4.8%</div>
+            </div>
+          </div>
+          <div style="height:240px;margin-bottom:20px;"><canvas id="reentry-chart"></canvas></div>
+          <div style="font-size:14px;font-weight:600;margin-bottom:12px;">재인입 고객 상담유형 Top 5</div>
+          <table class="data-table">
+            <thead><tr><th>순위</th><th>상담유형</th><th>재인입 건수</th><th>비율</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>배송문의</td><td>28</td><td>31.5%</td></tr>
+              <tr><td>2</td><td>교환/반품</td><td>22</td><td>24.7%</td></tr>
+              <tr><td>3</td><td>결제/환불</td><td>18</td><td>20.2%</td></tr>
+              <tr><td>4</td><td>A/S접수</td><td>12</td><td>13.5%</td></tr>
+              <tr><td>5</td><td>기술지원</td><td>9</td><td>10.1%</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 묵음 -->
+        <div id="tab-silence" style="display:none;padding:20px;">
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:20px;">
+            <div style="background:#F9F9F9;border-radius:8px;padding:16px;text-align:center;">
+              <div style="font-size:11px;color:#757575;">평균 묵음시간</div>
+              <div style="font-size:24px;font-weight:700;">00:42</div>
+            </div>
+            <div style="background:#F9F9F9;border-radius:8px;padding:16px;text-align:center;">
+              <div style="font-size:11px;color:#757575;">묵음 비율</div>
+              <div style="font-size:24px;font-weight:700;color:#F57F17;">12.3%</div>
+            </div>
+          </div>
+          <div style="height:240px;margin-bottom:20px;"><canvas id="silence-chart"></canvas></div>
+          <div style="font-size:14px;font-weight:600;margin-bottom:12px;">묵음 Top 5 상담유형</div>
+          <table class="data-table">
+            <thead><tr><th>순위</th><th>상담유형</th><th>평균 묵음시간</th><th>콜 건수</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>기술지원</td><td>01:23</td><td>87</td></tr>
+              <tr><td>2</td><td>A/S접수</td><td>01:05</td><td>112</td></tr>
+              <tr><td>3</td><td>불만/클레임</td><td>00:58</td><td>76</td></tr>
+              <tr><td>4</td><td>결제/환불</td><td>00:47</td><td>156</td></tr>
+              <tr><td>5</td><td>교환/반품</td><td>00:42</td><td>198</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 이슈 -->
+        <div id="tab-issue" style="display:none;padding:20px;">
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:20px;">
+            <div style="background:#F9F9F9;border-radius:8px;padding:16px;text-align:center;">
+              <div style="font-size:11px;color:#757575;">이슈 콜</div>
+              <div style="font-size:24px;font-weight:700;color:#F44336;">127건</div>
+            </div>
+            <div style="background:#F9F9F9;border-radius:8px;padding:16px;text-align:center;">
+              <div style="font-size:11px;color:#757575;">미처리</div>
+              <div style="font-size:24px;font-weight:700;color:#F57F17;">23건</div>
+            </div>
+          </div>
+          <div style="height:240px;margin-bottom:20px;"><canvas id="issue-chart"></canvas></div>
+          <div style="font-size:14px;font-weight:600;margin-bottom:12px;">이슈 처리현황</div>
+          <table class="data-table">
+            <thead><tr><th>이슈유형</th><th>건수</th><th>처리완료</th><th>미처리</th><th>처리율</th></tr></thead>
+            <tbody>
+              <tr><td>불만접수</td><td>42</td><td>35</td><td>7</td><td>83.3%</td></tr>
+              <tr><td>환불요청</td><td>33</td><td>28</td><td>5</td><td>84.8%</td></tr>
+              <tr><td>품질불량</td><td>25</td><td>20</td><td>5</td><td>80.0%</td></tr>
+              <tr><td>배송사고</td><td>18</td><td>14</td><td>4</td><td>77.8%</td></tr>
+              <tr><td>기타</td><td>9</td><td>7</td><td>2</td><td>77.8%</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../assets/dummy-data/all-data.js"></script>
+  <script src="../../js/utils/data-loader.js"></script>
+  <script src="../../js/utils/auth-simulator.js"></script>
+  <script src="../../js/utils/formatters.js"></script>
+  <script src="../../js/components/sidebar.js"></script>
+  <script src="../../js/components/layout.js"></script>
+  <script src="../../js/components/modal.js"></script>
+  <script src="../../js/components/toast.js"></script>
+  <script src="../../js/components/period-picker.js"></script>
+  <script>
+    const calls = [
+      { no:1, date:'2025-01-27 16:42', agent:'홍길동', talk:'08:32', silence:'00:45', type:'상품문의', issue:'-' },
+      { no:2, date:'2025-01-27 15:18', agent:'김철수', talk:'05:15', silence:'00:22', type:'배송문의', issue:'-' },
+      { no:3, date:'2025-01-27 14:05', agent:'이영희', talk:'12:48', silence:'02:10', type:'기술지원', issue:'묵음 과다' },
+      { no:4, date:'2025-01-27 11:33', agent:'박상현', talk:'06:22', silence:'00:18', type:'결제/환불', issue:'-' },
+      { no:5, date:'2025-01-27 10:07', agent:'최수진', talk:'15:44', silence:'01:35', type:'불만/클레임', issue:'불만접수' },
+      { no:6, date:'2025-01-27 09:25', agent:'홍길동', talk:'04:10', silence:'00:12', type:'회원관리', issue:'-' },
+      { no:7, date:'2025-01-26 17:02', agent:'김철수', talk:'09:55', silence:'00:55', type:'교환/반품', issue:'-' },
+      { no:8, date:'2025-01-26 15:38', agent:'이영희', talk:'07:20', silence:'00:30', type:'프로모션', issue:'-' }
+    ];
+
+    function switchTab(tab) {
+      ['total','reentry','silence','issue'].forEach(t => {
+        const el = document.getElementById('tab-' + t);
+        if (el) el.style.display = t === tab ? '' : 'none';
+      });
+      document.querySelectorAll('.tab-item').forEach((el, i) => {
+        const tabs = ['total','reentry','silence','issue'];
+        el.classList.toggle('active', tabs[i] === tab);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // 콜 리스트 테이블
+      const tbody = document.getElementById('total-tbody');
+      if (tbody) {
+        tbody.innerHTML = calls.map(c => `
+          <tr onclick="AICC_Modal.open({title:'콜 상세',content:'<div style=\\'padding:8px;\\'>상담사: ${c.agent}<br>일시: ${c.date}<br>통화시간: ${c.talk}<br>묵음시간: ${c.silence}<br>상담유형: ${c.type}<br>이슈: ${c.issue}</div>',footer:'<button class=\\'btn btn-secondary\\' onclick=\\'AICC_Modal.close()\\'>닫기</button>',size:'sm'})">
+            <td>${c.no}</td><td style="font-size:12px;color:#757575;">${c.date}</td><td style="font-weight:500;">${c.agent}</td>
+            <td>${c.talk}</td><td>${c.silence}</td><td>${c.type}</td>
+            <td style="color:${c.issue==='-'?'#9E9E9E':'#F57F17'};font-size:12px;">${c.issue}</td>
+          </tr>
+        `).join('');
+      }
+
+      // Charts
+      const c1 = document.getElementById('total-chart');
+      if (c1) new Chart(c1, {
+        type:'line', data:{ labels:['1/21','1/22','1/23','1/24','1/25','1/26','1/27'],
+          datasets:[{ label:'콜 건수', data:[245,268,312,278,295,187,257], borderColor:'#00A3FF', backgroundColor:'rgba(0,163,255,0.1)', fill:true, tension:0.3 }]
+        }, options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
+      });
+      const c2 = document.getElementById('reentry-chart');
+      if (c2) new Chart(c2, {
+        type:'bar', data:{ labels:['1/21','1/22','1/23','1/24','1/25','1/26','1/27'],
+          datasets:[{ label:'재인입', data:[12,15,18,10,14,8,12], backgroundColor:'rgba(230,81,0,0.6)', borderRadius:4 }]
+        }, options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
+      });
+      const c3 = document.getElementById('silence-chart');
+      if (c3) new Chart(c3, {
+        type:'line', data:{ labels: Array.from({length:24},(_, i)=>`${String(i).padStart(2,'0')}시`),
+          datasets:[{ label:'평균 묵음(초)', data:[35,38,42,45,40,32,28,30,38,42,45,48,52,50,47,44,42,40,38,35,32,30,35,37], borderColor:'#F57F17', tension:0.3 }]
+        }, options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
+      });
+      const c4 = document.getElementById('issue-chart');
+      if (c4) new Chart(c4, {
+        type:'bar', data:{ labels:['불만접수','환불요청','품질불량','배송사고','기타'],
+          datasets:[{ label:'건수', data:[42,33,25,18,9], backgroundColor:['#F44336','#E65100','#F57F17','#FFC107','#9E9E9E'], borderRadius:4 }]
+        }, options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y', plugins:{legend:{display:false}}, scales:{x:{beginAtZero:true}} }
+      });
+
+      if (typeof AICC_PeriodPicker !== 'undefined') AICC_PeriodPicker.create('period-picker', { mode: 'monthly' });
+    });
+  </script>
+</body>
+</html>

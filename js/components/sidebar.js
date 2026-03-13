@@ -36,7 +36,7 @@ window.AICC_Sidebar = {
       {
         group: '분석',
         items: [
-          { id: 'trend-analysis', label: '트렌드 분석', href: '/pages/admin/trend-analysis.html' },
+          { id: 'trend-analysis', label: '상세 분석', href: '/pages/admin/trend-analysis.html' },
           { id: 'report-generator', label: '리포트 생성기', href: '/pages/admin/report-generator.html' }
         ]
       },
@@ -56,6 +56,33 @@ window.AICC_Sidebar = {
           { id: 'my-dashboard', label: '나의 성과 대시보드', href: '/pages/agent/my-dashboard.html' },
           { id: 'my-evaluations', label: '나의 평가 결과', href: '/pages/agent/my-evaluations.html' },
           { id: 'my-disputes', label: '나의 이의 제기 현황', href: '/pages/agent/my-disputes.html' }
+        ]
+      }
+    ],
+    ta: [
+      {
+        group: '홈',
+        items: [
+          { id: 'ta-dashboard', label: 'TA 대시보드', href: '/pages/ta/ta-dashboard.html' },
+          { id: 'call-consultation', label: '콜 상담', href: '/pages/ta/call-consultation.html' },
+          { id: 'consultation-type', label: '상담 유형', href: '/pages/ta/consultation-type.html' },
+          { id: 'keyword', label: '키워드', href: '/pages/ta/keyword.html' }
+        ]
+      },
+      {
+        group: '분석',
+        items: [
+          { id: 'report-manage', label: '리포트 관리', href: '/pages/ta/report-manage.html' }
+        ]
+      },
+      {
+        group: '시스템',
+        items: [
+          { id: 'keyword-manage', label: '키워드 관리', href: '/pages/ta/system/keyword-manage.html' },
+          { id: 'analysis-settings', label: '분석 기준 설정', href: '/pages/ta/system/analysis-settings.html' },
+          { id: 'summarization', label: '요약문구 관리', href: '/pages/ta/system/summarization.html' },
+          { id: 'account-manage', label: '권한 관리', href: '/pages/ta/system/account-manage.html' },
+          { id: 'logs', label: '처리 로그', href: '/pages/ta/system/logs.html' }
         ]
       }
     ]
@@ -82,7 +109,8 @@ window.AICC_Sidebar = {
    * 1단 사이드바(고정 네비게이션) HTML 생성
    * QA 외 메뉴는 프로토타입이므로 비활성 상태로 렌더링
    */
-  render1stTier() {
+  render1stTier(module) {
+    const mod = module || 'qa';
     return `
       <div class="sidebar-1st" id="sidebar-1st">
         <div style="padding:16px 16px 8px;display:flex;align-items:center;gap:8px;">
@@ -136,11 +164,11 @@ window.AICC_Sidebar = {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/></svg>
             AICM
           </div>
-          <div class="sidebar-menu-item" style="opacity:0.75;cursor:default;">
+          <div class="sidebar-menu-item${mod === 'ta' ? ' active' : ''}" id="ta-menu-trigger">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/></svg>
             TA
           </div>
-          <div class="sidebar-menu-item active" id="qa-menu-trigger">
+          <div class="sidebar-menu-item${mod === 'qa' ? ' active' : ''}" id="qa-menu-trigger">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
             QA
           </div>
@@ -153,48 +181,68 @@ window.AICC_Sidebar = {
    * 2단 서브메뉴(오버레이 패널) HTML 생성
    * 관리자는 전체 메뉴 + MY ZONE, 상담사는 MY ZONE만 표시
    */
-  render2ndTier() {
+  render2ndTier(module) {
+    const mod = module || 'qa';
     const isAdmin = AICC_Auth.isAdmin();
     const activeId = this.getActiveId();
     let html = '<div class="sidebar-2nd" id="sidebar-2nd">';
 
-    html += `
-      <div style="padding:16px 20px 8px;">
-        <div style="font-size:15px;font-weight:700;color:#212121;">QA</div>
-        <div style="font-size:11px;color:#757575;margin-top:2px;">품질 관리 시스템</div>
-      </div>
-    `;
-
-    // 관리자 메뉴
-    if (isAdmin) {
-      this.menuItems.admin.forEach((group, gi) => {
+    if (mod === 'ta') {
+      html += `
+        <div style="padding:16px 20px 8px;">
+          <div style="font-size:15px;font-weight:700;color:#212121;">TA</div>
+          <div style="font-size:11px;color:#757575;margin-top:2px;">텍스트 분석 시스템</div>
+        </div>
+      `;
+      this.menuItems.ta.forEach((group, gi) => {
         if (group.group) {
           html += `<div class="sub-menu-group-title">${group.group}</div>`;
         }
         group.items.forEach(item => {
           const isActive = activeId === item.id;
-          const href = this.basePath + item.href.substring(1); // Remove leading /
+          const href = this.basePath + item.href.substring(1);
           html += `<a href="${href}" class="sub-menu-item ${isActive ? 'active' : ''}" style="text-decoration:none;">${item.label}</a>`;
         });
-        if (gi === this.menuItems.admin.length - 1) return;
-        // 시스템 설정 전에 구분선
-        if (gi === 3) {
+        if (gi < this.menuItems.ta.length - 1) {
           html += '<div class="sub-menu-divider"></div>';
         }
       });
+    } else {
+      html += `
+        <div style="padding:16px 20px 8px;">
+          <div style="font-size:15px;font-weight:700;color:#212121;">QA</div>
+          <div style="font-size:11px;color:#757575;margin-top:2px;">품질 관리 시스템</div>
+        </div>
+      `;
 
-      html += '<div class="sub-menu-divider"></div>';
-      html += '<div class="sub-menu-group-title">MY ZONE</div>';
-    }
+      if (isAdmin) {
+        this.menuItems.admin.forEach((group, gi) => {
+          if (group.group) {
+            html += `<div class="sub-menu-group-title">${group.group}</div>`;
+          }
+          group.items.forEach(item => {
+            const isActive = activeId === item.id;
+            const href = this.basePath + item.href.substring(1);
+            html += `<a href="${href}" class="sub-menu-item ${isActive ? 'active' : ''}" style="text-decoration:none;">${item.label}</a>`;
+          });
+          if (gi === this.menuItems.admin.length - 1) return;
+          if (gi === 3) {
+            html += '<div class="sub-menu-divider"></div>';
+          }
+        });
 
-    // 상담사 메뉴 (상담사 전용 또는 관리자도 볼 수 있음)
-    this.menuItems.agent.forEach(group => {
-      group.items.forEach(item => {
-        const isActive = activeId === item.id;
-        const href = this.basePath + item.href.substring(1);
-        html += `<a href="${href}" class="sub-menu-item ${isActive ? 'active' : ''}" style="text-decoration:none;">${item.label}</a>`;
+        html += '<div class="sub-menu-divider"></div>';
+        html += '<div class="sub-menu-group-title">MY ZONE</div>';
+      }
+
+      this.menuItems.agent.forEach(group => {
+        group.items.forEach(item => {
+          const isActive = activeId === item.id;
+          const href = this.basePath + item.href.substring(1);
+          html += `<a href="${href}" class="sub-menu-item ${isActive ? 'active' : ''}" style="text-decoration:none;">${item.label}</a>`;
+        });
       });
-    });
+    }
 
     html += '</div>';
     return html;
@@ -205,37 +253,52 @@ window.AICC_Sidebar = {
    * 1단↔2단 사이 마우스 이동 시 깜빡임 방지를 위해 150ms 지연 숨김 적용
    */
   bindEvents() {
-    const trigger = document.getElementById('qa-menu-trigger');
+    const qaTrigger = document.getElementById('qa-menu-trigger');
+    const taTrigger = document.getElementById('ta-menu-trigger');
     const sidebar2nd = document.getElementById('sidebar-2nd');
     const sidebar1st = document.getElementById('sidebar-1st');
 
-    if (!trigger || !sidebar2nd) return;
+    if (!sidebar2nd) return;
 
-    const show = () => {
-      clearTimeout(this.hideTimeout);
+    const self = this;
+
+    // 모듈별 2단 메뉴 콘텐츠를 동적으로 교체
+    const showMenu = (module) => {
+      clearTimeout(self.hideTimeout);
+      const freshHtml = self.render2ndTier(module);
+      const inner = freshHtml.replace('<div class="sidebar-2nd" id="sidebar-2nd">', '').replace(/<\/div>$/, '');
+      sidebar2nd.innerHTML = inner;
       sidebar2nd.classList.add('visible');
     };
 
-    // 마우스가 1단→2단으로 이동하는 동안의 간극을 허용하기 위한 지연
     const scheduleHide = () => {
-      this.hideTimeout = setTimeout(() => {
+      self.hideTimeout = setTimeout(() => {
         sidebar2nd.classList.remove('visible');
       }, 150);
     };
 
-    // 1단 QA 메뉴에 마우스 오버
-    trigger.addEventListener('mouseenter', show);
-    trigger.addEventListener('mouseleave', scheduleHide);
+    if (qaTrigger) {
+      qaTrigger.addEventListener('mouseenter', () => showMenu('qa'));
+      qaTrigger.addEventListener('mouseleave', scheduleHide);
+    }
 
-    // 2단 서브메뉴에 마우스 있으면 유지
-    sidebar2nd.addEventListener('mouseenter', show);
+    if (taTrigger) {
+      taTrigger.addEventListener('mouseenter', () => showMenu('ta'));
+      taTrigger.addEventListener('mouseleave', scheduleHide);
+    }
+
+    sidebar2nd.addEventListener('mouseenter', () => {
+      clearTimeout(self.hideTimeout);
+      sidebar2nd.classList.add('visible');
+    });
     sidebar2nd.addEventListener('mouseleave', scheduleHide);
 
-    // 1단 전체에서 QA 외 영역으로 가면 숨김
-    sidebar1st.addEventListener('mouseleave', (e) => {
-      if (!sidebar2nd.contains(e.relatedTarget)) {
-        scheduleHide();
-      }
-    });
+    if (sidebar1st) {
+      sidebar1st.addEventListener('mouseleave', (e) => {
+        if (!sidebar2nd.contains(e.relatedTarget)) {
+          scheduleHide();
+        }
+      });
+    }
   }
 };

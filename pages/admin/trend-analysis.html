@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>트렌드 분석 - AICC Quality Hub</title>
+  <title>상세 분석 - AICC Quality Hub</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="../../css/styles.css">
@@ -13,7 +13,7 @@
     <!-- 페이지 제목 -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
       <div>
-        <h1 style="font-size:20px;font-weight:700;margin:0;">트렌드 분석</h1>
+        <h1 style="font-size:20px;font-weight:700;margin:0;">상세 분석</h1>
         <p style="font-size:12px;color:#757575;margin:4px 0 0;">기간별 품질 점수 추이 분석</p>
       </div>
     </div>
@@ -25,6 +25,10 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#757575" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
       </div>
       <div class="filter-body">
+        <div>
+          <label class="form-label">기간</label>
+          <div id="period-picker-container"></div>
+        </div>
         <div>
           <label class="form-label">센터</label>
           <select class="form-select" id="center-filter" onchange="applyFilter()">
@@ -48,12 +52,6 @@
           </div>
         </div>
       </div>
-    </div>
-
-    <!-- 기간 선택 -->
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
-      <span style="font-size:13px;font-weight:600;color:#424242;margin-right:4px;">기간:</span>
-      <div id="period-picker-container"></div>
     </div>
 
     <!-- 차트 영역 -->

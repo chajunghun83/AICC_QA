@@ -13,7 +13,8 @@ window.AICC_Layout = {
   getBasePath() {
     const path = window.location.pathname;
     if (path.includes('/pages/admin/system-settings/')) return '../../../';
-    if (path.includes('/pages/admin/') || path.includes('/pages/agent/')) return '../../';
+    if (path.includes('/pages/ta/system/')) return '../../../';
+    if (path.includes('/pages/admin/') || path.includes('/pages/agent/') || path.includes('/pages/ta/')) return '../../';
     return './';
   },
 
@@ -34,7 +35,8 @@ window.AICC_Layout = {
     const filename = window.location.pathname.split('/').pop().replace('.html', '');
     const allItems = [
       ...(AICC_Sidebar.menuItems.admin || []).flatMap(g => g.items),
-      ...(AICC_Sidebar.menuItems.agent || []).flatMap(g => g.items)
+      ...(AICC_Sidebar.menuItems.agent || []).flatMap(g => g.items),
+      ...(AICC_Sidebar.menuItems.ta || []).flatMap(g => g.items)
     ];
     const found = allItems.find(item => item.id === filename);
     if (found) return { id: found.id, label: found.label, href: found.href };
@@ -259,12 +261,14 @@ window.AICC_Layout = {
     const basePath = this.getBasePath();
     AICC_Sidebar.init(basePath);
 
+    const currentModule = window.location.pathname.includes('/pages/ta/') ? 'ta' : 'qa';
+
     const pageContent = document.getElementById('page-content');
     const pageHtml = pageContent ? pageContent.innerHTML : '';
 
     document.body.innerHTML = `
-      ${AICC_Sidebar.render1stTier()}
-      ${AICC_Sidebar.render2ndTier()}
+      ${AICC_Sidebar.render1stTier(currentModule)}
+      ${AICC_Sidebar.render2ndTier(currentModule)}
       <div class="main-content" id="main-area">
         ${this.renderHeader()}
         <div style="padding:24px;" id="content-area">
