@@ -121,11 +121,11 @@ window.AICC_DATA['dashboard-stats.json'] =
   ],
   "urgent_issues": [
     { "type": "FAIL(금지어)", "count": 1, "team": "VIP상담팀", "agent": "이영희" },
-    { "type": "과락", "count": 3, "team": "기술지원팀" },
+    { "type": "기준 미달", "count": 3, "team": "기술지원팀" },
     { "type": "이의 제기 대기", "count": 5, "status": "pending" }
   ],
   "fail_agents": [
-    { "name": "최수진", "center": "서울센터", "team": "기술지원팀", "score": 45.2, "reason": "공감 부족 + 과락" },
+    { "name": "최수진", "center": "서울센터", "team": "기술지원팀", "score": 45.2, "reason": "공감 부족 + 기준 미달" },
     { "name": "정민호", "center": "서울센터", "team": "기술지원팀", "score": 52.1, "reason": "신속성 미달" },
     { "name": "이영희", "center": "서울센터", "team": "VIP상담팀", "score": 58.0, "reason": "FAIL(금지어)" },
     { "name": "박지훈", "center": "대구센터", "team": "CS상담팀", "score": 62.4, "reason": "해결력 부족" },
@@ -220,7 +220,7 @@ window.AICC_DATA['dashboard-stats.json'] =
       "evaluations": 215,
       "avg_score": 69.8,
       "agent_count": 18,
-      "issues": [{ "type": "과락", "count": 3 }]
+      "issues": [{ "type": "기준 미달", "count": 3 }]
     },
     {
       "center": "부산센터",
@@ -4055,7 +4055,7 @@ window.AICC_DATA["manual-evaluations.json"] =
     "manual_plan": "2025년 2월 AI 저점수 재평가",
     "manual_plan_criteria": "AI 점수 60점 미만",
     "eval_status": "completed",
-    "issues": ["과락"],
+    "issues": ["기준 미달"],
     "ai_feedback": "AI 자동 평가 점수: 52점. AI 저점수로 수동 재평가 대상입니다.",
     "scores": {
       "item-greeting": { "type": "NLP", "score": 5, "max": 10, "status": "warn", "confidence": 75 },
@@ -4096,7 +4096,7 @@ window.AICC_DATA["manual-evaluations.json"] =
     "manual_plan": "2025년 2월 AI 저점수 재평가",
     "manual_plan_criteria": "AI 점수 60점 미만",
     "eval_status": "pending",
-    "issues": ["과락"],
+    "issues": ["기준 미달"],
     "ai_feedback": "AI 자동 평가 점수: 48점. AI 저점수로 수동 재평가 대상입니다.",
     "scores": {
       "item-greeting": { "type": "NLP", "score": 4, "max": 10, "status": "fail", "confidence": 70 },

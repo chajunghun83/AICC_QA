@@ -36,7 +36,7 @@ window.AICC_Sidebar = {
       {
         group: '분석',
         items: [
-          { id: 'trend-analysis', label: '상세 분석', href: '/pages/admin/trend-analysis.html' },
+          { id: 'comparative-analysis', label: '비교 분석', href: '/pages/admin/comparative-analysis.html' },
           { id: 'report-generator', label: '리포트 생성기', href: '/pages/admin/report-generator.html' }
         ]
       },
@@ -44,6 +44,7 @@ window.AICC_Sidebar = {
         group: '시스템 설정',
         items: [
           { id: 'prompt-templates', label: '프롬프트 템플릿', href: '/pages/admin/system-settings/prompt-templates.html' },
+          { id: 'fail-rules', label: 'FAIL 판정 규칙', href: '/pages/admin/system-settings/fail-rules.html' },
           { id: 'user-management', label: '사용자 관리', href: '/pages/admin/system-settings/user-management.html' },
           { id: 'system-logs', label: '시스템 로그', href: '/pages/admin/system-settings/system-logs.html' }
         ]

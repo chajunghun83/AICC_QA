@@ -64,11 +64,11 @@
   ],
   "urgent_issues": [
     { "type": "FAIL(금지어)", "count": 1, "team": "VIP상담팀", "agent": "이영희" },
-    { "type": "과락", "count": 3, "team": "기술지원팀" },
+    { "type": "기준 미달", "count": 3, "team": "기술지원팀" },
     { "type": "이의 제기 대기", "count": 5, "status": "pending" }
   ],
   "fail_agents": [
-    { "name": "최수진", "center": "서울센터", "team": "기술지원팀", "score": 45.2, "reason": "공감 부족 + 과락" },
+    { "name": "최수진", "center": "서울센터", "team": "기술지원팀", "score": 45.2, "reason": "공감 부족 + 기준 미달" },
     { "name": "정민호", "center": "서울센터", "team": "기술지원팀", "score": 52.1, "reason": "신속성 미달" },
     { "name": "이영희", "center": "서울센터", "team": "VIP상담팀", "score": 58.0, "reason": "FAIL(금지어)" },
     { "name": "박지훈", "center": "대구센터", "team": "CS상담팀", "score": 62.4, "reason": "해결력 부족" },
@@ -163,7 +163,7 @@
       "evaluations": 215,
       "avg_score": 69.8,
       "agent_count": 18,
-      "issues": [{ "type": "과락", "count": 3 }]
+      "issues": [{ "type": "기준 미달", "count": 3 }]
     },
     {
       "center": "부산센터",

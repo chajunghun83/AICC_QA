@@ -221,7 +221,7 @@
     "manual_plan": "2025년 2월 AI 저점수 재평가",
     "manual_plan_criteria": "AI 점수 60점 미만",
     "eval_status": "completed",
-    "issues": ["과락"],
+    "issues": ["기준 미달"],
     "ai_feedback": "AI 자동 평가 점수: 52점. AI 저점수로 수동 재평가 대상입니다.",
     "scores": {
       "item-greeting": { "type": "NLP", "score": 5, "max": 10, "status": "warn", "confidence": 75 },
@@ -262,7 +262,7 @@
     "manual_plan": "2025년 2월 AI 저점수 재평가",
     "manual_plan_criteria": "AI 점수 60점 미만",
     "eval_status": "pending",
-    "issues": ["과락"],
+    "issues": ["기준 미달"],
     "ai_feedback": "AI 자동 평가 점수: 48점. AI 저점수로 수동 재평가 대상입니다.",
     "scores": {
       "item-greeting": { "type": "NLP", "score": 4, "max": 10, "status": "fail", "confidence": 70 },

@@ -432,7 +432,7 @@
 
     function getIssuePageUrl(issue) {
       if (issue.type.includes('FAIL')) return 'integrated-evaluation.html?issue=fail';
-      if (issue.type.includes('과락')) return 'integrated-evaluation.html?issue=under';
+      if (issue.type.includes('기준 미달')) return 'integrated-evaluation.html?issue=under';
       if (issue.type.includes('이의 제기')) return 'dispute-inbox.html?status=pending';
       return 'integrated-evaluation.html';
     }
@@ -573,7 +573,7 @@
       const tbody = document.getElementById('team-tbody');
       tbody.innerHTML = teams.map(team => {
         const issueHtml = team.issues.length > 0
-          ? team.issues.map(i => `<span class="badge ${i.type.includes('FAIL') || i.type.includes('과락') ? 'badge-rejected' : 'badge-pending'}" style="font-size:11px;">${i.type} ${i.count}건</span>`).join(' ')
+          ? team.issues.map(i => `<span class="badge ${i.type.includes('FAIL') || i.type.includes('기준 미달') ? 'badge-rejected' : 'badge-pending'}" style="font-size:11px;">${i.type} ${i.count}건</span>`).join(' ')
           : '<span style="color:#9E9E9E;font-size:12px;">-</span>';
 
         const detailUrl = `detail-analysis.html?ct=${encodeURIComponent(team.center)}&team=${encodeURIComponent(team.team)}`;

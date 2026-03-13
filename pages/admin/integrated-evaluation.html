@@ -81,7 +81,7 @@
             <select class="form-select" id="issue-filter" onchange="applyFilter()">
               <option value="all">전체</option>
               <option value="fail">FAIL (금지어)</option>
-              <option value="under">과락 (평가표 기준 미만)</option>
+              <option value="under">기준 미달 (평가표 기준 미만)</option>
             </select>
           </div>
           <div>
@@ -347,7 +347,7 @@
           : (ev.fail_items && ev.fail_items.length > 0
             ? '<div style="font-size:10px;color:#F57F17;">FAIL</div>'
             : (isUnderThreshold(ev)
-              ? '<div style="font-size:10px;color:#F57F17;">과락</div>'
+              ? '<div style="font-size:10px;color:#F57F17;">기준 미달</div>'
               : '<span style="color:#9E9E9E;font-size:11px;">-</span>'));
 
         return `<tr onclick="showEvalDetail('${ev.id}')" style="cursor:pointer;">
@@ -425,7 +425,7 @@
       if (issueVal === 'under') {
         filtered = filtered.filter(e =>
           isUnderThreshold(e) ||
-          (e.issues && e.issues.some(i => i.includes('과락')))
+          (e.issues && e.issues.some(i => i.includes('기준 미달')))
         );
       }
 

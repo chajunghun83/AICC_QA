@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FAIL 판정 규칙 - AICC Quality Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../../../css/styles.css">
+  <style>
+    .rule-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .rule-grid .data-table { font-size:12px; table-layout:fixed; width:100%; }
+    .rule-grid .data-table th, .rule-grid .data-table td { padding:8px 6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:center; }
+    .toggle-switch { position:relative; width:36px; height:20px; display:inline-block; vertical-align:middle; }
+    .toggle-switch input { opacity:0; width:0; height:0; }
+    .toggle-slider { position:absolute; inset:0; background:#ccc; border-radius:10px; cursor:pointer; transition:.2s; }
+    .toggle-slider::before { content:''; position:absolute; width:16px; height:16px; left:2px; top:2px; background:#fff; border-radius:50%; transition:.2s; }
+    .toggle-switch input:checked + .toggle-slider { background:#00A3FF; }
+    .toggle-switch input:checked + .toggle-slider::before { transform:translateX(16px); }
+    .action-btn { background:none; border:none; cursor:pointer; padding:4px; border-radius:4px; color:#757575; transition:all .15s; }
+    .action-btn:hover { background:#F5F5F5; color:#212121; }
+  </style>
+</head>
+<body class="bg-[#F5F5F5] text-[#212121]">
+  <div id="page-content">
+    <div style="margin-bottom:20px;">
+      <h1 style="font-size:20px;font-weight:700;margin:0;">FAIL 판정 규칙</h1>
+      <p style="font-size:12px;color:#757575;margin:4px 0 0;">STT 기반 자동 FAIL 판정 규칙 관리 — 금지어 감지 시 즉시 FAIL, 필수 고지 미감지 시 FAIL</p>
+    </div>
+
+    <div class="rule-grid">
+      <!-- 금지어 -->
+      <div class="content-card">
+        <div class="content-card-header" style="display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <span style="font-size:14px;font-weight:600;">금지어</span>
+            <span style="font-size:12px;color:#757575;margin-left:8px;" id="prohibited-count"></span>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openModal('prohibited')">+ 추가</button>
+        </div>
+        <div class="content-card-body" style="padding:0;">
+          <table class="data-table">
+            <colgroup>
+              <col style="width:10%;">
+              <col style="width:20%;">
+              <col style="width:25%;">
+              <col style="width:15%;">
+              <col style="width:10%;">
+              <col style="width:20%;">
+            </colgroup>
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>키워드</th>
+                <th>키워드 설명</th>
+                <th>상담 유형</th>
+                <th>상태</th>
+                <th>관리</th>
+              </tr>
+            </thead>
+            <tbody id="prohibited-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 필수 고지 사항 -->
+      <div class="content-card">
+        <div class="content-card-header" style="display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <span style="font-size:14px;font-weight:600;">필수 고지 사항</span>
+            <span style="font-size:12px;color:#757575;margin-left:8px;" id="required-count"></span>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openModal('required')">+ 추가</button>
+        </div>
+        <div class="content-card-body" style="padding:0;">
+          <table class="data-table">
+            <colgroup>
+              <col style="width:10%;">
+              <col style="width:20%;">
+              <col style="width:25%;">
+              <col style="width:15%;">
+              <col style="width:10%;">
+              <col style="width:20%;">
+            </colgroup>
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>키워드</th>
+                <th>키워드 설명</th>
+                <th>상담 유형</th>
+                <th>상태</th>
+                <th>관리</th>
+              </tr>
+            </thead>
+            <tbody id="required-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../../assets/dummy-data/all-data.js"></script>
+  <script src="../../../js/utils/data-loader.js"></script>
+  <script src="../../../js/utils/auth-simulator.js"></script>
+  <script src="../../../js/utils/formatters.js"></script>
+  <script src="../../../js/components/sidebar.js"></script>
+  <script src="../../../js/components/layout.js"></script>
+  <script src="../../../js/components/modal.js"></script>
+  <script src="../../../js/components/toast.js"></script>
+  <script>
+    /* ========== 더미 데이터 (키워드 1개 = 1행) ========== */
+    const prohibitedWords = [
+      { no:1,  keyword:'씨발',                    description:'욕설·비속어',       callType:'전체', active:true },
+      { no:2,  keyword:'개새끼',                   description:'욕설·비속어',       callType:'전체', active:true },
+      { no:3,  keyword:'지랄',                    description:'욕설·비속어',       callType:'전체', active:true },
+      { no:4,  keyword:'미친놈',                   description:'욕설·비속어',       callType:'전체', active:true },
+      { no:5,  keyword:'꺼져',                    description:'욕설·비속어',       callType:'전체', active:true },
+      { no:6,  keyword:'무식하다',                  description:'고객 비하',        callType:'전체', active:true },
+      { no:7,  keyword:'답답하다',                  description:'고객 비하',        callType:'전체', active:true },
+      { no:8,  keyword:'말귀를 못 알아듣다',          description:'고객 비하',        callType:'전체', active:true },
+      { no:9,  keyword:'A사는 안 좋다',             description:'경쟁사 비방',       callType:'전체', active:true },
+      { no:10, keyword:'B사 쓰지 마세요',            description:'경쟁사 비방',       callType:'전체', active:true },
+      { no:11, keyword:'제가 보상해 드릴게요',         description:'허위 약속',        callType:'전체', active:true },
+      { no:12, keyword:'100% 환불',               description:'허위 약속',        callType:'전체', active:true },
+      { no:13, keyword:'무조건 해결',               description:'허위 약속',        callType:'전체', active:true },
+      { no:14, keyword:'주민번호 알려주세요',          description:'개인정보 요구',     callType:'전체', active:true },
+      { no:15, keyword:'카드번호 말씀해 주세요',       description:'개인정보 요구',     callType:'전체', active:true },
+      { no:16, keyword:'끊겠습니다',                description:'통화 강제 종료 암시', callType:'전체', active:true },
+      { no:17, keyword:'더 이상 도와드리기 어렵습니다',  description:'통화 강제 종료 암시', callType:'전체', active:true },
+      { no:18, keyword:'아줌마',                   description:'성희롱·차별 발언',   callType:'전체', active:true },
+      { no:19, keyword:'나이가 있으시니까',           description:'성희롱·차별 발언',   callType:'전체', active:true },
+      { no:20, keyword:'우리 내부적으로',            description:'내부 정보 유출',     callType:'O/B',  active:false },
+      { no:21, keyword:'사실 회사에서는',            description:'내부 정보 유출',     callType:'O/B',  active:false }
+    ];
+
+    const requiredStatements = [
+      { no:1,  keyword:'녹취',               description:'녹취 동의 안내',          callType:'전체', active:true },
+      { no:2,  keyword:'녹음',               description:'녹취 동의 안내',          callType:'전체', active:true },
+      { no:3,  keyword:'통화 내용이 기록',     description:'녹취 동의 안내',          callType:'전체', active:true },
+      { no:4,  keyword:'개인정보 수집',        description:'개인정보 수집·이용 동의',   callType:'전체', active:true },
+      { no:5,  keyword:'개인정보 이용',        description:'개인정보 수집·이용 동의',   callType:'전체', active:true },
+      { no:6,  keyword:'본인 확인',           description:'본인 확인 절차',          callType:'전체', active:true },
+      { no:7,  keyword:'생년월일',            description:'본인 확인 절차',          callType:'전체', active:true },
+      { no:8,  keyword:'본인이 맞으신지',      description:'본인 확인 절차',          callType:'전체', active:true },
+      { no:9,  keyword:'원금 손실',           description:'상품 위험 고지',          callType:'O/B',  active:true },
+      { no:10, keyword:'투자 위험',           description:'상품 위험 고지',          callType:'O/B',  active:true },
+      { no:11, keyword:'수익을 보장하지 않',    description:'상품 위험 고지',          callType:'O/B',  active:true },
+      { no:12, keyword:'청약 철회',           description:'청약 철회 안내',          callType:'O/B',  active:true },
+      { no:13, keyword:'14일 이내',           description:'청약 철회 안내',          callType:'O/B',  active:true },
+      { no:14, keyword:'계약 취소',           description:'청약 철회 안내',          callType:'O/B',  active:true },
+      { no:15, keyword:'설명을 충분히',        description:'불완전판매 방지 고지',     callType:'O/B',  active:false },
+      { no:16, keyword:'이해하셨는지',         description:'불완전판매 방지 고지',     callType:'O/B',  active:false },
+      { no:17, keyword:'불이익이 발생',        description:'불완전판매 방지 고지',     callType:'O/B',  active:false }
+    ];
+
+    /* ========== 렌더링 ========== */
+    function renderTable(type) {
+      const data = type === 'prohibited' ? prohibitedWords : requiredStatements;
+      const tbody = document.getElementById(`${type}-tbody`);
+      const countEl = document.getElementById(`${type}-count`);
+      const activeCount = data.filter(d => d.active).length;
+      countEl.textContent = `${activeCount}/${data.length}건 활성`;
+
+      tbody.innerHTML = data.map(d => `
+        <tr>
+          <td>${d.no}</td>
+          <td style="font-weight:500;">${d.keyword}</td>
+          <td>${d.description}</td>
+          <td>${d.callType}</td>
+          <td>
+            <label class="toggle-switch">
+              <input type="checkbox" ${d.active ? 'checked' : ''} onchange="toggleActive('${type}',${d.no})">
+              <span class="toggle-slider"></span>
+            </label>
+          </td>
+          <td>
+            <div style="display:flex;gap:8px;justify-content:center;">
+              <button class="action-btn" onclick="openEditModal('${type}',${d.no})" title="수정">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+              </button>
+              <button class="action-btn" onclick="deleteRule('${type}',${d.no})" title="삭제">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    /* ========== 상태 토글 ========== */
+    function toggleActive(type, no) {
+      const data = type === 'prohibited' ? prohibitedWords : requiredStatements;
+      const item = data.find(d => d.no === no);
+      if (item) {
+        item.active = !item.active;
+        renderTable(type);
+        AICC_Toast.show(`"${item.keyword}" ${item.active ? '활성화' : '비활성화'}되었습니다.`);
+      }
+    }
+
+    /* ========== 삭제 ========== */
+    function deleteRule(type, no) {
+      const data = type === 'prohibited' ? prohibitedWords : requiredStatements;
+      const idx = data.findIndex(d => d.no === no);
+      if (idx === -1) return;
+      const kw = data[idx].keyword;
+      data.splice(idx, 1);
+      renderTable(type);
+      AICC_Toast.show(`"${kw}" 키워드가 삭제되었습니다.`);
+    }
+
+    /* ========== 추가/수정 모달 ========== */
+    function openModal(type) {
+      const title = type === 'prohibited' ? '금지어 추가' : '필수 고지 사항 추가';
+      AICC_Modal.open({
+        title,
+        content: buildModalContent(type, null),
+        footer: `
+          <button class="btn btn-secondary" onclick="AICC_Modal.close()">취소</button>
+          <button class="btn btn-primary" onclick="saveRule('${type}', null)">저장</button>
+        `,
+        size: 'md'
+      });
+    }
+
+    function openEditModal(type, no) {
+      const data = type === 'prohibited' ? prohibitedWords : requiredStatements;
+      const item = data.find(d => d.no === no);
+      if (!item) return;
+      const title = type === 'prohibited' ? '금지어 수정' : '필수 고지 사항 수정';
+      AICC_Modal.open({
+        title,
+        content: buildModalContent(type, item),
+        footer: `
+          <button class="btn btn-secondary" onclick="AICC_Modal.close()">취소</button>
+          <button class="btn btn-primary" onclick="saveRule('${type}', ${no})">저장</button>
+        `,
+        size: 'md'
+      });
+    }
+
+    function buildModalContent(type, item) {
+      const kwVal = item ? item.keyword : '';
+      const descVal = item ? item.description : '';
+      const callTypeVal = item ? item.callType : '전체';
+      const kwPlaceholder = type === 'prohibited'
+        ? '예: 씨발, 꺼져'
+        : '예: 녹취, 본인 확인';
+      const descPlaceholder = type === 'prohibited'
+        ? '예: 욕설·비속어, 고객 비하'
+        : '예: 녹취 동의 안내, 본인 확인 절차';
+
+      return `
+        <div style="display:flex;flex-direction:column;gap:20px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div>
+              <label class="form-label">키워드 (STT 감지 문구)</label>
+              <input type="text" class="form-input" id="modal-keyword" value="${kwVal}" placeholder="${kwPlaceholder}" style="width:100%;box-sizing:border-box;">
+            </div>
+            <div>
+              <label class="form-label">적용 상담 유형</label>
+              <select class="form-select" id="modal-calltype" style="width:100%;box-sizing:border-box;">
+                <option value="전체" ${callTypeVal==='전체'?'selected':''}>전체</option>
+                <option value="I/B" ${callTypeVal==='I/B'?'selected':''}>I/B (인바운드)</option>
+                <option value="O/B" ${callTypeVal==='O/B'?'selected':''}>O/B (아웃바운드)</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="form-label">키워드 설명</label>
+            <input type="text" class="form-input" id="modal-desc" value="${descVal}" placeholder="${descPlaceholder}" style="width:100%;box-sizing:border-box;">
+          </div>
+        </div>
+      `;
+    }
+
+    function saveRule(type, editNo) {
+      const keyword = document.getElementById('modal-keyword').value.trim();
+      const description = document.getElementById('modal-desc').value.trim();
+      const callType = document.getElementById('modal-calltype').value;
+
+      if (!keyword) {
+        AICC_Toast.show('키워드를 입력해 주세요.');
+        return;
+      }
+
+      const data = type === 'prohibited' ? prohibitedWords : requiredStatements;
+
+      if (editNo) {
+        const item = data.find(d => d.no === editNo);
+        if (item) {
+          item.keyword = keyword;
+          item.description = description;
+          item.callType = callType;
+        }
+        AICC_Toast.show(`"${keyword}" 키워드가 수정되었습니다.`);
+      } else {
+        const maxNo = data.length > 0 ? Math.max(...data.map(d => d.no)) : 0;
+        data.push({ no: maxNo + 1, keyword, description, callType, active: true });
+        AICC_Toast.show(`"${keyword}" 키워드가 추가되었습니다.`);
+      }
+
+      AICC_Modal.close();
+      renderTable(type);
+    }
+
+    /* ========== 초기화 ========== */
+    document.addEventListener('DOMContentLoaded', () => {
+      renderTable('prohibited');
+      renderTable('required');
+    });
+  </script>
+</body>
+</html>
