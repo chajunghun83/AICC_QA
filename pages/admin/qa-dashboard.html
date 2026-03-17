@@ -534,7 +534,7 @@
       if (!container || !items) return;
       container.innerHTML = items.slice(0, 5).map((item, i) => {
         const scoreColor = AICC_Fmt.scoreColor(item.score);
-        const linkUrl = `integrated-evaluation.html?deduction=${encodeURIComponent(item.item)}`;
+        const linkUrl = `integrated-evaluation.html?deduction=${encodeURIComponent(item.item_id)}`;
         return `
           <div onclick="window.location.href='${linkUrl}'" style="display:flex;align-items:center;gap:8px;padding:8px 0;cursor:pointer;transition:background 0.15s;${i < 4 ? 'border-bottom:1px solid #F0F0F0;' : ''}" onmouseenter="this.style.background='#FAFAFA'" onmouseleave="this.style.background=''">
             <span style="width:18px;height:18px;border-radius:4px;background:${item.status === 'danger' ? '#FFEBEE' : '#FFF8E1'};color:${item.status === 'danger' ? '#C62828' : '#F57F17'};font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${i + 1}</span>

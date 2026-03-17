@@ -125,7 +125,15 @@
       { id:'tm-10', name:'신규고객팀', centerId:'ct-3', center:'대구센터', color:'#F9A825' }
     ];
 
-    const EVAL_ITEMS = ['인사 멘트','고객 확인','경청/공감','문제 파악','해결 제시','정확성','종결 멘트'];
+    const EVAL_ITEMS = [
+      { name: '공감 표현 부족', id: 'pos-neg-empathy' },
+      { name: '비전문적 화법', id: 'professional-speech' },
+      { name: '응답 지연', id: 'speed' },
+      { name: '고객 불편 공감 부족', id: 'customer-discomfort' },
+      { name: '설명 불충분', id: 'easy-explanation' },
+      { name: '적극성 부족', id: 'active-response' },
+      { name: '인사 누락', id: 'first-greeting' }
+    ];
 
     const AGENT_NAMES = ['김민수','이영희','박지훈','최수진','정민호','한소영','윤재호','송미라','조현우','강서연','임도현','배수빈'];
     const DEDUCTION_REASONS = ['공감 부족','인사 누락','해결 미제시','확인 절차 생략','종결 멘트 누락','정보 오안내','고객 확인 미흡','경청 부족','안내 지연','감정 표현 부족'];
@@ -153,7 +161,7 @@
       const caution = Math.floor(totalEvals*(0.1+Math.random()*0.15));
       const low = totalEvals - excellent - good - caution;
       const items = {};
-      EVAL_ITEMS.forEach(item => { items[item] = +(base - 5 + Math.random()*15).toFixed(1); });
+      EVAL_ITEMS.forEach(ei => { items[ei.name] = +(base - 5 + Math.random()*15).toFixed(1); });
 
       // 유형별 상담/평가 건수
       const ibCalls = Math.floor(totalCalls * (0.5 + Math.random()*0.2));
@@ -173,8 +181,8 @@
 
       // 최다 감점 항목 Top5
       const shuffledItems = [...EVAL_ITEMS].sort(()=>Math.random()-0.5);
-      const topDeductions = shuffledItems.slice(0,5).map((item,idx) => ({
-        rank: idx+1, item, count: Math.floor(30 + Math.random()*70), avgDeduction: +(1 + Math.random()*4).toFixed(1)
+      const topDeductions = shuffledItems.slice(0,5).map((ei,idx) => ({
+        rank: idx+1, item: ei.name, id: ei.id, count: Math.floor(30 + Math.random()*70), avgDeduction: +(1 + Math.random()*4).toFixed(1)
       })).sort((a,b)=>b.count-a.count).map((d,i)=>({...d, rank:i+1}));
 
       // 최다 감점 콜 Top5
@@ -621,7 +629,7 @@
       return stats.map((s,i) => {
         const itemJson = JSON.stringify({name:items[i].name}).replace(/"/g,'&quot;');
         const rows = s.topDeductions.map(d =>
-          `<div class="stat-row clickable" style="padding:3px 0;" onclick="goToEval(${itemJson},'deduction=${encodeURIComponent(d.item)}')">
+          `<div class="stat-row clickable" style="padding:3px 0;" onclick="goToEval(${itemJson},'deduction=${encodeURIComponent(d.id)}')">
             <span class="stat-label" style="display:flex;align-items:center;gap:6px;">
               <span style="width:16px;height:16px;border-radius:50%;background:#F5F5F5;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#757575;">${d.rank}</span>
               ${d.item}
