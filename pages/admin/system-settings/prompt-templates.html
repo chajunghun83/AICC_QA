@@ -29,10 +29,10 @@
           <thead>
             <tr>
               <th style="width:40px;">No</th>
-              <th>템플릿명</th>
+              <th class="col-left">템플릿명</th>
               <th>카테고리</th>
               <th>유형</th>
-              <th style="text-align:right;">사용횟수</th>
+              <th>사용횟수</th>
               <th>수정일</th>
             </tr>
           </thead>
@@ -208,7 +208,6 @@ JSON 형식으로 결과를 출력하세요.`,
       }
     ];
 
-    // AI/NLP 유형별로 고정된 뱃지 HTML을 반환 — 확장 시 map에 추가만 하면 됨
     function getTypeBadge(type) {
       const map = {
         'AI': '<span class="badge badge-ai">AI</span>',
@@ -217,7 +216,6 @@ JSON 형식으로 결과를 출력하세요.`,
       return map[type] || type;
     }
 
-    // 톤 설정(엄격/표준/관대)을 시각적으로 구분하여 평가 강도를 직관적으로 파악 가능하게 함
     function getToneBadge(tone) {
       const map = {
         '엄격': '<span class="badge badge-rejected">엄격</span>',
@@ -227,22 +225,122 @@ JSON 형식으로 결과를 출력하세요.`,
       return map[tone] || tone;
     }
 
-    // 템플릿 전체 목록을 테이블에 렌더링 — 필터 없이 전체 표시
+    function getNextNo() {
+      return templates.length ? Math.max(...templates.map(t => t.no)) + 1 : 1;
+    }
+
+    function todayStr() {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    // 테이블 + 건수 갱신
     function renderTable() {
       const tbody = document.getElementById('template-tbody');
       tbody.innerHTML = templates.map(t => `
         <tr onclick="openDetail(${t.no})">
           <td>${t.no}</td>
-          <td style="font-weight:500;">${t.name}</td>
+          <td class="col-left" style="font-weight:500;">${t.name}</td>
           <td>${t.category}</td>
           <td>${getTypeBadge(t.type)}</td>
-          <td style="text-align:right;">${AICC_Fmt.number(t.usageCount)}</td>
+          <td>${AICC_Fmt.number(t.usageCount)}</td>
           <td style="color:#757575;">${AICC_Fmt.date(t.modifiedDate)}</td>
         </tr>
       `).join('');
+
+      const countEl = document.querySelector('.content-card-header span:last-child');
+      if (countEl) countEl.textContent = `총 ${templates.length}건`;
     }
 
-    // 프롬프트 내용, 톤 설정, 사용 통계, 버전 이력을 모달에 종합 표시
+    /* ── 생성/편집 공용 폼 HTML ── */
+    function buildTemplateFormHtml(t) {
+      const isEdit = !!t;
+      const categories = ['평가', '피드백', '요약', '품질 평가', '감정 분석', '스크립트 검증'];
+      const types = ['키워드', '패턴', 'AI', 'NLP'];
+
+      return `
+        <div style="display:grid;grid-template-columns:1fr;gap:14px;">
+          <div>
+            <label class="form-label">템플릿명 <span style="color:#F44336;">*</span></label>
+            <input type="text" id="tf-name" class="form-input" value="${isEdit ? t.name : ''}" placeholder="템플릿명을 입력하세요">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div>
+              <label class="form-label">카테고리 <span style="color:#F44336;">*</span></label>
+              <select id="tf-category" class="form-input">
+                ${categories.map(c => `<option value="${c}" ${isEdit && t.category === c ? 'selected' : ''}>${c}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label class="form-label">유형 <span style="color:#F44336;">*</span></label>
+              <select id="tf-type" class="form-input">
+                ${types.map(tp => `<option value="${tp}" ${isEdit && t.type === tp ? 'selected' : ''}>${tp}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="form-label">프롬프트 내용 <span style="color:#F44336;">*</span></label>
+            <textarea id="tf-prompt" class="form-input" rows="10" style="resize:vertical;font-family:'Consolas','Courier New',monospace;font-size:12px;line-height:1.6;" placeholder="프롬프트 내용을 입력하세요">${isEdit ? t.prompt : ''}</textarea>
+          </div>
+        </div>
+      `;
+    }
+
+    // 폼 값 수집 + 유효성 검증
+    function readTemplateForm() {
+      const name = document.getElementById('tf-name')?.value?.trim();
+      if (!name) { AICC_Toast.show('템플릿명을 입력하세요.'); return null; }
+
+      const category = document.getElementById('tf-category')?.value;
+      if (!category) { AICC_Toast.show('카테고리를 선택하세요.'); return null; }
+
+      const type = document.getElementById('tf-type')?.value;
+      if (!type) { AICC_Toast.show('유형을 선택하세요.'); return null; }
+
+      const prompt = document.getElementById('tf-prompt')?.value?.trim();
+      if (!prompt) { AICC_Toast.show('프롬프트 내용을 입력하세요.'); return null; }
+
+      return { name, category, type, prompt };
+    }
+
+    /* ── A-098: 새 템플릿 생성 ── */
+    function openCreateModal() {
+      const html = buildTemplateFormHtml(null);
+      AICC_Modal.open({
+        title: '새 템플릿 생성',
+        size: 'lg',
+        content: html,
+        footer: `
+          <button class="btn btn-secondary" onclick="AICC_Modal.close()">취소</button>
+          <button class="btn btn-primary" onclick="saveNewTemplate()">생성</button>
+        `
+      });
+    }
+
+    function saveNewTemplate() {
+      const vals = readTemplateForm();
+      if (!vals) return;
+
+      const newTpl = {
+        no: getNextNo(),
+        name: vals.name,
+        category: vals.category,
+        type: vals.type,
+        usageCount: 0,
+        modifiedDate: todayStr(),
+        tone: '표준',
+        prompt: vals.prompt,
+        versions: [
+          { version: 'v1.0', date: todayStr(), author: '관리자A', note: '초기 버전 생성' }
+        ]
+      };
+
+      templates.push(newTpl);
+      renderTable();
+      AICC_Modal.close();
+      AICC_Toast.show('템플릿이 생성되었습니다.');
+    }
+
+    /* ── 상세 보기 모달 ── */
     function openDetail(no) {
       const t = templates.find(x => x.no === no);
       if (!t) return;
@@ -316,9 +414,9 @@ JSON 형식으로 결과를 출력하세요.`,
       `;
 
       const footer = `
-        <button class="btn btn-danger" onclick="handleTemplateAction(${t.no}, '삭제')">삭제</button>
-        <button class="btn btn-secondary" onclick="handleTemplateAction(${t.no}, '복사')">복사</button>
-        <button class="btn btn-primary" onclick="handleTemplateAction(${t.no}, '편집')">편집</button>
+        <button class="btn btn-danger" onclick="deleteTemplate(${t.no})">삭제</button>
+        <button class="btn btn-secondary" onclick="copyTemplate(${t.no})">복사</button>
+        <button class="btn btn-primary" onclick="openEditModal(${t.no})">편집</button>
       `;
 
       AICC_Modal.open({
@@ -329,15 +427,85 @@ JSON 형식으로 결과를 출력하세요.`,
       });
     }
 
-    // 신규 생성 기능은 미구현 — Toast로 개발 중 안내
-    function openCreateModal() {
-      AICC_Toast.show('새 템플릿 생성 모달은 개발 중입니다.');
+    /* ── A-099: 삭제 ── */
+    function deleteTemplate(no) {
+      AICC_Modal.close();
+      const idx = templates.findIndex(x => x.no === no);
+      if (idx === -1) return;
+
+      if (!confirm('정말 삭제하시겠습니까?')) return;
+      templates.splice(idx, 1);
+      renderTable();
+      AICC_Toast.show('템플릿이 삭제되었습니다.');
     }
 
-    // 삭제/복사/편집 공통 핸들러 — 실제 API 연동 시 action별 분기 처리 필요
-    function handleTemplateAction(no, action) {
+    /* ── A-100: 복사 ── */
+    function copyTemplate(no) {
       AICC_Modal.close();
-      AICC_Toast.show(`"${action}" 처리가 완료되었습니다.`);
+      const t = templates.find(x => x.no === no);
+      if (!t) return;
+
+      const copy = JSON.parse(JSON.stringify(t));
+      copy.no = getNextNo();
+      copy.name = t.name + ' (사본)';
+      copy.usageCount = 0;
+      copy.modifiedDate = todayStr();
+      copy.versions = [
+        { version: 'v1.0', date: todayStr(), author: '관리자A', note: '사본 생성' }
+      ];
+
+      templates.push(copy);
+      renderTable();
+      AICC_Toast.show('사본이 생성되었습니다.');
+    }
+
+    /* ── A-101: 편집 ── */
+    function openEditModal(no) {
+      AICC_Modal.close();
+      const t = templates.find(x => x.no === no);
+      if (!t) return;
+
+      setTimeout(() => {
+        const html = buildTemplateFormHtml(t);
+        AICC_Modal.open({
+          title: `템플릿 편집: "${t.name}"`,
+          size: 'lg',
+          content: html,
+          footer: `
+            <button class="btn btn-secondary" onclick="AICC_Modal.close()">취소</button>
+            <button class="btn btn-primary" onclick="saveEditTemplate(${no})">저장</button>
+          `
+        });
+      }, 300);
+    }
+
+    function saveEditTemplate(no) {
+      const vals = readTemplateForm();
+      if (!vals) return;
+
+      const t = templates.find(x => x.no === no);
+      if (!t) return;
+
+      // 버전 이력 추가: 기존 최신 버전 번호를 올림
+      const latestVer = t.versions[0]?.version || 'v1.0';
+      const verParts = latestVer.replace('v', '').split('.');
+      const newVer = `v${verParts[0]}.${parseInt(verParts[1] || 0) + 1}`;
+
+      t.name = vals.name;
+      t.category = vals.category;
+      t.type = vals.type;
+      t.prompt = vals.prompt;
+      t.modifiedDate = todayStr();
+      t.versions.unshift({
+        version: newVer,
+        date: todayStr(),
+        author: '관리자A',
+        note: '템플릿 수정'
+      });
+
+      renderTable();
+      AICC_Modal.close();
+      AICC_Toast.show('템플릿이 수정되었습니다.');
     }
 
     // 초기 렌더링

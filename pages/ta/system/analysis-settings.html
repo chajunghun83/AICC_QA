@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>분석 기준 설정 - AICC Quality Hub</title>
+  <title>분석 기준 관리 - AICC Quality Hub</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="../../../css/styles.css">
@@ -12,7 +12,7 @@
   <div id="page-content">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
       <div>
-        <h1 style="font-size:20px;font-weight:700;margin:0;">분석 기준 설정</h1>
+        <h1 style="font-size:20px;font-weight:700;margin:0;">분석 기준 관리</h1>
         <p style="font-size:12px;color:#757575;margin:4px 0 0;">분석 기준값 설정</p>
       </div>
     </div>
@@ -31,13 +31,16 @@
         <!-- 묵음 기준 -->
         <div id="tab-silence" style="padding:24px;">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;">
-            <div style="background:#F0F7FF;border-radius:10px;padding:20px;border:1px solid #BBDEFB;">
-              <div style="font-size:13px;color:#1565C0;font-weight:600;margin-bottom:8px;">현재 설정값</div>
-              <div style="font-size:28px;font-weight:700;color:#1565C0;">30초</div>
-              <div style="font-size:12px;color:#757575;margin-top:4px;">연속 묵음 30초 초과 시 묵음 콜로 분류</div>
+            <div class="kpi-card" style="background:#F0F7FF;border-color:#BBDEFB;">
+              <div style="font-size:12px;color:#1565C0;font-weight:600;margin-bottom:8px;">현재 설정값</div>
+              <div style="display:flex;align-items:baseline;gap:8px;">
+                <span style="font-size:28px;font-weight:700;color:#1565C0;">30</span>
+                <span style="font-size:14px;color:#757575;">초</span>
+              </div>
+              <div style="font-size:11px;color:#757575;margin-top:8px;">연속 묵음 30초 초과 시 묵음 콜로 분류</div>
             </div>
-            <div style="background:#F9F9F9;border-radius:10px;padding:20px;border:1px solid #E0E0E0;">
-              <div style="font-size:13px;color:#757575;font-weight:600;margin-bottom:8px;">최근 변경 이력</div>
+            <div class="kpi-card">
+              <div style="font-size:12px;color:#757575;font-weight:600;margin-bottom:8px;">최근 변경 이력</div>
               <div style="font-size:13px;margin-bottom:4px;">2025-01-15 · <b>30초</b> 변경</div>
               <div style="font-size:12px;color:#9E9E9E;">이전: 20초 → 현재: 30초</div>
               <div style="font-size:12px;color:#9E9E9E;margin-top:2px;">변경자: 관리자</div>
@@ -46,7 +49,7 @@
           <div style="margin-bottom:16px;">
             <button class="btn btn-primary btn-sm" onclick="openEditModal('silence','묵음 기준','30','초','연속 묵음 지속 시간 (초)')">기준값 수정</button>
           </div>
-          <div style="font-size:14px;font-weight:600;margin-bottom:12px;">변경 이력</div>
+          <div class="content-card-header" style="border:none;"><span style="font-size:14px;font-weight:600;">변경 이력</span></div>
           <table class="data-table">
             <thead><tr><th>변경일시</th><th>이전 값</th><th>변경 값</th><th>변경자</th><th>변경사유</th></tr></thead>
             <tbody>
@@ -60,13 +63,16 @@
         <!-- 제외 콜 기준 -->
         <div id="tab-exclude" style="display:none;padding:24px;">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;">
-            <div style="background:#F0F7FF;border-radius:10px;padding:20px;border:1px solid #BBDEFB;">
-              <div style="font-size:13px;color:#1565C0;font-weight:600;margin-bottom:8px;">현재 설정값</div>
-              <div style="font-size:28px;font-weight:700;color:#1565C0;">10초</div>
-              <div style="font-size:12px;color:#757575;margin-top:4px;">통화시간 10초 미만 콜은 분석에서 제외</div>
+            <div class="kpi-card" style="background:#F0F7FF;border-color:#BBDEFB;">
+              <div style="font-size:12px;color:#1565C0;font-weight:600;margin-bottom:8px;">현재 설정값</div>
+              <div style="display:flex;align-items:baseline;gap:8px;">
+                <span style="font-size:28px;font-weight:700;color:#1565C0;">10</span>
+                <span style="font-size:14px;color:#757575;">초</span>
+              </div>
+              <div style="font-size:11px;color:#757575;margin-top:8px;">통화시간 10초 미만 콜은 분석에서 제외</div>
             </div>
-            <div style="background:#F9F9F9;border-radius:10px;padding:20px;border:1px solid #E0E0E0;">
-              <div style="font-size:13px;color:#757575;font-weight:600;margin-bottom:8px;">최근 변경 이력</div>
+            <div class="kpi-card">
+              <div style="font-size:12px;color:#757575;font-weight:600;margin-bottom:8px;">최근 변경 이력</div>
               <div style="font-size:13px;margin-bottom:4px;">2025-01-10 · <b>10초</b> 변경</div>
               <div style="font-size:12px;color:#9E9E9E;">이전: 5초 → 현재: 10초</div>
               <div style="font-size:12px;color:#9E9E9E;margin-top:2px;">변경자: 관리자</div>
@@ -75,7 +81,7 @@
           <div style="margin-bottom:16px;">
             <button class="btn btn-primary btn-sm" onclick="openEditModal('exclude','제외 콜 기준','10','초','최소 통화 시간 (초)')">기준값 수정</button>
           </div>
-          <div style="font-size:14px;font-weight:600;margin-bottom:12px;">변경 이력</div>
+          <div class="content-card-header" style="border:none;"><span style="font-size:14px;font-weight:600;">변경 이력</span></div>
           <table class="data-table">
             <thead><tr><th>변경일시</th><th>이전 값</th><th>변경 값</th><th>변경자</th><th>변경사유</th></tr></thead>
             <tbody>
@@ -88,13 +94,16 @@
         <!-- 초과 콜 기준 -->
         <div id="tab-overtime" style="display:none;padding:24px;">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;">
-            <div style="background:#F0F7FF;border-radius:10px;padding:20px;border:1px solid #BBDEFB;">
-              <div style="font-size:13px;color:#1565C0;font-weight:600;margin-bottom:8px;">현재 설정값</div>
-              <div style="font-size:28px;font-weight:700;color:#1565C0;">600초</div>
-              <div style="font-size:12px;color:#757575;margin-top:4px;">통화시간 600초(10분) 초과 시 초과 콜로 분류</div>
+            <div class="kpi-card" style="background:#F0F7FF;border-color:#BBDEFB;">
+              <div style="font-size:12px;color:#1565C0;font-weight:600;margin-bottom:8px;">현재 설정값</div>
+              <div style="display:flex;align-items:baseline;gap:8px;">
+                <span style="font-size:28px;font-weight:700;color:#1565C0;">600</span>
+                <span style="font-size:14px;color:#757575;">초</span>
+              </div>
+              <div style="font-size:11px;color:#757575;margin-top:8px;">통화시간 600초(10분) 초과 시 초과 콜로 분류</div>
             </div>
-            <div style="background:#F9F9F9;border-radius:10px;padding:20px;border:1px solid #E0E0E0;">
-              <div style="font-size:13px;color:#757575;font-weight:600;margin-bottom:8px;">최근 변경 이력</div>
+            <div class="kpi-card">
+              <div style="font-size:12px;color:#757575;font-weight:600;margin-bottom:8px;">최근 변경 이력</div>
               <div style="font-size:13px;margin-bottom:4px;">2025-01-05 · <b>600초</b> 변경</div>
               <div style="font-size:12px;color:#9E9E9E;">이전: 480초 → 현재: 600초</div>
               <div style="font-size:12px;color:#9E9E9E;margin-top:2px;">변경자: 관리자</div>
@@ -103,7 +112,7 @@
           <div style="margin-bottom:16px;">
             <button class="btn btn-primary btn-sm" onclick="openEditModal('overtime','초과 콜 기준','600','초','최대 통화 시간 (초)')">기준값 수정</button>
           </div>
-          <div style="font-size:14px;font-weight:600;margin-bottom:12px;">변경 이력</div>
+          <div class="content-card-header" style="border:none;"><span style="font-size:14px;font-weight:600;">변경 이력</span></div>
           <table class="data-table">
             <thead><tr><th>변경일시</th><th>이전 값</th><th>변경 값</th><th>변경자</th><th>변경사유</th></tr></thead>
             <tbody>
@@ -116,13 +125,16 @@
         <!-- 재인입 기준 -->
         <div id="tab-reentry" style="display:none;padding:24px;">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;">
-            <div style="background:#F0F7FF;border-radius:10px;padding:20px;border:1px solid #BBDEFB;">
-              <div style="font-size:13px;color:#1565C0;font-weight:600;margin-bottom:8px;">현재 설정값</div>
-              <div style="font-size:28px;font-weight:700;color:#1565C0;">24시간</div>
-              <div style="font-size:12px;color:#757575;margin-top:4px;">동일 고객 24시간 내 재인입 시 재인입 콜로 분류</div>
+            <div class="kpi-card" style="background:#F0F7FF;border-color:#BBDEFB;">
+              <div style="font-size:12px;color:#1565C0;font-weight:600;margin-bottom:8px;">현재 설정값</div>
+              <div style="display:flex;align-items:baseline;gap:8px;">
+                <span style="font-size:28px;font-weight:700;color:#1565C0;">24</span>
+                <span style="font-size:14px;color:#757575;">시간</span>
+              </div>
+              <div style="font-size:11px;color:#757575;margin-top:8px;">동일 고객 24시간 내 재인입 시 재인입 콜로 분류</div>
             </div>
-            <div style="background:#F9F9F9;border-radius:10px;padding:20px;border:1px solid #E0E0E0;">
-              <div style="font-size:13px;color:#757575;font-weight:600;margin-bottom:8px;">최근 변경 이력</div>
+            <div class="kpi-card">
+              <div style="font-size:12px;color:#757575;font-weight:600;margin-bottom:8px;">최근 변경 이력</div>
               <div style="font-size:13px;margin-bottom:4px;">2025-01-12 · <b>24시간</b> 변경</div>
               <div style="font-size:12px;color:#9E9E9E;">이전: 48시간 → 현재: 24시간</div>
               <div style="font-size:12px;color:#9E9E9E;margin-top:2px;">변경자: 관리자</div>
@@ -131,7 +143,7 @@
           <div style="margin-bottom:16px;">
             <button class="btn btn-primary btn-sm" onclick="openEditModal('reentry','재인입 기준','24','시간','재인입 판단 기준 시간')">기준값 수정</button>
           </div>
-          <div style="font-size:14px;font-weight:600;margin-bottom:12px;">변경 이력</div>
+          <div class="content-card-header" style="border:none;"><span style="font-size:14px;font-weight:600;">변경 이력</span></div>
           <table class="data-table">
             <thead><tr><th>변경일시</th><th>이전 값</th><th>변경 값</th><th>변경자</th><th>변경사유</th></tr></thead>
             <tbody>
@@ -140,33 +152,6 @@
             </tbody>
           </table>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 수정 모달 -->
-  <div id="edit-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);z-index:1000;align-items:center;justify-content:center;">
-    <div style="background:white;border-radius:12px;width:420px;box-shadow:0 8px 32px rgba(0,0,0,0.18);">
-      <div style="padding:20px 24px;border-bottom:1px solid #E0E0E0;display:flex;align-items:center;justify-content:space-between;">
-        <div style="font-size:16px;font-weight:700;" id="edit-modal-title">기준값 수정</div>
-        <button onclick="closeEditModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#757575;">×</button>
-      </div>
-      <div style="padding:20px 24px;">
-        <div style="margin-bottom:16px;">
-          <label class="form-label" id="edit-label">기준값</label>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <input type="number" class="form-input" id="edit-value" style="flex:1;">
-            <span id="edit-unit" style="font-size:14px;color:#757575;white-space:nowrap;"></span>
-          </div>
-        </div>
-        <div>
-          <label class="form-label">변경 사유</label>
-          <textarea class="form-input" style="width:100%;resize:none;height:72px;" placeholder="변경 사유를 입력하세요"></textarea>
-        </div>
-      </div>
-      <div style="padding:16px 24px;border-top:1px solid #E0E0E0;display:flex;justify-content:flex-end;gap:8px;">
-        <button class="btn btn-secondary" onclick="closeEditModal()">취소</button>
-        <button class="btn btn-primary" onclick="AICC_Toast.show('기준값이 저장되었습니다.');closeEditModal()">저장</button>
       </div>
     </div>
   </div>
@@ -192,22 +177,24 @@
     }
 
     function openEditModal(type, title, value, unit, label) {
-      document.getElementById('edit-modal-title').textContent = title + ' 수정';
-      document.getElementById('edit-label').textContent = label;
-      document.getElementById('edit-value').value = value;
-      document.getElementById('edit-unit').textContent = unit;
-      document.getElementById('edit-modal').style.display = 'flex';
-    }
-
-    function closeEditModal() {
-      document.getElementById('edit-modal').style.display = 'none';
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('edit-modal').addEventListener('click', function(e) {
-        if (e.target === this) closeEditModal();
+      AICC_Modal.open({
+        title: title + ' 수정',
+        content: `
+          <div style="margin-bottom:16px;">
+            <label class="form-label">${label}</label>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input type="number" class="form-input" value="${value}" style="flex:1;">
+              <span style="font-size:14px;color:#757575;white-space:nowrap;">${unit}</span>
+            </div>
+          </div>
+          <div>
+            <label class="form-label">변경 사유</label>
+            <textarea class="form-input" style="width:100%;resize:none;height:72px;" placeholder="변경 사유를 입력하세요"></textarea>
+          </div>`,
+        footer: '<button class="btn btn-secondary" onclick="AICC_Modal.close()">취소</button><button class="btn btn-primary" onclick="AICC_Toast.show(\'기준값이 저장되었습니다.\');AICC_Modal.close()">저장</button>',
+        size: 'sm'
       });
-    });
+    }
   </script>
 </body>
 </html>

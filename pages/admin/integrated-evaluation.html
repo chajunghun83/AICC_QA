@@ -463,6 +463,20 @@
       const ev = allEvals.find(e => e.id === evalId);
       if (!ev) return;
 
+      // A-033: transcript이 없을 때 시뮬레이션 스크립트 생성 (NLP 포함 전 방식 지원)
+      const simTranscriptFallback = [
+        { speaker: 'agent', time: '00:01', text: `안녕하세요, ${ev.agent_name || '상담사'}입니다. 무엇을 도와드릴까요?` },
+        { speaker: 'customer', time: '00:05', text: '네, 안녕하세요. 문의 사항이 있어서 연락드렸습니다.' },
+        { speaker: 'agent', time: '00:10', text: '네, 어떤 부분 도와드릴까요? 말씀해 주세요.' },
+        { speaker: 'customer', time: '00:15', text: '주문 건 확인 좀 부탁드릴게요.' },
+        { speaker: 'agent', time: '00:20', text: '네, 주문 확인 도와드리겠습니다. 주문번호 확인 부탁드리겠습니다.' },
+        { speaker: 'customer', time: '00:25', text: '주문번호는 ORD-2025-00382입니다.' },
+        { speaker: 'agent', time: '00:30', text: '확인하겠습니다. 잠시만 기다려주세요. 네, 확인되었습니다. 현재 배송 중이며 내일 오전 도착 예정입니다.' },
+        { speaker: 'customer', time: '00:40', text: '아, 감사합니다. 다른 건 없어요.' },
+        { speaker: 'agent', time: '00:43', text: '감사합니다. 좋은 하루 되세요!' }
+      ];
+      const activeTranscript = (ev.transcript && ev.transcript.length > 0) ? ev.transcript : simTranscriptFallback;
+
       const itemNameMap = buildItemNameMap();
       const scoreRows = Object.entries(ev.scores).map(([key, val], idx) => {
         const statusCls = val.status === 'pass' ? 'score-good' : val.status === 'warn' ? 'score-warn' : 'score-danger';
@@ -481,8 +495,8 @@
         `;
       }).join('');
 
-      const transcriptHtml = ev.transcript && ev.transcript.length > 0
-        ? ev.transcript.map((t, idx) => {
+      const transcriptHtml = activeTranscript.length > 0
+        ? activeTranscript.map((t, idx) => {
             const isAgent = t.speaker === 'agent';
             const bg = isAgent ? '#E3F2FD' : '#F5F5F5';
             const hoverBg = isAgent ? '#B3E5FC' : '#EEEEEE';
@@ -591,9 +605,21 @@
           </div>
         `,
         footer: `
+          <button class="btn btn-primary" onclick="openManualReview('${ev.id}')">수동 검증</button>
           <button class="btn btn-secondary" onclick="AICC_Modal.close()">닫기</button>
         `
       });
+    }
+
+    // A-035: 수동 검증 버튼 동작 — 검증 완료 상태로 변경 후 Toast 표시
+    function openManualReview(evalId) {
+      const ev = allEvals.find(e => e.id === evalId);
+      if (ev) {
+        ev.verification_status = '검증 완료';
+      }
+      AICC_Toast.show('수동 검증이 완료되었습니다.');
+      AICC_Modal.close();
+      renderTable();
     }
 
     function scrollToTranscript(scoreIdx) {

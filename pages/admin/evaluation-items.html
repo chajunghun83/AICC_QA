@@ -36,7 +36,7 @@
         <div class="content-card-header">
           <span style="font-size:14px;font-weight:600;" id="detail-title">항목을 선택하세요</span>
         </div>
-        <div class="content-card-body" id="detail-panel">
+        <div class="content-card-body" id="detail-panel" style="overflow-y:auto;max-height:calc(100vh - 220px);">
           <div style="text-align:center;padding:60px 0;color:#9E9E9E;">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#BDBDBD" stroke-width="1.5" style="margin:0 auto 12px;display:block;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
             <p>왼쪽 트리에서 항목을 선택하면<br>상세 정보가 표시됩니다.</p>
@@ -99,7 +99,8 @@
               <div class="tree-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('.chevron').style.transform=this.nextElementSibling.style.display==='none'?'rotate(-90deg)':'rotate(0)'">
                 <svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#757575" stroke-width="2" style="transition:transform 0.15s;"><path d="m6 9 6 6 6-6"/></svg>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF9800" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-                <span style="font-weight:500;font-size:13px;">${sub.name}</span>
+                <span id="tree-sub-name-${sub.id}" style="font-weight:500;font-size:13px;cursor:pointer;" ondblclick="event.stopPropagation();startEditSubName('${cat.id}','${sub.id}')" title="더블클릭하여 편집">${sub.name}</span>
+                <button onclick="event.stopPropagation();startEditSubName('${cat.id}','${sub.id}')" style="background:none;border:none;cursor:pointer;padding:2px;display:flex;align-items:center;opacity:0.3;margin-left:2px;" title="이름 편집" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.3'"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#757575" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button>
                 <span style="font-size:11px;color:#9E9E9E;">(${sub.items.length})</span>
               </div>
               <div style="margin-left:12px;">
@@ -114,7 +115,8 @@
             <div class="tree-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('.chevron').style.transform=this.nextElementSibling.style.display==='none'?'rotate(-90deg)':'rotate(0)'" style="font-weight:600;">
               <svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#757575" stroke-width="2" style="transition:transform 0.15s;"><path d="m6 9 6 6 6-6"/></svg>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00A3FF" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-              <span>${cat.name}</span>
+              <span id="tree-cat-name-${cat.id}" ondblclick="event.stopPropagation();startEditCatName('${cat.id}')" style="cursor:pointer;" title="더블클릭하여 편집">${cat.name}</span>
+              <button onclick="event.stopPropagation();startEditCatName('${cat.id}')" style="background:none;border:none;cursor:pointer;padding:2px;display:flex;align-items:center;opacity:0.3;margin-left:2px;" title="이름 편집" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.3'"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#757575" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button>
               <span style="font-size:11px;color:#9E9E9E;font-weight:400;">(${catItems}개)</span>
               ${statusLabel}
             </div>
@@ -292,7 +294,7 @@
           <div style="display:flex;gap:8px;padding-top:16px;border-top:1px solid #F0F0F0;">
             <button class="btn btn-primary btn-sm" onclick="showEditItemModal()">편집</button>
             <button class="btn btn-secondary btn-sm" onclick="AICC_Toast.show('항목이 복사되었습니다. (시뮬레이션)')">복사</button>
-            <button class="btn btn-danger btn-sm" onclick="AICC_Modal.confirm('이 항목을 삭제하시겠습니까?', function(){AICC_Toast.show('삭제되었습니다. (시뮬레이션)')})">삭제</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteSelectedItem()">삭제</button>
           </div>
         </div>
       `;
@@ -383,7 +385,7 @@
       let html = '';
 
       html += `<div style="margin-bottom:8px;">
-        <button type="button" class="btn btn-sm btn-secondary" onclick="startInlineCatAdd('__root__')" style="font-size:11px;width:100%;padding:5px 8px;display:flex;align-items:center;justify-content:center;gap:4px;">
+        <button type="button" class="btn btn-sm" onclick="startInlineCatAdd('__root__')" style="font-size:11px;width:100%;padding:5px 8px;display:flex;align-items:center;justify-content:center;gap:4px;background:#FF9800;color:white;border:1px solid #FF9800;border-radius:4px;">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
           새 대분류 추가
         </button>
@@ -404,8 +406,8 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00A3FF" stroke-width="2" style="flex-shrink:0;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
           <span style="flex:1;">${cat.name}</span>
           <span style="font-size:11px;color:#9E9E9E;font-weight:400;">(${cat.children.length})</span>
-          <button type="button" onclick="startInlineCatAdd('${cat.id}')" style="background:none;border:none;cursor:pointer;color:#00A3FF;padding:2px;display:flex;align-items:center;" title="중분류 추가">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          <button type="button" onclick="startInlineCatAdd('${cat.id}')" style="background:#9E9E9E;border:none;cursor:pointer;color:white;padding:2px 5px;display:flex;align-items:center;border-radius:3px;gap:2px;font-size:10px;" title="중분류 추가">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
           </button>
         </div>`;
 
@@ -635,7 +637,7 @@
       AICC_Modal.open({
         title: `평가 항목 편집: "${selectedItem.name}"`,
         size: 'lg',
-        content: getItemFormHtml(selectedItem),
+        content: `<div style="overflow-y:auto;max-height:calc(90vh - 120px);">${getItemFormHtml(selectedItem)}</div>`,
         footer: `
           <button class="btn btn-secondary" onclick="AICC_Modal.close()">취소</button>
           <button class="btn btn-primary" onclick="saveEditItem()">저장</button>
@@ -1052,8 +1054,8 @@
             <div style="background:#FFF8E1;border:1px solid #FFE0B2;border-radius:6px;padding:16px;">
               <div style="font-size:13px;font-weight:600;color:#E65100;margin-bottom:8px;">AI 평가 프롬프트 설정</div>
               <div style="display:flex;gap:8px;margin-bottom:8px;">
-                <button type="button" class="btn btn-sm btn-secondary" onclick="AICC_Toast.show('템플릿 불러오기 (시뮬레이션)')">템플릿 불러오기</button>
-                <button type="button" class="btn btn-sm btn-secondary" onclick="AICC_Toast.show('프롬프트 테스트 (시뮬레이션)')">테스트</button>
+                <button type="button" class="btn btn-sm btn-secondary" onclick="showPromptTemplateModal()">템플릿 불러오기</button>
+                <button type="button" class="btn btn-sm btn-secondary" onclick="testAIPrompt()">테스트</button>
               </div>
               <textarea id="form-prompt" class="form-input" style="width:100%;height:120px;" placeholder="AI 평가 기준 프롬프트를 작성하세요">${prompt}</textarea>
             </div>
@@ -1076,6 +1078,146 @@
       const method = document.getElementById('form-nlp-method')?.value;
       const field = document.getElementById('nlp-script-field');
       if (field) field.style.display = method === 'script_match' ? 'block' : 'none';
+    }
+
+    // A-048: 대분류 이름 인라인 편집
+    function startEditCatName(catId) {
+      const cat = itemsData.categories.find(c => c.id === catId);
+      if (!cat) return;
+      const span = document.getElementById('tree-cat-name-' + catId);
+      if (!span) return;
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = cat.name;
+      input.className = 'form-input';
+      input.style.cssText = 'font-size:13px;padding:2px 6px;width:auto;min-width:80px;font-weight:600;';
+      input.onclick = function(e) { e.stopPropagation(); };
+      input.onkeydown = function(e) {
+        e.stopPropagation();
+        if (e.key === 'Enter') { e.preventDefault(); this.onblur = null; finishEditCatName(catId, this.value); }
+        if (e.key === 'Escape') { this.onblur = null; renderTree(itemsData.categories); }
+      };
+      input.onblur = function() { finishEditCatName(catId, this.value); };
+      span.replaceWith(input);
+      input.focus();
+      input.select();
+    }
+
+    function finishEditCatName(catId, newName) {
+      newName = newName.trim();
+      const cat = itemsData.categories.find(c => c.id === catId);
+      if (!newName || !cat) { renderTree(itemsData.categories); return; }
+      if (cat.name !== newName) {
+        cat.name = newName;
+        AICC_Toast.show('대분류명이 수정되었습니다.');
+      }
+      renderTree(itemsData.categories);
+    }
+
+    // A-048: 중분류 이름 인라인 편집
+    function startEditSubName(catId, subId) {
+      const cat = itemsData.categories.find(c => c.id === catId);
+      if (!cat) return;
+      const sub = cat.children.find(s => s.id === subId);
+      if (!sub) return;
+      const span = document.getElementById('tree-sub-name-' + subId);
+      if (!span) return;
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = sub.name;
+      input.className = 'form-input';
+      input.style.cssText = 'font-size:13px;padding:2px 6px;width:auto;min-width:80px;font-weight:500;';
+      input.onclick = function(e) { e.stopPropagation(); };
+      input.onkeydown = function(e) {
+        e.stopPropagation();
+        if (e.key === 'Enter') { e.preventDefault(); this.onblur = null; finishEditSubName(catId, subId, this.value); }
+        if (e.key === 'Escape') { this.onblur = null; renderTree(itemsData.categories); }
+      };
+      input.onblur = function() { finishEditSubName(catId, subId, this.value); };
+      span.replaceWith(input);
+      input.focus();
+      input.select();
+    }
+
+    function finishEditSubName(catId, subId, newName) {
+      newName = newName.trim();
+      const cat = itemsData.categories.find(c => c.id === catId);
+      if (!cat) { renderTree(itemsData.categories); return; }
+      const sub = cat.children.find(s => s.id === subId);
+      if (!newName || !sub) { renderTree(itemsData.categories); return; }
+      if (sub.name !== newName) {
+        sub.name = newName;
+        AICC_Toast.show('중분류명이 수정되었습니다.');
+      }
+      renderTree(itemsData.categories);
+    }
+
+    // A-050: 항목 실제 삭제
+    function deleteSelectedItem() {
+      if (!selectedItem) return;
+      if (!confirm('정말 삭제하시겠습니까?')) return;
+      for (const cat of itemsData.categories) {
+        for (const sub of cat.children) {
+          const idx = sub.items.findIndex(it => it.id === selectedItem.id);
+          if (idx !== -1) {
+            sub.items.splice(idx, 1);
+            selectedItem = null;
+            renderTree(itemsData.categories);
+            document.getElementById('detail-title').textContent = '항목을 선택하세요';
+            document.getElementById('detail-panel').innerHTML = '<div style="text-align:center;padding:60px 0;color:#9E9E9E;"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#BDBDBD" stroke-width="1.5" style="margin:0 auto 12px;display:block;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg><p>왼쪽 트리에서 항목을 선택하면<br>상세 정보가 표시됩니다.</p></div>';
+            AICC_Toast.show('항목이 삭제되었습니다.');
+            return;
+          }
+        }
+      }
+    }
+
+    // A-052: 프롬프트 템플릿 목록
+    const PROMPT_TEMPLATES = [
+      { name: '기본 평가 프롬프트', content: '당신은 AICC 품질 관리 전문가입니다.\n상담사의 해당 항목을 평가해주세요.\n\n평가 기준:\n1. 적절한 응대를 했는가\n2. 고객의 요구를 정확히 파악했는가\n\n반드시 근거를 명시하여 응답하세요.' },
+      { name: '공감 표현 평가', content: '당신은 AICC 품질 관리 전문가입니다.\n상담사가 고객의 감정에 적절히 공감했는지 평가해주세요.\n\n평가 기준:\n1. 고객의 감정을 인지하고 표현했는가\n2. 공감 표현이 자연스러웠는가\n\n반드시 근거를 명시하여 응답하세요.' },
+      { name: '인사 멘트 평가', content: '당신은 AICC 품질 관리 전문가입니다.\n상담사의 인사 멘트를 평가해주세요.\n\n평가 기준:\n1. 표준 인사 멘트를 사용했는가\n2. 밝고 친절한 톤이었는가\n\n반드시 근거를 명시하여 응답하세요.' },
+      { name: '문제 해결력 평가', content: '당신은 AICC 품질 관리 전문가입니다.\n상담사의 문제 해결력을 평가해주세요.\n\n평가 기준:\n1. 고객 문제를 정확히 파악했는가\n2. 적절한 해결 방안을 제시했는가\n3. 후속 조치를 안내했는가\n\n반드시 근거를 명시하여 응답하세요.' }
+    ];
+
+    // A-052: 템플릿 불러오기 - 기존 모달 위에 오버레이로 표시
+    function showPromptTemplateModal() {
+      let overlay = document.getElementById('template-overlay');
+      if (overlay) overlay.remove();
+      overlay = document.createElement('div');
+      overlay.id = 'template-overlay';
+      overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.3);z-index:10000;display:flex;align-items:center;justify-content:center;';
+      const panel = document.createElement('div');
+      panel.style.cssText = 'background:white;border-radius:8px;padding:24px;width:420px;box-shadow:0 8px 32px rgba(0,0,0,0.2);';
+      let listHtml = PROMPT_TEMPLATES.map(function(t, i) {
+        return '<div onclick="applyPromptTemplate(' + i + ')" style="padding:12px;border:1px solid #E0E0E0;border-radius:6px;cursor:pointer;transition:all 0.15s;" onmouseover="this.style.background=\'#F5F5F5\';this.style.borderColor=\'#00A3FF\'" onmouseout="this.style.background=\'\';this.style.borderColor=\'#E0E0E0\'">' +
+          '<div style="font-size:13px;font-weight:600;color:#212121;">' + t.name + '</div>' +
+          '<div style="font-size:11px;color:#9E9E9E;margin-top:4px;">' + t.content.split('\n')[0] + '</div></div>';
+      }).join('');
+      panel.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">' +
+        '<div style="font-size:15px;font-weight:700;">프롬프트 템플릿 선택</div>' +
+        '<button onclick="document.getElementById(\'template-overlay\').remove()" style="background:none;border:none;cursor:pointer;font-size:20px;color:#757575;line-height:1;">&times;</button></div>' +
+        '<div style="display:flex;flex-direction:column;gap:8px;">' + listHtml + '</div>';
+      overlay.appendChild(panel);
+      overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+      document.body.appendChild(overlay);
+    }
+
+    function applyPromptTemplate(index) {
+      const t = PROMPT_TEMPLATES[index];
+      if (!t) return;
+      const textarea = document.getElementById('form-prompt');
+      if (textarea) textarea.value = t.content;
+      document.getElementById('template-overlay')?.remove();
+      AICC_Toast.show('"' + t.name + '" 템플릿이 적용되었습니다.');
+    }
+
+    // A-052: AI 프롬프트 테스트 - 2초 후 결과 표시
+    function testAIPrompt() {
+      AICC_Toast.show('AI 평가 테스트를 실행 중입니다...');
+      setTimeout(function() {
+        AICC_Toast.show('AI 평가 테스트가 완료되었습니다. 점수: 85점');
+      }, 2000);
     }
   </script>
 </body>

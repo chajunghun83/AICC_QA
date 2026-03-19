@@ -45,20 +45,29 @@
 
     <!-- KPI 카드 -->
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;">
-      <div class="content-card" style="padding:20px;text-align:center;">
-        <div style="font-size:12px;color:#757575;">전체</div>
-        <div style="font-size:32px;font-weight:700;color:#212121;margin:8px 0;">127건</div>
-        <div style="font-size:12px;color:#9E9E9E;">이슈 콜 총계</div>
+      <div class="kpi-card">
+        <div style="font-size:12px;color:#757575;margin-bottom:8px;">전체</div>
+        <div style="display:flex;align-items:baseline;gap:8px;">
+          <span style="font-size:28px;font-weight:700;">127</span>
+          <span style="font-size:14px;color:#757575;">건</span>
+        </div>
+        <div style="font-size:11px;color:#9E9E9E;margin-top:8px;">이슈 콜 총계</div>
       </div>
-      <div class="content-card" style="padding:20px;text-align:center;">
-        <div style="font-size:12px;color:#757575;">처리완료</div>
-        <div style="font-size:32px;font-weight:700;color:#4CAF50;margin:8px 0;">104건</div>
-        <div style="font-size:12px;color:#4CAF50;">처리율 81.9%</div>
+      <div class="kpi-card">
+        <div style="font-size:12px;color:#757575;margin-bottom:8px;">처리완료</div>
+        <div style="display:flex;align-items:baseline;gap:8px;">
+          <span style="font-size:28px;font-weight:700;color:#4CAF50;">104</span>
+          <span style="font-size:14px;color:#757575;">건</span>
+        </div>
+        <div style="font-size:11px;color:#4CAF50;margin-top:8px;">처리율 81.9%</div>
       </div>
-      <div class="content-card" style="padding:20px;text-align:center;">
-        <div style="font-size:12px;color:#757575;">미처리</div>
-        <div style="font-size:32px;font-weight:700;color:#F44336;margin:8px 0;">23건</div>
-        <div style="font-size:12px;color:#F44336;">조치 필요</div>
+      <div class="kpi-card">
+        <div style="font-size:12px;color:#757575;margin-bottom:8px;">미처리</div>
+        <div style="display:flex;align-items:baseline;gap:8px;">
+          <span style="font-size:28px;font-weight:700;color:#F44336;">23</span>
+          <span style="font-size:14px;color:#757575;">건</span>
+        </div>
+        <div style="font-size:11px;color:#F44336;margin-top:8px;">조치 필요</div>
       </div>
     </div>
 
@@ -102,43 +111,6 @@
     </div>
   </div>
 
-  <!-- 규칙 추가 모달 -->
-  <div id="add-rule-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);z-index:1000;align-items:center;justify-content:center;">
-    <div style="background:white;border-radius:12px;width:480px;box-shadow:0 8px 32px rgba(0,0,0,0.18);">
-      <div style="padding:20px 24px;border-bottom:1px solid #E0E0E0;display:flex;align-items:center;justify-content:space-between;">
-        <div style="font-size:16px;font-weight:700;">이슈 키워드 규칙 추가</div>
-        <button onclick="closeAddRuleModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#757575;">×</button>
-      </div>
-      <div style="padding:20px 24px;">
-        <div style="margin-bottom:16px;">
-          <label class="form-label">이슈유형</label>
-          <select class="form-select" style="width:100%;">
-            <option>불만접수</option><option>환불요청</option><option>품질불량</option><option>법적조치</option>
-          </select>
-        </div>
-        <div style="margin-bottom:16px;">
-          <label class="form-label">키워드 (쉼표로 구분)</label>
-          <input type="text" class="form-input" style="width:100%;" placeholder="예: 환불, 취소, 불만">
-        </div>
-        <div style="margin-bottom:16px;">
-          <label class="form-label">감지방식</label>
-          <select class="form-select" style="width:100%;">
-            <option>포함</option><option>정확일치</option><option>시작으로</option>
-          </select>
-        </div>
-        <div>
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-            <input type="checkbox" checked> <span style="font-size:13px;">이슈 감지 시 알림 발송</span>
-          </label>
-        </div>
-      </div>
-      <div style="padding:16px 24px;border-top:1px solid #E0E0E0;display:flex;justify-content:flex-end;gap:8px;">
-        <button class="btn btn-secondary" onclick="closeAddRuleModal()">취소</button>
-        <button class="btn btn-primary" onclick="AICC_Toast.show('규칙이 추가되었습니다.');closeAddRuleModal()">저장</button>
-      </div>
-    </div>
-  </div>
-
   <script src="../../assets/dummy-data/all-data.js"></script>
   <script src="../../js/utils/data-loader.js"></script>
   <script src="../../js/utils/auth-simulator.js"></script>
@@ -169,14 +141,36 @@
       { no:4, issueType:'품질불량', keywords:'불량, 파손, 오작동', detect:'포함', notify:false, regDate:'2025-01-20' }
     ];
 
-    const statusColors = { '처리완료':'#4CAF50', '미처리':'#F44336' };
-    const statusBg = { '처리완료':'rgba(76,175,80,0.1)', '미처리':'rgba(244,67,54,0.1)' };
+    const statusBadge = { '처리완료': 'badge-completed', '미처리': 'badge-rejected' };
 
     function openAddRuleModal() {
-      document.getElementById('add-rule-modal').style.display = 'flex';
-    }
-    function closeAddRuleModal() {
-      document.getElementById('add-rule-modal').style.display = 'none';
+      AICC_Modal.open({
+        title: '이슈 키워드 규칙 추가',
+        content: `
+          <div style="margin-bottom:16px;">
+            <label class="form-label">이슈유형</label>
+            <select class="form-select" style="width:100%;">
+              <option>불만접수</option><option>환불요청</option><option>품질불량</option><option>법적조치</option>
+            </select>
+          </div>
+          <div style="margin-bottom:16px;">
+            <label class="form-label">키워드 (쉼표로 구분)</label>
+            <input type="text" class="form-input" style="width:100%;" placeholder="예: 환불, 취소, 불만">
+          </div>
+          <div style="margin-bottom:16px;">
+            <label class="form-label">감지방식</label>
+            <select class="form-select" style="width:100%;">
+              <option>포함</option><option>정확일치</option><option>시작으로</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+              <input type="checkbox" checked> <span style="font-size:13px;">이슈 감지 시 알림 발송</span>
+            </label>
+          </div>`,
+        footer: '<button class="btn btn-secondary" onclick="AICC_Modal.close()">취소</button><button class="btn btn-primary" onclick="AICC_Toast.show(\'규칙이 추가되었습니다.\');AICC_Modal.close()">저장</button>',
+        size: 'md'
+      });
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -187,7 +181,7 @@
           <td style="font-weight:500;">${c.agent}</td>
           <td style="font-weight:500;">${c.issueType}</td>
           <td style="font-size:12px;color:#757575;">${c.callType}</td>
-          <td><span style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:600;color:${statusColors[c.status]};background:${statusBg[c.status]};">${c.status}</span></td>
+          <td><span class="badge ${statusBadge[c.status]}">${c.status}</span></td>
           <td style="font-size:12px;color:#757575;">${c.handler}</td>
         </tr>
       `).join('');
@@ -199,19 +193,15 @@
           <td style="font-size:12px;color:#757575;">${r.keywords}</td>
           <td style="font-size:12px;">${r.detect}</td>
           <td>
-            <span style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:600;color:${r.notify?'#4CAF50':'#9E9E9E'};background:${r.notify?'rgba(76,175,80,0.1)':'rgba(158,158,158,0.1)'};">${r.notify?'사용':'미사용'}</span>
+            <span class="badge ${r.notify ? 'badge-active' : 'badge-inactive'}">${r.notify ? '사용' : '미사용'}</span>
           </td>
           <td style="font-size:12px;color:#757575;">${r.regDate}</td>
           <td>
             <button class="btn btn-secondary btn-sm" onclick="AICC_Toast.show('규칙을 수정합니다.')">수정</button>
-            <button class="btn btn-sm" style="background:#FFF3F3;color:#F44336;border:1px solid #FFCDD2;margin-left:4px;" onclick="AICC_Toast.show('규칙이 삭제되었습니다.')">삭제</button>
+            <button class="btn btn-danger btn-sm" style="margin-left:4px;" onclick="AICC_Toast.show('규칙이 삭제되었습니다.')">삭제</button>
           </td>
         </tr>
       `).join('');
-
-      document.getElementById('add-rule-modal').addEventListener('click', function(e) {
-        if (e.target === this) closeAddRuleModal();
-      });
 
       if (typeof AICC_PeriodPicker !== 'undefined') {
         AICC_PeriodPicker.create('period-picker', { mode: 'monthly' });

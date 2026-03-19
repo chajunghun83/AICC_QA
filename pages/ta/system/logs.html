@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>처리 로그 - AICC Quality Hub</title>
+  <title>시스템 로그 - AICC Quality Hub</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="../../../css/styles.css">
 </head>
@@ -11,7 +11,7 @@
   <div id="page-content">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
       <div>
-        <h1 style="font-size:20px;font-weight:700;margin:0;">처리 로그</h1>
+        <h1 style="font-size:20px;font-weight:700;margin:0;">시스템 로그</h1>
         <p style="font-size:12px;color:#757575;margin:4px 0 0;">분석 처리 및 다운로드 이력</p>
       </div>
     </div>
@@ -46,17 +46,26 @@
 
           <!-- 요약 KPI -->
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;">
-            <div style="background:#F0F7FF;border-radius:8px;padding:14px;text-align:center;border:1px solid #BBDEFB;">
-              <div style="font-size:11px;color:#1565C0;">전체 실행</div>
-              <div style="font-size:22px;font-weight:700;color:#1565C0;margin:4px 0;">48</div>
+            <div class="kpi-card" style="background:#F0F7FF;border-color:#BBDEFB;">
+              <div style="font-size:12px;color:#1565C0;margin-bottom:8px;">전체 실행</div>
+              <div style="display:flex;align-items:baseline;gap:8px;">
+                <span style="font-size:24px;font-weight:700;color:#1565C0;">48</span>
+                <span style="font-size:14px;color:#757575;">건</span>
+              </div>
             </div>
-            <div style="background:#F1F8E9;border-radius:8px;padding:14px;text-align:center;border:1px solid #C8E6C9;">
-              <div style="font-size:11px;color:#2E7D32;">완료</div>
-              <div style="font-size:22px;font-weight:700;color:#2E7D32;margin:4px 0;">45</div>
+            <div class="kpi-card" style="background:#F1F8E9;border-color:#C8E6C9;">
+              <div style="font-size:12px;color:#2E7D32;margin-bottom:8px;">완료</div>
+              <div style="display:flex;align-items:baseline;gap:8px;">
+                <span style="font-size:24px;font-weight:700;color:#2E7D32;">45</span>
+                <span style="font-size:14px;color:#757575;">건</span>
+              </div>
             </div>
-            <div style="background:#FFF3F3;border-radius:8px;padding:14px;text-align:center;border:1px solid #FFCDD2;">
-              <div style="font-size:11px;color:#C62828;">실패</div>
-              <div style="font-size:22px;font-weight:700;color:#C62828;margin:4px 0;">3</div>
+            <div class="kpi-card" style="background:#FFF3F3;border-color:#FFCDD2;">
+              <div style="font-size:12px;color:#C62828;margin-bottom:8px;">실패</div>
+              <div style="display:flex;align-items:baseline;gap:8px;">
+                <span style="font-size:24px;font-weight:700;color:#C62828;">3</span>
+                <span style="font-size:14px;color:#757575;">건</span>
+              </div>
             </div>
           </div>
 
@@ -125,15 +134,10 @@
       { no:7, dlTime:'2025-01-24 16:22:55', filename:'agent_performance_202501.xlsx', size:'2.1 MB', requester:'박상현', status:'실패' }
     ];
 
-    const statusConfig = {
-      '완료': { color:'#2E7D32', bg:'rgba(76,175,80,0.1)' },
-      '처리중': { color:'#F57F17', bg:'rgba(245,127,23,0.1)' },
-      '실패': { color:'#C62828', bg:'rgba(244,67,54,0.1)' }
-    };
+    const statusBadgeMap = { '완료': 'badge-completed', '처리중': 'badge-pending', '실패': 'badge-rejected' };
 
-    function badge(status) {
-      const c = statusConfig[status] || { color:'#9E9E9E', bg:'rgba(158,158,158,0.1)' };
-      return `<span style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:600;color:${c.color};background:${c.bg};">${status}</span>`;
+    function statusBadge(status) {
+      return `<span class="badge ${statusBadgeMap[status] || 'badge-inactive'}">${status}</span>`;
     }
 
     function switchTab(tab) {
@@ -152,8 +156,8 @@
           <td>${l.no}</td>
           <td style="font-size:12px;color:#757575;">${l.execTime}</td>
           <td style="font-size:12px;">${l.period}</td>
-          <td>${badge(l.status)}</td>
-          <td style="font-weight:500;">${l.count > 0 ? l.count.toLocaleString() + '건' : '-'}</td>
+          <td>${statusBadge(l.status)}</td>
+          <td style="font-weight:500;">${l.count > 0 ? AICC_Fmt.number(l.count) + '건' : '-'}</td>
           <td style="font-size:12px;color:#757575;">${l.duration}</td>
           <td style="font-size:12px;color:#757575;">${l.executor}</td>
         </tr>
@@ -166,7 +170,7 @@
           <td style="font-weight:500;color:#00A3FF;cursor:pointer;">${l.filename}</td>
           <td style="font-size:12px;color:#757575;">${l.size}</td>
           <td style="font-size:12px;">${l.requester}</td>
-          <td>${badge(l.status)}</td>
+          <td>${statusBadge(l.status)}</td>
         </tr>
       `).join('');
 

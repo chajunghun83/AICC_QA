@@ -53,7 +53,7 @@
         <!-- 급상승 탭 -->
         <div id="tab-rising" style="padding:20px;">
           <div style="height:240px;margin-bottom:20px;"><canvas id="rising-chart"></canvas></div>
-          <div style="font-size:14px;font-weight:600;margin-bottom:12px;">급상승 키워드 목록</div>
+          <div class="content-card-header" style="border:none;"><span style="font-size:14px;font-weight:600;">급상승 키워드 목록</span></div>
           <table class="data-table">
             <thead>
               <tr><th>순위</th><th>키워드</th><th>건수</th><th>증감률</th><th>대표 상담유형</th></tr>
@@ -65,7 +65,7 @@
         <!-- 고빈도 탭 -->
         <div id="tab-frequent" style="display:none;padding:20px;">
           <div style="height:240px;margin-bottom:20px;"><canvas id="frequent-chart"></canvas></div>
-          <div style="font-size:14px;font-weight:600;margin-bottom:12px;">고빈도 키워드 목록</div>
+          <div class="content-card-header" style="border:none;"><span style="font-size:14px;font-weight:600;">고빈도 키워드 목록</span></div>
           <table class="data-table">
             <thead>
               <tr><th>순위</th><th>키워드</th><th>건수</th><th>점유율</th><th>대표 상담유형</th></tr>
@@ -181,8 +181,8 @@
         <tr onclick="AICC_Toast.show('${d.keyword} 키워드 상세 조회')">
           <td style="font-weight:600;color:#00A3FF;">${d.rank}</td>
           <td style="font-weight:600;">${d.keyword}</td>
-          <td>${d.count.toLocaleString()}</td>
-          <td style="color:#F44336;font-weight:600;">▲ ${d.rate}%</td>
+          <td>${AICC_Fmt.number(d.count)}</td>
+          <td style="color:#F44336;font-weight:600;">▲ ${AICC_Fmt.percent(d.rate)}</td>
           <td style="font-size:12px;color:#757575;">${d.category}</td>
         </tr>
       `).join('');
@@ -192,22 +192,25 @@
         <tr onclick="AICC_Toast.show('${d.keyword} 키워드 상세 조회')">
           <td style="font-weight:600;color:#00A3FF;">${d.rank}</td>
           <td style="font-weight:600;">${d.keyword}</td>
-          <td>${d.count.toLocaleString()}</td>
-          <td style="color:#1565C0;font-weight:500;">${d.share}%</td>
+          <td>${AICC_Fmt.number(d.count)}</td>
+          <td style="color:#1565C0;font-weight:500;">${AICC_Fmt.percent(d.share)}</td>
           <td style="font-size:12px;color:#757575;">${d.category}</td>
         </tr>
       `).join('');
 
       // 모니터링 테이블
       document.getElementById('monitoring-tbody').innerHTML = monitoringData.map(d => {
-        const diffColor = d.diff.startsWith('+') ? '#F44336' : (d.diff.startsWith('-') ? '#4CAF50' : '#757575');
-        const diffIcon = d.diff.startsWith('+') ? '▲' : (d.diff.startsWith('-') ? '▼' : '-');
+        const diffNum = parseInt(d.diff);
+        let diffBadge;
+        if (diffNum > 0) diffBadge = `<span class="badge badge-rejected">▲ ${Math.abs(diffNum)}</span>`;
+        else if (diffNum < 0) diffBadge = `<span class="badge badge-active">▼ ${Math.abs(diffNum)}</span>`;
+        else diffBadge = `<span class="badge badge-inactive">-</span>`;
         return `
-          <tr onclick="AICC_Toast.show('${d.keyword} 모니터링 추이 조회')">
+          <tr onclick="AICC_Toast.show('${d.keyword} 모니터링 추이 조회')" style="cursor:pointer;">
             <td style="font-weight:600;">${d.keyword}</td>
             <td style="font-size:12px;color:#757575;">${d.regDate}</td>
-            <td style="font-weight:700;">${d.today}</td>
-            <td style="color:${diffColor};font-weight:600;">${diffIcon} ${d.diff.replace(/[+-]/,'')}</td>
+            <td style="font-weight:700;">${AICC_Fmt.number(d.today)}</td>
+            <td>${diffBadge}</td>
             <td style="font-size:13px;letter-spacing:2px;color:#00A3FF;">${d.trend}</td>
             <td style="font-size:12px;color:#757575;">${d.registrant}</td>
           </tr>

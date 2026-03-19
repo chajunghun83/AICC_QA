@@ -64,14 +64,14 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th style="width:25%;">평가표명</th>
-              <th style="width:8%;text-align:center;">유형</th>
-              <th style="width:8%;text-align:center;">버전</th>
-              <th style="width:10%;text-align:right;">총점</th>
-              <th style="width:12%;text-align:right;">미달 기준</th>
-              <th style="width:10%;text-align:center;">항목 수</th>
-              <th style="width:12%;text-align:center;">상태</th>
-              <th style="width:15%;text-align:center;">수정일</th>
+              <th style="width:25%;" class="col-left">평가표명</th>
+              <th style="width:8%;">유형</th>
+              <th style="width:8%;">버전</th>
+              <th style="width:10%;">총점</th>
+              <th style="width:12%;">미달 기준</th>
+              <th style="width:10%;">항목 수</th>
+              <th style="width:12%;">상태</th>
+              <th style="width:15%;">수정일</th>
             </tr>
           </thead>
           <tbody id="forms-tbody"></tbody>
@@ -116,14 +116,14 @@
 
         return `
           <tr onclick="showFormDetail('${f.id}')">
-            <td style="font-weight:500;">${f.name}</td>
-            <td style="text-align:center;">${typeBadge}</td>
-            <td style="font-size:12px;color:#757575;text-align:center;">${f.version}</td>
-            <td style="text-align:right;font-weight:600;">${f.total_score}점</td>
-            <td style="text-align:right;">${f.pass_threshold ? `<span style="color:#E65100;font-weight:600;">${f.pass_threshold}점</span> <span style="font-size:11px;color:#9E9E9E;">미만</span>` : '<span style="color:#9E9E9E;font-size:12px;">-</span>'}</td>
-            <td style="text-align:center;">${itemCount}개</td>
-            <td style="text-align:center;">${statusBadge}</td>
-            <td style="font-size:12px;color:#757575;text-align:center;">${AICC_Fmt.date(f.updated_at)}</td>
+            <td class="col-left" style="font-weight:500;">${f.name}</td>
+            <td>${typeBadge}</td>
+            <td style="font-size:12px;color:#757575;">${f.version}</td>
+            <td style="font-weight:600;">${f.total_score}점</td>
+            <td>${f.pass_threshold ? `<span style="color:#E65100;font-weight:600;">${f.pass_threshold}점</span> <span style="font-size:11px;color:#9E9E9E;">미만</span>` : '<span style="color:#9E9E9E;font-size:12px;">-</span>'}</td>
+            <td>${itemCount}개</td>
+            <td>${statusBadge}</td>
+            <td style="font-size:12px;color:#757575;">${AICC_Fmt.date(f.updated_at)}</td>
           </tr>
         `;
       }).join('');
@@ -196,7 +196,7 @@
         `,
         footer: `
           <button class="btn btn-secondary" onclick="AICC_Modal.close()">취소</button>
-          <button class="btn btn-primary" onclick="saveNewForm()">생성</button>
+          <button id="picker-submit-btn" class="btn btn-primary" onclick="saveNewForm()">생성</button>
         `
       });
     }
@@ -205,6 +205,8 @@
     function saveNewForm() {
       const name = document.getElementById('nf-name')?.value?.trim();
       if (!name) { AICC_Toast.show('평가표명을 입력하세요.'); return; }
+      const sum = Object.values(pickerSelected).reduce((s, it) => s + (it.score || 0), 0);
+      if (sum > 100) { AICC_Toast.show(`배점 합계가 100점을 초과합니다. (현재: ${sum}점)`); return; }
       const type = document.querySelector('input[name="nf-type"]:checked')?.value || 'I/B';
       const status = document.querySelector('input[name="nf-status"]:checked')?.value || 'active';
       const total = parseInt(document.getElementById('nf-total')?.value) || 100;
@@ -300,6 +302,7 @@
         title: `${form.name} ${form.version}`,
         size: 'xl',
         content: `
+          <div style="overflow-y:auto;max-height:calc(90vh - 120px);">
           <div style="display:flex;gap:20px;margin-bottom:20px;flex-wrap:wrap;">
             <div><span class="form-label">유형</span><br>${form.type === 'I/B' ? '<span class="badge badge-nlp">I/B</span>' : '<span class="badge badge-ai">O/B</span>'}</div>
             <div><span class="form-label">총점</span><br><strong>${form.total_score}점</strong></div>
@@ -326,6 +329,7 @@
           </div>
 
           ${sectionsHtml.length > 0 ? sectionsHtml : '<div style="padding:24px;text-align:center;color:#9E9E9E;font-size:13px;">등록된 항목이 없습니다. 항목 라이브러리에서 추가해 주세요.</div>'}
+          </div>
         `,
         footer: `
           <button class="btn btn-secondary" onclick="AICC_Modal.close()">닫기</button>
@@ -401,7 +405,7 @@
         `,
         footer: `
           <button class="btn btn-secondary" onclick="AICC_Modal.close();showFormDetail('${formId}')">취소</button>
-          <button class="btn btn-primary" onclick="applyPickerItems('${formId}')">추가</button>
+          <button id="picker-submit-btn" class="btn btn-primary" onclick="applyPickerItems('${formId}')">추가</button>
         `
       });
     }
@@ -429,12 +433,21 @@
       renderPickerSelected();
     }
 
-    // 새 평가표 생성 모달의 총점 필드를 선택 항목 합산으로 자동 갱신
+    // 총점 필드 갱신 + 배점 합계 100점 초과 시 Toast 및 저장 버튼 비활성화 (A-054~056)
     function updatePickerTotal() {
       const totalInput = document.getElementById('nf-total');
-      if (!totalInput) return;
       const sum = Object.values(pickerSelected).reduce((s, it) => s + (it.score || 0), 0);
-      totalInput.value = sum;
+      if (totalInput) totalInput.value = sum;
+
+      const btn = document.getElementById('picker-submit-btn');
+      if (btn) {
+        if (sum > 100) {
+          AICC_Toast.show(`배점 합계가 100점을 초과합니다. (현재: ${sum}점)`);
+          btn.disabled = true;
+        } else {
+          btn.disabled = false;
+        }
+      }
     }
 
     // 선택 목록 UI와 총점을 동기화하여 실시간 피드백 제공
@@ -455,7 +468,7 @@
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#757575" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/></svg>
           <span style="flex:1;">${it.name}</span>
           ${AICC_Fmt.typeBadge(it.type)}
-          <input type="number" value="${it.score}" min="0" max="100" style="width:50px;padding:2px 4px;border:1px solid #E0E0E0;border-radius:3px;text-align:center;font-size:12px;" onchange="pickerSelected['${it.id}'].score=parseInt(this.value)||0;updatePickerTotal()">
+          <input type="number" value="${it.score}" min="0" max="100" style="width:50px;padding:2px 4px;border:1px solid #E0E0E0;border-radius:3px;text-align:center;font-size:12px;" oninput="pickerSelected['${it.id}'].score=parseInt(this.value)||0;updatePickerTotal()" onchange="pickerSelected['${it.id}'].score=parseInt(this.value)||0;updatePickerTotal()">
           <span style="color:#757575;">점</span>
           <select style="font-size:11px;padding:2px 4px;border:1px solid #E0E0E0;border-radius:3px;" onchange="pickerSelected['${it.id}'].score_type=this.value">
             <option value="deduction"${it.score_type === 'deduction' ? ' selected' : ''}>감점</option>
@@ -470,6 +483,8 @@
     function applyPickerItems(formId) {
       const items = Object.values(pickerSelected);
       if (items.length === 0) { AICC_Toast.show('항목을 선택하세요.'); return; }
+      const sum = items.reduce((s, it) => s + (it.score || 0), 0);
+      if (sum > 100) { AICC_Toast.show(`배점 합계가 100점을 초과합니다. (현재: ${sum}점)`); return; }
 
       const form = formsData.find(f => f.id === formId);
       if (!form) return;
@@ -528,7 +543,7 @@
             <div style="display:flex;gap:16px;">
               <div style="flex:1;">
                 <label class="form-label">배점</label>
-                <input type="number" id="is-score" class="form-input" style="width:100%;" value="${item.score}" min="0" max="100">
+                <input type="number" id="is-score" class="form-input" style="width:100%;" value="${item.score}" min="0" max="100" oninput="checkItemSettingScore('${formId}',${sectionIdx},${itemIdx})" onchange="checkItemSettingScore('${formId}',${sectionIdx},${itemIdx})">
               </div>
               <div style="flex:1;">
                 <label class="form-label">평가 방식</label>
@@ -544,9 +559,31 @@
         footer: `
           <button class="btn btn-danger" onclick="deleteFormItem('${formId}',${sectionIdx},${itemIdx})">삭제</button>
           <button class="btn btn-secondary" onclick="AICC_Modal.close();showFormDetail('${formId}')">취소</button>
-          <button class="btn btn-primary" onclick="saveFormItemSetting('${formId}',${sectionIdx},${itemIdx})">저장</button>
+          <button id="item-setting-save-btn" class="btn btn-primary" onclick="saveFormItemSetting('${formId}',${sectionIdx},${itemIdx})">저장</button>
         `
       });
+      setTimeout(() => checkItemSettingScore(formId, sectionIdx, itemIdx), 0);
+    }
+
+    // 항목 설정 모달에서 배점 변경 시 합계 100점 초과 검증 (A-054~056)
+    function checkItemSettingScore(formId, sectionIdx, itemIdx) {
+      const form = formsData.find(f => f.id === formId);
+      if (!form) return;
+      const section = form.sections[sectionIdx];
+      const item = section?.items[itemIdx];
+      if (!item) return;
+      const newScore = parseInt(document.getElementById('is-score')?.value) || 0;
+      const otherTotal = form.total_score - item.score;
+      const total = otherTotal + newScore;
+      const btn = document.getElementById('item-setting-save-btn');
+      if (btn) {
+        if (total > 100) {
+          AICC_Toast.show(`배점 합계가 100점을 초과합니다. (현재: ${total}점)`);
+          btn.disabled = true;
+        } else {
+          btn.disabled = false;
+        }
+      }
     }
 
     // 항목 배점 변경 시 섹션·평가표 총점을 재계산하여 데이터 정합성 유지
@@ -556,6 +593,11 @@
       const section = form.sections[sectionIdx];
       const item = section.items[itemIdx];
       const newScore = parseInt(document.getElementById('is-score')?.value) || 0;
+      const otherTotal = form.total_score - item.score;
+      if (otherTotal + newScore > 100) {
+        AICC_Toast.show(`배점 합계가 100점을 초과합니다. (현재: ${otherTotal + newScore}점)`);
+        return;
+      }
 
       item.score = newScore;
       section.total_score = section.items.reduce((s, i) => s + i.score, 0);

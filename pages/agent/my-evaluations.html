@@ -97,9 +97,9 @@
               <th>일시</th>
               <th>유형</th>
               <th>통화시간</th>
-              <th style="text-align:right">점수</th>
+              <th>점수</th>
               <th>신뢰도</th>
-              <th>이슈</th>
+              <th class="col-left">이슈</th>
             </tr>
           </thead>
           <tbody id="eval-tbody"></tbody>
@@ -289,9 +289,9 @@
             <td style="font-size:12px;">${ev.date} ${ev.time}</td>
             <td>${typeBadge}</td>
             <td style="font-size:12px;">${ev.duration}</td>
-            <td style="text-align:right;">${AICC_Fmt.scoreHtml(ev.score)}</td>
+            <td>${AICC_Fmt.scoreHtml(ev.score)}</td>
             <td>${confBadge}</td>
-            <td style="max-width:140px;">${issueHtml}</td>
+            <td class="col-left" style="max-width:140px;">${issueHtml}</td>
           </tr>
         `;
       }).join('');
@@ -309,7 +309,7 @@
           <tr style="cursor:default;">
             <td style="font-size:12px;">${item.name}</td>
             <td>${AICC_Fmt.typeBadge(item.type)}</td>
-            <td style="text-align:right;font-weight:500;">${item.score} / ${item.max}</td>
+            <td style="font-weight:500;">${item.score} / ${item.max}</td>
             <td><span class="${statusCls}" style="font-size:12px;">${statusText}</span></td>
           </tr>
         `;
@@ -366,7 +366,7 @@
                 <tr>
                   <th>평가 항목</th>
                   <th>방식</th>
-                  <th style="text-align:right">점수</th>
+                  <th>점수</th>
                   <th>상태</th>
                 </tr>
               </thead>

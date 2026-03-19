@@ -15,7 +15,7 @@
         <h1 style="font-size:20px;font-weight:700;margin:0;">사용자 관리</h1>
         <p style="font-size:12px;color:#757575;margin:4px 0 0;">시스템 사용자 및 접근 범위 관리</p>
       </div>
-      <span></span>
+      <button class="btn btn-primary btn-sm" onclick="openAddUserModal()">+ 사용자 등록</button>
     </div>
 
     <!-- 필터 -->
@@ -26,7 +26,7 @@
       <div class="filter-body">
         <div>
           <label class="form-label">센터</label>
-          <select class="form-select" id="ws-filter" onchange="filterUsers()">
+          <select class="form-select" id="ws-filter" onchange="onWsChange()">
             <option value="all">전체</option>
           </select>
         </div>
@@ -74,9 +74,10 @@
             <tr>
               <th style="width:40px;">No</th>
               <th>이름</th>
+              <th>이메일</th>
               <th>센터</th>
               <th>팀</th>
-              <th>접근 범위</th>
+              <th class="col-left">접근 범위</th>
               <th>접속 권한</th>
             </tr>
           </thead>
@@ -142,6 +143,10 @@
         { id: 'data-busan', label: '부산센터', children: [
           { id: 'data-busan-general', label: '일반상담팀' },
           { id: 'data-busan-happycall', label: '해피콜팀' }
+        ]},
+        { id: 'data-daegu', label: '대구센터', children: [
+          { id: 'data-daegu-cs', label: 'CS상담팀' },
+          { id: 'data-daegu-ob', label: '아웃바운드팀' }
         ]}
       ]}
     ];
@@ -194,7 +199,11 @@
       { no: 9, name: '한승우', email: 'swhan@company.com', center: '서울센터', team: '고객지원2팀', status: 'inactive', statusText: '비활성', joinDate: '2024-06-01',
         permissions: ['agent','my-dashboard','my-evaluations','data-scope','data-seoul','data-seoul-general'] },
       { no: 10, name: '윤하나', email: 'hnyoon@company.com', center: '부산센터', team: '기술지원팀', status: 'inactive', statusText: '비활성', joinDate: '2024-07-15',
-        permissions: ['agent','my-dashboard','my-evaluations','data-scope','data-busan','data-busan-happycall'] }
+        permissions: ['agent','my-dashboard','my-evaluations','data-scope','data-busan','data-busan-happycall'] },
+      { no: 11, name: '강민재', email: 'mjkang@company.com', center: '대구센터', team: 'CS상담팀', status: 'active', statusText: '활성', joinDate: '2024-08-01',
+        permissions: ['agent','my-dashboard','my-evaluations','my-disputes','data-scope','data-daegu','data-daegu-cs'] },
+      { no: 12, name: '조은서', email: 'esjo@company.com', center: '대구센터', team: '아웃바운드팀', status: 'active', statusText: '활성', joinDate: '2024-09-15',
+        permissions: ['agent','my-dashboard','my-evaluations','my-disputes','data-scope','data-daegu','data-daegu-ob'] }
     ];
 
     // innerHTML 일괄 교체로 DOM 조작 횟수를 최소화
@@ -205,15 +214,37 @@
         <tr onclick="openDetail(${u.no})">
           <td>${u.no}</td>
           <td style="font-weight:500;">${u.name}</td>
+          <td style="font-size:12px;color:#757575;">${u.email || ''}</td>
           <td>${u.center}</td>
           <td>${u.team}</td>
-          <td style="max-width:260px;">${permBadges(u.permissions)}</td>
+          <td class="col-left" style="max-width:260px;">${permBadges(u.permissions)}</td>
           <td>${AICC_Fmt.statusBadge(u.status, u.statusText)}</td>
         </tr>
       `).join('');
     }
 
-    // 체이닝 필터로 다중 조건을 순차 적용해 AND 조건 검색 구현
+    /* 센터별 소속 팀 매핑 — 센터 변경 시 팀 드롭다운을 종속 갱신 */
+    const centerTeamMap = {
+      '서울센터': ['VIP상담팀','일반상담팀','기술지원팀','고객지원1팀','고객지원2팀'],
+      '부산센터': ['일반상담팀','해피콜팀','고객지원1팀','영업지원팀','기술지원팀'],
+      '대구센터': ['CS상담팀','아웃바운드팀']
+    };
+
+    function onWsChange() {
+      const wsVal = document.getElementById('ws-filter').value;
+      const teamSel = document.getElementById('team-filter');
+      teamSel.innerHTML = '<option value="all">전체</option>';
+      if (wsVal !== 'all' && centerTeamMap[wsVal]) {
+        teamSel.disabled = false;
+        centerTeamMap[wsVal].forEach(t => { teamSel.innerHTML += '<option value="' + t + '">' + t + '</option>'; });
+      } else if (wsVal === 'all') {
+        teamSel.disabled = false;
+        const allTeams = [...new Set(users.map(u => u.team).filter(t => t && t !== '전체'))];
+        allTeams.forEach(t => { teamSel.innerHTML += '<option value="' + t + '">' + t + '</option>'; });
+      }
+      filterUsers();
+    }
+
     function filterUsers() {
       const statusVal = document.getElementById('status-filter').value;
       const searchVal = (document.getElementById('search-input').value || '').trim().toLowerCase();
@@ -482,6 +513,65 @@
       AICC_Toast.show('사용자 ' + action + '가 완료되었습니다.');
     }
 
+    // 센터 선택 시 팀 드롭다운을 종속 갱신하는 등록 모달 전용 헬퍼
+    function onRegWsChange() {
+      const ws = document.getElementById('reg-ws').value;
+      const teamSel = document.getElementById('reg-team');
+      teamSel.innerHTML = '<option value="">팀 선택</option>';
+      if (ws && centerTeamMap[ws]) {
+        centerTeamMap[ws].forEach(t => { teamSel.innerHTML += '<option value="' + t + '">' + t + '</option>'; });
+      }
+    }
+
+    function openAddUserModal() {
+      const centerOptions = Object.keys(centerTeamMap).map(c => `<option value="${c}">${c}</option>`).join('');
+      AICC_Modal.open({
+        title: '사용자 등록',
+        content: `<div style="display:flex;flex-direction:column;gap:14px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div><label class="form-label">이름 *</label><input type="text" class="form-input" id="reg-name" style="width:100%;" placeholder="이름"></div>
+            <div><label class="form-label">이메일 *</label><input type="email" class="form-input" id="reg-email" style="width:100%;" placeholder="email@company.com"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div><label class="form-label">센터 *</label><select class="form-select" id="reg-ws" style="width:100%;" onchange="onRegWsChange()"><option value="">센터 선택</option>${centerOptions}</select></div>
+            <div><label class="form-label">팀 *</label><select class="form-select" id="reg-team" style="width:100%;"><option value="">팀 선택</option></select></div>
+          </div>
+          <div>
+            <label class="form-label">접속 권한</label>
+            <select class="form-select" id="reg-status" style="width:100%;">
+              <option value="active">활성</option>
+              <option value="inactive">비활성</option>
+            </select>
+          </div>
+        </div>`,
+        footer: `<button class="btn btn-secondary" onclick="AICC_Modal.close()">취소</button>
+                 <button class="btn btn-primary" onclick="saveNewUser()">등록</button>`,
+        size: 'md'
+      });
+    }
+
+    function saveNewUser() {
+      const name = (document.getElementById('reg-name').value || '').trim();
+      const email = (document.getElementById('reg-email').value || '').trim();
+      const center = document.getElementById('reg-ws').value;
+      const team = document.getElementById('reg-team').value;
+      const status = document.getElementById('reg-status').value;
+      if (!name) { AICC_Toast.show('이름을 입력하세요.'); return; }
+      if (!email) { AICC_Toast.show('이메일을 입력하세요.'); return; }
+      if (!center) { AICC_Toast.show('센터를 선택하세요.'); return; }
+      if (!team) { AICC_Toast.show('팀을 선택하세요.'); return; }
+      const newNo = users.length > 0 ? Math.max(...users.map(u => u.no)) + 1 : 1;
+      const today = new Date().toISOString().slice(0, 10);
+      users.push({
+        no: newNo, name, email, center, team,
+        status, statusText: status === 'active' ? '활성' : '비활성',
+        joinDate: today, permissions: []
+      });
+      filterUsers();
+      AICC_Modal.close();
+      AICC_Toast.show('사용자가 등록되었습니다.');
+    }
+
     // 모든 필터를 초기값으로 복원 후 전체 데이터로 테이블 재렌더링
     function resetUserFilter() {
       document.getElementById('ws-filter').value = 'all';
@@ -492,14 +582,12 @@
       renderTable(users);
     }
 
-    // 사용자 데이터에서 센터/팀 목록을 동적 추출해 필터 옵션 생성
     document.addEventListener('DOMContentLoaded', () => {
       const wsList = [...new Set(users.map(u => u.center).filter(Boolean))];
       const wsSel = document.getElementById('ws-filter');
       wsList.forEach(w => { wsSel.innerHTML += '<option value="' + w + '">' + w + '</option>'; });
       const teamList = [...new Set(users.map(u => u.team).filter(t => t && t !== '전체'))];
       const teamSel = document.getElementById('team-filter');
-      teamSel.innerHTML += '<option value="전체">전체</option>';
       teamList.forEach(t => { teamSel.innerHTML += '<option value="' + t + '">' + t + '</option>'; });
       renderTable(users);
     });

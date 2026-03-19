@@ -81,7 +81,7 @@
               <th>사용자</th>
               <th>역할</th>
               <th>액션</th>
-              <th>상세 내용</th>
+              <th class="col-left">상세 내용</th>
               <th>IP</th>
             </tr>
           </thead>
@@ -137,7 +137,7 @@
     // 역할을 컴팩트한 텍스트 뱃지로 표현 — 테이블 열 폭 절약을 위해 span만 사용
     function getRoleBadgeSmall(role) {
       const map = {
-        'ADMIN': '<span style="font-size:11px;color:#00A3FF;font-weight:600;">ADMIN</span>',
+        'ADMIN': '<span style="font-size:11px;color:#00A3FF;font-weight:600;">관리자</span>',
         'QA_MANAGER': '<span style="font-size:11px;color:#1565C0;font-weight:600;">QA 매니저</span>',
         'AGENT': '<span style="font-size:11px;color:#757575;font-weight:600;">상담사</span>'
       };
@@ -155,7 +155,7 @@
           <td style="font-weight:500;">${l.user}</td>
           <td>${getRoleBadgeSmall(l.role)}</td>
           <td>${getActionBadge(l.action)}</td>
-          <td class="text-truncate" style="max-width:280px;">${l.detail}</td>
+          <td class="text-truncate col-left" style="max-width:280px;">${l.detail}</td>
           <td style="font-size:12px;color:#9E9E9E;font-family:monospace;">${l.ip}</td>
         </tr>
       `).join('');

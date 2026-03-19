@@ -12,7 +12,7 @@ window.AICC_DATA = {};
 window.AICC_DATA['centers.json'] = 
 [
   {
-    "id": "ws-seoul",
+    "id": "ct-seoul",
     "name": "서울센터",
     "teams": [
       { "id": "team-vip", "name": "VIP상담팀", "agent_count": 12 },
@@ -21,7 +21,7 @@ window.AICC_DATA['centers.json'] =
     ]
   },
   {
-    "id": "ws-busan",
+    "id": "ct-busan",
     "name": "부산센터",
     "teams": [
       { "id": "team-general2", "name": "일반상담팀", "agent_count": 20 },
@@ -29,7 +29,7 @@ window.AICC_DATA['centers.json'] =
     ]
   },
   {
-    "id": "ws-daegu",
+    "id": "ct-daegu",
     "name": "대구센터",
     "teams": [
       { "id": "team-cs", "name": "CS상담팀", "agent_count": 15 },
@@ -447,7 +447,7 @@ window.AICC_DATA['evaluation-forms.json'] =
     ],
     "fail_rule": { "item_id": "profanity", "name": "욕설/금지어", "description": "탐지 시 전 항목 0점 처리" },
     "pass_threshold": 60,
-    "applied_to": ["ws-seoul", "ws-busan"],
+    "applied_to": ["ct-seoul", "ct-busan"],
     "applied_teams": "전체"
   },
   {
@@ -497,7 +497,7 @@ window.AICC_DATA['evaluation-forms.json'] =
     ],
     "fail_rule": { "item_id": "profanity", "name": "욕설/금지어", "description": "탐지 시 전 항목 0점 처리" },
     "pass_threshold": 70,
-    "applied_to": ["ws-seoul"],
+    "applied_to": ["ct-seoul"],
     "applied_teams": "VIP상담팀"
   },
   {
@@ -546,7 +546,7 @@ window.AICC_DATA['evaluation-forms.json'] =
     ],
     "fail_rule": { "item_id": "profanity", "name": "욕설/금지어", "description": "탐지 시 전 항목 0점 처리" },
     "pass_threshold": 60,
-    "applied_to": ["ws-busan", "ws-daegu"],
+    "applied_to": ["ct-busan", "ct-daegu"],
     "applied_teams": "아웃바운드팀, 해피콜팀"
   }
 ]

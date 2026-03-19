@@ -48,10 +48,10 @@
               <th style="width:40px">No</th>
               <th>제출일</th>
               <th>평가 ID</th>
-              <th>이의 항목</th>
-              <th style="text-align:right">원 점수</th>
-              <th style="text-align:right">요청 점수</th>
-              <th>사유</th>
+              <th class="col-left">이의 항목</th>
+              <th>원 점수</th>
+              <th>요청 점수</th>
+              <th class="col-left">사유</th>
               <th>상태</th>
               <th>처리 결과</th>
             </tr>
@@ -183,11 +183,11 @@
 
       tbody.innerHTML = disputes.map(d => {
         const resultText = d.status === '승인'
-          ? '<span style="font-size:12px;color:#4CAF50;">' + d.finalScore + '점으로 변경</span>'
+          ? '<span style="font-size:12px;color:#4CAF50;">변경(' + d.originalScore + '→' + d.finalScore + ')</span>'
           : d.status === '수정 승인'
-          ? '<span style="font-size:12px;color:#00A3FF;">' + d.finalScore + '점으로 수정</span>'
+          ? '<span style="font-size:12px;color:#00A3FF;">수정(' + d.originalScore + '→' + d.finalScore + ')</span>'
           : d.status === '반려'
-          ? '<span style="font-size:12px;color:#F44336;">원 점수 유지</span>'
+          ? '<span style="font-size:12px;color:#F44336;">유지</span>'
           : '<span style="font-size:12px;color:#9E9E9E;">-</span>';
 
         return `
@@ -195,10 +195,10 @@
             <td style="font-weight:600;color:#757575;">${d.no}</td>
             <td style="font-size:12px;">${d.submitDate}</td>
             <td style="font-size:12px;font-family:monospace;">${d.evalId}</td>
-            <td style="font-size:12px;">${d.item}</td>
-            <td style="text-align:right;font-size:12px;">${d.originalScore} / ${d.maxScore}</td>
-            <td style="text-align:right;font-size:12px;font-weight:500;">${d.requestedScore}</td>
-            <td style="max-width:180px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.reason}</td>
+            <td class="col-left" style="font-size:12px;">${d.item}</td>
+            <td style="font-size:12px;">${d.originalScore} / ${d.maxScore}</td>
+            <td style="font-size:12px;font-weight:500;">${d.requestedScore}</td>
+            <td class="col-left" style="max-width:180px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.reason}</td>
             <td>${statusBadgeMap[d.status]}</td>
             <td>${resultText}</td>
           </tr>
@@ -221,15 +221,22 @@
 
       const scoreColor = d.evalScore >= 80 ? '#4CAF50' : d.evalScore >= 60 ? '#FFC107' : '#F44336';
 
-      // 관리자 응답 유무에 따라 처리 결과 섹션 또는 대기 안내를 분기 렌더링
+      // 처리 완료된 이의 제기의 경우 항목 점수 변동분을 총점에 반영하여 변경 전/후 총점 산출
+      const hasScoreChange = d.finalScore != null && d.finalScore !== d.originalScore;
+      const newTotalScore = hasScoreChange ? d.evalScore + (d.finalScore - d.originalScore) : null;
+
       let adminSection = '';
       if (d.adminResponse) {
         const resultColor = d.status === '승인' ? '#4CAF50' : d.status === '수정 승인' ? '#00A3FF' : '#F44336';
         const resultText = d.status === '승인'
-          ? d.finalScore + '점으로 변경 승인'
+          ? '변경(' + d.originalScore + '→' + d.finalScore + ')'
           : d.status === '수정 승인'
-          ? d.finalScore + '점으로 수정 승인 (요청: ' + d.requestedScore + '점)'
-          : '원 점수 유지 (반려)';
+          ? '수정(' + d.originalScore + '→' + d.finalScore + ') (요청: ' + d.requestedScore + '점)'
+          : '유지 (반려)';
+
+        const totalScoreHtml = newTotalScore != null
+          ? `<div><span style="font-size:12px;color:#757575;">평가 총점 변경</span><br><strong style="color:${resultColor}">${d.evalScore}점 → ${newTotalScore}점</strong></div>`
+          : '';
 
         adminSection = `
           <div style="border-top:1px solid #E0E0E0;padding-top:16px;margin-top:16px;">
@@ -238,6 +245,7 @@
               <div><span style="font-size:12px;color:#757575;">처리자</span><br><strong>${d.adminName}</strong></div>
               <div><span style="font-size:12px;color:#757575;">처리일</span><br><strong>${d.processDate}</strong></div>
               <div><span style="font-size:12px;color:#757575;">결과</span><br><strong style="color:${resultColor}">${resultText}</strong></div>
+              ${totalScoreHtml}
             </div>
             <div style="background:#F5F5F5;border-radius:6px;padding:12px 16px;font-size:13px;line-height:1.6;">
               <strong>관리자 의견:</strong> ${d.adminResponse}

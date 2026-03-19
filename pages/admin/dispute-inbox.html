@@ -63,8 +63,14 @@
           </select>
         </div>
         <div>
+          <label class="form-label">센터</label>
+          <select class="form-select" id="ws-filter" onchange="onWsChange()">
+            <option value="all">전체</option>
+          </select>
+        </div>
+        <div>
           <label class="form-label">팀</label>
-          <select class="form-select" id="team-filter" onchange="filterDisputes()">
+          <select class="form-select" id="team-filter" onchange="filterDisputes()" disabled>
             <option value="all">전체</option>
           </select>
         </div>
@@ -105,10 +111,11 @@
               <th style="width:40px;">No</th>
               <th>제출일</th>
               <th>상담사</th>
+              <th>센터</th>
               <th>팀</th>
               <th>평가ID</th>
-              <th>이의 항목</th>
-              <th style="text-align:right;">원 점수</th>
+              <th class="col-left">이의 항목</th>
+              <th>원 점수</th>
               <th>상태</th>
               <th>처리자</th>
             </tr>
@@ -116,6 +123,7 @@
           <tbody id="dispute-tbody"></tbody>
         </table>
       </div>
+      <div id="pagination-container" style="padding:12px 16px;border-top:1px solid #E0E0E0;"></div>
     </div>
   </div>
 
@@ -129,21 +137,55 @@
   <script src="../../js/components/toast.js"></script>
   <script src="../../js/components/period-picker.js"></script>
   <script>
-    // 더미 데이터
+    // 현재 로그인 사용자 (A-062 더미)
+    const CURRENT_USER = '김철수';
+
+    // 센터/팀 데이터 캐시
+    let centersData = [];
+
+    // 더미 데이터 — center 필드 포함 (A-060)
     const disputes = [
-      { no: 1, date: '2025-01-15', agent: '김민수', team: '고객지원1팀', evalId: 'EVAL-2025-0412', item: '고객 응대 태도', score: 55, status: '대기', handler: '-' },
-      { no: 2, date: '2025-01-15', agent: '이서연', team: '고객지원2팀', evalId: 'EVAL-2025-0398', item: '문제 해결 능력', score: 62, status: '대기', handler: '-' },
-      { no: 3, date: '2025-01-14', agent: '박지훈', team: '기술지원팀', evalId: 'EVAL-2025-0385', item: '스크립트 준수', score: 48, status: '대기', handler: '-' },
-      { no: 4, date: '2025-01-14', agent: '최유진', team: '고객지원1팀', evalId: 'EVAL-2025-0371', item: '통화 종료 절차', score: 70, status: '대기', handler: '-' },
-      { no: 5, date: '2025-01-13', agent: '정다은', team: '영업지원팀', evalId: 'EVAL-2025-0360', item: '상품 안내 정확성', score: 58, status: '대기', handler: '-' },
-      { no: 6, date: '2025-01-12', agent: '한승우', team: '고객지원2팀', evalId: 'EVAL-2025-0345', item: '고객 응대 태도', score: 65, status: '검토 중', handler: '관리자A' },
-      { no: 7, date: '2025-01-11', agent: '윤하나', team: '기술지원팀', evalId: 'EVAL-2025-0330', item: '기술 정확성', score: 72, status: '검토 중', handler: '관리자B' },
-      { no: 8, date: '2025-01-10', agent: '강도현', team: '고객지원1팀', evalId: 'EVAL-2025-0318', item: '문제 해결 능력', score: 60, status: '검토 중', handler: '관리자A' },
-      { no: 9, date: '2025-01-08', agent: '오수빈', team: '영업지원팀', evalId: 'EVAL-2025-0290', item: '스크립트 준수', score: 75, status: '승인', handler: '관리자A' },
-      { no: 10, date: '2025-01-05', agent: '임재혁', team: '고객지원2팀', evalId: 'EVAL-2025-0265', item: '통화 종료 절차', score: 68, status: '반려', handler: '관리자B' }
+      { no: 1,  date: '2025-01-15', agent: '김민수', center: '서울센터', team: 'VIP상담팀',   evalId: 'EVAL-2025-0412', item: '고객 응대 태도',   score: 55, status: '대기',    handler: '-' },
+      { no: 2,  date: '2025-01-15', agent: '이서연', center: '부산센터', team: '일반상담팀',  evalId: 'EVAL-2025-0398', item: '문제 해결 능력',   score: 62, status: '대기',    handler: '-' },
+      { no: 3,  date: '2025-01-14', agent: '박지훈', center: '서울센터', team: '기술지원팀',  evalId: 'EVAL-2025-0385', item: '스크립트 준수',    score: 48, status: '대기',    handler: '-' },
+      { no: 4,  date: '2025-01-14', agent: '최유진', center: '서울센터', team: 'VIP상담팀',   evalId: 'EVAL-2025-0371', item: '통화 종료 절차',   score: 70, status: '대기',    handler: '-' },
+      { no: 5,  date: '2025-01-13', agent: '정다은', center: '대구센터', team: '아웃바운드팀', evalId: 'EVAL-2025-0360', item: '상품 안내 정확성', score: 58, status: '대기',    handler: '-' },
+      { no: 6,  date: '2025-01-12', agent: '한승우', center: '부산센터', team: '해피콜팀',    evalId: 'EVAL-2025-0345', item: '고객 응대 태도',   score: 65, status: '검토 중', handler: '김철수' },
+      { no: 7,  date: '2025-01-11', agent: '윤하나', center: '서울센터', team: '기술지원팀',  evalId: 'EVAL-2025-0330', item: '기술 정확성',      score: 72, status: '검토 중', handler: '관리자B' },
+      { no: 8,  date: '2025-01-10', agent: '강도현', center: '서울센터', team: '일반상담팀',  evalId: 'EVAL-2025-0318', item: '문제 해결 능력',   score: 60, status: '검토 중', handler: '김철수' },
+      { no: 9,  date: '2025-01-08', agent: '오수빈', center: '대구센터', team: 'CS상담팀',    evalId: 'EVAL-2025-0290', item: '스크립트 준수',    score: 75, status: '승인',    handler: '김철수' },
+      { no: 10, date: '2025-01-05', agent: '임재혁', center: '부산센터', team: '일반상담팀',  evalId: 'EVAL-2025-0265', item: '통화 종료 절차',   score: 68, status: '반려',    handler: '관리자B' },
+      { no: 11, date: '2025-01-04', agent: '송지호', center: '서울센터', team: 'VIP상담팀',   evalId: 'EVAL-2025-0250', item: '고객 응대 태도',   score: 50, status: '승인',    handler: '김철수' },
+      { no: 12, date: '2025-01-03', agent: '배수현', center: '대구센터', team: '아웃바운드팀', evalId: 'EVAL-2025-0238', item: '상품 안내 정확성', score: 63, status: '반려',    handler: '관리자B' },
+      { no: 13, date: '2025-01-02', agent: '노은서', center: '부산센터', team: '해피콜팀',    evalId: 'EVAL-2025-0220', item: '스크립트 준수',    score: 45, status: '승인',    handler: '김철수' },
+      { no: 14, date: '2024-12-30', agent: '황민재', center: '서울센터', team: '일반상담팀',  evalId: 'EVAL-2025-0205', item: '문제 해결 능력',   score: 77, status: '반려',    handler: '관리자B' },
+      { no: 15, date: '2024-12-28', agent: '조아름', center: '대구센터', team: 'CS상담팀',    evalId: 'EVAL-2025-0190', item: '기술 정확성',      score: 53, status: '승인',    handler: '김철수' }
     ];
 
-    // 상태값에 따라 시각적 구분을 위한 뱃지 클래스 매핑 (fallback으로 badge-pending 사용)
+    // 이의 사유 (no 기준)
+    const disputeReasons = {
+      1:  '해당 통화에서 고객이 먼저 화를 내었으며, 저는 침착하게 대응하였습니다. 녹취록을 확인하시면 고객 응대에 문제가 없음을 확인하실 수 있습니다.',
+      2:  '고객의 요청 사항이 시스템 제한으로 인해 즉시 처리할 수 없는 건이었습니다. 이에 대한 대안을 제시하였으나, 평가에서 반영되지 않은 것 같습니다.',
+      3:  '해당 건은 신규 프로모션 관련 스크립트가 아직 배포되지 않은 시점의 통화입니다. 최신 스크립트 기준으로 재평가를 요청합니다.',
+      4:  '통화 종료 시 고객이 먼저 전화를 끊었으며, 종료 인사를 할 기회가 없었습니다. 상황을 고려한 재평가를 요청합니다.',
+      5:  '상품 안내 시점에서 상품 정보가 변경 전이었습니다. 당시 기준으로는 정확한 안내를 한 것이므로 재평가를 요청합니다.',
+      6:  '녹취 내용을 다시 들어보시면 종합적으로 친절하게 응대한 것을 확인하실 수 있습니다.',
+      7:  '기술 문의에 대해 정확한 답변을 드렸으나, 일부 표현이 전문 용어 위주여서 감점된 것으로 보입니다.',
+      8:  '해당 건은 복합 민원으로, 1차 상담에서 해결이 어려운 건이었습니다. 에스컬레이션 절차를 적절히 따랐습니다.',
+      9:  '스크립트 순서를 일부 변경하여 안내하였으나, 필수 항목은 모두 포함되었습니다.',
+      10: '통화 종료 전에 추가 문의 확인을 하였으나, 고객이 빠르게 끊어서 기록에 반영되지 않았습니다.',
+      11: '해당 고객은 VIP 등급으로 특별 대우를 요청하였으며, 규정 범위 내에서 최대한 응대하였습니다.',
+      12: '아웃바운드 캠페인 스크립트 버전이 변경되기 직전 통화였습니다.',
+      13: '해피콜 절차를 모두 이행하였으나, 고객이 중간에 통화를 종료하여 일부 항목이 누락된 것입니다.',
+      14: '복합 문의 건으로 에스컬레이션이 필요했으나, 1차 상담에서 가능한 부분은 모두 안내하였습니다.',
+      15: '기술 문의 답변 시 내부 KB 문서를 정확히 참조하여 안내하였습니다.'
+    };
+
+    // 페이지네이션 상태 (A-063)
+    const PAGE_SIZE = 10;
+    let currentPage = 1;
+    let currentFiltered = [...disputes];
+
     function getStatusBadge(status) {
       const map = {
         '대기': 'badge-pending',
@@ -154,72 +196,135 @@
       return `<span class="badge ${map[status] || 'badge-pending'}">${status}</span>`;
     }
 
-    // 필터 결과 또는 전체 데이터를 테이블에 반영하고 건수를 갱신
+    // 요약 카드 갱신
+    function updateSummaryCards() {
+      const waiting = disputes.filter(d => d.status === '대기').length;
+      const reviewing = disputes.filter(d => d.status === '검토 중').length;
+      const done = disputes.filter(d => d.status === '승인' || d.status === '반려').length;
+      const cards = document.querySelectorAll('.kpi-card');
+      if (cards[0]) cards[0].querySelector('span[style*="font-size:28px"]').textContent = waiting;
+      if (cards[1]) cards[1].querySelector('span[style*="font-size:28px"]').textContent = reviewing;
+      if (cards[2]) cards[2].querySelector('span[style*="font-size:28px"]').textContent = done;
+    }
+
+    // 페이지네이션 UI 렌더링 (A-063)
+    function renderPagination(totalItems) {
+      const container = document.getElementById('pagination-container');
+      const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+      if (currentPage > totalPages) currentPage = totalPages;
+
+      let html = '<div class="pagination">';
+      html += `<button class="pagination-btn" ${currentPage <= 1 ? 'disabled' : ''} onclick="goToPage(${currentPage - 1})">&laquo; 이전</button>`;
+
+      const startPage = Math.max(1, currentPage - 2);
+      const endPage = Math.min(totalPages, startPage + 4);
+      for (let i = startPage; i <= endPage; i++) {
+        html += `<button class="pagination-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+      }
+
+      html += `<button class="pagination-btn" ${currentPage >= totalPages ? 'disabled' : ''} onclick="goToPage(${currentPage + 1})">다음 &raquo;</button>`;
+      html += '</div>';
+      container.innerHTML = html;
+    }
+
+    function goToPage(page) {
+      currentPage = page;
+      renderTable(currentFiltered);
+    }
+
     function renderTable(data) {
+      currentFiltered = data;
       const tbody = document.getElementById('dispute-tbody');
       document.getElementById('total-count').textContent = `총 ${data.length}건`;
-      tbody.innerHTML = data.map(d => `
+
+      const start = (currentPage - 1) * PAGE_SIZE;
+      const pageData = data.slice(start, start + PAGE_SIZE);
+
+      tbody.innerHTML = pageData.map(d => `
         <tr onclick="openDetail(${d.no})">
           <td>${d.no}</td>
           <td>${AICC_Fmt.date(d.date)}</td>
           <td style="font-weight:500;">${d.agent}</td>
+          <td>${d.center}</td>
           <td>${d.team}</td>
           <td style="font-size:12px;color:#757575;">${d.evalId}</td>
-          <td>${d.item}</td>
-          <td style="text-align:right;">${AICC_Fmt.scoreHtml(d.score)}</td>
+          <td class="col-left">${d.item}</td>
+          <td>${AICC_Fmt.scoreHtml(d.score)}</td>
           <td>${getStatusBadge(d.status)}</td>
           <td style="color:#757575;">${d.handler}</td>
         </tr>
       `).join('');
+
+      renderPagination(data.length);
     }
 
-    // 다중 조건을 순차 체이닝하여 누적 필터링 — 각 조건이 독립적이므로 순서 무관
+    // 센터 변경 시 하위 팀 목록을 연쇄적으로 갱신 (A-059)
+    function onWsChange() {
+      const wsVal = document.getElementById('ws-filter').value;
+      const teamFilter = document.getElementById('team-filter');
+
+      if (wsVal === 'all') {
+        teamFilter.disabled = true;
+        teamFilter.innerHTML = '<option value="all">전체</option>';
+      } else {
+        teamFilter.disabled = false;
+        const found = centersData.find(c => c.name === wsVal);
+        teamFilter.innerHTML = '<option value="all">전체</option>';
+        if (found) {
+          found.teams.forEach(t => {
+            teamFilter.innerHTML += `<option value="${t.name}">${t.name}</option>`;
+          });
+        }
+      }
+      filterDisputes();
+    }
+
     function filterDisputes() {
       let filtered = [...disputes];
+
+      const wsVal = document.getElementById('ws-filter').value;
+      if (wsVal !== 'all') filtered = filtered.filter(d => d.center === wsVal);
+
       const statusVal = document.getElementById('status-filter').value;
       if (statusVal !== 'all') filtered = filtered.filter(d => d.status === statusVal);
+
       const teamVal = document.getElementById('team-filter').value;
       if (teamVal !== 'all') filtered = filtered.filter(d => d.team === teamVal);
+
       const agentSearch = (document.getElementById('agent-search').value || '').trim().toLowerCase();
       if (agentSearch) filtered = filtered.filter(d => (d.agent || '').toLowerCase().includes(agentSearch));
+
       const itemVal = document.getElementById('item-filter').value;
       if (itemVal !== 'all') filtered = filtered.filter(d => d.item === itemVal);
+
       const handlerSearch = (document.getElementById('handler-search').value || '').trim().toLowerCase();
       if (handlerSearch) filtered = filtered.filter(d => (d.handler || '').toLowerCase().includes(handlerSearch));
+
+      currentPage = 1;
       renderTable(filtered);
       AICC_Toast.show('필터가 적용되었습니다.');
     }
 
-    // 모든 필터를 초기 상태로 복원 후 전체 데이터 재렌더링
     function resetDisputeFilter() {
+      document.getElementById('ws-filter').value = 'all';
       document.getElementById('status-filter').value = 'all';
       document.getElementById('team-filter').value = 'all';
+      document.getElementById('team-filter').disabled = true;
       document.getElementById('agent-search').value = '';
       document.getElementById('item-filter').value = 'all';
       document.getElementById('handler-search').value = '';
+      currentPage = 1;
       renderTable(disputes);
     }
 
-    // 상태(대기/검토 중)에 따라 처리 액션 버튼 또는 조회 전용 모달로 분기
     function openDetail(no) {
       const d = disputes.find(x => x.no === no);
       if (!d) return;
 
-      const reasons = {
-        1: '해당 통화에서 고객이 먼저 화를 내었으며, 저는 침착하게 대응하였습니다. 녹취록을 확인하시면 고객 응대에 문제가 없음을 확인하실 수 있습니다.',
-        2: '고객의 요청 사항이 시스템 제한으로 인해 즉시 처리할 수 없는 건이었습니다. 이에 대한 대안을 제시하였으나, 평가에서 반영되지 않은 것 같습니다.',
-        3: '해당 건은 신규 프로모션 관련 스크립트가 아직 배포되지 않은 시점의 통화입니다. 최신 스크립트 기준으로 재평가를 요청합니다.',
-        4: '통화 종료 시 고객이 먼저 전화를 끊었으며, 종료 인사를 할 기회가 없었습니다. 상황을 고려한 재평가를 요청합니다.',
-        5: '상품 안내 시점에서 상품 정보가 변경 전이었습니다. 당시 기준으로는 정확한 안내를 한 것이므로 재평가를 요청합니다.',
-        6: '녹취 내용을 다시 들어보시면 종합적으로 친절하게 응대한 것을 확인하실 수 있습니다.',
-        7: '기술 문의에 대해 정확한 답변을 드렸으나, 일부 표현이 전문 용어 위주여서 감점된 것으로 보입니다.',
-        8: '해당 건은 복합 민원으로, 1차 상담에서 해결이 어려운 건이었습니다. 에스컬레이션 절차를 적절히 따랐습니다.',
-        9: '스크립트 순서를 일부 변경하여 안내하였으나, 필수 항목은 모두 포함되었습니다.',
-        10: '통화 종료 전에 추가 문의 확인을 하였으나, 고객이 빠르게 끊어서 기록에 반영되지 않았습니다.'
-      };
-
-      // 처리가 완료되지 않은 건만 수정/승인/반려 액션을 허용하기 위한 분기
       const isPending = d.status === '대기' || d.status === '검토 중';
+
+      // A-062: 검토 중인 건에 대해 현재 사용자와 처리자 불일치 시 버튼 비활성화
+      const isLockedByOther = d.status === '검토 중' && d.handler !== '-' && d.handler !== CURRENT_USER;
 
       const content = `
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
@@ -233,7 +338,7 @@
           </div>
           <div>
             <div class="form-label">상담사</div>
-            <div style="font-size:13px;font-weight:500;">${d.agent} (${d.team})</div>
+            <div style="font-size:13px;font-weight:500;">${d.agent} (${d.center} / ${d.team})</div>
           </div>
           <div>
             <div class="form-label">이의 항목</div>
@@ -252,17 +357,23 @@
         <div style="border-top:1px solid #E0E0E0;padding-top:16px;margin-bottom:20px;">
           <div class="form-label" style="margin-bottom:8px;">상담사 이의 사유</div>
           <div style="background:#F9F9F9;border:1px solid #E0E0E0;border-radius:6px;padding:14px;font-size:13px;line-height:1.7;color:#424242;">
-            ${reasons[d.no]}
+            ${disputeReasons[d.no] || '사유 없음'}
           </div>
         </div>
 
-        ${isPending ? `
+        ${isLockedByOther ? `
+        <div style="border-top:1px solid #E0E0E0;padding-top:16px;">
+          <div style="background:#FFF3E0;border:1px solid #FFB74D;border-radius:6px;padding:12px;font-size:13px;color:#E65100;">
+            ⚠ 다른 처리자(${d.handler})가 검토 중입니다. 승인/반려가 제한됩니다.
+          </div>
+        </div>
+        ` : isPending ? `
         <div style="border-top:1px solid #E0E0E0;padding-top:16px;">
           <div class="form-label" style="margin-bottom:8px;">처리 의견</div>
-          <textarea class="form-input" style="width:100%;height:80px;resize:vertical;" placeholder="처리 의견을 입력하세요..."></textarea>
+          <textarea class="form-input" id="modal-opinion" style="width:100%;height:80px;resize:vertical;" placeholder="처리 의견을 입력하세요..."></textarea>
           <div style="margin-top:8px;">
             <div class="form-label" style="margin-bottom:4px;">점수 수정 (선택)</div>
-            <input type="number" class="form-input" style="width:80px;" placeholder="점수" min="0" max="100">
+            <input type="number" class="form-input" id="modal-score" style="width:80px;" placeholder="점수" min="0" max="100">
           </div>
         </div>
         ` : `
@@ -275,14 +386,19 @@
         `}
       `;
 
-      const footer = isPending ? `
-        <button class="btn btn-secondary" onclick="AICC_Modal.close()">취소</button>
-        <button class="btn btn-danger" onclick="handleAction(${d.no}, '반려')">반려</button>
-        <button class="btn btn-secondary" style="border-color:#1565C0;color:#1565C0;" onclick="handleAction(${d.no}, '수정 승인')">수정 승인</button>
-        <button class="btn btn-primary" onclick="handleAction(${d.no}, '승인')">승인</button>
-      ` : `
-        <button class="btn btn-secondary" onclick="AICC_Modal.close()">닫기</button>
-      `;
+      let footer;
+      if (isLockedByOther) {
+        footer = `<button class="btn btn-secondary" onclick="AICC_Modal.close()">닫기</button>`;
+      } else if (isPending) {
+        footer = `
+          <button class="btn btn-secondary" onclick="AICC_Modal.close()">취소</button>
+          <button class="btn btn-danger" onclick="handleAction(${d.no}, '반려')">반려</button>
+          <button class="btn btn-secondary" style="border-color:#1565C0;color:#1565C0;" onclick="handleAction(${d.no}, '수정 승인')">수정 승인</button>
+          <button class="btn btn-primary" onclick="handleAction(${d.no}, '승인')">승인</button>
+        `;
+      } else {
+        footer = `<button class="btn btn-secondary" onclick="AICC_Modal.close()">닫기</button>`;
+      }
 
       AICC_Modal.open({
         title: `이의 제기 상세 - ${d.evalId}`,
@@ -292,23 +408,34 @@
       });
     }
 
-    // 모달 닫기 후 Toast로 즉시 피드백 — 실제 API 연동 시 비동기 처리로 대체 예정
+    // A-061: 승인/수정승인/반려 실제 반영
     function handleAction(no, action) {
+      const d = disputes.find(x => x.no === no);
+      if (!d) return;
+
+      const statusMap = { '승인': '승인', '수정 승인': '승인', '반려': '반려' };
+      d.status = statusMap[action] || action;
+      d.handler = CURRENT_USER;
+
       AICC_Modal.close();
+      updateSummaryCards();
+      filterDisputes();
       AICC_Toast.show(`${action} 처리가 완료되었습니다.`);
     }
 
     // 초기 렌더링
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
       AICC_PeriodPicker.create('period-picker-container', {
         defaultPeriod: 'monthly',
         onChange: function() { filterDisputes(); }
       });
 
-      // Set으로 중복 제거 후 필터 드롭다운 옵션을 데이터 기반으로 동적 생성
-      const teams = [...new Set(disputes.map(d => d.team))];
-      const teamSel = document.getElementById('team-filter');
-      teams.forEach(t => { teamSel.innerHTML += '<option value="' + t + '">' + t + '</option>'; });
+      // centers.json 로드 후 센터 드롭다운 생성 (A-059)
+      centersData = await AICC_DataLoader.load('centers.json') || [];
+      const wsSel = document.getElementById('ws-filter');
+      centersData.forEach(c => {
+        wsSel.innerHTML += `<option value="${c.name}">${c.name}</option>`;
+      });
 
       const items = [...new Set(disputes.map(d => d.item))];
       const itemSel = document.getElementById('item-filter');

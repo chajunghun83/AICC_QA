@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>전체 콜 현황 - AICC Quality Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body class="bg-[#F5F5F5] text-[#212121]">
+  <div id="page-content">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <h1 style="font-size:20px;font-weight:700;margin:0;">전체 콜 현황</h1>
+        <p style="font-size:12px;color:#757575;margin:4px 0 0;">텍스트 분석 콜 통합 조회</p>
+      </div>
+      <div id="url-filter-badge" style="display:none;"></div>
+    </div>
+
+    <!-- 검색 필터 -->
+    <div class="filter-section">
+      <div class="filter-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'flex':'none'">
+        <span>검색조건</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#757575" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+      <div class="filter-body">
+        <div>
+          <label class="form-label">센터</label>
+          <select class="form-select" id="ws-filter" onchange="onWsChange()">
+            <option value="all">전체</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">팀</label>
+          <select class="form-select" id="team-filter" onchange="applyFilter()" disabled>
+            <option value="all">전체</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">기간</label>
+          <div id="period-picker-container"></div>
+        </div>
+        <div>
+          <label class="form-label">상담사</label>
+          <input type="text" class="form-input" id="agent-search" placeholder="상담사명 검색" style="min-width:130px;">
+        </div>
+        <div>
+          <label class="form-label">유형</label>
+          <select class="form-select" id="type-filter">
+            <option value="all">전체</option>
+            <option value="I/B">I/B (인바운드)</option>
+            <option value="O/B">O/B (아웃바운드)</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">재인입</label>
+          <select class="form-select" id="reentry-filter">
+            <option value="all">전체</option>
+            <option value="first">최초 콜</option>
+            <option value="reentry">재인입만</option>
+            <option value="gte3">3회차 이상</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">통화시간</label>
+          <select class="form-select" id="duration-filter">
+            <option value="all">전체</option>
+            <option value="lte1">1분 이하</option>
+            <option value="lte3">3분 이하</option>
+            <option value="lte5">5분 이하</option>
+            <option value="lte10">10분 이하</option>
+            <option value="gte10">10분 이상</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">이슈 키워드</label>
+          <input type="text" class="form-input" id="issue-search" placeholder="키워드 검색" style="min-width:130px;">
+        </div>
+        <div>
+          <label class="form-label">&nbsp;</label>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-secondary btn-sm" onclick="resetFilter()">초기화</button>
+            <button class="btn btn-primary btn-sm" onclick="applyFilter()">검색</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 테이블 -->
+    <div class="content-card" style="margin-top:16px;">
+      <div class="content-card-header">
+        <span style="font-size:14px;font-weight:600;">콜 목록</span>
+        <span style="font-size:12px;color:#757575;" id="call-count">총 0건</span>
+      </div>
+      <div class="content-card-body" style="padding:0;">
+        <table class="data-table">
+          <colgroup>
+            <col style="width:9%">
+            <col style="width:11%">
+            <col style="width:11%">
+            <col style="width:6%">
+            <col style="width:22%">
+            <col style="width:5%">
+            <col style="width:6%">
+            <col style="width:7%">
+            <col style="width:23%">
+          </colgroup>
+          <thead>
+            <tr>
+              <th style="text-align:center;">콜 ID</th>
+              <th style="text-align:center;">일시</th>
+              <th style="text-align:center;">센터/팀</th>
+              <th style="text-align:center;">상담사</th>
+              <th style="text-align:center;">상담 유형</th>
+              <th style="text-align:center;">유형</th>
+              <th style="text-align:center;">재인입</th>
+              <th style="text-align:center;">통화시간</th>
+              <th style="text-align:center;">이슈 키워드</th>
+            </tr>
+          </thead>
+          <tbody id="call-tbody"></tbody>
+        </table>
+        <div class="pagination">
+          <button class="pagination-btn" onclick="goPage('first')">&laquo;</button>
+          <span id="page-buttons"></span>
+          <button class="pagination-btn" onclick="goPage('last')">&raquo;</button>
+          <span style="margin-left:16px;font-size:12px;color:#757575;">페이지당:
+            <select class="form-select" id="page-size-select" style="min-width:60px;padding:2px 24px 2px 8px;" onchange="changePageSize()">
+              <option>10</option>
+              <option selected>20</option>
+              <option>50</option>
+            </select>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../assets/dummy-data/all-data.js"></script>
+  <script src="../../js/utils/data-loader.js"></script>
+  <script src="../../js/utils/auth-simulator.js"></script>
+  <script src="../../js/utils/formatters.js"></script>
+  <script src="../../js/components/sidebar.js"></script>
+  <script src="../../js/components/layout.js"></script>
+  <script src="../../js/components/modal.js"></script>
+  <script src="../../js/components/toast.js"></script>
+  <script src="../../js/components/period-picker.js"></script>
+  <script>
+    /* ══════════════════════════ 더미데이터 ══════════════════════════ */
+
+    const agents = ['김민수','이영희','박신입','정하은','최지우','한동해','오세진','윤서연','강태양','송미래'];
+    const centers = [
+      { name:'서울센터', teams:['VIP상담팀','일반상담팀','기술지원팀'] },
+      { name:'부산센터', teams:['일반상담팀','해피콜팀'] },
+      { name:'대구센터', teams:['일반상담팀','CS팀'] }
+    ];
+
+    /* 3~4댑스 혼합 상담유형 - 대시보드 히트맵 소분류와 정합성 확보 */
+    const consultationTypes = [
+      '주문 > 주문조회 > 주문상태 > 배송현황확인',
+      '주문 > 주문조회 > 주문상태 > 입금확인',
+      '주문 > 주문조회 > 주문내역 > 주문상세보기',
+      '주문 > 주문변경 > 수량변경',
+      '주문 > 주문변경 > 옵션변경',
+      '주문 > 주문변경 > 배송지변경',
+      '주문 > 주문취소 > 단순변심 > 전체취소',
+      '주문 > 주문취소 > 오류주문',
+      '주문 > 주문취소 > 품절취소',
+      '결제 > 카드결제 > 결제오류 > 승인실패',
+      '결제 > 카드결제 > 할부변경',
+      '결제 > 간편결제 > 네이버페이',
+      '결제 > 간편결제 > 카카오페이',
+      '결제 > 현금결제 > 무통장입금',
+      '결제 > 결제취소 > 부분취소',
+      '배송 > 배송현황 > 일반배송 > 택배추적',
+      '배송 > 배송현황 > 특수배송 > 새벽배송',
+      '배송 > 배송현황 > 특수배송 > 당일배송',
+      '배송 > 배송기간 > 배송지연 > 택배지연',
+      '배송 > 배송기간 > 배송지연 > 물류지연',
+      '배송 > 배송기간 > 배송소요일',
+      '배송 > 배송지 > 주소변경',
+      '배송 > 배송지 > 수령인변경',
+      '배송 > 해외배송 > 관세문의',
+      '교환/반품 > 교환접수 > 사이즈교환 > 의류사이즈',
+      '교환/반품 > 교환접수 > 사이즈교환 > 신발사이즈',
+      '교환/반품 > 교환접수 > 색상교환',
+      '교환/반품 > 교환접수 > 불량교환',
+      '교환/반품 > 반품접수 > 단순변심반품',
+      '교환/반품 > 반품접수 > 상품불량 > 파손',
+      '교환/반품 > 반품접수 > 상품불량 > 오배송',
+      '교환/반품 > 환불처리 > 환불지연',
+      '교환/반품 > 환불처리 > 환불방법',
+      '교환/반품 > 수거문의 > 수거일정',
+      '회원/계정 > 로그인 > 비밀번호찾기',
+      '회원/계정 > 회원정보 > 탈퇴문의',
+      '회원/계정 > 회원정보 > 정보변경',
+      '회원/계정 > 등급혜택 > 등급조회',
+      '상품 > 상품정보 > 사이즈정보 > 사이즈표',
+      '상품 > 상품정보 > 소재성분',
+      '상품 > 재입고 > 재입고알림',
+      '상품 > 가격문의 > 할인정보',
+      '프로모션 > 쿠폰 > 쿠폰오류',
+      '프로모션 > 쿠폰 > 쿠폰적용',
+      '프로모션 > 적립금 > 적립금사용',
+      'A/S > A/S접수 > 수선요청 > 의류수선',
+      'A/S > A/S진행 > 비용문의',
+      '고객불만 > 서비스불만 > 응대불만',
+      '고객불만 > 품질불만 > 제품하자',
+      '고객불만 > 보상요구 > 환불요구',
+      '앱/웹사이트 > 앱오류 > 결제오류',
+      '앱/웹사이트 > 기능문의 > 검색기능',
+      '카탈로그 > 신상품 > 사전예약'
+    ];
+
+    const issuePool = [
+      ['배송지연','택배분실'],['상품불량','포장파손'],['환불지연','결제오류'],
+      ['사이즈불일치','교환지연'],['오배송','수량부족'],['응대불만','대기시간'],
+      ['쿠폰오류','적립금누락'],['로그인실패','개인정보'],['재입고지연','품절'],
+      ['반품거부','환불방법'],['배송지연','상품불량'],['결제오류','할부문제'],
+      ['포장불량','제품하자'],['택배지연','물류지연'],['사이즈교환','색상교환'],
+      ['반품지연','교환지연'],['배송','주문번호'],['사이즈','변경'],
+      ['제품','훼손'],['반품','환불'],['결제','적립금'],
+      ['배송지변경','주소'],['단순변심','교환'],['쿠폰','포인트'],
+      ['회원탈퇴','색상'],['재입고','상품명'],['사전예약','한정판'],
+      ['시즌오프','공동구매'],['라이브방송','사전예약']
+    ];
+
+    const transcriptTemplates = [
+      [
+        {speaker:'상담사',text:'안녕하세요, {team} {agent}입니다. 무엇을 도와드릴까요?'},
+        {speaker:'고객',text:'주문한 상품이 아직 안 왔어요. 주문번호 알려드릴게요.'},
+        {speaker:'상담사',text:'네, 주문번호 확인해보겠습니다.'},
+        {speaker:'고객',text:'배송이 너무 늦어서 불만이에요.'},
+        {speaker:'상담사',text:'확인해보니 택배사에서 지연이 발생한 것 같습니다.'},
+        {speaker:'고객',text:'그럼 언제쯤 받을 수 있나요?'},
+        {speaker:'상담사',text:'내일 중으로 배송 완료될 예정입니다.'},
+        {speaker:'고객',text:'빨리 보내주세요.'},
+        {speaker:'상담사',text:'네, 최대한 빠르게 처리하겠습니다. 더 도움 필요하신 게 있으실까요?'},
+        {speaker:'고객',text:'아니요, 감사합니다.'},
+        {speaker:'상담사',text:'감사합니다. 좋은 하루 되세요.'}
+      ],
+      [
+        {speaker:'상담사',text:'안녕하세요, {team} {agent}입니다.'},
+        {speaker:'고객',text:'받은 상품이 불량인데 교환하고 싶어요.'},
+        {speaker:'상담사',text:'불편을 드려 죄송합니다. 어떤 부분이 불량인가요?'},
+        {speaker:'고객',text:'지퍼 부분이 파손되어 있어요.'},
+        {speaker:'상담사',text:'사진을 보내주시면 빠르게 처리해드리겠습니다.'},
+        {speaker:'고객',text:'네, 지금 보내드릴게요.'},
+        {speaker:'상담사',text:'확인했습니다. 교환 접수 도와드리겠습니다.'},
+        {speaker:'고객',text:'수거는 언제 오나요?'},
+        {speaker:'상담사',text:'내일 오전 중 수거 예정입니다.'},
+        {speaker:'고객',text:'감사합니다.'}
+      ],
+      [
+        {speaker:'상담사',text:'안녕하세요, {team} {agent}입니다. 무엇을 도와드릴까요?'},
+        {speaker:'고객',text:'환불 신청했는데 아직 안 들어왔어요.'},
+        {speaker:'상담사',text:'주문번호 알려주시겠어요?'},
+        {speaker:'고객',text:'ORD-20250115-0042예요.'},
+        {speaker:'상담사',text:'확인해보겠습니다. 잠시만요.'},
+        {speaker:'고객',text:'결제 취소가 왜 이렇게 오래 걸리나요?'},
+        {speaker:'상담사',text:'카드사 처리에 영업일 기준 3~5일 소요됩니다.'},
+        {speaker:'고객',text:'알겠습니다.'},
+        {speaker:'상담사',text:'추가로 도움 필요하신 부분 있으신가요?'},
+        {speaker:'고객',text:'없습니다. 감사합니다.'}
+      ]
+    ];
+
+    const extractedKeywordPool = {
+      issue: ['배송지연','상품불량','환불지연','포장파손','오배송','결제오류','택배분실','교환지연','사이즈불일치','응대불만','대기시간','쿠폰오류','재고부족','품절안내','누락배송','이중결제','배송추적불가','상품파손','가격오류','수량불일치'],
+      consult: ['주문번호','배송조회','교환접수','반품접수','환불방법','결제확인','주문취소','주소변경','사이즈변경','적립금','회원탈퇴','비밀번호변경','쿠폰적용','카드결제','무통장입금','배송비확인','선물포장','수령인변경','출고일정','재입고알림'],
+      product: ['스니커즈','패딩','원피스','가방','운동화','티셔츠','코트','청바지','모자','벨트','자켓','니트','슬랙스','후드티','맨투맨','샌들','부츠','스카프','지갑','시계']
+    };
+
+    /* 더미데이터 생성 */
+    function generateCallData() {
+      const data = [];
+      for (let i = 1; i <= 100; i++) {
+        const ci = Math.floor(Math.random() * centers.length);
+        const c = centers[ci];
+        const team = c.teams[Math.floor(Math.random() * c.teams.length)];
+        const agent = agents[Math.floor(Math.random() * agents.length)];
+        const ct = consultationTypes[Math.floor(Math.random() * consultationTypes.length)];
+        const issues = issuePool[Math.floor(Math.random() * issuePool.length)];
+        const tpl = transcriptTemplates[Math.floor(Math.random() * transcriptTemplates.length)];
+        const day = String(Math.floor(Math.random() * 28) + 1).padStart(2, '0');
+        const hour = String(Math.floor(Math.random() * 10) + 8).padStart(2, '0');
+        const min = String(Math.floor(Math.random() * 60)).padStart(2, '0');
+        /* 초과콜 확인용 다양한 통화시간 분포 */
+        const durRand = Math.random();
+        let durTotalSec;
+        if (durRand < 0.1) durTotalSec = Math.floor(Math.random() * 60) + 10;           // ~1분 (10~69초)
+        else if (durRand < 0.25) durTotalSec = Math.floor(Math.random() * 120) + 60;     // 1~3분
+        else if (durRand < 0.45) durTotalSec = Math.floor(Math.random() * 120) + 180;    // 3~5분
+        else if (durRand < 0.70) durTotalSec = Math.floor(Math.random() * 300) + 300;    // 5~10분
+        else if (durRand < 0.88) durTotalSec = Math.floor(Math.random() * 600) + 600;    // 10~20분
+        else durTotalSec = Math.floor(Math.random() * 1200) + 1200;                      // 20~40분
+        const durMin = String(Math.floor(durTotalSec / 60)).padStart(2, '0');
+        const durSec = String(durTotalSec % 60).padStart(2, '0');
+
+        const transcript = tpl.map((line, idx) => ({
+          time: `${Math.floor(idx * 0.5)}:${String((idx * 30) % 60).padStart(2,'0')}`,
+          speaker: line.speaker,
+          text: line.text.replace('{team}', team).replace('{agent}', agent)
+        }));
+
+        /* 추출 키워드에 transcriptIdx 매핑 */
+        const pick = (arr, n) => {
+          const shuffled = [...arr].sort(() => 0.5 - Math.random());
+          return shuffled.slice(0, n);
+        };
+        const mkKw = (pool, n) => pick(pool, n).map(name => ({
+          name,
+          count: Math.floor(Math.random() * 4) + 1,
+          transcriptIdx: Array.from({length: Math.floor(Math.random() * 3) + 1}, () => Math.floor(Math.random() * transcript.length))
+        }));
+
+        data.push({
+          id: `TA-2025-${String(i).padStart(5, '0')}`,
+          date: `2025-03-${day}`,
+          time: `${hour}:${min}`,
+          center: c.name,
+          team,
+          agent,
+          consultationType: ct,
+          callType: Math.random() > 0.35 ? 'I/B' : 'O/B',
+          reentry: (() => { const r = Math.random(); return r < 0.65 ? 1 : r < 0.90 ? 2 : r < 0.98 ? 3 : 4; })(),
+          duration: `${durMin}:${durSec}`,
+          issueKeywords: issues,
+          extractedKeywords: {
+            issue: mkKw(extractedKeywordPool.issue, 5),
+            consult: mkKw(extractedKeywordPool.consult, 4),
+            product: mkKw(extractedKeywordPool.product, 4)
+          },
+          transcript
+        });
+      }
+      return data.sort((a, b) => (`${b.date} ${b.time}`).localeCompare(`${a.date} ${a.time}`));
+    }
+
+    const callData = generateCallData();
+    let filteredData = [...callData];
+    let currentPage = 1;
+    let pageSize = 20;
+
+    /* URL 파라미터 기반 필터 (대시보드 연동) */
+    let urlFilter = null;
+    function parseUrlFilter() {
+      const params = new URLSearchParams(window.location.search);
+      const filter = params.get('filter');
+      const value = params.get('value');
+      if (!filter || filter === 'all') return null;
+      return { filter, value };
+    }
+
+    /* ══════════════════════════ 필터 ══════════════════════════ */
+
+    function onWsChange() {
+      const wsVal = document.getElementById('ws-filter').value;
+      const teamFilter = document.getElementById('team-filter');
+      if (wsVal === 'all') {
+        teamFilter.disabled = true;
+        teamFilter.innerHTML = '<option value="all">전체</option>';
+      } else {
+        teamFilter.disabled = false;
+        const c = centers.find(x => x.name === wsVal);
+        teamFilter.innerHTML = '<option value="all">전체</option>';
+        if (c) c.teams.forEach(t => { teamFilter.innerHTML += `<option value="${t}">${t}</option>`; });
+      }
+      applyFilter();
+    }
+
+    /* duration 문자열("MM:SS")을 분 단위 숫자로 변환 */
+    function parseDurationMin(dur) {
+      const [m, s] = dur.split(':').map(Number);
+      return m + s / 60;
+    }
+
+    function applyFilter() {
+      const ws = document.getElementById('ws-filter').value;
+      const team = document.getElementById('team-filter').value;
+      const agentQ = document.getElementById('agent-search').value.trim().toLowerCase();
+      const typeVal = document.getElementById('type-filter').value;
+      const reentryVal = document.getElementById('reentry-filter').value;
+      const durVal = document.getElementById('duration-filter').value;
+      const issueQ = document.getElementById('issue-search').value.trim().toLowerCase();
+
+      filteredData = callData.filter(c => {
+        if (ws !== 'all' && c.center !== ws) return false;
+        if (team !== 'all' && c.team !== team) return false;
+        if (agentQ && !c.agent.toLowerCase().includes(agentQ)) return false;
+        if (typeVal !== 'all' && c.callType !== typeVal) return false;
+        if (reentryVal === 'first' && c.reentry !== 1) return false;
+        if (reentryVal === 'reentry' && c.reentry < 2) return false;
+        if (reentryVal === 'gte3' && c.reentry < 3) return false;
+        if (durVal !== 'all') {
+          const min = parseDurationMin(c.duration);
+          if (durVal === 'lte1' && min > 1) return false;
+          if (durVal === 'lte3' && min > 3) return false;
+          if (durVal === 'lte5' && min > 5) return false;
+          if (durVal === 'lte10' && min > 10) return false;
+          if (durVal === 'gte10' && min < 10) return false;
+        }
+        if (issueQ && !c.issueKeywords.some(k => k.toLowerCase().includes(issueQ))) return false;
+
+        /* 대시보드에서 넘어온 URL 파라미터 기반 필터 */
+        if (urlFilter) {
+          const f = urlFilter.filter;
+          const v = urlFilter.value;
+          if (f === 'issue') {
+            if (!c.issueKeywords || c.issueKeywords.length === 0) return false;
+          } else if (f === 'over') {
+            if (parseDurationMin(c.duration) < 3) return false;
+          } else if (f === 'reentry') {
+            if (c.reentry < 2) return false;
+          } else if (f === 'keyword') {
+            const kw = (v || '').replace(/\s/g, '').toLowerCase();
+            const inIssue = c.issueKeywords.some(k => k.replace(/\s/g, '').toLowerCase().includes(kw));
+            const inExtracted = Object.values(c.extractedKeywords).some(arr => arr.some(ek => ek.name.replace(/\s/g, '').toLowerCase().includes(kw)));
+            if (!inIssue && !inExtracted) return false;
+          } else if (f === 'consult_type') {
+            const parts = c.consultationType.split(' > ');
+            const lastDepth = parts[parts.length - 1];
+            if (lastDepth !== v) return false;
+          } else if (f === 'hour') {
+            const callHour = parseInt(c.time.split(':')[0], 10);
+            if (callHour !== parseInt(v, 10)) return false;
+          }
+        }
+        return true;
+      });
+
+      currentPage = 1;
+      renderTable();
+    }
+
+    function resetFilter() {
+      document.getElementById('ws-filter').value = 'all';
+      document.getElementById('team-filter').value = 'all';
+      document.getElementById('team-filter').disabled = true;
+      document.getElementById('agent-search').value = '';
+      document.getElementById('type-filter').value = 'all';
+      document.getElementById('reentry-filter').value = 'all';
+      document.getElementById('duration-filter').value = 'all';
+      document.getElementById('issue-search').value = '';
+      urlFilter = null;
+      const badge = document.getElementById('url-filter-badge');
+      if (badge) { badge.style.display = 'none'; badge.innerHTML = ''; }
+      if (window.history.replaceState) {
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+      filteredData = [...callData];
+      currentPage = 1;
+      renderTable();
+      AICC_Toast.show('필터가 초기화되었습니다.');
+    }
+
+    /* ══════════════════════════ 테이블 렌더링 ══════════════════════════ */
+
+    function renderTable() {
+      document.getElementById('call-count').textContent = `총 ${filteredData.length}건`;
+      const start = (currentPage - 1) * pageSize;
+      const pageData = filteredData.slice(start, start + pageSize);
+      const tbody = document.getElementById('call-tbody');
+
+      tbody.innerHTML = pageData.map(c => {
+        const typeBadge = c.callType === 'I/B'
+          ? `<span style="display:inline-block;padding:2px 8px;background:#e8f5e9;color:#2e7d32;border-radius:4px;font-size:11px;font-weight:600;">${c.callType}</span>`
+          : `<span style="display:inline-block;padding:2px 8px;background:#fff3e0;color:#e65100;border-radius:4px;font-size:11px;font-weight:600;">${c.callType}</span>`;
+        const issueChips = c.issueKeywords.map(k =>
+          `<span style="display:inline-block;padding:2px 8px;margin:1px 2px;border-radius:10px;font-size:11px;background:#FFF3F3;color:#E53935;border:1px solid #FFCDD2;">${k}</span>`
+        ).join('');
+        return `<tr onclick="showCallDetail('${c.id}')" style="cursor:pointer;">
+          <td style="text-align:center;font-size:12px;">${c.id}</td>
+          <td style="text-align:center;font-size:12px;white-space:nowrap;">${c.date} ${c.time}</td>
+          <td style="text-align:center;font-size:12px;white-space:nowrap;">${c.center} &gt; ${c.team}</td>
+          <td style="text-align:center;font-size:12px;">${c.agent}</td>
+          <td style="font-size:11px;color:#424242;padding:6px 12px;">${c.consultationType}</td>
+          <td style="text-align:center;">${typeBadge}</td>
+          <td style="text-align:center;">${c.reentry >= 3
+            ? `<span style="display:inline-block;padding:2px 8px;background:#ffebee;color:#c62828;border-radius:4px;font-size:11px;font-weight:600;">${c.reentry}회차</span>`
+            : c.reentry === 2
+              ? `<span style="display:inline-block;padding:2px 8px;background:#fff3e0;color:#e65100;border-radius:4px;font-size:11px;font-weight:600;">2회차</span>`
+              : '-'}</td>
+          <td style="text-align:center;font-size:12px;white-space:nowrap;">${c.duration}</td>
+          <td style="padding:6px 10px;">${issueChips}</td>
+        </tr>`;
+      }).join('');
+
+      renderPagination();
+    }
+
+    function renderPagination() {
+      const totalPages = Math.max(1, Math.ceil(filteredData.length / pageSize));
+      const container = document.getElementById('page-buttons');
+      let html = '';
+      const startP = Math.max(1, currentPage - 2);
+      const endP = Math.min(totalPages, startP + 4);
+      for (let p = startP; p <= endP; p++) {
+        html += `<button class="pagination-btn${p === currentPage ? ' active' : ''}" onclick="goPage(${p})">${p}</button>`;
+      }
+      container.innerHTML = html;
+    }
+
+    function goPage(p) {
+      const totalPages = Math.max(1, Math.ceil(filteredData.length / pageSize));
+      if (p === 'first') currentPage = 1;
+      else if (p === 'last') currentPage = totalPages;
+      else currentPage = Math.max(1, Math.min(totalPages, p));
+      renderTable();
+    }
+
+    function changePageSize() {
+      pageSize = parseInt(document.getElementById('page-size-select').value);
+      currentPage = 1;
+      renderTable();
+    }
+
+    /* ══════════════════════════ 상세 모달 ══════════════════════════ */
+
+    function showCallDetail(callId) {
+      const c = callData.find(x => x.id === callId);
+      if (!c) return;
+
+      const infoRows = [
+        { label:'콜 ID', value:`<span style="font-weight:600;">${c.id}</span>` },
+        { label:'일시', value:`<span style="font-weight:600;">${c.date} ${c.time}</span>` },
+        { label:'센터', value:c.center },
+        { label:'팀', value:c.team },
+        { label:'상담사', value:c.agent },
+        { label:'상담 유형', value:`<span style="font-size:12px;">${c.consultationType}</span>` },
+        { label:'유형', value: c.callType === 'I/B'
+          ? `<span style="display:inline-block;padding:2px 8px;background:#e8f5e9;color:#2e7d32;border-radius:4px;font-size:11px;font-weight:600;">I/B</span>`
+          : `<span style="display:inline-block;padding:2px 8px;background:#fff3e0;color:#e65100;border-radius:4px;font-size:11px;font-weight:600;">O/B</span>` },
+        { label:'통화시간', value:c.duration }
+      ];
+      const infoHtml = `<div style="font-size:13px;">${infoRows.map(r =>
+        `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #F0F0F0;">
+          <span style="color:#757575;font-size:12px;flex-shrink:0;">${r.label}</span>
+          <span style="text-align:right;font-weight:500;color:#212121;">${r.value}</span>
+        </div>`).join('')}</div>`;
+
+      const scriptHtml = c.transcript.map((line, idx) => {
+        const isAgent = line.speaker === '상담사';
+        const bg = isAgent ? '#E3F2FD' : '#F5F5F5';
+        const hoverBg = isAgent ? '#B3E5FC' : '#EEEEEE';
+        const labelColor = isAgent ? '#00A3FF' : '#424242';
+        const iconFill = isAgent ? '#00A3FF' : '#757575';
+        return `<div id="transcript-${idx}" class="transcript-line" style="display:flex;gap:10px;padding:6px 4px;cursor:pointer;border-radius:6px;transition:background 0.15s;" onclick="playSegment(${idx})" onmouseenter="this.style.background='${hoverBg}'" onmouseleave="if(!this.classList.contains('playing'))this.style.background=''">
+          <div style="min-width:40px;font-size:10px;color:#757575;padding-top:2px;">${line.time}</div>
+          <div style="flex:1;">
+            <div style="font-size:10px;font-weight:600;color:${labelColor};margin-bottom:2px;">${line.speaker}</div>
+            <div style="background:${bg};padding:6px 10px;border-radius:6px;font-size:12px;line-height:1.5;display:flex;align-items:start;gap:6px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="${iconFill}" style="flex-shrink:0;margin-top:3px;opacity:0.5;"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <span>${line.text}</span>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+
+      const kwCategories = [
+        { key:'issue', label:'이슈 키워드', bg:'#FFF3F3', color:'#E53935', border:'#FFCDD2' },
+        { key:'consult', label:'상담 키워드', bg:'#E3F2FD', color:'#1565C0', border:'#BBDEFB' },
+        { key:'product', label:'상품 키워드', bg:'#F3E5F5', color:'#7B1FA2', border:'#E1BEE7' }
+      ];
+
+      const kwHtml = kwCategories.map(cat => {
+        const items = c.extractedKeywords[cat.key] || [];
+        if (items.length === 0) return '';
+        const chips = items.map(kw =>
+          `<span onclick="scrollToTranscript(${kw.transcriptIdx[0]});event.stopPropagation();"
+                style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;margin:3px;border-radius:12px;font-size:12px;cursor:pointer;
+                       background:${cat.bg};color:${cat.color};border:1px solid ${cat.border};transition:all 0.15s;"
+                onmouseover="this.style.boxShadow='0 2px 6px rgba(0,0,0,0.15)'"
+                onmouseout="this.style.boxShadow='none'">
+            ${kw.name}<span style="background:${cat.color};color:#fff;border-radius:8px;padding:0 5px;font-size:10px;font-weight:600;margin-left:2px;">${kw.count}</span>
+          </span>`
+        ).join('');
+        return `<div style="margin-bottom:16px;">
+          <div style="font-size:12px;font-weight:600;color:#424242;margin-bottom:8px;padding-left:2px;">${cat.label}</div>
+          <div style="display:flex;flex-wrap:wrap;">${chips}</div>
+        </div>`;
+      }).join('');
+
+      const modalBody = `
+        <div style="display:grid;grid-template-columns:30% 40% 30%;gap:0;height:calc(90vh - 160px);max-height:660px;">
+          <div style="padding:20px;border-right:1px solid #EEEEEE;overflow-y:auto;">
+            <div style="font-size:14px;font-weight:700;margin-bottom:16px;color:#212121;">콜 정보</div>
+            ${infoHtml}
+          </div>
+          <div style="padding:20px;display:flex;flex-direction:column;min-width:0;min-height:0;" id="script-panel">
+            <div style="font-size:13px;font-weight:700;color:#424242;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #424242;flex-shrink:0;">스크립트</div>
+            <div id="script-scroll" style="flex:1;min-height:0;background:#FAFAFA;border:1px solid #E0E0E0;border-radius:8px;padding:12px;overflow-y:auto;">
+              ${scriptHtml}
+            </div>
+            <div style="margin-top:10px;background:#F5F5F5;border:1px solid #E0E0E0;border-radius:8px;padding:10px 14px;flex-shrink:0;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <button onclick="togglePlay()" style="background:none;border:none;cursor:pointer;padding:0;" id="play-btn">
+                  <svg id="play-btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="#424242"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                </button>
+                <div style="flex:1;">
+                  <div style="width:100%;height:4px;background:#BDBDBD;border-radius:2px;position:relative;cursor:pointer;">
+                    <div id="player-progress" style="width:0%;height:100%;background:#00A3FF;border-radius:2px;transition:width 0.2s;"></div>
+                  </div>
+                </div>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;padding-left:30px;">
+                <span style="font-size:10px;color:#757575;">0:00</span>
+                <span style="font-size:10px;color:#757575;">${c.duration}</span>
+              </div>
+            </div>
+          </div>
+          <div style="padding:20px;border-left:1px solid #EEEEEE;overflow-y:auto;">
+            <div style="font-size:14px;font-weight:700;margin-bottom:16px;color:#212121;">추출 키워드</div>
+            ${kwHtml}
+          </div>
+        </div>`;
+
+      AICC_Modal.open({
+        title: `콜 상세 - ${c.id}`,
+        content: modalBody,
+        size: 'xxl',
+        footer: '<button class="btn btn-secondary" onclick="AICC_Modal.close()">닫기</button>'
+      });
+
+      requestAnimationFrame(() => {
+        const body = document.querySelector('#aicc-modal-backdrop .modal-body');
+        if (body) { body.style.overflow = 'auto'; body.style.padding = '0'; }
+      });
+    }
+
+    /** 키워드 클릭 시 스크립트 해당 위치로 스크롤 + 하이라이트 */
+    function scrollToTranscript(idx) {
+      const el = document.getElementById(`transcript-${idx}`);
+      if (!el) return;
+      const scrollContainer = document.getElementById('script-scroll');
+      if (scrollContainer) {
+        el.scrollIntoView({ behavior:'smooth', block:'center' });
+      }
+      document.querySelectorAll('[id^="transcript-"]').forEach(e => { e.style.boxShadow = 'none'; e.style.background = ''; });
+      el.style.boxShadow = 'inset 3px 0 0 #00A3FF';
+      el.style.background = '#E3F2FD';
+      setTimeout(() => { el.style.boxShadow = 'none'; el.style.background = ''; }, 2500);
+    }
+
+    function playSegment(idx) {
+      scrollToTranscript(idx);
+    }
+
+    let isPlaying = false;
+    function togglePlay() {
+      isPlaying = !isPlaying;
+      const icon = document.getElementById('play-btn-icon');
+      if (icon) {
+        icon.innerHTML = isPlaying
+          ? '<rect x="5" y="3" width="4" height="18"/><rect x="15" y="3" width="4" height="18"/>'
+          : '<polygon points="5 3 19 12 5 21 5 3"/>';
+      }
+    }
+
+    /* ══════════════════════════ 초기화 ══════════════════════════ */
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const data = await AICC_DataLoader.loadAll(['centers.json']);
+        const centersData = data['centers.json'];
+        if (centersData) {
+          const wsSelect = document.getElementById('ws-filter');
+          centersData.forEach(ws => { wsSelect.innerHTML += `<option value="${ws.name}">${ws.name}</option>`; });
+        }
+      } catch(e) {}
+
+      AICC_PeriodPicker.create('period-picker-container', {
+        defaultPeriod: 'monthly',
+        onChange: function() { applyFilter(); }
+      });
+
+      /* 대시보드에서 전달된 URL 파라미터 파싱 */
+      urlFilter = parseUrlFilter();
+      if (urlFilter) {
+        const labels = {
+          issue: '이슈 콜',
+          over: '초과 콜 (3분 이상)',
+          reentry: '재인입 콜 (2회 이상)',
+          keyword: `키워드: ${urlFilter.value}`,
+          consult_type: `상담유형: ${urlFilter.value}`,
+          hour: `시간대: ${urlFilter.value}시`
+        };
+        const filterLabel = labels[urlFilter.filter] || urlFilter.filter;
+
+        /* 관련 UI 필터 자동 세팅 */
+        if (urlFilter.filter === 'reentry') {
+          document.getElementById('reentry-filter').value = 'reentry';
+        } else if (urlFilter.filter === 'keyword') {
+          document.getElementById('issue-search').value = urlFilter.value || '';
+        }
+
+        const badge = document.getElementById('url-filter-badge');
+        badge.style.display = 'inline-flex';
+        badge.innerHTML = `<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:#E3F2FD;color:#1565C0;border-radius:16px;font-size:12px;font-weight:600;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          대시보드 필터: ${filterLabel}
+          <span style="cursor:pointer;margin-left:4px;" onclick="resetFilter()" title="필터 해제">✕</span>
+        </span>`;
+        setTimeout(() => AICC_Toast.show(`대시보드 필터 적용: ${filterLabel}`), 500);
+      }
+
+      applyFilter();
+    });
+  </script>
+</body>
+</html>

@@ -108,21 +108,21 @@
   <script>
     /* ========== 더미 데이터 ========== */
     const CENTERS = [
-      { id:'ct-1', name:'서울센터', color:'#00A3FF' },
-      { id:'ct-2', name:'부산센터', color:'#FF9800' },
-      { id:'ct-3', name:'대구센터', color:'#9C27B0' }
+      { id:'ct-seoul', name:'서울센터', color:'#00A3FF' },
+      { id:'ct-busan', name:'부산센터', color:'#FF9800' },
+      { id:'ct-daegu', name:'대구센터', color:'#9C27B0' }
     ];
     const TEAMS = [
-      { id:'tm-1', name:'VIP상담팀', centerId:'ct-1', center:'서울센터', color:'#1976D2' },
-      { id:'tm-2', name:'일반상담팀', centerId:'ct-1', center:'서울센터', color:'#E65100' },
-      { id:'tm-3', name:'기술지원팀', centerId:'ct-1', center:'서울센터', color:'#7B1FA2' },
-      { id:'tm-4', name:'아웃바운드팀', centerId:'ct-1', center:'서울센터', color:'#2E7D32' },
-      { id:'tm-5', name:'고객상담1팀', centerId:'ct-2', center:'부산센터', color:'#D32F2F' },
-      { id:'tm-6', name:'고객상담2팀', centerId:'ct-2', center:'부산센터', color:'#00838F' },
-      { id:'tm-7', name:'영업지원팀', centerId:'ct-2', center:'부산센터', color:'#6D4C41' },
-      { id:'tm-8', name:'종합상담팀', centerId:'ct-3', center:'대구센터', color:'#455A64' },
-      { id:'tm-9', name:'클레임처리팀', centerId:'ct-3', center:'대구센터', color:'#C2185B' },
-      { id:'tm-10', name:'신규고객팀', centerId:'ct-3', center:'대구센터', color:'#F9A825' }
+      { id:'tm-1', name:'VIP상담팀', centerId:'ct-seoul', center:'서울센터', color:'#1976D2' },
+      { id:'tm-2', name:'일반상담팀', centerId:'ct-seoul', center:'서울센터', color:'#E65100' },
+      { id:'tm-3', name:'기술지원팀', centerId:'ct-seoul', center:'서울센터', color:'#7B1FA2' },
+      { id:'tm-4', name:'아웃바운드팀', centerId:'ct-seoul', center:'서울센터', color:'#2E7D32' },
+      { id:'tm-5', name:'고객상담1팀', centerId:'ct-busan', center:'부산센터', color:'#D32F2F' },
+      { id:'tm-6', name:'고객상담2팀', centerId:'ct-busan', center:'부산센터', color:'#00838F' },
+      { id:'tm-7', name:'영업지원팀', centerId:'ct-busan', center:'부산센터', color:'#6D4C41' },
+      { id:'tm-8', name:'종합상담팀', centerId:'ct-daegu', center:'대구센터', color:'#455A64' },
+      { id:'tm-9', name:'클레임처리팀', centerId:'ct-daegu', center:'대구센터', color:'#C2185B' },
+      { id:'tm-10', name:'신규고객팀', centerId:'ct-daegu', center:'대구센터', color:'#F9A825' }
     ];
 
     const EVAL_ITEMS = [
@@ -135,19 +135,57 @@
       { name: '인사 누락', id: 'first-greeting' }
     ];
 
-    const AGENT_NAMES = ['김민수','이영희','박지훈','최수진','정민호','한소영','윤재호','송미라','조현우','강서연','임도현','배수빈'];
+    /* A-091/A-092: 센터별 고유 상담사 이름 */
+    const CENTER_AGENTS = {
+      'ct-seoul': ['김민수','이영희','박지훈','최수진','정민호','한소영'],
+      'ct-busan': ['윤재호','송미라','조현우','강서연','임도현','배수빈'],
+      'ct-daegu': ['오태준','신은경','류성재','문하은','장우진','권다연']
+    };
     const DEDUCTION_REASONS = ['공감 부족','인사 누락','해결 미제시','확인 절차 생략','종결 멘트 누락','정보 오안내','고객 확인 미흡','경청 부족','안내 지연','감정 표현 부족'];
 
-    // 센터/팀 단위 더미 통계 생성
-    function genStats(id, base) {
+    /* A-082/A-083: 센터별 강점/약점 프로필 (지표마다 최고 센터가 다르도록) */
+    const CENTER_PROFILES = {
+      'ct-seoul': { scoreBase:84, callsBase:1000, evalRateBase:0.93, failRateBase:0.015, underRateBase:0.025, callTimeBase:380, trendSlope:0.5 },
+      'ct-busan': { scoreBase:82, callsBase:850, evalRateBase:0.97, failRateBase:0.005, underRateBase:0.010, callTimeBase:260, trendSlope:-0.3 },
+      'ct-daegu': { scoreBase:78, callsBase:700, evalRateBase:0.90, failRateBase:0.020, underRateBase:0.035, callTimeBase:200, trendSlope:1.2 }
+    };
+    const TEAM_BASES = { 'tm-1':86,'tm-2':79,'tm-3':82,'tm-4':77,'tm-5':80,'tm-6':76,'tm-7':80,'tm-8':77,'tm-9':73,'tm-10':76 };
+
+    function getAgentsForId(id) {
+      if (CENTER_AGENTS[id]) return CENTER_AGENTS[id];
+      const team = TEAMS.find(t => t.id === id);
+      if (team && CENTER_AGENTS[team.centerId]) return CENTER_AGENTS[team.centerId];
+      return CENTER_AGENTS['ct-seoul'];
+    }
+
+    function getProfileForId(id) {
+      if (CENTER_PROFILES[id]) return CENTER_PROFILES[id];
+      const team = TEAMS.find(t => t.id === id);
+      const cp = team ? CENTER_PROFILES[team.centerId] : CENTER_PROFILES['ct-seoul'];
+      const base = TEAM_BASES[id] || cp.scoreBase;
+      return {
+        scoreBase: base,
+        callsBase: Math.floor(cp.callsBase * (0.18 + Math.random()*0.12)),
+        evalRateBase: Math.min(0.99, cp.evalRateBase + (Math.random()-0.5)*0.04),
+        failRateBase: Math.max(0.002, cp.failRateBase + (Math.random()-0.5)*0.006),
+        underRateBase: Math.max(0.005, cp.underRateBase + (Math.random()-0.5)*0.01),
+        callTimeBase: Math.max(120, cp.callTimeBase + Math.floor((Math.random()-0.5)*80)),
+        trendSlope: cp.trendSlope + (Math.random()-0.5)*0.8
+      };
+    }
+
+    function genStats(id) {
+      const p = getProfileForId(id);
+      const base = p.scoreBase;
       const currentAvg = base + (Math.random()*4 - 1);
       const prevAvg = base + (Math.random()*4 - 2);
-      const totalCalls = Math.floor(800 + Math.random()*600);
-      const totalEvals = Math.floor(totalCalls * (0.92 + Math.random()*0.06));
-      const failCount = Math.floor(totalEvals * (0.005 + Math.random()*0.02));
-      const underCount = Math.floor(totalEvals * (0.01 + Math.random()*0.03));
+      const totalCalls = Math.floor(p.callsBase + Math.random()*200);
+      const totalEvals = Math.floor(totalCalls * Math.min(0.99, p.evalRateBase + Math.random()*0.03));
+      const failCount = Math.max(0, Math.floor(totalEvals * (p.failRateBase + Math.random()*0.008)));
+      const underCount = Math.max(0, Math.floor(totalEvals * (p.underRateBase + Math.random()*0.01)));
+      const numDays = Math.min(currentPeriod, 30);
       const scores = [];
-      for(let i=0;i<30;i++) scores.push(base + Math.random()*8 - 3 + i/30*2);
+      for(let i=0;i<numDays;i++) scores.push(base + Math.random()*8 - 3 + (p.trendSlope * i / numDays * 4));
       const maxS = Math.max(...scores);
       const minS = Math.min(...scores);
       const mean = scores.reduce((a,b)=>a+b,0)/scores.length;
@@ -159,34 +197,29 @@
       const excellent = Math.floor(totalEvals*(0.2+Math.random()*0.2));
       const good = Math.floor(totalEvals*(0.3+Math.random()*0.15));
       const caution = Math.floor(totalEvals*(0.1+Math.random()*0.15));
-      const low = totalEvals - excellent - good - caution;
+      const low = Math.max(0, totalEvals - excellent - good - caution);
       const items = {};
       EVAL_ITEMS.forEach(ei => { items[ei.name] = +(base - 5 + Math.random()*15).toFixed(1); });
 
-      // 유형별 상담/평가 건수
       const ibCalls = Math.floor(totalCalls * (0.5 + Math.random()*0.2));
       const obCalls = Math.floor(totalCalls * (0.15 + Math.random()*0.1));
       const manualCalls = totalCalls - ibCalls - obCalls;
       const ibEvals = Math.floor(ibCalls * (0.92 + Math.random()*0.06));
       const obEvals = Math.floor(obCalls * (0.90 + Math.random()*0.08));
       const manualEvals = totalEvals - ibEvals - obEvals;
-
-      // 유형별 평균 점수
       const ibScore = +(base + Math.random()*4 - 1).toFixed(1);
       const obScore = +(base - 2 + Math.random()*4).toFixed(1);
       const manualScore = +(base + 1 + Math.random()*3).toFixed(1);
 
-      // 상담사 평균 상담 시간 (초 단위)
-      const avgCallTimeSec = Math.floor(240 + Math.random()*300);
+      const avgCallTimeSec = Math.max(60, Math.floor(p.callTimeBase + (Math.random()-0.5)*80));
 
-      // 최다 감점 항목 Top5
       const shuffledItems = [...EVAL_ITEMS].sort(()=>Math.random()-0.5);
       const topDeductions = shuffledItems.slice(0,5).map((ei,idx) => ({
         rank: idx+1, item: ei.name, id: ei.id, count: Math.floor(30 + Math.random()*70), avgDeduction: +(1 + Math.random()*4).toFixed(1)
       })).sort((a,b)=>b.count-a.count).map((d,i)=>({...d, rank:i+1}));
 
-      // 최다 감점 콜 Top5
-      const shuffledAgents = [...AGENT_NAMES].sort(()=>Math.random()-0.5);
+      const agents = getAgentsForId(id);
+      const shuffledAgents = [...agents].sort(()=>Math.random()-0.5);
       const shuffledReasons = [...DEDUCTION_REASONS].sort(()=>Math.random()-0.5);
       const topDeductionCalls = shuffledAgents.slice(0,5).map((name,idx) => ({
         rank: idx+1, agent: name, score: +(40 + Math.random()*25).toFixed(1), reason: shuffledReasons[idx]
@@ -210,19 +243,16 @@
       };
     }
 
-    const CENTER_BASES = { 'ct-1':84, 'ct-2':80, 'ct-3':77 };
-    const TEAM_BASES = { 'tm-1':86,'tm-2':79,'tm-3':82,'tm-4':77,'tm-5':80,'tm-6':76,'tm-7':80,'tm-8':77,'tm-9':73,'tm-10':76 };
-
     let centerStats = {};
     let teamStats = {};
     function regenerateStats() {
-      CENTERS.forEach(c => { centerStats[c.id] = genStats(c.id, CENTER_BASES[c.id]); });
-      TEAMS.forEach(t => { teamStats[t.id] = genStats(t.id, TEAM_BASES[t.id]); });
+      CENTERS.forEach(c => { centerStats[c.id] = genStats(c.id); });
+      TEAMS.forEach(t => { teamStats[t.id] = genStats(t.id); });
     }
 
     /* ========== 상태 ========== */
     let compareType = 'center';
-    let selectedTargets = ['ct-1','ct-2'];
+    let selectedTargets = ['ct-seoul','ct-busan'];
     let currentPeriod = 30;
     const WIDGETS = [
       { id:'trend', label:'품질 점수 추이' },
@@ -238,6 +268,7 @@
     let visibleWidgets = new Set(WIDGETS.map(w=>w.id));
     let trendChart = null;
     let radarCharts = [];
+    let trendDevCharts = [];
 
     /* ========== 초기화 ========== */
     document.addEventListener('DOMContentLoaded', () => {
@@ -264,7 +295,7 @@
       document.querySelectorAll('.seg-btn').forEach((b,i) => {
         b.classList.toggle('active', (i===0 && type==='center') || (i===1 && type==='team'));
       });
-      selectedTargets = type==='center' ? ['ct-1','ct-2'] : ['tm-1','tm-5'];
+      selectedTargets = type==='center' ? ['ct-seoul','ct-busan'] : ['tm-1','tm-5'];
       renderTargetSelector();
       renderAll();
     }
@@ -337,7 +368,6 @@
 
       let html = '';
 
-      // 1. 품질 점수 추이 (full width)
       if (visibleWidgets.has('trend')) {
         html += `<div class="content-card" style="margin-bottom:16px;">
           <div class="content-card-header"><span style="font-size:14px;font-weight:600;">품질 점수 추이</span></div>
@@ -345,7 +375,6 @@
         </div>`;
       }
 
-      // 사이드 바이 사이드 영역 (컬럼별 카드)
       const sideWidgetIds = ['avgScore','evalCount','issueRate','trendDev','avgCallTime','distRadar','topDeduction','topDeductionCall'];
       const sideWidgets = sideWidgetIds.filter(w=>visibleWidgets.has(w));
       if (sideWidgets.length > 0) {
@@ -374,8 +403,8 @@
 
       container.innerHTML = html;
 
-      // 차트 렌더링
       if (visibleWidgets.has('trend')) renderTrendChart(stats, items);
+      if (visibleWidgets.has('trendDev')) renderTrendDevCharts(stats, items);
       if (visibleWidgets.has('distRadar')) { renderDonutCharts(stats, items); renderRadarCharts(stats, items); }
     }
 
@@ -385,12 +414,6 @@
     }
 
     /* ========== 드릴다운 네비게이션 헬퍼 ========== */
-    /*
-     * goToEval(item, extraParams)
-     * - 비교 분석 위젯에서 통합 평가 현황(integrated-evaluation.html)으로 이동하는 공통 함수
-     * - compareType에 따라 center 또는 team 파라미터를 자동 생성
-     * - extraParams로 추가 필터(issue, score_range, deduction, date 등)를 전달
-     */
     function goToEval(item, extraParams) {
       const base = compareType === 'center'
         ? `center=${encodeURIComponent(item.name)}`
@@ -398,9 +421,24 @@
       window.location.href = `integrated-evaluation.html?${base}${extraParams ? '&' + extraParams : ''}`;
     }
 
+    /* ========== 날짜 유틸 ========== */
+    function buildDateLabels(numDays) {
+      const today = new Date();
+      const displayLabels = [];
+      const isoStrings = [];
+      for (let i = numDays - 1; i >= 0; i--) {
+        const d = new Date(today);
+        d.setDate(d.getDate() - i);
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        displayLabels.push(`${mm}/${dd}`);
+        isoStrings.push(`${d.getFullYear()}-${mm}-${dd}`);
+      }
+      return { displayLabels, isoStrings };
+    }
+
     /* ========== 위젯 렌더링 함수들 ========== */
 
-    // 최고값 대비 차이 표시 헬퍼 (higherIsBetter=true: 높을수록 좋음)
     function bestDiff(values, idx, higherIsBetter=true) {
       const best = higherIsBetter ? Math.max(...values) : Math.min(...values);
       const val = values[idx];
@@ -428,7 +466,6 @@
       return { isBest:false, html:`<span class="diff-cell"><span class="diff-badge">▼ ${diff.toFixed(1)}%p</span></span>` };
     }
 
-    // 2. 평균 QA 점수 + 유형별 평가 점수
     function renderAvgScore(stats, items) {
       const avgs = stats.map(s=>s.currentAvg);
       const ibScores = stats.map(s=>s.byType.ib.avgScore);
@@ -464,7 +501,6 @@
       });
     }
 
-    // 3. 상담/평가 건수 (좌: 총합, 우: 유형별)
     function renderEvalCount(stats, items) {
       const calls = stats.map(s=>s.totalCalls);
       const evals = stats.map(s=>s.totalEvals);
@@ -514,11 +550,6 @@
       });
     }
 
-    /*
-     * 이슈 발생률 드릴다운
-     * - FAIL(금지어) 행 클릭 → integrated-evaluation.html?issue=fail + 센터/팀 필터
-     * - 기준 미달 행 클릭 → integrated-evaluation.html?issue=under + 센터/팀 필터
-     */
     function renderIssueRate(stats, items) {
       const failRates = stats.map(s=>s.failRate);
       const underRates = stats.map(s=>s.underRate);
@@ -545,7 +576,6 @@
       });
     }
 
-    // 5. 점수 분포(도넛) + 종합 성과(레이더) - 5:5 배치
     const PERF_LABELS = ['QA 점수','평가 완료율','정상 비율','우수 비율','상담 효율'];
 
     function renderDistRadar(stats, items) {
@@ -573,7 +603,7 @@
       });
     }
 
-    // 7. 추세 및 편차
+    /* A-086/A-087: 추세 및 편차 - Chart.js 미니 차트 포함 */
     function renderTrendDev(stats, items) {
       const maxScores = stats.map(s=>s.maxScore);
       const minScores = stats.map(s=>s.minScore);
@@ -586,6 +616,7 @@
         const bdStd = bestDiff(stds, i, false);
         return `<div class="col-widget">
           <div class="widget-label">추세 및 편차</div>
+          <div style="height:120px;margin-bottom:8px;"><canvas id="trenddev-${i}"></canvas></div>
           <div class="stat-row"><span class="stat-label">최고점</span><span class="stat-val ${bdMax.isBest?'best':''}">${s.maxScore}점</span>${bdMax.html}</div>
           <div class="stat-row"><span class="stat-label">최저점</span><span class="stat-val ${bdMin.isBest?'best':''}">${s.minScore}점</span>${bdMin.html}</div>
           <div class="stat-row"><span class="stat-label">편차</span><span class="stat-val ${bdDev.isBest?'best':''}">${s.deviation}</span>${bdDev.html}</div>
@@ -599,7 +630,6 @@
       });
     }
 
-    // 8. 상담사 평균 상담 시간
     function renderAvgCallTime(stats, items) {
       const times = stats.map(s=>s.avgCallTimeSec);
       return stats.map((s,i) => {
@@ -620,11 +650,6 @@
       });
     }
 
-    /*
-     * 최다 감점 항목 Top 5 드릴다운
-     * - 감점 항목 행 클릭 → integrated-evaluation.html로 이동
-     * - 전달 파라미터: deduction(감점 항목명) + 센터/팀 필터
-     */
     function renderTopDeduction(stats, items) {
       return stats.map((s,i) => {
         const itemJson = JSON.stringify({name:items[i].name}).replace(/"/g,'&quot;');
@@ -644,16 +669,12 @@
       });
     }
 
-    /*
-     * 최다 감점 콜 Top 5 드릴다운
-     * - 감점 콜 행 클릭 → integrated-evaluation.html로 이동
-     * - 전달 파라미터: score_range=low + 센터/팀 필터 (저점수 평가 목록 조회)
-     */
+    /* A-091/A-092: 클릭 시 상담사명(agent) 파라미터로 필터링 */
     function renderTopDeductionCall(stats, items) {
       return stats.map((s,i) => {
         const itemJson = JSON.stringify({name:items[i].name}).replace(/"/g,'&quot;');
         const rows = s.topDeductionCalls.map(d =>
-          `<div class="stat-row clickable" style="padding:3px 0;" onclick="goToEval(${itemJson},'score_range=low')">
+          `<div class="stat-row clickable" style="padding:3px 0;" onclick="goToEval(${itemJson},'agent=${encodeURIComponent(d.agent)}')">
             <span class="stat-label" style="display:flex;align-items:center;gap:6px;">
               <span style="width:16px;height:16px;border-radius:50%;background:#F5F5F5;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#757575;">${d.rank}</span>
               ${d.agent}
@@ -669,16 +690,15 @@
     }
 
     /* ========== 차트 렌더링 ========== */
-    /*
-     * 품질 점수 추이 드릴다운
-     * - 차트 데이터 포인트 클릭 → integrated-evaluation.html로 이동
-     * - 전달 파라미터: date(클릭한 날짜) + center 또는 team(해당 라인의 센터/팀)
-     */
+
+    /* A-079/A-080: 실제 날짜 라벨, 클릭 시 ws=all + date 파라미터
+       A-081: 오늘 이후 날짜 데이터 비표시 (역산 방식으로 미래 날짜 원천 차단) */
     function renderTrendChart(stats, items) {
       const ctx = document.getElementById('trend-canvas');
       if (!ctx) return;
       if (trendChart) trendChart.destroy();
-      const labels = stats[0].trendData.map(d => `Day ${d.day}`);
+      const numDays = stats[0].trendData.length;
+      const { displayLabels, isoStrings } = buildDateLabels(numDays);
       const datasets = stats.map((s,i) => ({
         label: getName(items[i]),
         data: s.trendData.map(d=>d.score),
@@ -689,16 +709,15 @@
         pointHoverRadius: 5
       }));
       trendChart = new Chart(ctx, {
-        type:'line', data:{ labels, datasets },
+        type:'line', data:{ labels: displayLabels, datasets },
         options:{
           responsive:true, maintainAspectRatio:false,
           interaction:{ mode:'index', intersect:false },
           onClick: (evt, elements) => {
             if (elements.length > 0) {
-              const dsIdx = elements[0].datasetIndex;
               const ptIdx = elements[0].index;
-              const date = labels[ptIdx];
-              goToEval(items[dsIdx], `date=${encodeURIComponent(date)}`);
+              const date = isoStrings[ptIdx];
+              window.location.href = `integrated-evaluation.html?ws=all&date=${date}`;
             }
           },
           onHover: (evt, elements) => {
@@ -717,12 +736,6 @@
     }
 
     let donutCharts = [];
-
-    /*
-     * 점수 분포 도넛 차트 드릴다운
-     * - 세그먼트(우수/양호/주의/미달) 클릭 → integrated-evaluation.html로 이동
-     * - 전달 파라미터: score_range(excellent|good|caution|low) + 센터/팀 필터
-     */
     const SCORE_RANGE_KEYS = ['excellent','good','caution','low'];
 
     function renderDonutCharts(stats, items) {
@@ -763,15 +776,6 @@
     function renderRadarCharts(stats, items) {
       radarCharts.forEach(c=>c.destroy());
       radarCharts = [];
-      /*
-       * 종합 성과 레이더 차트 - 5개 축 데이터 출처
-       * ──────────────────────────────────────────
-       * 1. QA 점수      : currentAvg (평균 QA 점수, 0~100)
-       * 2. 평가 완료율  : evalRate (총 상담 건수 대비 평가 완료 비율, 0~100%)
-       * 3. 정상 비율    : 100 - failRate - underRate (FAIL·기준 미달 제외 정상 평가 비율, 0~100%)
-       * 4. 우수 비율    : excellent / totalEvals * 100 (우수 등급 비율, 0~100%)
-       * 5. 상담 효율    : 평균 상담 시간 기반 선형 환산 (3분=100, 10분=0, 짧을수록 높음)
-       */
       stats.forEach((s,i) => {
         const ctx = document.getElementById(`radar-${i}`);
         if (!ctx) return;
@@ -793,7 +797,10 @@
           },
           options:{
             responsive:true, maintainAspectRatio:false,
-            plugins:{ legend:{ display:false } },
+            plugins:{
+              legend:{ display:true, position:'bottom', labels:{ font:{size:10}, usePointStyle:true, pointStyle:'circle' } },
+              tooltip:{ enabled:true, callbacks:{ label:c=>`${c.dataset.label}: ${c.parsed.r.toFixed(1)}` } }
+            },
             scales:{
               r:{ min:0, max:100, ticks:{ stepSize:25, font:{size:8}, backdropColor:'transparent' },
                 pointLabels:{ font:{size:9} }, grid:{color:'#E0E0E0'} }
@@ -801,6 +808,54 @@
           }
         });
         radarCharts.push(chart);
+      });
+    }
+
+    /* A-086/A-087: 추세 및 편차 미니 차트 (범례 + 툴팁 활성화) */
+    function renderTrendDevCharts(stats, items) {
+      trendDevCharts.forEach(c => c.destroy());
+      trendDevCharts = [];
+      const numDays = stats[0].trendData.length;
+      const { displayLabels } = buildDateLabels(numDays);
+      stats.forEach((s, i) => {
+        const ctx = document.getElementById(`trenddev-${i}`);
+        if (!ctx) return;
+        const avgVal = +(s.trendData.reduce((a,d) => a + d.score, 0) / s.trendData.length).toFixed(1);
+        const chart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: displayLabels,
+            datasets: [
+              {
+                label: '일별 점수',
+                data: s.trendData.map(d => d.score),
+                borderColor: items[i].color,
+                backgroundColor: items[i].color + '20',
+                borderWidth: 1.5, fill: true, tension: 0.3,
+                pointRadius: 0, pointHoverRadius: 4
+              },
+              {
+                label: '평균 (' + avgVal + '점)',
+                data: Array(numDays).fill(avgVal),
+                borderColor: '#9E9E9E',
+                borderWidth: 1, borderDash: [4, 4],
+                fill: false, pointRadius: 0, pointHoverRadius: 0
+              }
+            ]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+              legend: { display: true, position: 'top', labels: { usePointStyle: true, pointStyle: 'circle', padding: 8, font: { size: 10 } } },
+              tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', padding: 8, callbacks: { label: c => `${c.dataset.label}: ${c.parsed.y.toFixed(1)}점` } }
+            },
+            scales: {
+              y: { min: 60, max: 100, grid: { color: '#F5F5F5' }, ticks: { font: { size: 9 }, maxTicksLimit: 4 } },
+              x: { display: false }
+            }
+          }
+        });
+        trendDevCharts.push(chart);
       });
     }
   </script>

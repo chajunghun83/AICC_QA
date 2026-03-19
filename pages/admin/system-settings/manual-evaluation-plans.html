@@ -45,7 +45,9 @@
         </div>
         <div>
           <label class="form-label">대상</label>
-          <input type="text" class="form-input" id="target-search" placeholder="대상 검색" style="min-width:120px;">
+          <select class="form-select" id="target-search" style="min-width:120px;">
+            <option value="all">전체</option>
+          </select>
         </div>
         <div>
           <label class="form-label">담당자</label>
@@ -71,9 +73,10 @@
           <thead>
             <tr>
               <th style="width:40px;">No</th>
-              <th>계획명</th>
+              <th class="col-left">계획명</th>
               <th>적용 평가표</th>
               <th>평가기간</th>
+              <th>반복 주기</th>
               <th>대상</th>
               <th>상세 조건</th>
               <th>담당자</th>
@@ -189,9 +192,21 @@
       return plans.length > 0 ? Math.max(...plans.map(p => p.no)) + 1 : 1;
     }
 
+    /* ── 채널 체크박스 하이라이트 토글 ── */
+    function toggleChannelHighlight(chk) {
+      const label = chk.parentElement;
+      if (chk.checked) {
+        label.style.background = '#E3F2FD';
+        label.style.border = '1px solid #00A3FF';
+      } else {
+        label.style.background = '';
+        label.style.border = '1px solid transparent';
+      }
+    }
+
     /* ── 상태 자동 계산 ── */
-    // DB 상태 필드 대신 날짜 기반으로 자동 계산하여 데이터 정합성 유지
     function computeStatus(plan) {
+      if (plan.draft) return { status: 'pending', text: '초안' };
       const today = new Date().toISOString().slice(0, 10);
       if (today < plan.periodStart) return { status: 'pending', text: '예정' };
       if (plan.periodEnd && today > plan.periodEnd) return { status: 'completed', text: '종료' };
@@ -244,9 +259,10 @@
         return `
           <tr onclick="openDetail(${p.no})">
             <td>${p.no}</td>
-            <td style="font-weight:500;">${p.name}</td>
+            <td class="col-left" style="font-weight:500;">${p.name}</td>
             <td style="max-width:180px;">${renderFormsBadge(p.forms)}</td>
             <td style="font-size:12px;color:#757575;">${period}</td>
+            <td>${p.repeat || '-'}</td>
             <td>${p.target}</td>
             <td>${criteriaBadge(p.criteriaType, p.criteriaValue, p.criteria)}</td>
             <td>${p.assignee || '-'}</td>
@@ -265,8 +281,8 @@
       if (statusVal !== 'all') filtered = filtered.filter(p => computeStatus(p).text === statusVal);
       const repeatVal = document.getElementById('repeat-filter').value;
       if (repeatVal !== 'all') filtered = filtered.filter(p => p.repeat === repeatVal);
-      const targetSearch = (document.getElementById('target-search').value || '').trim().toLowerCase();
-      if (targetSearch) filtered = filtered.filter(p => (p.target || '').toLowerCase().includes(targetSearch));
+      const targetVal = document.getElementById('target-search').value;
+      if (targetVal !== 'all') filtered = filtered.filter(p => (p.target || '').includes(targetVal));
       const assigneeSearch = (document.getElementById('assignee-search').value || '').trim().toLowerCase();
       if (assigneeSearch) filtered = filtered.filter(p => (p.assignee || '').toLowerCase().includes(assigneeSearch));
       renderTable(filtered);
@@ -278,7 +294,7 @@
       document.getElementById('plan-search').value = '';
       document.getElementById('plan-status-filter').value = 'all';
       document.getElementById('repeat-filter').value = 'all';
-      document.getElementById('target-search').value = '';
+      document.getElementById('target-search').value = 'all';
       document.getElementById('assignee-search').value = '';
       renderTable();
     }
@@ -308,6 +324,7 @@
         : '<span style="color:#BDBDBD;font-size:12px;">미설정</span>';
 
       const content = `
+        <div style="overflow-y:auto;max-height:calc(90vh - 120px);">
         <div style="margin-bottom:20px;">
           <div class="form-label" style="margin-bottom:12px;font-size:13px;font-weight:700;color:#212121;">기본 정보</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
@@ -352,10 +369,10 @@
             <div>
               <div class="form-label">채널</div>
               <div style="display:flex;gap:8px;margin-top:4px;">
-                <label style="display:flex;align-items:center;gap:4px;font-size:13px;">
+                <label style="display:flex;align-items:center;gap:4px;font-size:13px;padding:4px 8px;border-radius:4px;${td.inbound ? 'background:#E3F2FD;border:1px solid #00A3FF;' : 'border:1px solid transparent;'}">
                   <input type="checkbox" ${td.inbound ? 'checked' : ''} disabled> I/B
                 </label>
-                <label style="display:flex;align-items:center;gap:4px;font-size:13px;">
+                <label style="display:flex;align-items:center;gap:4px;font-size:13px;padding:4px 8px;border-radius:4px;${td.outbound ? 'background:#E3F2FD;border:1px solid #00A3FF;' : 'border:1px solid transparent;'}">
                   <input type="checkbox" ${td.outbound ? 'checked' : ''} disabled> O/B
                 </label>
               </div>
@@ -392,19 +409,20 @@
             </div>
           </div>
         </div>
+        </div>
       `;
 
       let footerBtns;
       if (isActive || isPending) {
         footerBtns = `
           <button class="btn btn-danger" onclick="handleAction(${p.no}, 'delete')">삭제</button>
-          <button class="btn btn-secondary" onclick="handleAction(${p.no}, 'copy')">복사</button>
+          <button class="btn btn-secondary" onclick="handleAction(${p.no}, 'copy')">사본 생성</button>
           <button class="btn btn-secondary" onclick="openEditModal(${p.no})">편집</button>
         `;
       } else {
         footerBtns = `
           <button class="btn btn-secondary" onclick="AICC_Modal.close()">닫기</button>
-          <button class="btn btn-secondary" onclick="handleAction(${p.no}, 'copy')">복사</button>
+          <button class="btn btn-secondary" onclick="handleAction(${p.no}, 'copy')">사본 생성</button>
         `;
       }
 
@@ -853,11 +871,11 @@
               <div style="flex:1;">
                 <label class="form-label">채널</label>
                 <div style="display:flex;gap:12px;margin-top:6px;">
-                  <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
-                    <input type="checkbox" id="pf-ib" ${td.inbound !== false ? 'checked' : ''}> I/B
+                  <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;padding:4px 8px;border-radius:4px;${td.inbound !== false ? 'background:#E3F2FD;border:1px solid #00A3FF;' : 'border:1px solid transparent;'}">
+                    <input type="checkbox" id="pf-ib" ${td.inbound !== false ? 'checked' : ''} onchange="toggleChannelHighlight(this)"> I/B
                   </label>
-                  <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
-                    <input type="checkbox" id="pf-ob" ${td.outbound !== false ? 'checked' : ''}> O/B
+                  <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;padding:4px 8px;border-radius:4px;${td.outbound !== false ? 'background:#E3F2FD;border:1px solid #00A3FF;' : 'border:1px solid transparent;'}">
+                    <input type="checkbox" id="pf-ob" ${td.outbound !== false ? 'checked' : ''} onchange="toggleChannelHighlight(this)"> O/B
                   </label>
                 </div>
               </div>
@@ -927,6 +945,10 @@
       if (formNames.length === 0) {
         formNames.push('표준 QA 평가표 v2.1', '기술지원 전문 평가표', '표준 QA 평가표 v2.0');
       }
+      // 수동 평가 전용 평가표 옵션 추가
+      ['수동 평가표 v1.0', '수동 평가표 v2.0', 'VOC 응대 평가표'].forEach(f => {
+        if (!formNames.includes(f)) formNames.push(f);
+      });
       const unique = [...new Set(formNames)];
       const selected = selectedForms.length > 0 ? selectedForms[0] : '';
       const options = unique.map(fn =>
@@ -1081,7 +1103,6 @@
       }, 300);
     }
 
-    // Object.assign으로 기존 객체를 직접 갱신하여 배열 내 참조 유지
     function saveEdit(no) {
       const vals = readForm();
       if (!vals) return;
@@ -1090,6 +1111,7 @@
       if (!p) return;
 
       Object.assign(p, vals);
+      delete p.draft;
       renderTable();
       AICC_Modal.close();
       AICC_Toast.show('수동 평가 계획이 수정되었습니다.');
@@ -1105,19 +1127,20 @@
 
       switch (action) {
         case 'delete':
+          if (!confirm('정말 삭제하시겠습니까?')) return;
           plans.splice(idx, 1);
           renderTable();
           AICC_Toast.show(`"${p.name}" 계획이 삭제되었습니다. 연동된 자동 평가 제외 규칙도 함께 삭제됩니다.`);
           break;
         case 'copy': {
-          // deep copy로 원본과 완전히 독립된 사본 생성
           const copy = JSON.parse(JSON.stringify(p));
           copy.no = getNextNo();
           copy.name = p.name + ' (사본)';
+          copy.draft = true;
           copy.stats = { total: 0, completed: 0, pending: 0 };
           plans.push(copy);
           renderTable();
-          AICC_Toast.show(`"${p.name}" 계획이 복사되었습니다.`);
+          AICC_Toast.show(`"${p.name}" 사본이 생성되었습니다. (초안 상태)`);
           break;
         }
       }
@@ -1134,10 +1157,18 @@
       const evRaw = await AICC_DataLoader.load('evaluations.json');
       if (evRaw) { evaluationsData = evRaw; consultTypeTree = buildConsultTypeTree(evRaw); }
 
-      // 기존 계획에 사용된 반복 주기값을 자동으로 필터 옵션에 추가
       const repeats = [...new Set(plans.map(p => p.repeat).filter(Boolean))];
       const repeatSel = document.getElementById('repeat-filter');
       repeats.forEach(r => { repeatSel.innerHTML += '<option value="' + r + '">' + r + '</option>'; });
+
+      // 센터/팀 기반 대상 드롭다운 옵션 동적 생성
+      const targetSel = document.getElementById('target-search');
+      centersData.forEach(ws => {
+        targetSel.innerHTML += '<option value="' + ws.name + '">' + ws.name + ' > 전체</option>';
+        ws.teams.forEach(t => {
+          targetSel.innerHTML += '<option value="' + ws.name + ' > ' + t.name + '">' + ws.name + ' > ' + t.name + '</option>';
+        });
+      });
 
       renderTable();
     });

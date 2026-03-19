@@ -120,47 +120,47 @@
       const data = getDataByTab(tab);
 
       if (tab === 'agent') {
-        thead.innerHTML = '<tr><th style="width:40px;">No</th><th>상담사</th><th>소속</th><th>사유</th><th>적용 기간</th><th>상태</th></tr>';
+        thead.innerHTML = '<tr><th style="width:40px;">No</th><th>상담사</th><th>소속</th><th class="col-left">사유</th><th>적용 기간</th><th>상태</th></tr>';
         tbody.innerHTML = data.map(r => `
           <tr onclick="openDetail('agent', ${r.no})">
             <td>${r.no}</td>
             <td style="font-weight:500;">${r.agents.join(', ')}</td>
             <td>${r.center} > ${r.team}</td>
-            <td>${r.reason}</td>
+            <td class="col-left">${r.reason}</td>
             <td style="font-size:12px;color:#757575;">${r.periodStart} ~ ${r.periodEnd}</td>
             <td>${statusBadge(r.isActive)}</td>
           </tr>
         `).join('');
       } else if (tab === 'team') {
-        thead.innerHTML = '<tr><th style="width:40px;">No</th><th>팀</th><th>사유</th><th>적용 기간</th><th>상태</th></tr>';
+        thead.innerHTML = '<tr><th style="width:40px;">No</th><th>팀</th><th class="col-left">사유</th><th>적용 기간</th><th>상태</th></tr>';
         tbody.innerHTML = data.map(r => `
           <tr onclick="openDetail('team', ${r.no})">
             <td>${r.no}</td>
             <td style="font-weight:500;">${r.center} > ${r.team}</td>
-            <td>${r.reason}</td>
+            <td class="col-left">${r.reason}</td>
             <td style="font-size:12px;color:#757575;">${r.periodStart} ~ ${r.periodEnd}</td>
             <td>${statusBadge(r.isActive)}</td>
           </tr>
         `).join('');
       } else if (tab === 'period') {
-        thead.innerHTML = '<tr><th style="width:40px;">No</th><th>제외 기간</th><th>대상 범위</th><th>사유</th><th>상태</th></tr>';
+        thead.innerHTML = '<tr><th style="width:40px;">No</th><th>제외 기간</th><th>대상 범위</th><th class="col-left">사유</th><th>상태</th></tr>';
         tbody.innerHTML = data.map(r => `
           <tr onclick="openDetail('period', ${r.no})">
             <td>${r.no}</td>
             <td style="font-weight:500;">${r.periodStart} ~ ${r.periodEnd}</td>
             <td>${r.scopeLabel}</td>
-            <td>${r.reason}</td>
+            <td class="col-left">${r.reason}</td>
             <td>${statusBadge(r.isActive)}</td>
           </tr>
         `).join('');
       } else {
-        thead.innerHTML = '<tr><th style="width:40px;">No</th><th>적용 대상</th><th>기준 시간</th><th>사유</th><th>상태</th></tr>';
+        thead.innerHTML = '<tr><th style="width:40px;">No</th><th>적용 대상</th><th>기준 시간</th><th class="col-left">사유</th><th>상태</th></tr>';
         tbody.innerHTML = data.map(r => `
           <tr onclick="openDetail('duration', ${r.no})">
             <td>${r.no}</td>
             <td style="font-weight:500;">${r.channel}</td>
             <td>${r.seconds}초 미만</td>
-            <td>${r.reason}</td>
+            <td class="col-left">${r.reason}</td>
             <td>${statusBadge(r.isActive)}</td>
           </tr>
         `).join('');
@@ -367,10 +367,12 @@
         <option value="">팀 선택</option>
         ${teams.map(t => `<option value="${t.name}"${t.name === selectedTeam ? ' selected' : ''}>${t.name}</option>`).join('')}
       </select><div id="exc-agent-area" style="margin-top:8px;">`;
-      if (agents.length > 0) {
-        const allNames = agents.map(a => a.name);
-        // 기존 선택 상담사가 현재 팀에 존재하지 않을 수 있으므로 교차 필터링 후 폴백으로 전체 선택
-        const selected = (d.agents || []).filter(n => allNames.includes(n));
+      const allNames = agents.map(a => a.name);
+      const ruleAgents = d.agents || [];
+      // 규칙에 저장된 상담사가 현재 팀 목록에 없어도 편집 시 원본 데이터를 유지하기 위해 병합
+      ruleAgents.forEach(n => { if (!allNames.includes(n)) allNames.push(n); });
+      if (allNames.length > 0) {
+        const selected = ruleAgents.filter(n => allNames.includes(n));
         html += '<label class="form-label" style="margin-top:8px;">상담사 선택</label>' +
           renderDualListbox('dlb-agent', allNames, selected.length > 0 ? selected : allNames);
       }

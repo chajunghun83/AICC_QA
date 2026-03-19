@@ -1593,6 +1593,26 @@
       const { ws, team } = ctx;
       const agents = team.agents;
 
+      // A-028: 실제 agents에서 긴급 이슈 건수 계산
+      const actualUrgentCount = agents.filter(a => a.urgentIssue).length;
+
+      // A-029: 실제 평가 데이터에서 최다 감점 항목을 콜 단위로 계산
+      const deductionMap = {};
+      const allEvals = agents.flatMap(a => a.evaluations || []);
+      allEvals.forEach(e => {
+        const items = e.deductionItems || (e.deductionItem ? [e.deductionItem] : []);
+        items.forEach(item => { deductionMap[item] = (deductionMap[item] || 0) + 1; });
+      });
+      let actualTopItem = '-', actualTopCalls = 0;
+      Object.entries(deductionMap).forEach(([item, cnt]) => {
+        if (cnt > actualTopCalls) { actualTopItem = item; actualTopCalls = cnt; }
+      });
+      const actualTopPct = allEvals.length > 0 ? Math.round(actualTopCalls / allEvals.length * 100) : 0;
+
+      // A-031/A-032: 실제 evaluations에서 70점 이하 콜 건수 계산 (score <= 70)
+      const actualLowScoreCalls = allEvals.filter(e => e.score <= 70).length;
+      const actualLowScorePct = allEvals.length > 0 ? Math.round(actualLowScoreCalls / allEvals.length * 100) : 0;
+
       const row1 = [
         { label: '평가 상담사', value: AICC_Fmt.number(team.agentCount), current: team.agentCount, prev: team.agentCount_prev || 0, unit: '명', prevLabel: '전월', sub: team.name },
         { label: '평가 건수', value: AICC_Fmt.number(team.totalCalls), current: team.totalCalls, prev: (team.calls_auto_ib_prev || 0) + (team.calls_auto_ob_prev || 0) + (team.calls_manual_prev || 0), unit: '건', prevLabel: '전월',
@@ -1603,7 +1623,7 @@
           autoIB_prev: team.calls_auto_ib_prev || 0, autoIB_done_prev: team.calls_auto_ib_done_prev || 0,
           autoOB_prev: team.calls_auto_ob_prev || 0, autoOB_done_prev: team.calls_auto_ob_done_prev || 0,
           manual_prev: team.calls_manual_prev || 0, manual_done_prev: team.calls_manual_done_prev || 0 },
-        { label: '긴급 이슈', value: team.urgentIssues || 0, current: team.urgentIssues || 0, prev: team.urgentIssues_prev || 0, unit: '건', prevLabel: '전월', filterKey: 'urgentIssue' },
+        { label: '긴급 이슈', value: actualUrgentCount, current: actualUrgentCount, prev: team.urgentIssues_prev || 0, unit: '건', prevLabel: '전월', filterKey: 'urgentIssue' },
         { label: '상담사 평균 통화시간', value: team.avgDuration || '00:00', current: team.avgDuration || '00:00', prev: team.avgDuration_prev || '00:00', unit: '', isDuration: true, prevLabel: '전월' }
       ];
       const row2 = [
@@ -1613,8 +1633,8 @@
           scoreIB: team.avg_score_auto_ib || 0, scoreIB_prev: team.avg_score_auto_ib_prev || 0,
           scoreOB: team.avg_score_auto_ob || 0, scoreOB_prev: team.avg_score_auto_ob_prev || 0,
           scoreManual: team.avg_score_manual || 0, scoreManual_prev: team.avg_score_manual_prev || 0 },
-        { label: '최다 감점 항목', isTopDeduction: true, deductionData: team.topDeduction || { item: '-', calls: 0, pct: 0 }, filterKey: 'topDeduction' },
-        { label: '70점 이하 콜', isLowScore: true, lowCalls: team.lowScoreCalls || 0, lowPct: team.lowScorePct || 0, filterKey: 'lowScore' }
+        { label: '최다 감점 항목', isTopDeduction: true, deductionData: { item: actualTopItem, calls: actualTopCalls, pct: actualTopPct }, filterKey: 'topDeduction' },
+        { label: '70점 이하 콜', isLowScore: true, lowCalls: actualLowScoreCalls, lowPct: actualLowScorePct, filterKey: 'lowScore' }
       ];
 
       renderKpiTwoRows(row1, row2);
@@ -2171,9 +2191,17 @@
       if (progress) progress.style.width = pct + '%';
     }
 
-    // 수동 검증 페이지 이동 stub — 실제 구현 시 evalId를 쿼리파라미터로 전달 예정
+    // A-035: 수동 검증 버튼 동작 — 검증 완료 상태로 변경 후 Toast 표시
     function openManualReview(evalId) {
-      AICC_Toast.show('수동 검증 화면으로 이동합니다. (시뮬레이션)');
+      if (navStack.length === 3) {
+        const { agent } = navStack[2].data;
+        const ev = agent.evaluations.find(e => e.id === evalId);
+        if (ev) {
+          ev.verification_status = '검증 완료';
+        }
+      }
+      AICC_Toast.show('수동 검증이 완료되었습니다.');
+      AICC_Modal.close();
     }
 
     /* ========== 필터 ========== */

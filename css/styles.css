@@ -404,7 +404,7 @@
   font-weight: 600;
   color: #757575;
   padding: 10px 12px;
-  text-align: left;
+  text-align: center;
   border-bottom: 1px solid #E0E0E0;
   white-space: nowrap;
 }
@@ -423,7 +423,12 @@
   padding: 10px 12px;
   font-size: 13px;
   color: #212121;
+  text-align: center;
 }
+
+/* 텍스트 컬럼(상담유형, 평가표명, 계획명, 사유 등)은 좌측 정렬 유지 */
+.data-table th.col-left,
+.data-table td.col-left { text-align: left; }
 
 /* Cards */
 .kpi-card {

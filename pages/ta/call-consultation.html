@@ -36,20 +36,24 @@
         <!-- 전체 콜 -->
         <div id="tab-total" style="padding:20px;">
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px;">
-            <div style="background:#F9F9F9;border-radius:8px;padding:16px;text-align:center;">
-              <div style="font-size:11px;color:#757575;">전체 콜</div>
-              <div style="font-size:24px;font-weight:700;">1,842건</div>
+            <div class="kpi-card">
+              <div style="font-size:12px;color:#757575;margin-bottom:8px;">전체 콜</div>
+              <div style="display:flex;align-items:baseline;gap:8px;">
+                <span style="font-size:24px;font-weight:700;">1,842</span>
+                <span style="font-size:14px;color:#757575;">건</span>
+              </div>
             </div>
-            <div style="background:#F9F9F9;border-radius:8px;padding:16px;text-align:center;">
-              <div style="font-size:11px;color:#757575;">평균 통화시간</div>
+            <div class="kpi-card">
+              <div style="font-size:12px;color:#757575;margin-bottom:8px;">평균 통화시간</div>
               <div style="font-size:24px;font-weight:700;">05:23</div>
             </div>
-            <div style="background:#F9F9F9;border-radius:8px;padding:16px;text-align:center;">
-              <div style="font-size:11px;color:#757575;">평균 묵음시간</div>
+            <div class="kpi-card">
+              <div style="font-size:12px;color:#757575;margin-bottom:8px;">평균 묵음시간</div>
               <div style="font-size:24px;font-weight:700;">00:42</div>
             </div>
           </div>
           <div style="height:240px;margin-bottom:20px;"><canvas id="total-chart"></canvas></div>
+          <div class="content-card-header"><span style="font-size:14px;font-weight:600;">콜 목록</span><span style="font-size:12px;color:#757575;">총 8건</span></div>
           <table class="data-table">
             <thead><tr><th>No</th><th>일시</th><th>상담사</th><th>통화시간</th><th>묵음시간</th><th>상담유형</th><th>이슈</th></tr></thead>
             <tbody id="total-tbody"></tbody>
@@ -59,17 +63,20 @@
         <!-- 재인입 -->
         <div id="tab-reentry" style="display:none;padding:20px;">
           <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:20px;">
-            <div style="background:#F9F9F9;border-radius:8px;padding:16px;text-align:center;">
-              <div style="font-size:11px;color:#757575;">재인입 콜</div>
-              <div style="font-size:24px;font-weight:700;color:#E65100;">89건</div>
+            <div class="kpi-card">
+              <div style="font-size:12px;color:#757575;margin-bottom:8px;">재인입 콜</div>
+              <div style="display:flex;align-items:baseline;gap:8px;">
+                <span style="font-size:24px;font-weight:700;color:#E65100;">89</span>
+                <span style="font-size:14px;color:#757575;">건</span>
+              </div>
             </div>
-            <div style="background:#F9F9F9;border-radius:8px;padding:16px;text-align:center;">
-              <div style="font-size:11px;color:#757575;">재인입률</div>
+            <div class="kpi-card">
+              <div style="font-size:12px;color:#757575;margin-bottom:8px;">재인입률</div>
               <div style="font-size:24px;font-weight:700;color:#E65100;">4.8%</div>
             </div>
           </div>
           <div style="height:240px;margin-bottom:20px;"><canvas id="reentry-chart"></canvas></div>
-          <div style="font-size:14px;font-weight:600;margin-bottom:12px;">재인입 고객 상담유형 Top 5</div>
+          <div class="content-card-header" style="border:none;"><span style="font-size:14px;font-weight:600;">재인입 고객 상담유형 Top 5</span></div>
           <table class="data-table">
             <thead><tr><th>순위</th><th>상담유형</th><th>재인입 건수</th><th>비율</th></tr></thead>
             <tbody>
@@ -85,17 +92,17 @@
         <!-- 묵음 -->
         <div id="tab-silence" style="display:none;padding:20px;">
           <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:20px;">
-            <div style="background:#F9F9F9;border-radius:8px;padding:16px;text-align:center;">
-              <div style="font-size:11px;color:#757575;">평균 묵음시간</div>
+            <div class="kpi-card">
+              <div style="font-size:12px;color:#757575;margin-bottom:8px;">평균 묵음시간</div>
               <div style="font-size:24px;font-weight:700;">00:42</div>
             </div>
-            <div style="background:#F9F9F9;border-radius:8px;padding:16px;text-align:center;">
-              <div style="font-size:11px;color:#757575;">묵음 비율</div>
+            <div class="kpi-card">
+              <div style="font-size:12px;color:#757575;margin-bottom:8px;">묵음 비율</div>
               <div style="font-size:24px;font-weight:700;color:#F57F17;">12.3%</div>
             </div>
           </div>
           <div style="height:240px;margin-bottom:20px;"><canvas id="silence-chart"></canvas></div>
-          <div style="font-size:14px;font-weight:600;margin-bottom:12px;">묵음 Top 5 상담유형</div>
+          <div class="content-card-header" style="border:none;"><span style="font-size:14px;font-weight:600;">묵음 Top 5 상담유형</span></div>
           <table class="data-table">
             <thead><tr><th>순위</th><th>상담유형</th><th>평균 묵음시간</th><th>콜 건수</th></tr></thead>
             <tbody>
@@ -111,17 +118,23 @@
         <!-- 이슈 -->
         <div id="tab-issue" style="display:none;padding:20px;">
           <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:20px;">
-            <div style="background:#F9F9F9;border-radius:8px;padding:16px;text-align:center;">
-              <div style="font-size:11px;color:#757575;">이슈 콜</div>
-              <div style="font-size:24px;font-weight:700;color:#F44336;">127건</div>
+            <div class="kpi-card">
+              <div style="font-size:12px;color:#757575;margin-bottom:8px;">이슈 콜</div>
+              <div style="display:flex;align-items:baseline;gap:8px;">
+                <span style="font-size:24px;font-weight:700;color:#F44336;">127</span>
+                <span style="font-size:14px;color:#757575;">건</span>
+              </div>
             </div>
-            <div style="background:#F9F9F9;border-radius:8px;padding:16px;text-align:center;">
-              <div style="font-size:11px;color:#757575;">미처리</div>
-              <div style="font-size:24px;font-weight:700;color:#F57F17;">23건</div>
+            <div class="kpi-card">
+              <div style="font-size:12px;color:#757575;margin-bottom:8px;">미처리</div>
+              <div style="display:flex;align-items:baseline;gap:8px;">
+                <span style="font-size:24px;font-weight:700;color:#F57F17;">23</span>
+                <span style="font-size:14px;color:#757575;">건</span>
+              </div>
             </div>
           </div>
           <div style="height:240px;margin-bottom:20px;"><canvas id="issue-chart"></canvas></div>
-          <div style="font-size:14px;font-weight:600;margin-bottom:12px;">이슈 처리현황</div>
+          <div class="content-card-header" style="border:none;"><span style="font-size:14px;font-weight:600;">이슈 처리현황</span></div>
           <table class="data-table">
             <thead><tr><th>이슈유형</th><th>건수</th><th>처리완료</th><th>미처리</th><th>처리율</th></tr></thead>
             <tbody>
@@ -177,7 +190,7 @@
           <tr onclick="AICC_Modal.open({title:'콜 상세',content:'<div style=\\'padding:8px;\\'>상담사: ${c.agent}<br>일시: ${c.date}<br>통화시간: ${c.talk}<br>묵음시간: ${c.silence}<br>상담유형: ${c.type}<br>이슈: ${c.issue}</div>',footer:'<button class=\\'btn btn-secondary\\' onclick=\\'AICC_Modal.close()\\'>닫기</button>',size:'sm'})">
             <td>${c.no}</td><td style="font-size:12px;color:#757575;">${c.date}</td><td style="font-weight:500;">${c.agent}</td>
             <td>${c.talk}</td><td>${c.silence}</td><td>${c.type}</td>
-            <td style="color:${c.issue==='-'?'#9E9E9E':'#F57F17'};font-size:12px;">${c.issue}</td>
+            <td>${c.issue==='-' ? '<span class="badge badge-inactive">-</span>' : '<span class="badge badge-pending">'+c.issue+'</span>'}</td>
           </tr>
         `).join('');
       }

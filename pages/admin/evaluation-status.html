@@ -71,9 +71,9 @@
           <label class="form-label">신뢰도</label>
           <select class="form-select" id="confidence-filter">
             <option value="all">전체</option>
-            <option value="high">90% 이상</option>
-            <option value="mid">70 ~ 89%</option>
-            <option value="low">70% 미만</option>
+            <option value="High">High</option>
+            <option value="Mid">Mid</option>
+            <option value="Low">Low</option>
           </select>
         </div>
         <div>
@@ -89,7 +89,7 @@
           </select>
         </div>
         <div>
-          <label class="form-label">검증 상태</label>
+          <label class="form-label">수동 검증</label>
           <select class="form-select" id="review-filter" onchange="applyFilter()">
             <option value="all">전체</option>
             <option value="reviewed">검증 완료</option>
@@ -119,12 +119,12 @@
               <th>평가 ID</th>
               <th>일시</th>
               <th>팀</th>
-              <th>상담유형</th>
+              <th class="col-left">상담유형</th>
               <th>유형</th>
               <th>통화시간</th>
               <th>상담사</th>
-              <th>평가표</th>
-              <th style="text-align:right">점수</th>
+              <th class="col-left">평가표</th>
+              <th>점수</th>
               <th>신뢰도</th>
               <th>이슈</th>
             </tr>
@@ -280,12 +280,12 @@
             <td style="font-size:12px;font-family:monospace;">${ev.id}${reviewBadge}</td>
             <td style="font-size:12px;">${ev.date} ${ev.call_time}</td>
             <td style="font-size:12px;color:#757575;">${ev.center} &gt; ${ev.team}</td>
-            <td style="font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${ev.consultation_type || ''}">${ev.consultation_type || '-'}</td>
+            <td class="col-left" style="font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${ev.consultation_type || ''}">${ev.consultation_type || '-'}</td>
             <td><span class="badge ${ev.call_type === 'I/B' ? 'badge-nlp' : 'badge-ai'}" style="font-size:10px;">${ev.call_type}</span></td>
             <td style="font-size:12px;">${ev.duration}</td>
             <td style="font-weight:500;">${ev.agent_name}</td>
-            <td style="font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ev.eval_form || '-'}</td>
-            <td style="text-align:right;">${AICC_Fmt.scoreHtml(ev.total_score)}</td>
+            <td class="col-left" style="font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ev.eval_form || '-'}</td>
+            <td>${AICC_Fmt.scoreHtml(ev.total_score)}</td>
             <td>${confBadge}</td>
             <td style="max-width:120px;">${issueHtml}</td>
           </tr>
@@ -371,6 +371,18 @@
               ${infoRow('점수', '<strong style="font-size:16px;' + scoreColor + '">' + ev.total_score + '점</strong>')}
 
               ${ev.ai_feedback ? `<div style="margin-top:12px;background:#F5F5F5;border-radius:6px;padding:10px 12px;font-size:11px;line-height:1.6;"><strong style="color:#424242;">AI 피드백</strong><br><span style="color:#757575;">${ev.ai_feedback}</span></div>` : ''}
+
+              ${ev.manual_review ? `
+                <div style="margin-top:12px;">
+                  <div style="font-size:12px;font-weight:600;color:#2E7D32;margin-bottom:6px;">수동 검증 이력</div>
+                  ${(ev.review_history || [ev.manual_review]).map(h => `
+                    <div style="padding:6px 10px;background:#E8F5E9;border-radius:6px;font-size:11px;color:#2E7D32;margin-bottom:4px;">
+                      <div>${h.reviewed_at} (${h.reviewer})${h.modified_items && h.modified_items.length > 0 ? ' | 수정 ' + h.modified_items.length + '건' : ''}</div>
+                      ${h.comment ? '<div style="margin-top:2px;color:#1B5E20;font-style:italic;">' + h.comment + '</div>' : ''}
+                    </div>
+                  `).join('')}
+                </div>
+              ` : ''}
             </div>
 
             <!-- 중간: 스크립트 + 플레이어 -->
@@ -555,14 +567,15 @@
         `;
       }).join('');
 
-      const reviewedInfo = ev.manual_review
-        ? `<div style="margin-bottom:8px;padding:6px 10px;background:#E8F5E9;border-radius:6px;font-size:11px;color:#2E7D32;">
-             이전 검증: ${ev.manual_review.reviewed_at} (${ev.manual_review.reviewer})
-             ${ev.manual_review.modified_items && ev.manual_review.modified_items.length > 0
-               ? ' | 수정 ' + ev.manual_review.modified_items.length + '건'
-               : ''}
-             ${ev.manual_review.comment ? '<div style="margin-top:2px;color:#1B5E20;font-style:italic;">' + ev.manual_review.comment + '</div>' : ''}
-           </div>`
+      const reviewHistory = ev.review_history || (ev.manual_review ? [ev.manual_review] : []);
+      const reviewedInfo = reviewHistory.length > 0
+        ? '<div style="margin-bottom:8px;"><div style="font-size:11px;font-weight:600;color:#2E7D32;margin-bottom:4px;">검증 이력</div>' +
+          reviewHistory.map(h => `
+            <div style="padding:6px 10px;background:#E8F5E9;border-radius:6px;font-size:11px;color:#2E7D32;margin-bottom:4px;">
+              <div>${h.reviewed_at} (${h.reviewer})${h.modified_items && h.modified_items.length > 0 ? ' | 수정 ' + h.modified_items.length + '건' : ''}</div>
+              ${h.comment ? '<div style="margin-top:2px;color:#1B5E20;font-style:italic;">' + h.comment + '</div>' : ''}
+            </div>
+          `).join('') + '</div>'
         : '';
 
       const mrScoreColor = ev.total_score >= 80 ? 'color:#4CAF50' : ev.total_score >= 60 ? 'color:#FFC107' : 'color:#F44336';
@@ -719,12 +732,20 @@
 
       const comment = document.getElementById('mr-comment')?.value?.trim() || '';
 
-      ev.manual_review = {
+      // 기존 단일 객체 → 배열 구조 마이그레이션
+      if (!ev.review_history) {
+        ev.review_history = [];
+        if (ev.manual_review) ev.review_history.push({...ev.manual_review});
+      }
+
+      const newReview = {
         reviewed_at: dateStr,
         reviewer: '관리자',
         modified_items: modifiedItems,
         comment: comment
       };
+      ev.review_history.push(newReview);
+      ev.manual_review = newReview;
 
       manualReviewEvalId = null;
       AICC_Modal.close();
@@ -809,9 +830,12 @@
         const formVal = document.getElementById('form-filter').value;
         if (formVal !== 'all') filtered = filtered.filter(e => e.eval_form === formVal);
         const confVal = document.getElementById('confidence-filter').value;
-        if (confVal === 'high') filtered = filtered.filter(e => e.confidence >= 90);
-        if (confVal === 'mid') filtered = filtered.filter(e => e.confidence >= 70 && e.confidence < 90);
-        if (confVal === 'low') filtered = filtered.filter(e => e.confidence < 70);
+        if (confVal !== 'all') {
+          filtered = filtered.filter(e => {
+            const conf = e.confidence === 'Medium' ? 'Mid' : e.confidence;
+            return conf === confVal;
+          });
+        }
         const consultSearch = (document.getElementById('consult-search').value || '').trim().toLowerCase();
         if (consultSearch) filtered = filtered.filter(e => (e.consultation_type || '').toLowerCase().includes(consultSearch));
         renderEvalTable(filtered);

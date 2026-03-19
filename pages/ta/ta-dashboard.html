@@ -3,88 +3,102 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TA 대시보드 - AICC Quality Hub</title>
+  <title>대시보드 - AICC Quality Hub</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-treemap@3.1.0/dist/chartjs-chart-treemap.min.js"></script>
   <link rel="stylesheet" href="../../css/styles.css">
+  <style>
+    .kpi-card:hover .kpi-search-icon { color: #424242 !important; }
+  </style>
 </head>
 <body class="bg-[#F5F5F5] text-[#212121]">
   <div id="page-content">
+    <!-- 페이지 헤더 + 필터 -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
       <div>
-        <h1 style="font-size:20px;font-weight:700;margin:0;">TA 대시보드</h1>
+        <h1 style="font-size:20px;font-weight:700;margin:0;">대시보드</h1>
         <p style="font-size:12px;color:#757575;margin:4px 0 0;">텍스트 분석 현황 종합 대시보드</p>
       </div>
       <div style="display:flex;align-items:center;gap:12px;">
-        <div id="period-picker"></div>
-        <select class="form-select" id="ws-filter"><option value="">전체</option></select>
-        <button class="btn btn-primary btn-sm" onclick="AICC_Toast.show('필터가 적용되었습니다.')">검색</button>
+        <button class="btn btn-sm btn-secondary" id="btn-realtime" onclick="toggleRealtime()" style="padding:6px 16px;font-weight:600;white-space:nowrap;flex-shrink:0;">실시간</button>
+        <div id="period-picker-container"></div>
+        <select class="form-select" id="ws-filter" onchange="onCenterChange()">
+          <option value="all">전체 센터</option>
+        </select>
+        <select class="form-select" id="team-filter" disabled onchange="onTeamChange()">
+          <option value="all">전체 팀</option>
+        </select>
       </div>
     </div>
 
-    <!-- KPI 카드 -->
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;">
-      <div class="content-card" style="padding:20px;text-align:center;">
-        <div style="font-size:12px;color:#757575;">전체 콜</div>
-        <div style="font-size:28px;font-weight:700;color:#212121;margin:8px 0;">1,842</div>
-        <div style="font-size:12px;color:#4CAF50;">▲ 12.3% vs 전기간</div>
-      </div>
-      <div class="content-card" style="padding:20px;text-align:center;">
-        <div style="font-size:12px;color:#757575;">이슈 콜</div>
-        <div style="font-size:28px;font-weight:700;color:#F57F17;margin:8px 0;">127</div>
-        <div style="font-size:12px;color:#F44336;">▲ 8.5%</div>
-      </div>
-      <div class="content-card" style="padding:20px;text-align:center;">
-        <div style="font-size:12px;color:#757575;">초과 콜</div>
-        <div style="font-size:28px;font-weight:700;color:#1565C0;margin:8px 0;">45</div>
-        <div style="font-size:12px;color:#4CAF50;">▼ 3.2%</div>
-      </div>
-      <div class="content-card" style="padding:20px;text-align:center;">
-        <div style="font-size:12px;color:#757575;">재인입 콜</div>
-        <div style="font-size:28px;font-weight:700;color:#E65100;margin:8px 0;">89</div>
-        <div style="font-size:12px;color:#F44336;">▲ 15.7%</div>
-      </div>
-    </div>
+    <!-- KPI 카드 4개 -->
+    <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:20px;" id="kpi-cards"></div>
 
-    <!-- 급상승 키워드 + 위험 키워드 -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
-      <div class="content-card">
-        <div class="content-card-header"><span style="font-size:14px;font-weight:600;">급상승 키워드 Top 5</span></div>
-        <div class="content-card-body" style="padding:0;">
-          <table class="data-table">
-            <thead><tr><th>순위</th><th>키워드</th><th>건수</th><th>증감률</th></tr></thead>
-            <tbody id="rising-tbody"></tbody>
-          </table>
+    <!-- 중간: 급상승 키워드 + 히트맵 2개 + 하단 4카드 -->
+    <div style="display:grid;grid-template-columns:1fr 2fr 2fr;grid-template-rows:auto auto;gap:16px;margin-bottom:20px;">
+      <!-- 급상승 키워드 TOP 10 (2행 스팬) -->
+      <div class="content-card" style="grid-row:span 2;">
+        <div class="content-card-header"><span style="font-size:14px;font-weight:600;">주요 키워드 TOP 20</span></div>
+        <div class="content-card-body" style="padding:0;" id="rising-list"></div>
+      </div>
+
+      <!-- 상담유형 히트맵 (좌) -->
+      <div class="content-card" style="display:flex;flex-direction:column;">
+        <div class="content-card-header">
+          <span style="font-size:14px;font-weight:600;">상담유형 히트맵</span>
+          <div style="display:flex;gap:4px;">
+            <button class="btn btn-sm btn-primary" id="btn-depth1" onclick="switchDepth(1)">대분류</button>
+            <button class="btn btn-sm btn-secondary" id="btn-depth2" onclick="switchDepth(2)">중분류</button>
+          </div>
+        </div>
+        <div class="content-card-body" id="heatmap-left" style="height:520px;position:relative;">
+          <canvas id="treemap-left-canvas"></canvas>
         </div>
       </div>
-      <div class="content-card">
-        <div class="content-card-header"><span style="font-size:14px;font-weight:600;">위험 키워드</span></div>
-        <div class="content-card-body">
-          <div style="display:flex;flex-wrap:wrap;gap:8px;" id="risk-badges"></div>
+
+      <!-- 소분류 히트맵 (우) -->
+      <div class="content-card" style="display:flex;flex-direction:column;">
+        <div class="content-card-header" style="min-height:62px;">
+          <span style="font-size:14px;font-weight:600;">소분류 히트맵</span>
+          <span style="font-size:12px;color:#757575;" id="heatmap-right-label">전체</span>
+        </div>
+        <div class="content-card-body" id="heatmap-right" style="height:520px;position:relative;">
+          <canvas id="treemap-right-canvas"></canvas>
+        </div>
+      </div>
+
+      <!-- 하단 4개 카드 -->
+      <div style="grid-column:2/4;display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
+        <div class="content-card">
+          <div class="content-card-header"><span style="font-size:14px;font-weight:600;">상담유형 Top 5</span></div>
+          <div class="content-card-body" style="padding:0;" id="trend-list"></div>
+        </div>
+        <div class="content-card">
+          <div class="content-card-header"><span style="font-size:14px;font-weight:600;">이슈 키워드 TOP 5</span></div>
+          <div class="content-card-body" style="padding:0;" id="issue-list"></div>
+        </div>
+        <div class="content-card">
+          <div class="content-card-header"><span style="font-size:14px;font-weight:600;">신규 키워드 TOP 5</span><span id="new-kw-info" style="display:none;cursor:help;margin-left:6px;font-size:13px;color:#90CAF9;" title="실시간 모드에서는 어제 대비 오늘 새로 등장한 키워드를 표시합니다.">ⓘ</span></div>
+          <div class="content-card-body" style="padding:0;" id="freq-list"></div>
+        </div>
+        <div class="content-card">
+          <div class="content-card-header"><span style="font-size:14px;font-weight:600;">미처리 리스트</span></div>
+          <div class="content-card-body" style="padding:12px;" id="pending-list"></div>
         </div>
       </div>
     </div>
 
-    <!-- 상담유형 히트맵 -->
-    <div class="content-card" style="margin-bottom:24px;">
-      <div class="content-card-header"><span style="font-size:14px;font-weight:600;">상담유형 히트맵</span></div>
-      <div class="content-card-body">
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;" id="heatmap-grid"></div>
-      </div>
-    </div>
-
-    <!-- 시간대별 콜 분포 -->
-    <div class="content-card" style="margin-bottom:24px;">
-      <div class="content-card-header"><span style="font-size:14px;font-weight:600;">시간대별 콜 분포</span></div>
-      <div class="content-card-body"><div style="height:280px;"><canvas id="hourly-chart"></canvas></div></div>
-    </div>
-
-    <!-- 고빈도 키워드 -->
+    <!-- 시간대별 콜량 -->
     <div class="content-card">
-      <div class="content-card-header"><span style="font-size:14px;font-weight:600;">고빈도 키워드</span></div>
-      <div class="content-card-body">
-        <div style="display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:center;min-height:120px;" id="wordcloud"></div>
+      <div class="content-card-header">
+        <span style="font-size:14px;font-weight:600;">시간대별 콜량</span>
+        <div style="display:flex;align-items:center;gap:16px;font-size:11px;">
+          <span style="display:flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;background:rgba(0,163,255,0.7);border-radius:2px;"></span><span id="current-legend-label">현재 기간</span></span>
+          <span id="prev-legend-wrap" style="display:flex;align-items:center;gap:4px;"><span style="width:12px;height:0;border-top:2px dashed #BDBDBD;"></span><span id="prev-legend-label">전월 기간</span></span>
+        </div>
       </div>
+      <div class="content-card-body"><div style="height:280px;"><canvas id="hourly-chart"></canvas></div></div>
     </div>
   </div>
 
@@ -98,247 +112,840 @@
   <script src="../../js/components/toast.js"></script>
   <script src="../../js/components/period-picker.js"></script>
   <script>
-    /* ── 드릴다운 더미 데이터 ── */
-    const callListData = [
-      { id:'CALL-2025-08421', date:'2025-01-27 16:42', agent:'홍길동', type:'상품문의', duration:'08:32', keyword:'환불' },
-      { id:'CALL-2025-08418', date:'2025-01-27 15:18', agent:'김철수', type:'배송문의', duration:'05:15', keyword:'배송지연' },
-      { id:'CALL-2025-08415', date:'2025-01-27 14:05', agent:'이영희', type:'기술지원', duration:'12:48', keyword:'품절' },
-      { id:'CALL-2025-08410', date:'2025-01-27 11:33', agent:'박상현', type:'결제/환불', duration:'06:22', keyword:'카드결제오류' },
-      { id:'CALL-2025-08407', date:'2025-01-27 10:07', agent:'최수진', type:'교환/반품', duration:'15:44', keyword:'사이즈교환' },
-      { id:'CALL-2025-08401', date:'2025-01-27 09:25', agent:'홍길동', type:'회원관리', duration:'04:10', keyword:'회원탈퇴' },
-      { id:'CALL-2025-08395', date:'2025-01-26 17:02', agent:'김철수', type:'배송문의', duration:'09:55', keyword:'배송지연' },
-      { id:'CALL-2025-08390', date:'2025-01-26 15:38', agent:'이영희', type:'프로모션', duration:'07:20', keyword:'적립금' }
+    /* ── 상태 ── */
+    let currentDepth = 1;
+    let selectedCatName = null;
+    let currentPeriod = 'monthly';
+    let hourlyChart = null;
+    let isRealtime = false;
+    let leftTreemapChart = null;
+    let rightTreemapChart = null;
+
+    const periodConfig = {
+      daily:   { kpiPrefix:'금일', prevLabel:'전일' },
+      weekly:  { kpiPrefix:'금주', prevLabel:'전주' },
+      monthly: { kpiPrefix:'금월', prevLabel:'전월' },
+      yearly:  { kpiPrefix:'금년', prevLabel:'전년' },
+      custom:  { kpiPrefix:'기간 내', prevLabel:'이전 기간' }
+    };
+
+    /* ── 4댑스 상담유형 트리 (쇼핑몰) ── */
+    const categoryTree = [
+      { name:'주문', count:3222, children:[
+        { name:'주문조회', count:1205, children:[
+          { name:'주문상태', count:680, children:[{name:'배송현황확인',count:380},{name:'입금확인',count:300}] },
+          { name:'주문내역', count:525, children:[{name:'주문상세보기',count:320},{name:'영수증발급',count:205}] }
+        ]},
+        { name:'주문변경', count:987, children:[
+          {name:'수량변경',count:412},{name:'옵션변경',count:355},{name:'배송지변경',count:220}
+        ]},
+        { name:'주문취소', count:1030, children:[
+          { name:'단순변심', count:480, children:[{name:'전체취소',count:290},{name:'부분취소',count:190}] },
+          {name:'오류주문',count:320},{name:'품절취소',count:230}
+        ]}
+      ]},
+      { name:'결제', count:2105, children:[
+        { name:'카드결제', count:890, children:[
+          { name:'결제오류', count:520, children:[{name:'승인실패',count:310},{name:'한도초과',count:210}] },
+          {name:'할부변경',count:370}
+        ]},
+        { name:'간편결제', count:615, children:[
+          {name:'네이버페이',count:235},{name:'카카오페이',count:205},{name:'토스',count:175}
+        ]},
+        { name:'현금결제', count:350, children:[{name:'무통장입금',count:210},{name:'계좌이체',count:140}] },
+        { name:'결제취소', count:250, children:[{name:'부분취소',count:150},{name:'전액취소',count:100}] }
+      ]},
+      { name:'배송', count:5019, children:[
+        { name:'배송현황', count:2100, children:[
+          { name:'일반배송', count:1200, children:[{name:'택배추적',count:720},{name:'배송예정일',count:480}] },
+          { name:'특수배송', count:900, children:[{name:'새벽배송',count:520},{name:'당일배송',count:380}] }
+        ]},
+        { name:'배송기간', count:1450, children:[
+          { name:'배송지연', count:890, children:[{name:'택배지연',count:540},{name:'물류지연',count:350}] },
+          {name:'배송소요일',count:560}
+        ]},
+        { name:'배송지', count:832, children:[{name:'주소변경',count:520},{name:'수령인변경',count:312}] },
+        { name:'해외배송', count:637, children:[{name:'관세문의',count:387},{name:'해외배송추적',count:250}] }
+      ]},
+      { name:'교환/반품', count:4253, children:[
+        { name:'교환접수', count:1680, children:[
+          { name:'사이즈교환', count:890, children:[{name:'의류사이즈',count:540},{name:'신발사이즈',count:350}] },
+          {name:'색상교환',count:490},{name:'불량교환',count:300}
+        ]},
+        { name:'반품접수', count:1350, children:[
+          {name:'단순변심반품',count:780},
+          { name:'상품불량', count:570, children:[{name:'파손',count:340},{name:'오배송',count:230}] }
+        ]},
+        { name:'환불처리', count:823, children:[{name:'환불지연',count:450},{name:'환불방법',count:373}] },
+        { name:'수거문의', count:400, children:[{name:'수거일정',count:240},{name:'수거방법',count:160}] }
+      ]},
+      { name:'회원/계정', count:2890, children:[
+        { name:'회원가입', count:890, children:[{name:'가입방법',count:320},{name:'본인인증',count:370},{name:'인증오류',count:200}] },
+        { name:'로그인', count:760, children:[{name:'비밀번호찾기',count:480},{name:'아이디찾기',count:280}] },
+        { name:'회원정보', count:680, children:[{name:'정보변경',count:320},{name:'탈퇴문의',count:260},{name:'개인정보',count:100}] },
+        { name:'등급혜택', count:560, children:[{name:'등급조회',count:340},{name:'혜택안내',count:220}] }
+      ]},
+      { name:'상품', count:3450, children:[
+        { name:'상품정보', count:1420, children:[
+          { name:'사이즈정보', count:680, children:[{name:'사이즈표',count:420},{name:'실측문의',count:260}] },
+          {name:'소재성분',count:440},{name:'색상확인',count:300}
+        ]},
+        { name:'재입고', count:890, children:[{name:'재입고알림',count:530},{name:'입고일정',count:360}] },
+        { name:'가격문의', count:640, children:[{name:'할인정보',count:390},{name:'가격변동',count:250}] },
+        { name:'리뷰후기', count:500, children:[{name:'리뷰작성',count:300},{name:'리뷰수정',count:200}] }
+      ]},
+      { name:'프로모션', count:2199, children:[
+        { name:'쿠폰', count:900, children:[{name:'쿠폰적용',count:420},{name:'쿠폰오류',count:300},{name:'쿠폰발급',count:180}] },
+        { name:'적립금', count:580, children:[{name:'적립금사용',count:350},{name:'적립금확인',count:230}] },
+        { name:'이벤트', count:369, children:[{name:'이벤트참여',count:169},{name:'당첨확인',count:200}] },
+        { name:'할인', count:350, children:[{name:'기간한정',count:200},{name:'회원할인',count:150}] }
+      ]},
+      { name:'A/S', count:1456, children:[
+        { name:'A/S접수', count:680, children:[
+          { name:'수선요청', count:380, children:[{name:'의류수선',count:230},{name:'가방수선',count:150}] },
+          {name:'교체요청',count:180},{name:'부품교체',count:120}
+        ]},
+        { name:'A/S진행', count:476, children:[{name:'진행상태',count:150},{name:'소요기간',count:136},{name:'비용문의',count:190}] },
+        { name:'보증문의', count:300, children:[{name:'보증기간',count:100},{name:'보증범위',count:80},{name:'보증서분실',count:70},{name:'보증연장',count:50}] }
+      ]},
+      { name:'포인트/마일리지', count:987, children:[
+        { name:'포인트적립', count:420, children:[{name:'구매적립',count:250},{name:'리뷰적립',count:100},{name:'출석적립',count:70}] },
+        { name:'포인트사용', count:350, children:[{name:'사용방법',count:210},{name:'사용제한',count:140}] },
+        { name:'마일리지', count:217, children:[{name:'전환문의',count:120},{name:'소멸안내',count:97}] }
+      ]},
+      { name:'기타', count:654, children:[
+        { name:'매장문의', count:260, children:[{name:'영업시간',count:80},{name:'매장위치',count:60},{name:'주차안내',count:60},{name:'매장전화',count:60}] },
+        { name:'제휴문의', count:207, children:[{name:'제휴카드',count:120},{name:'기업제휴',count:87}] },
+        { name:'기타문의', count:187, children:[{name:'칭찬제안',count:50},{name:'불편사항',count:47},{name:'시스템오류',count:40},{name:'앱문의',count:30},{name:'기타',count:20}] }
+      ]},
+      { name:'고객불만', count:1180, children:[
+        { name:'서비스불만', count:520, children:[{name:'응대불만',count:280},{name:'대기시간',count:240}] },
+        { name:'품질불만', count:410, children:[{name:'제품하자',count:250},{name:'포장불량',count:160}] },
+        { name:'보상요구', count:250, children:[{name:'환불요구',count:150},{name:'추가보상',count:100}] }
+      ]},
+      { name:'앱/웹사이트', count:1050, children:[
+        { name:'앱오류', count:450, children:[{name:'로딩오류',count:200},{name:'결제오류',count:150},{name:'화면깨짐',count:100}] },
+        { name:'기능문의', count:350, children:[{name:'검색기능',count:180},{name:'필터기능',count:170}] },
+        { name:'계정연동', count:250, children:[{name:'SNS연동',count:150},{name:'기기변경',count:100}] }
+      ]},
+      { name:'멤버십', count:920, children:[
+        { name:'등급문의', count:380, children:[{name:'승급조건',count:220},{name:'등급유지',count:160}] },
+        { name:'혜택문의', count:310, children:[{name:'무료배송',count:180},{name:'전용쿠폰',count:130}] },
+        { name:'가입탈퇴', count:230, children:[{name:'가입방법',count:140},{name:'해지방법',count:90}] }
+      ]},
+      { name:'선물/기프트', count:780, children:[
+        { name:'기프트카드', count:350, children:[{name:'카드구매',count:200},{name:'카드사용',count:150}] },
+        { name:'선물포장', count:250, children:[{name:'포장옵션',count:150},{name:'메시지카드',count:100}] },
+        { name:'선물배송', count:180, children:[{name:'익명배송',count:100},{name:'예약배송',count:80}] }
+      ]},
+      { name:'구독서비스', count:650, children:[
+        { name:'정기배송', count:300, children:[{name:'주기변경',count:170},{name:'상품변경',count:130}] },
+        { name:'구독관리', count:220, children:[{name:'일시정지',count:130},{name:'해지문의',count:90}] },
+        { name:'구독혜택', count:130, children:[{name:'할인율',count:80},{name:'추가혜택',count:50}] }
+      ]},
+      { name:'매장안내', count:580, children:[
+        { name:'매장정보', count:280, children:[{name:'위치안내',count:150},{name:'영업시간',count:130}] },
+        { name:'픽업서비스', count:180, children:[{name:'매장픽업',count:110},{name:'드라이브스루',count:70}] },
+        { name:'매장재고', count:120, children:[{name:'재고확인',count:70},{name:'매장예약',count:50}] }
+      ]},
+      { name:'세금계산서', count:490, children:[
+        { name:'발급요청', count:250, children:[{name:'전자발급',count:160},{name:'수정발급',count:90}] },
+        { name:'현금영수증', count:150, children:[{name:'발급문의',count:90},{name:'취소문의',count:60}] },
+        { name:'영수증재발급', count:90, children:[{name:'이메일발송',count:50},{name:'팩스발송',count:40}] }
+      ]},
+      { name:'해외직구', count:430, children:[
+        { name:'통관문의', count:200, children:[{name:'관세계산',count:120},{name:'통관지연',count:80}] },
+        { name:'해외반품', count:130, children:[{name:'반품절차',count:80},{name:'반품비용',count:50}] },
+        { name:'사이즈문의', count:100, children:[{name:'해외사이즈',count:60},{name:'사이즈변환',count:40}] }
+      ]},
+      { name:'카탈로그', count:370, children:[
+        { name:'신상품', count:170, children:[{name:'신상알림',count:100},{name:'사전예약',count:70}] },
+        { name:'브랜드문의', count:120, children:[{name:'입점문의',count:70},{name:'브랜드정보',count:50}] },
+        { name:'품절상품', count:80, children:[{name:'재입고알림',count:50},{name:'대체상품',count:30}] }
+      ]},
+      { name:'챗봇/AI상담', count:320, children:[
+        { name:'챗봇오류', count:150, children:[{name:'응답오류',count:90},{name:'연결실패',count:60}] },
+        { name:'상담전환', count:100, children:[{name:'상담사연결',count:60},{name:'콜백요청',count:40}] },
+        { name:'AI추천', count:70, children:[{name:'추천오류',count:40},{name:'맞춤추천',count:30}] }
+      ]}
     ];
 
-    function genHourlyDetail(keyword) {
-      return Array.from({length:24}, (_, h) => Math.round(Math.random() * 20 + (h >= 9 && h <= 17 ? 15 : 2)));
+    /* ── KPI 기본 데이터 ── */
+    const kpiBase = {
+      totalCalls: { current:12161, prev:11465, ib:7892, ob:4269, ibPrev:7456, obPrev:4009 },
+      issueCalls: { current:8974, prev:8977, ib:5840, ob:3134, ibPrev:5843, obPrev:3134 },
+      overCalls:  { current:2185, prev:1876, ib:1420, ob:765, ibPrev:1220, obPrev:656 },
+      reEntryCalls:{ current:8675, prev:8371, ib:5639, ob:3036, ibPrev:5436, obPrev:2935 }
+    };
+
+    /* ── 주요 키워드 TOP 20 ── */
+    const mainKeywords = [
+      { name:'주문 번호',  count:6729, rate:3 },
+      { name:'배송',      count:5019, rate:7 },
+      { name:'사이즈',    count:4665, rate:3 },
+      { name:'주소',      count:4253, rate:5 },
+      { name:'변경',      count:4148, rate:4 },
+      { name:'제품',      count:3222, rate:8 },
+      { name:'훼손',      count:2906, rate:3 },
+      { name:'반품',      count:2580, rate:2 },
+      { name:'결제',      count:2105, rate:1 },
+      { name:'상품명',    count:1849, rate:4 },
+      { name:'배송지 변경', count:1832, rate:7 },
+      { name:'단순 변심',  count:1788, rate:4 },
+      { name:'교환',      count:1680, rate:2 },
+      { name:'환불',      count:1450, rate:-1 },
+      { name:'적립금',    count:1120, rate:1 },
+      { name:'쿠폰',      count:1050, rate:3 },
+      { name:'회원탈퇴',   count:980,  rate:6 },
+      { name:'포인트',    count:920,  rate:-2 },
+      { name:'색상',      count:870,  rate:1 },
+      { name:'재입고',    count:815,  rate:5 }
+    ];
+
+    /* ── 상담유형 트렌드 Top 5 ── */
+    const trendData = [
+      { name:'교환/반품',  count:2406, rate:3 },
+      { name:'배송현황',   count:2384, rate:4 },
+      { name:'사이즈교환', count:2292, rate:-2 },
+      { name:'주문변경',   count:2257, rate:-1 },
+      { name:'상품문의',   count:2190, rate:-1 }
+    ];
+
+    /* ── 이슈 키워드 TOP 5 (이슈+리스크 통합) ── */
+    const issueData = [
+      { name:'반품 지연',  count:1842, rate:12 },
+      { name:'상품 불량',  count:1356, rate:8 },
+      { name:'환불 지연',  count:987,  rate:15 },
+      { name:'오배송',    count:673,  rate:6 },
+      { name:'포장 파손',  count:512,  rate:9 }
+    ];
+
+    /* ── 신규 키워드 TOP 5 ── */
+    const newKeywordData = [
+      { name:'사전예약',   count:892, rate:null },
+      { name:'시즌오프',   count:645, rate:null },
+      { name:'한정판',    count:423, rate:null },
+      { name:'공동구매',   count:312, rate:null },
+      { name:'라이브방송',  count:287, rate:null }
+    ];
+
+    /* ── 미처리 리스트 (필터 독립) ── */
+    const pendingData = {
+      total: 23,
+      items: [
+        { name:'배송 지연 클레임', count:8 },
+        { name:'환불 미완료',     count:5 },
+        { name:'교환 접수 대기',   count:4 },
+        { name:'불량 신고 확인',   count:3 },
+        { name:'고객 재문의 대기',  count:3 }
+      ]
+    };
+
+    /* ── 실시간용 축소 더미데이터 (금일 0시~16시 누적 기준) ── */
+    const realtimeKpi = {
+      totalCalls:   { current:285, ib:185, ob:100 },
+      issueCalls:   { current:198, ib:129, ob:69 },
+      overCalls:    { current:52,  ib:34,  ob:18 },
+      reEntryCalls: { current:203, ib:132, ob:71 }
+    };
+
+    const realtimeMainKeywords = mainKeywords.map(k => ({ ...k, count: Math.round(k.count / 45) }));
+    const realtimeTrendData = trendData.map(k => ({ ...k, count: Math.round(k.count / 45) }));
+    const realtimeIssueData = issueData.map(k => ({ ...k, count: Math.round(k.count / 45) }));
+
+    /* 실시간 모드의 신규 키워드: 어제 대비 오늘 처음 등장한 키워드 */
+    const realtimeNewKeywordData = [
+      { name:'긴급배송',   count:12, rate:null },
+      { name:'선물세트',   count:8,  rate:null },
+      { name:'묶음할인',   count:6,  rate:null },
+      { name:'품절재입고',  count:5,  rate:null },
+      { name:'당일수령',   count:3,  rate:null }
+    ];
+
+    /* ── 시간대별 콜량 ── */
+    const hourlyBase = {
+      current: [12,8,5,3,2,4,15,45,87,102,98,89,76,82,95,103,97,88,72,56,42,35,28,18],
+      prev:    [10,7,4,3,2,3,12,40,80,95,90,85,70,78,88,98,92,82,68,52,38,32,25,15]
+    };
+
+    /* ══════════════════════════ 유틸리티 ══════════════════════════ */
+
+    /** 트리 노드의 모든 리프(마지막 댑스) 반환 */
+    function getLeafNodes(node) {
+      if (!node.children || node.children.length === 0) {
+        return [{ name: node.name, count: node.count }];
+      }
+      let leaves = [];
+      node.children.forEach(c => { leaves = leaves.concat(getLeafNodes(c)); });
+      return leaves;
     }
 
-    /* ── 1단계: 키워드 상세 모달 (시간대별 분포 차트 + 콜 리스트 버튼) ── */
-    function openKeywordDetail(keyword, count, extra) {
-      const hourly = genHourlyDetail(keyword);
-      const prevHourly = hourly.map(v => Math.round(v * (0.7 + Math.random() * 0.4)));
-      const chartId = 'kw-detail-chart-' + Date.now();
-      const content = `
-        <div style="margin-bottom:16px;">
-          <div style="display:flex;gap:16px;margin-bottom:12px;">
-            <div style="background:#F9F9F9;border-radius:8px;padding:12px 20px;flex:1;text-align:center;">
-              <div style="font-size:11px;color:#757575;">총 건수</div>
-              <div style="font-size:22px;font-weight:700;color:#00A3FF;">${count || '-'}</div>
-            </div>
-            <div style="background:#F9F9F9;border-radius:8px;padding:12px 20px;flex:1;text-align:center;">
-              <div style="font-size:11px;color:#757575;">전기간 대비</div>
-              <div style="font-size:22px;font-weight:700;color:#F44336;">▲ ${extra || Math.round(Math.random()*50+10)}%</div>
-            </div>
-          </div>
-          ${extra && extra.includes && extra.includes('>') ? '<div style="font-size:12px;color:#757575;margin-bottom:8px;">상담유형: ' + extra + '</div>' : ''}
-        </div>
-        <div style="font-size:13px;font-weight:600;margin-bottom:8px;">시간대별 분포 (클릭 시 콜 리스트)</div>
-        <div style="height:220px;"><canvas id="${chartId}"></canvas></div>
-      `;
-      AICC_Modal.open({
-        title: '키워드 상세 - ' + keyword,
-        content: content,
-        footer: '<button class="btn btn-secondary" onclick="openCallList(&quot;'+keyword+'&quot;)">콜 리스트 보기</button><button class="btn btn-secondary" onclick="AICC_Modal.close()">닫기</button>',
-        size: 'lg'
-      });
-      setTimeout(() => {
-        const canvas = document.getElementById(chartId);
-        if (canvas) {
-          new Chart(canvas, {
-            type: 'bar',
-            data: {
-              labels: Array.from({length:24}, (_, i) => i+'시'),
-              datasets: [
-                { label: '현재', data: hourly, backgroundColor: 'rgba(0,163,255,0.7)', borderRadius: 3, order: 1 },
-                { label: '전기간', data: prevHourly, type:'line', borderColor:'#BDBDBD', borderDash:[4,4], pointRadius:0, tension:0.3, order:0 }
-              ]
-            },
-            options: {
-              responsive:true, maintainAspectRatio:false,
-              onClick: (e, elements) => { if (elements.length > 0) { const hour = elements[0].index; openCallList(keyword, hour+'시'); } },
-              plugins: { legend: { position:'top', labels:{font:{size:11}} } },
-              scales: { y:{beginAtZero:true, grid:{color:'#F0F0F0'}}, x:{grid:{display:false}} }
-            }
+    /** 전체 트리의 모든 리프 노드 수집 */
+    function getAllLeafNodes() {
+      let leaves = [];
+      categoryTree.forEach(cat => { leaves = leaves.concat(getLeafNodes(cat)); });
+      return leaves;
+    }
+
+    function getDepth1Items() {
+      return categoryTree.map(c => ({ name:c.name, count:c.count }));
+    }
+
+    function getDepth2Items() {
+      const items = [];
+      categoryTree.forEach(cat => {
+        if (cat.children) {
+          cat.children.forEach(child => {
+            items.push({ name:child.name, count:child.count, parent:cat.name });
           });
         }
-      }, 100);
-    }
-
-    /* ── 2단계: 콜 리스트 모달 ── */
-    function openCallList(keyword, hour) {
-      const filtered = keyword ? callListData.filter(c => c.keyword === keyword || Math.random() > 0.3) : callListData;
-      const title = hour ? '콜 리스트 - ' + keyword + ' (' + hour + ')' : '콜 리스트' + (keyword ? ' - ' + keyword : '');
-      const rows = filtered.map((c, i) => `
-        <tr onclick="openCallDetail('${c.id}')">
-          <td>${i+1}</td>
-          <td style="font-size:12px;color:#757575;">${c.date}</td>
-          <td style="font-weight:500;">${c.agent}</td>
-          <td style="font-family:monospace;font-size:12px;">${c.id}</td>
-          <td>${c.type}</td>
-          <td>${c.duration}</td>
-        </tr>`).join('');
-      AICC_Modal.open({
-        title: title,
-        content: `<div style="font-size:12px;color:#757575;margin-bottom:8px;">총 ${filtered.length}건</div>
-          <table class="data-table"><thead><tr><th>No</th><th>상담일시</th><th>상담사</th><th>콜 ID</th><th>상담유형</th><th>통화시간</th></tr></thead>
-          <tbody>${rows}</tbody></table>`,
-        footer: '<button class="btn btn-secondary" onclick="AICC_Modal.close()">닫기</button>',
-        size: 'lg'
       });
+      return items;
     }
 
-    /* ── 3단계: 콜 상세 모달 ── */
-    function openCallDetail(callId) {
-      const call = callListData.find(c => c.id === callId) || callListData[0];
-      AICC_Modal.open({
-        title: '콜 상세 - ' + call.id,
-        content: `
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;background:#FAFAFA;border:1px solid #EEEEEE;border-radius:8px;padding:16px;margin-bottom:16px;">
-            <div><div style="font-size:11px;color:#757575;">상담일시</div><div style="font-size:13px;font-weight:500;">${call.date}</div></div>
-            <div><div style="font-size:11px;color:#757575;">상담사</div><div style="font-size:13px;font-weight:500;">${call.agent}</div></div>
-            <div><div style="font-size:11px;color:#757575;">상담유형</div><div style="font-size:13px;font-weight:500;">${call.type}</div></div>
-            <div><div style="font-size:11px;color:#757575;">통화시간</div><div style="font-size:13px;font-weight:500;">${call.duration}</div></div>
-          </div>
-          <div style="font-size:13px;font-weight:600;margin-bottom:8px;">감지된 키워드</div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;">
-            <span class="badge badge-active">${call.keyword}</span>
-            <span class="badge badge-pending">상담</span>
-            <span class="badge badge-pending">접수</span>
-          </div>
-          <div style="font-size:13px;font-weight:600;margin-bottom:8px;">통화 스크립트 (요약)</div>
-          <div style="background:#F5F5F5;border-radius:6px;padding:12px;font-size:12px;line-height:1.7;max-height:200px;overflow-y:auto;">
-            <div style="margin-bottom:8px;"><span style="color:#00A3FF;font-weight:600;">상담사:</span> 안녕하세요, ${call.agent}입니다. 무엇을 도와드릴까요?</div>
-            <div style="margin-bottom:8px;"><span style="color:#424242;font-weight:600;">고객:</span> 네, ${call.keyword} 관련해서 문의드립니다...</div>
-            <div style="margin-bottom:8px;"><span style="color:#00A3FF;font-weight:600;">상담사:</span> 네, 확인해드리겠습니다. ${call.type} 건으로 접수하겠습니다.</div>
-            <div><span style="color:#424242;font-weight:600;">고객:</span> 감사합니다.</div>
-          </div>`,
-        footer: '<button class="btn btn-secondary" onclick="AICC_Modal.close()">닫기</button>',
-        size: 'lg'
-      });
+    /** 이름으로 트리 노드 찾기 (depth 1) */
+    function findDepth1Node(name) {
+      return categoryTree.find(c => c.name === name);
     }
 
-    const risingKeywords = [
-      { keyword: '환불', count: 342, rate: 85.2 },
-      { keyword: '배송지연', count: 287, rate: 62.3 },
-      { keyword: '품절', count: 198, rate: 45.1 },
-      { keyword: '카드결제오류', count: 156, rate: 38.7 },
-      { keyword: '교환접수', count: 134, rate: 28.9 }
-    ];
-
-    const riskKeywords = [
-      { keyword: '법적조치', level: 'high' },
-      { keyword: '소비자원', level: 'high' },
-      { keyword: '해킹', level: 'high' },
-      { keyword: '개인정보유출', level: 'high' },
-      { keyword: '불만접수', level: 'medium' },
-      { keyword: '환불거부', level: 'medium' },
-      { keyword: '서비스해지', level: 'medium' },
-      { keyword: '품질불량', level: 'low' }
-    ];
-
-    const categories = [
-      { name: '상품문의', count: 342, heat: 0.95 },
-      { name: '배송문의', count: 287, heat: 0.82 },
-      { name: '교환/반품', count: 198, heat: 0.68 },
-      { name: '결제/환불', count: 156, heat: 0.58 },
-      { name: '회원관리', count: 134, heat: 0.50 },
-      { name: 'A/S접수', count: 112, heat: 0.42 },
-      { name: '프로모션', count: 98, heat: 0.35 },
-      { name: '기술지원', count: 87, heat: 0.30 },
-      { name: '불만/클레임', count: 76, heat: 0.25 },
-      { name: '계약관련', count: 65, heat: 0.20 },
-      { name: '예약/방문', count: 54, heat: 0.15 },
-      { name: '기타', count: 43, heat: 0.10 }
-    ];
-
-    const hourlyData = [12,8,5,3,2,4,15,45,87,102,98,89,76,82,95,103,97,88,72,56,42,35,28,18];
-
-    const freqKeywords = [
-      { keyword: '환불', size: 32 }, { keyword: '배송', size: 28 }, { keyword: '교환', size: 26 },
-      { keyword: '결제', size: 24 }, { keyword: '사이즈', size: 22 }, { keyword: '품절', size: 20 },
-      { keyword: '적립금', size: 18 }, { keyword: '무료배송', size: 17 }, { keyword: '카드', size: 16 },
-      { keyword: 'AS', size: 15 }, { keyword: '회원탈퇴', size: 14 }, { keyword: '비밀번호', size: 13 },
-      { keyword: '쿠폰', size: 16 }, { keyword: '재입고', size: 15 }, { keyword: '포장', size: 12 }
-    ];
-
-    document.addEventListener('DOMContentLoaded', () => {
-      // 급상승 키워드 테이블
-      const risingEl = document.getElementById('rising-tbody');
-      if (risingEl) {
-        risingEl.innerHTML = risingKeywords.map((k, i) => `
-          <tr onclick="openKeywordDetail('${k.keyword}', ${k.count}, '${k.rate}')">
-            <td style="font-weight:600;color:#00A3FF;">${i + 1}</td>
-            <td style="font-weight:500;">${k.keyword}</td>
-            <td>${k.count}</td>
-            <td style="color:#F44336;">▲ ${k.rate}%</td>
-          </tr>
-        `).join('');
+    /** 이름으로 트리 노드 찾기 (depth 2) */
+    function findDepth2Node(name) {
+      for (const cat of categoryTree) {
+        if (cat.children) {
+          const found = cat.children.find(c => c.name === name);
+          if (found) return { node: found, parent: cat.name };
+        }
       }
+      return null;
+    }
 
-      // 위험 키워드 배지
-      const riskColors = { high: '#F44336', medium: '#F57F17', low: '#757575' };
-      const riskEl = document.getElementById('risk-badges');
-      if (riskEl) {
-        riskEl.innerHTML = riskKeywords.map(k =>
-          `<span style="display:inline-block;padding:6px 14px;border-radius:16px;font-size:12px;font-weight:600;color:white;background:${riskColors[k.level]};cursor:pointer;"
-            onclick="openKeywordDetail('${k.keyword}', ${Math.round(Math.random()*50+10)})">${k.keyword}</span>`
-        ).join('');
-      }
+    /** 증감률 HTML */
+    function changeHtml(rate) {
+      if (rate === null || rate === undefined) return '<span style="font-size:10px;color:#00A3FF;font-weight:600;">NEW</span>';
+      if (rate === 0) return '<span style="font-size:11px;color:#757575;">0%</span>';
+      const color = rate > 0 ? '#F44336' : '#4CAF50';
+      const arrow = rate > 0 ? '▲' : '▼';
+      return `<span style="font-size:11px;color:${color};">${arrow}${Math.abs(rate)}%</span>`;
+    }
 
-      // 히트맵
-      const heatEl = document.getElementById('heatmap-grid');
-      if (heatEl) {
-        heatEl.innerHTML = categories.map(c => {
-          const r = Math.round(0 + (1 - c.heat) * 200);
-          const g = Math.round(120 + (1 - c.heat) * 135);
-          const b = Math.round(255);
-          const bg = `rgba(${r},${g},${b},${0.15 + c.heat * 0.6})`;
-          return `<div style="background:${bg};border-radius:8px;padding:16px;text-align:center;cursor:pointer;"
-            onclick="openKeywordDetail('${c.name}', ${c.count}, '${c.name}')">
-            <div style="font-size:13px;font-weight:600;">${c.name}</div>
-            <div style="font-size:18px;font-weight:700;margin-top:4px;">${c.count}</div>
-          </div>`;
-        }).join('');
-      }
+    /* ══════════════════════════ 전체 콜 현황 연동 ══════════════════════════ */
 
-      // 시간대별 차트
-      const hourlyCanvas = document.getElementById('hourly-chart');
-      if (hourlyCanvas) {
-        new Chart(hourlyCanvas, {
-          type: 'bar',
-          data: {
-            labels: Array.from({length:24}, (_, i) => `${String(i).padStart(2,'0')}시`),
-            datasets: [{
-              label: '콜 건수',
-              data: hourlyData,
-              backgroundColor: 'rgba(0,163,255,0.6)',
-              borderRadius: 4
-            }]
+    const CALL_STATUS_URL = 'call-status.html';
+    function goCallStatus(filter, value) {
+      let url = CALL_STATUS_URL + '?filter=' + encodeURIComponent(filter);
+      if (value !== undefined && value !== null) url += '&value=' + encodeURIComponent(value);
+      window.location.href = url;
+    }
+    const searchIconSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
+
+    /* ══════════════════════════ KPI 카드 렌더 ══════════════════════════ */
+
+    function renderKPICards(cfg) {
+      const prevLabel = cfg ? cfg.prevLabel : '전월';
+      const kpiSource = isRealtime ? realtimeKpi : kpiBase;
+      const cards = [
+        { label:'총 콜수', key:'totalCalls', color:'', filter:'all' },
+        { label:'이슈 콜', key:'issueCalls', color:'color:#F57F17;', filter:'issue' },
+        { label:'초과 콜', key:'overCalls', color:'color:#1565C0;', filter:'over' },
+        { label:'재인입 콜', key:'reEntryCalls', color:'color:#E65100;', filter:'reentry' }
+      ];
+
+      document.getElementById('kpi-cards').innerHTML = cards.map(card => {
+        const d = kpiSource[card.key];
+        const diff = isRealtime ? 0 : (d.current - (d.prev || 0));
+        const arrow = diff > 0 ? '&#9650;' : diff < 0 ? '&#9660;' : '';
+        const trendColor = diff > 0 ? '#F44336' : diff < 0 ? '#4CAF50' : '#757575';
+        const trendText = (!isRealtime && diff !== 0) ? `<span style="font-size:12px;color:${trendColor};">${arrow} ${AICC_Fmt.number(Math.abs(diff))}</span>` : '';
+        const prevLine = !isRealtime
+          ? `<div style="font-size:10px;color:#BDBDBD;margin-top:4px;">${prevLabel}: ${AICC_Fmt.number(d.prev)}건</div>`
+          : '';
+
+        return `
+        <div class="kpi-card" style="padding:12px 16px;cursor:pointer;position:relative;" onclick="goCallStatus('${card.filter}')">
+          <span style="position:absolute;top:10px;right:12px;color:#BDBDBD;" class="kpi-search-icon">${searchIconSvg}</span>
+          <div style="font-size:12px;color:#757575;margin-bottom:4px;">${card.label}</div>
+          <div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;">
+            <span style="font-size:28px;font-weight:700;white-space:nowrap;${card.color}">${AICC_Fmt.number(d.current)}</span>
+            ${trendText}
+            <span style="margin-left:auto;font-size:11px;white-space:nowrap;color:#9E9E9E;">I/B <span style="color:#616161;font-weight:600;">${AICC_Fmt.number(d.ib)}</span>건<span style="font-size:10px;">(${Math.round(d.ib / d.current * 100)}%)</span>&ensp;O/B <span style="color:#616161;font-weight:600;">${AICC_Fmt.number(d.ob)}</span>건<span style="font-size:10px;">(${Math.round(d.ob / d.current * 100)}%)</span></span>
+          </div>
+          ${prevLine}
+        </div>`;
+      }).join('');
+    }
+
+    /* ══════════════════════════ 주요 키워드 TOP 20 ══════════════════════════ */
+
+    function renderMainKeywords() {
+      const el = document.getElementById('rising-list');
+      const data = isRealtime ? realtimeMainKeywords : mainKeywords;
+      el.innerHTML = data.map((k, i) => `
+        <div style="display:flex;align-items:center;padding:10px 14px;cursor:pointer;${i < data.length - 1 ? 'border-bottom:1px solid #F5F5F5;' : ''}" onclick="goCallStatus('keyword','${k.name.replace(/'/g,"\\'")}')">
+          <span style="font-size:13px;font-weight:700;color:${i < 3 ? '#00A3FF' : '#9E9E9E'};min-width:20px;">${i + 1}</span>
+          <span style="flex:1;font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:10px;">${k.name}</span>
+          <span style="font-size:12px;font-weight:600;color:#424242;white-space:nowrap;">${AICC_Fmt.number(k.count)}</span>
+          ${!isRealtime ? `<span style="min-width:44px;text-align:right;white-space:nowrap;margin-left:8px;">${changeHtml(k.rate)}</span>` : ''}
+        </div>
+      `).join('');
+    }
+
+    /* ══════════════════════════ 하단 랭킹 리스트 ══════════════════════════ */
+
+    function renderRankList(containerId, items, hideRate) {
+      const el = document.getElementById(containerId);
+      el.innerHTML = items.map((item, i) => `
+        <div style="display:flex;align-items:center;padding:10px 14px;cursor:pointer;${i < items.length - 1 ? 'border-bottom:1px solid #F5F5F5;' : ''}" onclick="goCallStatus('keyword','${item.name.replace(/'/g,"\\'")}')">
+          <span style="font-size:13px;font-weight:700;color:${i < 3 ? '#00A3FF' : '#9E9E9E'};min-width:16px;">${i + 1}</span>
+          <span style="flex:1;font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:10px;">${item.name}</span>
+          <span style="font-size:12px;font-weight:600;color:#424242;white-space:nowrap;">${AICC_Fmt.number(item.count)}건</span>
+          ${!hideRate ? `<span style="min-width:44px;text-align:right;white-space:nowrap;margin-left:8px;">${changeHtml(item.rate)}</span>` : ''}
+        </div>
+      `).join('');
+    }
+
+    /* ══════════════════════════ 미처리 리스트 렌더 ══════════════════════════ */
+
+    function renderPendingList() {
+      const el = document.getElementById('pending-list');
+      el.innerHTML = `
+        <div style="display:flex;align-items:stretch;gap:16px;height:100%;">
+          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:70px;">
+            <span style="font-size:36px;font-weight:700;color:#F44336;">${pendingData.total}</span>
+            <span style="font-size:11px;color:#9E9E9E;margin-top:2px;">건</span>
+          </div>
+          <div style="flex:1;border-left:1px solid #EEEEEE;padding-left:12px;">
+            ${pendingData.items.map((item, i) => `
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;${i < pendingData.items.length - 1 ? 'border-bottom:1px solid #F5F5F5;' : ''}">
+                <span style="font-size:12px;color:#424242;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.name}</span>
+                <span style="font-size:12px;font-weight:600;color:#F44336;white-space:nowrap;margin-left:8px;">${item.count}건</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>`;
+    }
+
+    /* ══════════════════════════ 히트맵 렌더 ══════════════════════════ */
+
+    /** 트리맵 색상: 연한 하늘색(#B8DCF5) → 진한 남색(#0A1E50) */
+    function treemapBgColor(ctx) {
+      if (ctx.type !== 'data') return 'transparent';
+      const value = ctx.raw.v;
+      const max = ctx.dataset._maxVal || 1;
+      const ratio = Math.max(0.05, value / max);
+      const r = Math.round(184 - ratio * 174);
+      const g = Math.round(220 - ratio * 190);
+      const b = Math.round(245 - ratio * 165);
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    function treemapTextColor(ctx) {
+      if (ctx.type !== 'data') return '#212121';
+      const value = ctx.raw.v;
+      const max = ctx.dataset._maxVal || 1;
+      return (value / max) > 0.3 ? '#ffffff' : '#1A1A2E';
+    }
+
+    function renderLeftHeatmap() {
+      const items = currentDepth === 1 ? getDepth1Items() : getDepth2Items();
+      const maxCount = Math.max(...items.map(i => i.count));
+
+      if (leftTreemapChart) leftTreemapChart.destroy();
+
+      const canvas = document.getElementById('treemap-left-canvas');
+      leftTreemapChart = new Chart(canvas, {
+        type: 'treemap',
+        data: {
+          datasets: [{
+            tree: items,
+            key: 'count',
+            labels: {
+              display: true,
+              formatter: (ctx) => ctx.type === 'data' ? [ctx.raw._data.name, AICC_Fmt.number(ctx.raw.v)] : '',
+              color: (ctx) => treemapTextColor(ctx),
+              font: [{ size: 11, weight: 600 }, { size: 13, weight: 700 }],
+              overflow: 'fit',
+              position: 'middle'
+            },
+            backgroundColor: (ctx) => treemapBgColor(ctx),
+            borderColor: 'rgba(255,255,255,0.5)',
+            borderWidth: 1,
+            borderRadius: 0,
+            spacing: 0,
+            _maxVal: maxCount
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: {
+            callbacks: {
+              title: (items) => items[0]?.raw?._data?.name || '',
+              label: (item) => AICC_Fmt.number(item.raw.v) + '건'
+            }
+          }},
+          onHover: (e, elements) => {
+            e.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
           },
-          options: {
-            responsive: true, maintainAspectRatio: false,
-            onClick: (e, elements) => { if (elements.length > 0) { openCallList(null, elements[0].index + '시'); } },
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, grid: { color: '#F0F0F0' } }, x: { grid: { display: false } } }
+          onClick: (e, elements) => {
+            if (elements.length > 0) {
+              const raw = leftTreemapChart.data.datasets[0].data[elements[0].index];
+              const name = raw?._data?.name;
+              if (name) selectHeatmapItem(name);
+            }
           }
+        }
+      });
+    }
+
+    function renderRightHeatmap(catName) {
+      let leaves = [];
+      let label = '전체';
+
+      if (catName && currentDepth === 1) {
+        const node = findDepth1Node(catName);
+        if (node) { leaves = getLeafNodes(node); label = catName; }
+      } else if (catName && currentDepth === 2) {
+        const result = findDepth2Node(catName);
+        if (result) { leaves = getLeafNodes(result.node); label = result.parent + ' > ' + catName; }
+      }
+
+      if (leaves.length === 0) {
+        leaves = getAllLeafNodes();
+        label = '전체';
+      }
+
+      const sorted = [...leaves].sort((a, b) => b.count - a.count);
+      const maxCount = Math.max(...sorted.map(i => i.count));
+
+      document.getElementById('heatmap-right-label').textContent = label;
+
+      if (rightTreemapChart) rightTreemapChart.destroy();
+
+      const canvas = document.getElementById('treemap-right-canvas');
+      rightTreemapChart = new Chart(canvas, {
+        type: 'treemap',
+        data: {
+          datasets: [{
+            tree: sorted,
+            key: 'count',
+            labels: {
+              display: true,
+              formatter: (ctx) => ctx.type === 'data' ? [ctx.raw._data.name, AICC_Fmt.number(ctx.raw.v)] : '',
+              color: (ctx) => treemapTextColor(ctx),
+              font: [{ size: 10, weight: 600 }, { size: 12, weight: 700 }],
+              overflow: 'fit',
+              position: 'middle'
+            },
+            backgroundColor: (ctx) => treemapBgColor(ctx),
+            borderColor: 'rgba(255,255,255,0.5)',
+            borderWidth: 1,
+            borderRadius: 0,
+            spacing: 0,
+            _maxVal: maxCount
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: {
+            callbacks: {
+              title: (items) => items[0]?.raw?._data?.name || '',
+              label: (item) => AICC_Fmt.number(item.raw.v) + '건'
+            }
+          }},
+          onHover: (e, elements) => {
+            e.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
+          },
+          onClick: (e, elements) => {
+            if (elements.length > 0) {
+              const raw = rightTreemapChart.data.datasets[0].data[elements[0].index];
+              const name = raw?._data?.name;
+              if (name) goCallStatus('consult_type', name);
+            }
+          }
+        }
+      });
+    }
+
+    /* ══════════════════════════ 시간대별 콜량 차트 ══════════════════════════ */
+
+    function renderHourlyChart() {
+      const canvas = document.getElementById('hourly-chart');
+      if (!canvas) return;
+      if (hourlyChart) hourlyChart.destroy();
+
+      const cfg = periodConfig[currentPeriod] || periodConfig.monthly;
+      const REALTIME_HOUR = 16;
+
+      const datasets = [];
+      if (isRealtime) {
+        /* 실시간: 0~16시까지만 데이터, 17~23시는 null */
+        const currentData = hourlyBase.current.map((v, i) => i <= REALTIME_HOUR ? v : null);
+        datasets.push({
+          label: '금일',
+          data: currentData,
+          backgroundColor: 'rgba(0,163,255,0.7)',
+          borderRadius: 4,
+          order: 1
+        });
+      } else {
+        datasets.push({
+          label: '현재 기간',
+          data: hourlyBase.current,
+          backgroundColor: 'rgba(0,163,255,0.7)',
+          borderRadius: 4,
+          order: 1
+        });
+        datasets.push({
+          label: cfg.prevLabel + ' 기간',
+          data: hourlyBase.prev,
+          type: 'line',
+          borderColor: '#BDBDBD',
+          borderDash: [4,4],
+          pointRadius: 0,
+          tension: 0.3,
+          borderWidth: 2,
+          order: 0
         });
       }
 
-      // 워드클라우드
-      const colors = ['#00A3FF','#1565C0','#4CAF50','#F57F17','#E65100','#9C27B0','#F44336'];
-      const wcEl = document.getElementById('wordcloud');
-      if (wcEl) {
-        wcEl.innerHTML = freqKeywords.map((k, i) =>
-          `<span style="font-size:${k.size}px;font-weight:${k.size > 20 ? 700 : 500};color:${colors[i % colors.length]};cursor:pointer;transition:transform 0.2s;"
-            onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'"
-            onclick="openKeywordDetail('${k.keyword}', ${Math.round(k.size * 12)})">${k.keyword}</span>`
-        ).join('');
+      hourlyChart = new Chart(canvas, {
+        type: 'bar',
+        data: {
+          labels: Array.from({length:24}, (_, i) => `${String(i).padStart(2,'0')}시`),
+          datasets: datasets
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero:true, grid:{ color:'#F0F0F0' }, ticks:{ font:{size:11}, color:'#757575' } },
+            x: { grid:{ display:false }, ticks:{ font:{size:11}, color:'#757575' } }
+          },
+          onHover: (e, elements) => {
+            e.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
+          },
+          onClick: (e, elements) => {
+            if (elements.length > 0) {
+              const idx = elements[0].index;
+              goCallStatus('hour', idx);
+            }
+          }
+        }
+      });
+    }
+
+    /* ══════════════════════════ 이벤트 핸들러 ══════════════════════════ */
+
+    function switchDepth(depth) {
+      currentDepth = depth;
+      selectedCatName = null;
+      document.getElementById('btn-depth1').className = 'btn btn-sm ' + (depth === 1 ? 'btn-primary' : 'btn-secondary');
+      document.getElementById('btn-depth2').className = 'btn btn-sm ' + (depth === 2 ? 'btn-primary' : 'btn-secondary');
+
+      const items = depth === 1 ? getDepth1Items() : getDepth2Items();
+      if (items.length > 0) {
+        selectedCatName = items[0].name;
+      }
+      renderLeftHeatmap();
+      renderRightHeatmap(selectedCatName);
+    }
+
+    function selectHeatmapItem(name) {
+      selectedCatName = name;
+      renderLeftHeatmap();
+      renderRightHeatmap(name);
+    }
+
+    /** 전체 위젯 재렌더 */
+    function renderAllWidgets() {
+      const cfg = isRealtime
+        ? { kpiPrefix:'금일', prevLabel:'전일' }
+        : (periodConfig[currentPeriod] || periodConfig.monthly);
+      renderKPICards(cfg);
+      renderMainKeywords();
+      /* 신규 키워드(freq-list)는 NEW 뱃지이므로 rate 칼럼 항상 표시 */
+      renderRankList('trend-list', isRealtime ? realtimeTrendData : trendData, isRealtime);
+      renderRankList('issue-list', isRealtime ? realtimeIssueData : issueData, isRealtime);
+      renderRankList('freq-list', isRealtime ? realtimeNewKeywordData : newKeywordData, false);
+      renderHourlyChart();
+    }
+
+    /** 실시간 모드 토글 */
+    function toggleRealtime() {
+      isRealtime = !isRealtime;
+      const btn = document.getElementById('btn-realtime');
+      const filterWrap = document.getElementById('period-picker-container');
+      const wsFilter = document.getElementById('ws-filter');
+      const teamFilter = document.getElementById('team-filter');
+
+      if (isRealtime) {
+        btn.className = 'btn btn-sm btn-primary';
+        btn.innerHTML = '<span style="color:#FF5252;margin-right:4px;">●</span>실시간';
+        /* 필터를 시각적으로만 흐리게 표시 — 클릭하면 실시간 해제 후 필터 적용 */
+        filterWrap.style.opacity = '0.5';
+        wsFilter.style.opacity = '0.5';
+        teamFilter.style.opacity = '0.5';
+      } else {
+        btn.className = 'btn btn-sm btn-secondary';
+        btn.innerHTML = '실시간';
+        filterWrap.style.opacity = '1';
+        wsFilter.style.opacity = '1';
+        wsFilter.disabled = false;
+        if (wsFilter.value !== 'all') {
+          teamFilter.disabled = false;
+        }
+        teamFilter.style.opacity = '1';
       }
 
-      if (typeof AICC_PeriodPicker !== 'undefined') {
-        AICC_PeriodPicker.create('period-picker', { mode: 'monthly' });
+      /* 실시간 모드의 신규 키워드 info 아이콘 토글 */
+      const infoIcon = document.getElementById('new-kw-info');
+      if (infoIcon) infoIcon.style.display = isRealtime ? 'inline' : 'none';
+
+      const prevLegend = document.getElementById('prev-legend-wrap');
+      if (prevLegend) prevLegend.style.display = isRealtime ? 'none' : 'flex';
+      const currentLabel = document.getElementById('current-legend-label');
+      if (currentLabel) currentLabel.textContent = isRealtime ? '금일' : '현재 기간';
+
+      renderAllWidgets();
+      AICC_Toast.show(isRealtime ? '실시간 모드가 활성화되었습니다.' : '실시간 모드가 해제되었습니다.');
+    }
+
+    /** 실시간 모드 해제 (필터 조작 시 자동 호출) */
+    function deactivateRealtime() {
+      if (!isRealtime) return;
+      isRealtime = false;
+      const btn = document.getElementById('btn-realtime');
+      btn.className = 'btn btn-sm btn-secondary';
+      btn.innerHTML = '실시간';
+      document.getElementById('period-picker-container').style.opacity = '1';
+      document.getElementById('ws-filter').style.opacity = '1';
+      document.getElementById('ws-filter').disabled = false;
+      document.getElementById('team-filter').style.opacity = '1';
+
+      const infoIcon = document.getElementById('new-kw-info');
+      if (infoIcon) infoIcon.style.display = 'none';
+      const prevLegend = document.getElementById('prev-legend-wrap');
+      if (prevLegend) prevLegend.style.display = 'flex';
+      const currentLabel = document.getElementById('current-legend-label');
+      if (currentLabel) currentLabel.textContent = '현재 기간';
+    }
+
+    /** 센터 선택 시 팀 필터 캐스케이딩 */
+    function onCenterChange() {
+      const wasRealtime = isRealtime;
+      deactivateRealtime();
+      const wsId = document.getElementById('ws-filter').value;
+      const teamFilter = document.getElementById('team-filter');
+
+      if (wsId === 'all') {
+        teamFilter.disabled = true;
+        teamFilter.innerHTML = '<option value="all">전체 팀</option>';
+      } else {
+        teamFilter.disabled = false;
+        if (window._centersData) {
+          const center = window._centersData.find(c => c.id === wsId);
+          teamFilter.innerHTML = '<option value="all">전체 팀</option>';
+          if (center && center.teams) {
+            center.teams.forEach(t => {
+              teamFilter.innerHTML += `<option value="${t.id}">${t.name}</option>`;
+            });
+          }
+        }
       }
+      if (wasRealtime) renderAllWidgets();
+      AICC_Toast.show('필터가 적용되었습니다.');
+    }
+
+    /** 팀 선택 시 실시간 해제 */
+    function onTeamChange() {
+      const wasRealtime = isRealtime;
+      deactivateRealtime();
+      if (wasRealtime) renderAllWidgets();
+      AICC_Toast.show('필터가 적용되었습니다.');
+    }
+
+    /** 기간 변경 시 데이터 갱신 */
+    function applyPeriod(period) {
+      deactivateRealtime();
+      currentPeriod = period;
+      const cfg = periodConfig[period] || periodConfig.monthly;
+
+      // KPI 스케일링
+      const factor = { daily:1, weekly:7, monthly:30, yearly:365, custom:15 };
+      const f = factor[period] || 30;
+      const baseF = 30;
+      const ratio = f / baseF;
+
+      const orig = {
+        totalCalls: { current:12161, prev:11465, ib:7892, ob:4269, ibPrev:7456, obPrev:4009 },
+        issueCalls: { current:8974, prev:8977, ib:5840, ob:3134, ibPrev:5843, obPrev:3134 },
+        overCalls:  { current:2185, prev:1876, ib:1420, ob:765, ibPrev:1220, obPrev:656 },
+        reEntryCalls:{ current:8675, prev:8371, ib:5639, ob:3036, ibPrev:5436, obPrev:2935 }
+      };
+
+      const scale = (val) => Math.round(val * ratio * (0.9 + Math.random() * 0.2));
+      Object.keys(kpiBase).forEach(key => {
+        Object.keys(kpiBase[key]).forEach(prop => {
+          kpiBase[key][prop] = scale(orig[key][prop]);
+        });
+      });
+
+      renderAllWidgets();
+
+      const prevEl = document.getElementById('prev-legend-label');
+      if (prevEl) prevEl.textContent = cfg.prevLabel + ' 기간';
+
+      AICC_Toast.show(`${cfg.kpiPrefix} 데이터로 전환되었습니다.`);
+    }
+
+    /* ══════════════════════════ 초기화 ══════════════════════════ */
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      // 센터 데이터 로드
+      try {
+        const data = await AICC_DataLoader.loadAll(['centers.json']);
+        const centers = data['centers.json'];
+        if (centers) {
+          window._centersData = centers;
+          const wsSelect = document.getElementById('ws-filter');
+          centers.forEach(ws => {
+            wsSelect.innerHTML += `<option value="${ws.id}">${ws.name}</option>`;
+          });
+        }
+      } catch(e) { /* 센터 데이터 로드 실패 시 무시 */ }
+
+      // 기간 선택기
+      AICC_PeriodPicker.create('period-picker-container', {
+        defaultPeriod: 'monthly',
+        onChange: function(periodType) { applyPeriod(periodType); }
+      });
+
+      /* 실시간 모드에서 기간 선택기 클릭 시 즉시 해제 (드롭다운이 흐리게 뜨는 문제 방지) */
+      document.getElementById('period-picker-container').addEventListener('click', function() {
+        if (isRealtime) {
+          deactivateRealtime();
+          renderAllWidgets();
+          this.style.opacity = '1';
+        }
+      }, true);
+
+      // 전체 위젯 렌더
+      const cfg = periodConfig.monthly;
+      renderKPICards(cfg);
+      renderMainKeywords();
+      renderRankList('trend-list', trendData, false);
+      renderRankList('issue-list', issueData, false);
+      renderRankList('freq-list', newKeywordData, false);
+      renderPendingList();
+
+      // 히트맵 초기 렌더 (대분류 첫 번째 항목 선택)
+      selectedCatName = categoryTree[0].name;
+      renderLeftHeatmap();
+      renderRightHeatmap(selectedCatName);
+
+      renderHourlyChart();
     });
   </script>
 </body>

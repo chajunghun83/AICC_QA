@@ -61,10 +61,10 @@
 
     <!-- 하단: 긴급이슈 + 점수분포 + 감점항목Top5 + 감점콜Top5 -->
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
-      <!-- 긴급 이슈 -->
+      <!-- 관리자 확인 영역 -->
       <div class="content-card">
         <div class="content-card-header">
-          <span style="font-size:14px;font-weight:600;">긴급 이슈</span>
+          <span style="font-size:14px;font-weight:600;">관리자 확인 영역</span>
           <span class="badge badge-pending" id="issue-count">0건</span>
         </div>
         <div class="content-card-body" id="issue-list" style="min-height:150px;">
@@ -122,12 +122,12 @@
           </colgroup>
           <thead>
             <tr>
-              <th style="text-align:center;">센터</th>
-              <th style="text-align:center;">팀</th>
-              <th style="text-align:center;">상담 건수</th>
-              <th style="text-align:center;">평가 건수</th>
-              <th style="text-align:center;">평균 점수</th>
-              <th style="text-align:center;">이슈</th>
+              <th>센터</th>
+              <th>팀</th>
+              <th>상담 건수</th>
+              <th>평가 건수</th>
+              <th>평균 점수</th>
+              <th class="col-left">이슈</th>
             </tr>
           </thead>
           <tbody id="team-tbody">
@@ -162,7 +162,23 @@
       });
     });
 
-    // 대시보드 초기 데이터를 비동기로 일괄 로드 후, 모든 위젯을 순차적으로 렌더링
+    let centersData = null;
+
+    /* 최근 30일 날짜 라벨을 동적 생성 (A-002/A-008: 1월 고정 → 오늘 기준) */
+    function generateRecentDates(days) {
+      const today = new Date();
+      const result = [];
+      for (let i = days - 1; i >= 0; i -= 2) {
+        const d = new Date(today);
+        d.setDate(today.getDate() - i);
+        result.push({
+          date: String(d.getMonth() + 1).padStart(2, '0') + '/' + String(d.getDate()).padStart(2, '0'),
+          score: Math.round((80 + Math.random() * 8) * 10) / 10
+        });
+      }
+      return result;
+    }
+
     async function loadDashboard() {
       const data = await AICC_DataLoader.loadAll([
         'dashboard-stats.json',
@@ -170,23 +186,28 @@
       ]);
 
       dashboardData = data['dashboard-stats.json'];
-      const centers = data['centers.json'];
+      centersData = data['centers.json'];
 
       if (!dashboardData) {
         document.getElementById('kpi-cards').innerHTML = '<p style="color:#757575;grid-column:span 4;text-align:center;padding:40px;">데이터를 불러올 수 없습니다.</p>';
         return;
       }
 
-      // 센터 필터 옵션 생성
-      if (centers) {
+      dashboardData.quality_trend_30days = generateRecentDates(30);
+
+      if (centersData) {
         const wsSelect = document.getElementById('ws-filter');
-        centers.forEach(ws => {
+        centersData.forEach(ws => {
           wsSelect.innerHTML += `<option value="${ws.id}">${ws.name}</option>`;
         });
       }
 
-      const initCfg = periodConfig['monthly'];
-      renderKPICards(dashboardData.summary, initCfg);
+      renderAllWidgets();
+    }
+
+    function renderAllWidgets() {
+      const cfg = periodConfig[currentPeriod || 'monthly'];
+      renderKPICards(dashboardData.summary, cfg);
       renderTrendChart(dashboardData.quality_trend_30days);
       renderTeamChart(dashboardData.team_scores);
       renderIssues(dashboardData.urgent_issues);
@@ -195,6 +216,8 @@
       renderDeductionCalls(dashboardData.fail_agents);
       renderTeamTable(dashboardData.teams);
     }
+
+    let currentPeriod = 'monthly';
 
     // 기간 설정에 따라 KPI 라벨과 비교 기준을 동적으로 변경하여 하나의 함수로 모든 기간 유형을 처리
     function renderKPICards(summary, cfg) {
@@ -353,7 +376,7 @@
             if (elements.length > 0) {
               const idx = elements[0].index;
               const date = trendLabels[idx];
-              window.location.href = `integrated-evaluation.html?date=${encodeURIComponent(date)}`;
+              window.location.href = `integrated-evaluation.html?date=${encodeURIComponent(date)}${getWsParam()}`;
             }
           },
           onHover: (evt, elements) => {
@@ -405,7 +428,7 @@
           onClick: (evt, elements) => {
             if (elements.length > 0) {
               const idx = elements[0].index;
-              window.location.href = `integrated-evaluation.html?team=${encodeURIComponent(teamNames[idx])}`;
+              window.location.href = `integrated-evaluation.html?team=${encodeURIComponent(teamNames[idx])}${getWsParam()}`;
             }
           },
           onHover: (evt, elements) => {
@@ -510,7 +533,7 @@
       const scoreRangeMap = { '우수': 'excellent', '양호': 'good', '주의': 'caution', '미달': 'low' };
       document.getElementById('distribution-legend').innerHTML = segments.map(s => {
         const rangeKey = Object.keys(scoreRangeMap).find(k => s.label.includes(k)) || '';
-        const linkUrl = `integrated-evaluation.html?score_range=${scoreRangeMap[rangeKey] || ''}`;
+        const linkUrl = `integrated-evaluation.html?score_range=${scoreRangeMap[rangeKey] || ''}${getWsParam()}`;
         return `
         <div onclick="window.location.href='${linkUrl}'" style="display:flex;align-items:center;gap:10px;padding:3px 0;cursor:pointer;transition:background 0.15s;" onmouseenter="this.style.background='#FAFAFA'" onmouseleave="this.style.background=''">
           <span style="width:8px;height:8px;border-radius:2px;background:${s.color};flex-shrink:0;"></span>
@@ -524,7 +547,7 @@
       distChart.options.onClick = (evt, elements) => {
         if (elements.length > 0) {
           const idx = elements[0].index;
-          window.location.href = `integrated-evaluation.html?score_range=${rangeKeys[idx]}`;
+          window.location.href = `integrated-evaluation.html?score_range=${rangeKeys[idx]}${getWsParam()}`;
         }
       };
     }
@@ -534,7 +557,7 @@
       if (!container || !items) return;
       container.innerHTML = items.slice(0, 5).map((item, i) => {
         const scoreColor = AICC_Fmt.scoreColor(item.score);
-        const linkUrl = `integrated-evaluation.html?deduction=${encodeURIComponent(item.item_id)}`;
+        const linkUrl = `integrated-evaluation.html?deduction=${encodeURIComponent(item.item_id)}${getWsParam()}`;
         return `
           <div onclick="window.location.href='${linkUrl}'" style="display:flex;align-items:center;gap:8px;padding:8px 0;cursor:pointer;transition:background 0.15s;${i < 4 ? 'border-bottom:1px solid #F0F0F0;' : ''}" onmouseenter="this.style.background='#FAFAFA'" onmouseleave="this.style.background=''">
             <span style="width:18px;height:18px;border-radius:4px;background:${item.status === 'danger' ? '#FFEBEE' : '#FFF8E1'};color:${item.status === 'danger' ? '#C62828' : '#F57F17'};font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${i + 1}</span>
@@ -553,7 +576,7 @@
       const sorted = [...agents].sort((a, b) => a.score - b.score).slice(0, 5);
       container.innerHTML = sorted.map((agent, i) => {
         const scoreColor = AICC_Fmt.scoreColor(agent.score);
-        const linkUrl = `integrated-evaluation.html?score_range=low`;
+        const linkUrl = `integrated-evaluation.html?score_range=low${getWsParam()}`;
         return `
           <div onclick="window.location.href='${linkUrl}'" style="display:flex;align-items:center;gap:8px;padding:8px 0;cursor:pointer;transition:background 0.15s;${i < sorted.length - 1 ? 'border-bottom:1px solid #F0F0F0;' : ''}" onmouseenter="this.style.background='#FAFAFA'" onmouseleave="this.style.background=''">
             <span style="width:18px;height:18px;border-radius:4px;background:${agent.score < 60 ? '#FFEBEE' : '#FFF8E1'};color:${agent.score < 60 ? '#C62828' : '#F57F17'};font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${i + 1}</span>
@@ -568,23 +591,23 @@
       }).join('');
     }
 
-    // 행 클릭 시 상세 분석 페이지로 이동하여 드릴다운 제공
     function renderTeamTable(teams) {
       const tbody = document.getElementById('team-tbody');
+      const wsId = document.getElementById('ws-filter').value;
       tbody.innerHTML = teams.map(team => {
         const issueHtml = team.issues.length > 0
           ? team.issues.map(i => `<span class="badge ${i.type.includes('FAIL') || i.type.includes('기준 미달') ? 'badge-rejected' : 'badge-pending'}" style="font-size:11px;">${i.type} ${i.count}건</span>`).join(' ')
           : '<span style="color:#9E9E9E;font-size:12px;">-</span>';
 
-        const detailUrl = `detail-analysis.html?ct=${encodeURIComponent(team.center)}&team=${encodeURIComponent(team.team)}`;
+        const detailUrl = `integrated-evaluation.html?ws=${encodeURIComponent(team.center_id || '')}&team=${encodeURIComponent(team.team)}`;
         return `
           <tr style="cursor:pointer;" onclick="window.location.href='${detailUrl}'">
-            <td style="text-align:center;font-size:12px;">${team.center}</td>
-            <td style="text-align:center;font-size:12px;font-weight:500;">${team.team}</td>
-            <td style="text-align:center;font-size:12px;">${AICC_Fmt.number(team.calls)}</td>
-            <td style="text-align:center;font-size:12px;">${AICC_Fmt.number(team.evaluations)}</td>
-            <td style="text-align:center;">${AICC_Fmt.scoreHtml(team.avg_score)}</td>
-            <td style="text-align:left;font-size:12px;">${issueHtml}</td>
+            <td style="font-size:12px;">${team.center}</td>
+            <td style="font-size:12px;font-weight:500;">${team.team}</td>
+            <td style="font-size:12px;">${AICC_Fmt.number(team.calls)}</td>
+            <td style="font-size:12px;">${AICC_Fmt.number(team.evaluations)}</td>
+            <td>${AICC_Fmt.scoreHtml(team.avg_score)}</td>
+            <td class="col-left" style="font-size:12px;">${issueHtml}</td>
           </tr>
         `;
       }).join('');
@@ -687,11 +710,16 @@
       return dist;
     }
 
-    // 기간 변경 시 KPI·차트·분포 등 모든 위젯을 일괄 갱신하여 데이터 일관성 유지
+    /* 현재 선택된 센터의 URL 파라미터 문자열 반환 */
+    function getWsParam() {
+      const wsId = document.getElementById('ws-filter').value;
+      return wsId !== 'all' ? `&ws=${encodeURIComponent(wsId)}` : '';
+    }
+
     function applyPeriod(period) {
       if (!dashboardData) return;
+      currentPeriod = period;
       const cfg = periodConfig[period];
-
       document.getElementById('trend-title').textContent = cfg.trendTitle;
 
       const kpiData = generateKPIVariation(period);
@@ -705,7 +733,7 @@
       AICC_Toast.show(`${cfg.kpiPrefix} 데이터로 전환되었습니다.`);
     }
 
-    // 센터 선택 시 해당 팀 목록만 필터링하는 캐스케이딩 필터 패턴 적용
+    /* 센터/팀 필터 변경 시 모든 위젯을 갱신 (A-009/A-011/A-017) */
     function filterDashboard() {
       const wsId = document.getElementById('ws-filter').value;
       const teamFilter = document.getElementById('team-filter');
@@ -715,24 +743,34 @@
         teamFilter.innerHTML = '<option value="all">전체 팀</option>';
       } else {
         teamFilter.disabled = false;
-        // 센터에 해당하는 팀만 필터
-        const teams = dashboardData.teams.filter(t => t.center_id === wsId);
+        const center = centersData ? centersData.find(c => c.id === wsId) : null;
         teamFilter.innerHTML = '<option value="all">전체 팀</option>';
-        teams.forEach(t => {
-          teamFilter.innerHTML += `<option value="${t.team_id}">${t.team}</option>`;
-        });
+        if (center) {
+          center.teams.forEach(t => {
+            teamFilter.innerHTML += `<option value="${t.id}">${t.name}</option>`;
+          });
+        }
       }
 
-      // 테이블 필터링
       const teamId = teamFilter.value;
-      let filtered = dashboardData.teams;
+      let filteredTeams = dashboardData.teams;
       if (wsId !== 'all') {
-        filtered = filtered.filter(t => t.center_id === wsId);
+        filteredTeams = filteredTeams.filter(t => t.center_id === wsId);
       }
       if (teamId !== 'all') {
-        filtered = filtered.filter(t => t.team_id === teamId);
+        filteredTeams = filteredTeams.filter(t => t.team_id === teamId);
       }
-      renderTeamTable(filtered);
+
+      renderTeamTable(filteredTeams);
+
+      const filteredScores = wsId === 'all'
+        ? dashboardData.team_scores
+        : dashboardData.team_scores.filter(t => {
+            const teamData = filteredTeams.find(ft => ft.team === t.team);
+            return !!teamData;
+          });
+      renderTeamChart(filteredScores.length > 0 ? filteredScores : dashboardData.team_scores);
+      renderDistribution(generateDistribution());
 
       AICC_Toast.show('필터가 적용되었습니다.');
     }

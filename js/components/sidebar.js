@@ -64,26 +64,25 @@ window.AICC_Sidebar = {
       {
         group: '홈',
         items: [
-          { id: 'ta-dashboard', label: 'TA 대시보드', href: '/pages/ta/ta-dashboard.html' },
+          { id: 'ta-dashboard', label: 'TA 홈', href: '/pages/ta/ta-dashboard.html' },
+          { id: 'call-status', label: '전체 콜 현황', href: '/pages/ta/call-status.html' },
           { id: 'call-consultation', label: '콜 상담', href: '/pages/ta/call-consultation.html' },
           { id: 'consultation-type', label: '상담 유형', href: '/pages/ta/consultation-type.html' },
           { id: 'keyword', label: '키워드', href: '/pages/ta/keyword.html' }
         ]
       },
       {
-        group: '분석',
+        group: '관리자 기능',
         items: [
-          { id: 'report-manage', label: '리포트 관리', href: '/pages/ta/report-manage.html' }
+          { id: 'report-manage', label: '리포트 관리', href: '/pages/ta/report-manage.html' },
+          { id: 'keyword-manage', label: '키워드 관리', href: '/pages/ta/system/keyword-manage.html' },
+          { id: 'analysis-settings', label: '분석 기준 관리', href: '/pages/ta/system/analysis-settings.html' }
         ]
       },
       {
-        group: '시스템',
+        group: '이력 조회',
         items: [
-          { id: 'keyword-manage', label: '키워드 관리', href: '/pages/ta/system/keyword-manage.html' },
-          { id: 'analysis-settings', label: '분석 기준 설정', href: '/pages/ta/system/analysis-settings.html' },
-          { id: 'summarization', label: '요약문구 관리', href: '/pages/ta/system/summarization.html' },
-          { id: 'account-manage', label: '권한 관리', href: '/pages/ta/system/account-manage.html' },
-          { id: 'logs', label: '처리 로그', href: '/pages/ta/system/logs.html' }
+          { id: 'logs', label: '시스템 로그', href: '/pages/ta/system/logs.html' }
         ]
       }
     ]

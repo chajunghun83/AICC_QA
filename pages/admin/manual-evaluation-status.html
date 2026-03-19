@@ -124,27 +124,27 @@
               <th>평가 ID</th>
               <th>일시</th>
               <th>팀</th>
-              <th>상담유형</th>
+              <th class="col-left">상담유형</th>
               <th>유형</th>
               <th>통화시간</th>
               <th>상담사</th>
-              <th>평가 계획</th>
-              <th>평가표</th>
+              <th class="col-left">평가 계획</th>
+              <th class="col-left">평가표</th>
               <th>평가자</th>
-              <th style="text-align:right">점수</th>
+              <th>점수</th>
               <th>평가 상태</th>
               <th>이슈</th>
             </tr>
           </thead>
           <tbody id="eval-tbody"></tbody>
         </table>
-        <div class="pagination">
+        <div id="pagination-area" class="pagination">
           <button class="pagination-btn">&laquo;</button>
           <button class="pagination-btn active">1</button>
           <button class="pagination-btn">2</button>
           <button class="pagination-btn">&raquo;</button>
           <span style="margin-left:16px;font-size:12px;color:#757575;">페이지당:
-            <select class="form-select" style="min-width:60px;padding:2px 24px 2px 8px;">
+            <select id="per-page-select" class="form-select" style="min-width:60px;padding:2px 24px 2px 8px;" onchange="applyFilter()">
               <option>10</option>
               <option selected>20</option>
               <option>50</option>
@@ -211,6 +211,12 @@
       const tbody = document.getElementById('eval-tbody');
       document.getElementById('eval-count').textContent = `총 ${evals.length}건`;
 
+      // 총 건수가 페이지당 표시 건수 이하이면 페이지네이션 비표시 (A-045)
+      const perPageEl = document.getElementById('per-page-select');
+      const perPage = perPageEl ? parseInt(perPageEl.value, 10) : 20;
+      const paginationEl = document.getElementById('pagination-area');
+      if (paginationEl) paginationEl.style.display = evals.length > perPage ? 'flex' : 'none';
+
       tbody.innerHTML = evals.map(ev => {
         const issueHtml = ev.issues && ev.issues.length > 0
           ? ev.issues.slice(0, 2).map(i => `<div style="font-size:10px;color:#F57F17;">${i}</div>`).join('')
@@ -229,14 +235,14 @@
             <td style="font-size:12px;font-family:monospace;">${ev.id}</td>
             <td style="font-size:12px;">${ev.date} ${ev.call_time}</td>
             <td style="font-size:12px;color:#757575;">${ev.center} &gt; ${ev.team}</td>
-            <td style="font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${ev.consultation_type || ''}">${ev.consultation_type || '-'}</td>
+            <td class="col-left" style="font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${ev.consultation_type || ''}">${ev.consultation_type || '-'}</td>
             <td><span class="badge ${ev.call_type === 'I/B' ? 'badge-nlp' : 'badge-ai'}" style="font-size:10px;">${ev.call_type}</span></td>
             <td style="font-size:12px;">${ev.duration}</td>
             <td style="font-weight:500;">${ev.agent_name}</td>
-            <td style="font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${ev.manual_plan}">${ev.manual_plan}</td>
-            <td style="font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ev.eval_form || '-'}</td>
+            <td class="col-left" style="font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${ev.manual_plan}">${ev.manual_plan}</td>
+            <td class="col-left" style="font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ev.eval_form || '-'}</td>
             <td style="font-size:12px;">${ev.eval_status === 'completed' && ev.manual_review?.reviewer ? ev.manual_review.reviewer : '-'}</td>
-            <td style="text-align:right;">${scoreDisplay}</td>
+            <td>${scoreDisplay}</td>
             <td>${statusBadge}</td>
             <td style="overflow:hidden;text-overflow:ellipsis;">${issueHtml}</td>
           </tr>
