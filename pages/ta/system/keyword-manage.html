@@ -3,73 +3,98 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="/image/faviconV2.png">
   <title>키워드 관리 - AICC Quality Hub</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="../../../css/styles.css">
+  <style>
+    .kw-tabs { display:flex; gap:0; border-bottom:2px solid #E0E0E0; margin-bottom:0; }
+    .kw-tab { padding:10px 24px; font-size:13px; font-weight:600; color:#9E9E9E; background:none; border:none;
+              cursor:pointer; position:relative; transition:color .15s; border-bottom:2px solid transparent; margin-bottom:-2px; }
+    .kw-tab:hover { color:#424242; }
+    .kw-tab.active { color:#00A3FF; border-bottom-color:#00A3FF; }
+    .kw-tab .tab-count { font-weight:400; font-size:11px; margin-left:4px; color:#BDBDBD; }
+    .kw-tab.active .tab-count { color:#00A3FF; }
+
+    .tab-panel { display:none; }
+    .tab-panel.active { display:block; }
+
+    .data-table { font-size:12px; table-layout:fixed; width:100%; }
+    .data-table th, .data-table td { padding:10px 8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:center; }
+
+    .toggle-switch { position:relative; width:36px; height:20px; display:inline-block; vertical-align:middle; }
+    .toggle-switch input { opacity:0; width:0; height:0; }
+    .toggle-slider { position:absolute; inset:0; background:#ccc; border-radius:10px; cursor:pointer; transition:.2s; }
+    .toggle-slider::before { content:''; position:absolute; width:16px; height:16px; left:2px; top:2px; background:#fff; border-radius:50%; transition:.2s; }
+    .toggle-switch input:checked + .toggle-slider { background:#00A3FF; }
+    .toggle-switch input:checked + .toggle-slider::before { transform:translateX(16px); }
+
+    .action-btn { background:none; border:none; cursor:pointer; padding:4px; border-radius:4px; color:#757575; transition:all .15s; }
+    .action-btn:hover { background:#F5F5F5; color:#212121; }
+  </style>
 </head>
 <body class="bg-[#F5F5F5] text-[#212121]">
   <div id="page-content">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-      <div>
-        <h1 style="font-size:20px;font-weight:700;margin:0;">키워드 관리</h1>
-        <p style="font-size:12px;color:#757575;margin:4px 0 0;">분석 키워드 등록 및 관리</p>
-      </div>
+    <div style="margin-bottom:20px;">
+      <h1 style="font-size:20px;font-weight:700;margin:0;">키워드 관리</h1>
+      <p style="font-size:12px;color:#757575;margin:4px 0 0;">모니터링·제외·이슈 키워드 등록 및 관리</p>
     </div>
 
     <div class="content-card">
+      <div class="content-card-header" style="padding-bottom:0;">
+        <div class="kw-tabs">
+          <button class="kw-tab active" data-tab="monitor" onclick="switchTab('monitor')">모니터링 키워드<span class="tab-count" id="monitor-tab-count"></span></button>
+          <button class="kw-tab" data-tab="exclude" onclick="switchTab('exclude')">제외 키워드<span class="tab-count" id="exclude-tab-count"></span></button>
+          <button class="kw-tab" data-tab="issue" onclick="switchTab('issue')">이슈 키워드<span class="tab-count" id="issue-tab-count"></span></button>
+        </div>
+      </div>
+
       <div class="content-card-body" style="padding:0;">
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:2px solid #E0E0E0;">
-          <div class="tab-nav" style="border-bottom:none;">
-            <div class="tab-item active" onclick="switchTab('monitoring')">모니터링 키워드</div>
-            <div class="tab-item" onclick="switchTab('issue')">이슈 키워드</div>
-            <div class="tab-item" onclick="switchTab('risk')">리스크 키워드</div>
-            <div class="tab-item" onclick="switchTab('exclude')">제외 키워드</div>
-          </div>
-          <button class="btn btn-primary btn-sm" style="margin:8px 0;" onclick="openAddModal()">+ 키워드 추가</button>
-        </div>
-
         <!-- 모니터링 키워드 -->
-        <div id="tab-monitoring" style="padding:20px;">
-          <div style="font-size:13px;color:#757575;margin-bottom:16px;">키워드 발생 건수와 추이를 실시간으로 모니터링합니다.</div>
+        <div class="tab-panel active" id="panel-monitor">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px;">
+            <span style="font-size:12px;color:#757575;" id="monitor-count"></span>
+            <button class="btn btn-primary btn-sm" onclick="openModal('monitor')">+ 추가</button>
+          </div>
           <table class="data-table">
-            <thead>
-              <tr><th>No</th><th>키워드</th><th>분류</th><th>우선순위</th><th>알림</th><th>등록일</th><th>등록자</th><th>관리</th></tr>
-            </thead>
-            <tbody id="monitoring-tbody"></tbody>
-          </table>
-        </div>
-
-        <!-- 이슈 키워드 -->
-        <div id="tab-issue" style="display:none;padding:20px;">
-          <div style="font-size:13px;color:#757575;margin-bottom:16px;">이슈 콜 분류에 사용되는 키워드를 관리합니다.</div>
-          <table class="data-table">
-            <thead>
-              <tr><th>No</th><th>키워드</th><th>이슈유형</th><th>감지방식</th><th>알림</th><th>등록일</th><th>등록자</th><th>관리</th></tr>
-            </thead>
-            <tbody id="issue-tbody"></tbody>
-          </table>
-        </div>
-
-        <!-- 리스크 키워드 -->
-        <div id="tab-risk" style="display:none;padding:20px;">
-          <div style="font-size:13px;color:#757575;margin-bottom:16px;">감지 시 즉시 알림이 발송되는 고위험 키워드입니다.</div>
-          <table class="data-table">
-            <thead>
-              <tr><th>No</th><th>키워드</th><th>위험등급</th><th>대응지침</th><th>등록일</th><th>등록자</th><th>관리</th></tr>
-            </thead>
-            <tbody id="risk-tbody"></tbody>
+            <colgroup>
+              <col style="width:7%;"><col style="width:18%;"><col style="width:28%;">
+              <col style="width:15%;"><col style="width:10%;"><col style="width:14%;">
+            </colgroup>
+            <thead><tr><th>No</th><th>키워드</th><th>키워드 설명</th><th>상담 유형</th><th>상태</th><th>관리</th></tr></thead>
+            <tbody id="monitor-tbody"></tbody>
           </table>
         </div>
 
         <!-- 제외 키워드 -->
-        <div id="tab-exclude" style="display:none;padding:20px;">
-          <div style="font-size:13px;color:#757575;margin-bottom:16px;">분석에서 제외할 불용어(stopword)를 관리합니다.</div>
+        <div class="tab-panel" id="panel-exclude">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px;">
+            <span style="font-size:12px;color:#757575;" id="exclude-count"></span>
+            <button class="btn btn-primary btn-sm" onclick="openModal('exclude')">+ 추가</button>
+          </div>
           <table class="data-table">
-            <thead>
-              <tr><th>No</th><th>키워드</th><th>제외사유</th><th>등록일</th><th>등록자</th><th>관리</th></tr>
-            </thead>
+            <colgroup>
+              <col style="width:7%;"><col style="width:18%;"><col style="width:28%;">
+              <col style="width:15%;"><col style="width:10%;"><col style="width:14%;">
+            </colgroup>
+            <thead><tr><th>No</th><th>키워드</th><th>키워드 설명</th><th>상담 유형</th><th>상태</th><th>관리</th></tr></thead>
             <tbody id="exclude-tbody"></tbody>
+          </table>
+        </div>
+
+        <!-- 이슈 키워드 -->
+        <div class="tab-panel" id="panel-issue">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px;">
+            <span style="font-size:12px;color:#757575;" id="issue-count"></span>
+            <button class="btn btn-primary btn-sm" onclick="openModal('issue')">+ 추가</button>
+          </div>
+          <table class="data-table">
+            <colgroup>
+              <col style="width:7%;"><col style="width:18%;"><col style="width:28%;">
+              <col style="width:15%;"><col style="width:10%;"><col style="width:14%;">
+            </colgroup>
+            <thead><tr><th>No</th><th>키워드</th><th>키워드 설명</th><th>상담 유형</th><th>상태</th><th>관리</th></tr></thead>
+            <tbody id="issue-tbody"></tbody>
           </table>
         </div>
       </div>
@@ -84,136 +109,236 @@
   <script src="../../../js/components/layout.js"></script>
   <script src="../../../js/components/modal.js"></script>
   <script src="../../../js/components/toast.js"></script>
-  <script src="../../../js/components/period-picker.js"></script>
   <script>
-    const monitoringKeywords = [
-      { no:1, keyword:'소비자원', category:'법률', priority:'높음', notify:true, regDate:'2025-01-10', registrant:'관리자' },
-      { no:2, keyword:'법적조치', category:'법률', priority:'높음', notify:true, regDate:'2025-01-10', registrant:'관리자' },
-      { no:3, keyword:'개인정보유출', category:'보안', priority:'높음', notify:true, regDate:'2025-01-15', registrant:'시스템' },
-      { no:4, keyword:'환불거부', category:'서비스', priority:'보통', notify:true, regDate:'2025-01-20', registrant:'홍길동' },
-      { no:5, keyword:'재인입', category:'서비스품질', priority:'낮음', notify:false, regDate:'2025-01-22', registrant:'김관리' }
-    ];
+    /* ========== 더미 데이터 ========== */
+    const kwData = {
+      monitor: [
+        { no:1,  keyword:'해지',           description:'해지 의사 표현',               callType:'전체', active:true },
+        { no:2,  keyword:'위약금',          description:'위약금 관련 문의',              callType:'전체', active:true },
+        { no:3,  keyword:'환불',           description:'환불 요청/문의',               callType:'전체', active:true },
+        { no:4,  keyword:'보상',           description:'보상 요구/문의',               callType:'전체', active:true },
+        { no:5,  keyword:'불만',           description:'서비스 불만 표현',              callType:'전체', active:true },
+        { no:6,  keyword:'상담사 연결',      description:'상위 상담사 연결 요청',          callType:'전체', active:true },
+        { no:7,  keyword:'약정',           description:'약정 기간/조건 문의',            callType:'전체', active:true },
+        { no:8,  keyword:'요금제 변경',      description:'요금제 변경 요청',              callType:'I/B',  active:true },
+        { no:9,  keyword:'배송 지연',       description:'배송 지연 클레임',              callType:'I/B',  active:true },
+        { no:10, keyword:'교환',           description:'상품 교환 요청',               callType:'전체', active:true },
+        { no:11, keyword:'반품',           description:'상품 반품 요청',               callType:'전체', active:true },
+        { no:12, keyword:'A/S',           description:'제품 수리/A/S 접수',           callType:'I/B',  active:true },
+        { no:13, keyword:'장애',           description:'서비스 장애 신고',              callType:'I/B',  active:true },
+        { no:14, keyword:'미납',           description:'미납 요금 관련',               callType:'전체', active:true },
+        { no:15, keyword:'포인트',          description:'포인트 적립/사용 문의',          callType:'전체', active:true },
+        { no:16, keyword:'업그레이드',       description:'서비스/상품 업그레이드 문의',      callType:'O/B',  active:true },
+        { no:17, keyword:'프로모션',         description:'프로모션/이벤트 안내',           callType:'O/B',  active:false },
+        { no:18, keyword:'재가입',          description:'재가입/복원 문의',              callType:'전체', active:false }
+      ],
+      exclude: [
+        { no:1,  keyword:'네',            description:'응답 추임새',                  callType:'전체', active:true },
+        { no:2,  keyword:'예',            description:'응답 추임새',                  callType:'전체', active:true },
+        { no:3,  keyword:'아',            description:'감탄사/필러',                  callType:'전체', active:true },
+        { no:4,  keyword:'음',            description:'감탄사/필러',                  callType:'전체', active:true },
+        { no:5,  keyword:'어',            description:'감탄사/필러',                  callType:'전체', active:true },
+        { no:6,  keyword:'감사합니다',      description:'일반 인사말',                  callType:'전체', active:true },
+        { no:7,  keyword:'안녕하세요',      description:'일반 인사말',                  callType:'전체', active:true },
+        { no:8,  keyword:'여보세요',       description:'통화 시작 인사',                callType:'전체', active:true },
+        { no:9,  keyword:'잠시만요',       description:'대기 요청 표현',                callType:'전체', active:true },
+        { no:10, keyword:'알겠습니다',      description:'동의/확인 표현',                callType:'전체', active:true },
+        { no:11, keyword:'그렇군요',       description:'동의/확인 표현',                callType:'전체', active:true },
+        { no:12, keyword:'좋은 하루 되세요', description:'종료 인사',                    callType:'전체', active:true },
+        { no:13, keyword:'수고하세요',      description:'종료 인사',                    callType:'전체', active:true },
+        { no:14, keyword:'확인해 보겠습니다', description:'처리 진행 표현',                callType:'전체', active:true },
+        { no:15, keyword:'말씀하세요',      description:'통화 시작 유도',                callType:'전체', active:true },
+        { no:16, keyword:'그러니까',       description:'접속사/필러',                   callType:'전체', active:false },
+        { no:17, keyword:'그래서',         description:'접속사/필러',                   callType:'전체', active:false }
+      ],
+      issue: [
+        { no:1,  keyword:'고소',           description:'법적 조치 언급',               callType:'전체', active:true },
+        { no:2,  keyword:'소송',           description:'법적 조치 언급',               callType:'전체', active:true },
+        { no:3,  keyword:'변호사',         description:'법적 조치 언급',               callType:'전체', active:true },
+        { no:4,  keyword:'소비자원',        description:'외부 기관 신고 언급',            callType:'전체', active:true },
+        { no:5,  keyword:'감독기관',        description:'외부 기관 신고 언급',            callType:'전체', active:true },
+        { no:6,  keyword:'방통위',         description:'외부 기관 신고 언급',            callType:'전체', active:true },
+        { no:7,  keyword:'공정위',         description:'외부 기관 신고 언급',            callType:'전체', active:true },
+        { no:8,  keyword:'녹취',           description:'녹취/녹음 요구',               callType:'전체', active:true },
+        { no:9,  keyword:'녹음하고 있다',    description:'녹취/녹음 요구',               callType:'전체', active:true },
+        { no:10, keyword:'상급자',         description:'에스컬레이션 요청',              callType:'전체', active:true },
+        { no:11, keyword:'책임자',         description:'에스컬레이션 요청',              callType:'전체', active:true },
+        { no:12, keyword:'팀장',           description:'에스컬레이션 요청',              callType:'전체', active:true },
+        { no:13, keyword:'사장',           description:'에스컬레이션 요청',              callType:'전체', active:true },
+        { no:14, keyword:'언론',           description:'미디어 노출 위협',              callType:'전체', active:true },
+        { no:15, keyword:'기자',           description:'미디어 노출 위협',              callType:'전체', active:true },
+        { no:16, keyword:'SNS에 올리겠다',  description:'소셜미디어 노출 위협',            callType:'전체', active:true },
+        { no:17, keyword:'오배송',         description:'물류 이슈',                    callType:'I/B',  active:true },
+        { no:18, keyword:'수량부족',        description:'물류 이슈',                    callType:'I/B',  active:true },
+        { no:19, keyword:'사기',           description:'신뢰 손상 표현',               callType:'전체', active:false },
+        { no:20, keyword:'신고',           description:'외부 기관 신고 언급',            callType:'전체', active:false }
+      ]
+    };
 
-    const issueKeywords = [
-      { no:1, keyword:'환불', issueType:'환불요청', detect:'포함', notify:true, regDate:'2025-01-10', registrant:'관리자' },
-      { no:2, keyword:'불만', issueType:'불만접수', detect:'포함', notify:true, regDate:'2025-01-10', registrant:'관리자' },
-      { no:3, keyword:'소비자원', issueType:'법적조치', detect:'정확일치', notify:true, regDate:'2025-01-15', registrant:'관리자' },
-      { no:4, keyword:'파손', issueType:'품질불량', detect:'포함', notify:false, regDate:'2025-01-18', registrant:'품질팀' }
-    ];
+    const tabLabels = { monitor:'모니터링 키워드', exclude:'제외 키워드', issue:'이슈 키워드' };
+    let currentTab = 'monitor';
 
-    const riskKeywords = [
-      { no:1, keyword:'법적조치', level:'높음', guide:'팀장 즉시 보고', regDate:'2025-01-10', registrant:'관리자' },
-      { no:2, keyword:'소비자원', level:'높음', guide:'팀장 즉시 보고', regDate:'2025-01-10', registrant:'관리자' },
-      { no:3, keyword:'해킹', level:'높음', guide:'보안팀 긴급 연락', regDate:'2025-01-15', registrant:'시스템' },
-      { no:4, keyword:'개인정보유출', level:'높음', guide:'보안팀 긴급 연락', regDate:'2025-01-15', registrant:'시스템' },
-      { no:5, keyword:'서비스해지', level:'보통', guide:'유지담당자 연결', regDate:'2025-01-20', registrant:'홍길동' }
-    ];
-
-    const excludeKeywords = [
-      { no:1, keyword:'음', reason:'불용어', regDate:'2025-01-10', registrant:'관리자' },
-      { no:2, keyword:'어', reason:'불용어', regDate:'2025-01-10', registrant:'관리자' },
-      { no:3, keyword:'네', reason:'단순응답어', regDate:'2025-01-10', registrant:'관리자' },
-      { no:4, keyword:'예', reason:'단순응답어', regDate:'2025-01-10', registrant:'관리자' },
-      { no:5, keyword:'아니요', reason:'단순응답어', regDate:'2025-01-12', registrant:'관리자' }
-    ];
-
-    const priorityBadge = { '높음': 'badge-rejected', '보통': 'badge-pending', '낮음': 'badge-inactive' };
-
-    function priorityTag(text) {
-      return `<span class="badge ${priorityBadge[text] || 'badge-inactive'}">${text}</span>`;
+    /* ========== 탭 전환 ========== */
+    function switchTab(type) {
+      currentTab = type;
+      document.querySelectorAll('.kw-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === type));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `panel-${type}`));
     }
-    function notifyTag(flag) {
-      return flag ? '<span class="badge badge-active">사용</span>' : '<span class="badge badge-inactive">미사용</span>';
-    }
-    function actionBtns() {
-      return `<button class="btn btn-secondary btn-sm" onclick="AICC_Toast.show('수정합니다.')">수정</button>
-              <button class="btn btn-danger btn-sm" style="margin-left:4px;" onclick="AICC_Toast.show('삭제되었습니다.')">삭제</button>`;
-    }
 
-    function switchTab(tab) {
-      ['monitoring','issue','risk','exclude'].forEach(t => {
-        document.getElementById('tab-' + t).style.display = t === tab ? '' : 'none';
-      });
-      document.querySelectorAll('.tab-item').forEach((el, i) => {
-        const tabs = ['monitoring','issue','risk','exclude'];
-        el.classList.toggle('active', tabs[i] === tab);
-      });
-    }
+    /* ========== 테이블 렌더링 ========== */
+    function renderTable(type) {
+      const data = [...kwData[type]].sort((a, b) => b.no - a.no);
+      const tbody = document.getElementById(`${type}-tbody`);
+      const countEl = document.getElementById(`${type}-count`);
+      const tabCountEl = document.getElementById(`${type}-tab-count`);
+      const activeCount = data.filter(d => d.active).length;
 
-    function openAddModal() {
-      AICC_Modal.open({
-        title: '키워드 추가',
-        content: `
-          <div style="margin-bottom:16px;">
-            <label class="form-label">키워드</label>
-            <input type="text" class="form-input" style="width:100%;" placeholder="키워드를 입력하세요">
-          </div>
-          <div style="margin-bottom:16px;">
-            <label class="form-label">분류/유형</label>
-            <input type="text" class="form-input" style="width:100%;" placeholder="분류를 입력하세요">
-          </div>
-          <div style="margin-bottom:16px;">
-            <label class="form-label">우선순위</label>
-            <select class="form-select" style="width:100%;">
-              <option>높음</option><option>보통</option><option>낮음</option>
-            </select>
-          </div>
-          <div>
-            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-              <input type="checkbox" checked> <span style="font-size:13px;">감지 시 알림 발송</span>
+      countEl.textContent = `${activeCount} / ${data.length}건 활성`;
+      tabCountEl.textContent = `(${data.length})`;
+
+      tbody.innerHTML = data.map(d => `
+        <tr>
+          <td>${d.no}</td>
+          <td style="font-weight:500;">${d.keyword}</td>
+          <td>${d.description}</td>
+          <td>${d.callType}</td>
+          <td>
+            <label class="toggle-switch">
+              <input type="checkbox" ${d.active ? 'checked' : ''} onchange="toggleActive('${type}',${d.no})">
+              <span class="toggle-slider"></span>
             </label>
-          </div>`,
-        footer: '<button class="btn btn-secondary" onclick="AICC_Modal.close()">취소</button><button class="btn btn-primary" onclick="AICC_Toast.show(\'키워드가 추가되었습니다.\');AICC_Modal.close()">저장</button>',
+          </td>
+          <td>
+            <div style="display:flex;gap:8px;justify-content:center;">
+              <button class="action-btn" onclick="openEditModal('${type}',${d.no})" title="수정">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+              </button>
+              <button class="action-btn" onclick="deleteRule('${type}',${d.no})" title="삭제">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    /* ========== 상태 토글 ========== */
+    function toggleActive(type, no) {
+      const item = kwData[type].find(d => d.no === no);
+      if (item) {
+        item.active = !item.active;
+        renderTable(type);
+        AICC_Toast.show(`"${item.keyword}" ${item.active ? '활성화' : '비활성화'}되었습니다.`);
+      }
+    }
+
+    /* ========== 삭제 ========== */
+    function deleteRule(type, no) {
+      const data = kwData[type];
+      const idx = data.findIndex(d => d.no === no);
+      if (idx === -1) return;
+      const kw = data[idx].keyword;
+      data.splice(idx, 1);
+      renderTable(type);
+      AICC_Toast.show(`"${kw}" 키워드가 삭제되었습니다.`);
+    }
+
+    /* ========== 추가/수정 모달 ========== */
+    function openModal(type) {
+      AICC_Modal.open({
+        title: `${tabLabels[type]} 추가`,
+        content: buildModalContent(type, null),
+        footer: `
+          <button class="btn btn-secondary" onclick="AICC_Modal.close()">취소</button>
+          <button class="btn btn-primary" onclick="saveRule('${type}', null)">저장</button>
+        `,
         size: 'md'
       });
     }
 
+    function openEditModal(type, no) {
+      const item = kwData[type].find(d => d.no === no);
+      if (!item) return;
+      AICC_Modal.open({
+        title: `${tabLabels[type]} 수정`,
+        content: buildModalContent(type, item),
+        footer: `
+          <button class="btn btn-secondary" onclick="AICC_Modal.close()">취소</button>
+          <button class="btn btn-primary" onclick="saveRule('${type}', ${no})">저장</button>
+        `,
+        size: 'md'
+      });
+    }
+
+    function buildModalContent(type, item) {
+      const kwVal = item ? item.keyword : '';
+      const descVal = item ? item.description : '';
+      const callTypeVal = item ? item.callType : '전체';
+
+      const placeholders = {
+        monitor: { kw:'예: 해지, 위약금, 환불', desc:'예: 해지 의사 표현, 환불 요청' },
+        exclude: { kw:'예: 네, 감사합니다, 여보세요', desc:'예: 응답 추임새, 일반 인사말' },
+        issue:   { kw:'예: 고소, 소비자원, 상급자', desc:'예: 법적 조치 언급, 에스컬레이션 요청' }
+      };
+      const ph = placeholders[type];
+
+      return `
+        <div style="display:flex;flex-direction:column;gap:20px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div>
+              <label class="form-label">키워드 (STT 감지 문구)</label>
+              <input type="text" class="form-input" id="modal-keyword" value="${kwVal}" placeholder="${ph.kw}" style="width:100%;box-sizing:border-box;">
+            </div>
+            <div>
+              <label class="form-label">적용 상담 유형</label>
+              <select class="form-select" id="modal-calltype" style="width:100%;box-sizing:border-box;">
+                <option value="전체" ${callTypeVal==='전체'?'selected':''}>전체</option>
+                <option value="I/B" ${callTypeVal==='I/B'?'selected':''}>I/B (인바운드)</option>
+                <option value="O/B" ${callTypeVal==='O/B'?'selected':''}>O/B (아웃바운드)</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="form-label">키워드 설명</label>
+            <input type="text" class="form-input" id="modal-desc" value="${descVal}" placeholder="${ph.desc}" style="width:100%;box-sizing:border-box;">
+          </div>
+        </div>
+      `;
+    }
+
+    function saveRule(type, editNo) {
+      const keyword = document.getElementById('modal-keyword').value.trim();
+      const description = document.getElementById('modal-desc').value.trim();
+      const callType = document.getElementById('modal-calltype').value;
+
+      if (!keyword) {
+        AICC_Toast.show('키워드를 입력해 주세요.');
+        return;
+      }
+
+      const data = kwData[type];
+
+      if (editNo) {
+        const item = data.find(d => d.no === editNo);
+        if (item) {
+          item.keyword = keyword;
+          item.description = description;
+          item.callType = callType;
+        }
+        AICC_Toast.show(`"${keyword}" 키워드가 수정되었습니다.`);
+      } else {
+        const maxNo = data.length > 0 ? Math.max(...data.map(d => d.no)) : 0;
+        data.push({ no: maxNo + 1, keyword, description, callType, active: true });
+        AICC_Toast.show(`"${keyword}" 키워드가 추가되었습니다.`);
+      }
+
+      AICC_Modal.close();
+      renderTable(type);
+    }
+
+    /* ========== 초기화 ========== */
     document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('monitoring-tbody').innerHTML = monitoringKeywords.map(k => `
-        <tr>
-          <td>${k.no}</td><td style="font-weight:600;">${k.keyword}</td>
-          <td style="font-size:12px;color:#757575;">${k.category}</td>
-          <td>${priorityTag(k.priority)}</td>
-          <td>${notifyTag(k.notify)}</td>
-          <td style="font-size:12px;color:#757575;">${k.regDate}</td>
-          <td style="font-size:12px;color:#757575;">${k.registrant}</td>
-          <td>${actionBtns()}</td>
-        </tr>
-      `).join('');
-
-      document.getElementById('issue-tbody').innerHTML = issueKeywords.map(k => `
-        <tr>
-          <td>${k.no}</td><td style="font-weight:600;">${k.keyword}</td>
-          <td style="font-size:12px;">${k.issueType}</td>
-          <td style="font-size:12px;color:#757575;">${k.detect}</td>
-          <td>${notifyTag(k.notify)}</td>
-          <td style="font-size:12px;color:#757575;">${k.regDate}</td>
-          <td style="font-size:12px;color:#757575;">${k.registrant}</td>
-          <td>${actionBtns()}</td>
-        </tr>
-      `).join('');
-
-      document.getElementById('risk-tbody').innerHTML = riskKeywords.map(k => `
-        <tr>
-          <td>${k.no}</td><td style="font-weight:600;">${k.keyword}</td>
-          <td>${priorityTag(k.level)}</td>
-          <td style="font-size:12px;color:#757575;">${k.guide}</td>
-          <td style="font-size:12px;color:#757575;">${k.regDate}</td>
-          <td style="font-size:12px;color:#757575;">${k.registrant}</td>
-          <td>${actionBtns()}</td>
-        </tr>
-      `).join('');
-
-      document.getElementById('exclude-tbody').innerHTML = excludeKeywords.map(k => `
-        <tr>
-          <td>${k.no}</td><td style="font-weight:600;">${k.keyword}</td>
-          <td style="font-size:12px;color:#757575;">${k.reason}</td>
-          <td style="font-size:12px;color:#757575;">${k.regDate}</td>
-          <td style="font-size:12px;color:#757575;">${k.registrant}</td>
-          <td>${actionBtns()}</td>
-        </tr>
-      `).join('');
-
+      ['monitor','exclude','issue'].forEach(t => renderTable(t));
     });
   </script>
 </body>

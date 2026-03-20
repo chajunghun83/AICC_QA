@@ -3,79 +3,125 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="/image/faviconV2.png">
   <title>상담 유형 - AICC Quality Hub</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="../../css/styles.css">
+  <style>
+    .kw-group-header {
+      padding:8px 12px;font-size:11px;font-weight:700;color:#fff;
+      background:#5B9BD5;border-bottom:1px solid #4A8BC2;
+      position:sticky;top:0;z-index:1;
+      letter-spacing:0.5px;
+    }
+    .kw-item {
+      padding:6px 12px 6px 22px;cursor:pointer;display:flex;
+      justify-content:space-between;align-items:center;font-size:12px;
+      border-bottom:1px solid #F5F5F5;transition:background .15s;
+    }
+    .kw-item:hover { background:#F5F9FF; }
+    .kw-item.active { background:#E3F2FD;font-weight:600; }
+
+    .type-table { width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed; }
+    .type-table th {
+      padding:8px 10px;text-align:center;font-weight:600;color:#757575;
+      border-bottom:2px solid #E0E0E0;background:#FAFAFA;
+      position:sticky;top:0;z-index:1;white-space:nowrap;
+    }
+    .type-table td { padding:8px 10px;border-bottom:1px solid #F0F0F0;text-align:center; }
+    .type-table tr:hover td { background:#F5F9FF; }
+    .type-table tr[data-clickable] { cursor:pointer; }
+    .type-table col.c-depth { width:20%; }
+    .type-table col.c-count { width:10%; }
+    .type-table col.c-ratio { width:10%; }
+  </style>
 </head>
 <body class="bg-[#F5F5F5] text-[#212121]">
   <div id="page-content">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+    <!-- 헤더 + 필터 -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
       <div>
         <h1 style="font-size:20px;font-weight:700;margin:0;">상담 유형</h1>
-        <p style="font-size:12px;color:#757575;margin:4px 0 0;">상담 유형별 분석</p>
+        <p style="font-size:12px;color:#757575;margin:4px 0 0;">키워드별 상담 유형 분석</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div id="period-picker-container"></div>
+        <select class="form-select" id="ws-filter" onchange="onCenterChange()">
+          <option value="all">전체 센터</option>
+        </select>
+        <select class="form-select" id="team-filter" disabled onchange="onTeamChange()">
+          <option value="all">전체 팀</option>
+        </select>
       </div>
     </div>
 
-    <!-- 필터 -->
-    <div class="filter-section">
-      <div class="filter-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'flex':'none'">
-        <span>검색조건</span>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#757575" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+    <!-- 메인 콘텐츠 — 한 페이지에 꽉 차게 -->
+    <div id="main-area" style="display:flex;height:calc(100vh - 160px);gap:12px;">
+
+      <!-- 좌측 키워드 리스트 (화면 끝까지 세로 확장) -->
+      <div class="content-card" style="width:230px;flex-shrink:0;display:flex;flex-direction:column;">
+        <div class="content-card-header" style="padding:10px 16px;">
+          <span style="font-size:14px;font-weight:600;">키워드</span>
+        </div>
+        <div style="padding:8px 10px;border-bottom:1px solid #EEEEEE;">
+          <input type="text" id="kw-search" placeholder="키워드 검색..."
+            oninput="onKeywordSearch(this.value)"
+            style="width:100%;padding:6px 10px;border:1px solid #E0E0E0;border-radius:6px;font-size:12px;outline:none;">
+        </div>
+        <div id="keyword-list" style="flex:1;overflow-y:auto;"></div>
       </div>
-      <div class="filter-body">
-        <div><label class="form-label">기간</label><div id="period-picker"></div></div>
-        <div>
-          <label class="form-label">워크스페이스</label>
-          <select class="form-select"><option value="">전체</option><option>WS-01 고객센터</option><option>WS-02 기술지원</option></select>
-        </div>
-        <div>
-          <label class="form-label">분류 depth</label>
-          <select class="form-select" id="depth-filter">
-            <option value="depth1">depth1</option>
-            <option value="depth2">depth2</option>
-            <option value="depth3">depth3</option>
-            <option value="depth4">depth4</option>
-          </select>
-        </div>
-        <div>
-          <label class="form-label">&nbsp;</label>
-          <div style="display:flex;gap:8px;">
-            <button class="btn btn-secondary btn-sm" onclick="AICC_Toast.show('초기화되었습니다.')">초기화</button>
-            <button class="btn btn-primary btn-sm" onclick="AICC_Toast.show('필터가 적용되었습니다.')">검색</button>
+
+      <!-- 우측: 상담유형 테이블 + 차트 (세로 분할) -->
+      <div style="flex:1;display:flex;flex-direction:column;gap:12px;min-width:0;">
+
+        <!-- 상담유형 테이블 -->
+        <div class="content-card" style="flex:6;display:flex;flex-direction:column;min-height:0;">
+          <div class="content-card-header" style="padding:10px 16px;display:flex;align-items:center;gap:8px;">
+            <span style="font-size:14px;font-weight:600;">상담 유형 리스트</span>
+            <span id="selected-kw-badge" style="display:none;padding:2px 10px;background:#E3F2FD;color:#1565C0;border-radius:12px;font-size:12px;font-weight:600;"></span>
+          </div>
+          <div class="content-card-body" style="flex:1;overflow-y:auto;padding:0;">
+            <table class="type-table">
+              <colgroup>
+                <col class="c-depth"><col class="c-depth"><col class="c-depth"><col class="c-depth">
+                <col class="c-count"><col class="c-ratio">
+              </colgroup>
+              <thead>
+                <tr>
+                  <th>대분류</th><th>중분류</th><th>소분류</th><th>세부분류</th>
+                  <th>건수</th><th>비율</th>
+                </tr>
+              </thead>
+              <tbody id="type-table-body">
+                <tr><td colspan="6" style="text-align:center;padding:60px 0;color:#BDBDBD;font-size:13px;">키워드를 선택해주세요</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
-      </div>
-    </div>
 
-    <!-- 가로 막대 차트 -->
-    <div class="content-card" style="margin-bottom:24px;">
-      <div class="content-card-header"><span style="font-size:14px;font-weight:600;">상담 유형 Top 10</span></div>
-      <div class="content-card-body">
-        <div style="height:320px;"><canvas id="type-chart"></canvas></div>
-      </div>
-    </div>
-
-    <!-- 데이터 테이블 -->
-    <div class="content-card">
-      <div class="content-card-header">
-        <span style="font-size:14px;font-weight:600;">상담 유형 상세</span>
-        <span style="font-size:12px;color:#757575;margin-left:8px;">행 클릭 시 하위 분류 확인</span>
-      </div>
-      <div class="content-card-body" style="padding:0;">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>순위</th>
-              <th>상담유형</th>
-              <th>콜 건수</th>
-              <th>평균 통화시간</th>
-              <th>평균 묵음시간</th>
-              <th>주요 키워드</th>
-            </tr>
-          </thead>
-          <tbody id="type-tbody"></tbody>
-        </table>
+        <!-- 하단 차트 -->
+        <div class="content-card" style="flex:4;display:flex;flex-direction:column;min-height:0;">
+          <div class="content-card-header" style="padding:10px 16px;display:flex;align-items:center;justify-content:space-between;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:14px;font-weight:600;">관련 데이터</span>
+              <span id="chart-kw-badge" style="display:none;padding:2px 10px;background:#E3F2FD;color:#1565C0;border-radius:12px;font-size:12px;font-weight:600;"></span>
+            </div>
+            <div style="display:flex;align-items:center;gap:16px;font-size:11px;">
+              <span style="display:flex;align-items:center;gap:4px;">
+                <span style="width:12px;height:12px;background:rgba(0,163,255,0.7);border-radius:2px;"></span>
+                <span id="legend-current">현재 기간</span>
+              </span>
+              <span style="display:flex;align-items:center;gap:4px;">
+                <span style="width:12px;height:0;border-top:2px dashed #BDBDBD;"></span>
+                <span id="legend-prev">전월 기간</span>
+              </span>
+            </div>
+          </div>
+          <div class="content-card-body" style="flex:1;padding:8px;min-height:0;">
+            <canvas id="chart-keyword"></canvas>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -90,84 +136,501 @@
   <script src="../../js/components/toast.js"></script>
   <script src="../../js/components/period-picker.js"></script>
   <script>
-    const typeData = [
-      { rank:1, name:'상품문의', count:342, talk:'04:52', silence:'00:32', keywords:'상품, 재고, 사이즈, 색상', subs:[{name:'상품정보',count:145},{name:'재고문의',count:98},{name:'옵션변경',count:65},{name:'묶음배송',count:34}] },
-      { rank:2, name:'배송문의', count:287, talk:'05:18', silence:'00:38', keywords:'배송, 배송지연, 택배, 운송장', subs:[{name:'배송추적',count:110},{name:'배송지연',count:87},{name:'배송지변경',count:55},{name:'재배송',count:35}] },
-      { rank:3, name:'교환/반품', count:198, talk:'06:45', silence:'00:51', keywords:'교환, 반품, 불량, 파손', subs:[{name:'교환신청',count:82},{name:'반품신청',count:76},{name:'파손/불량',count:40}] },
-      { rank:4, name:'결제/환불', count:156, talk:'07:12', silence:'00:44', keywords:'결제, 환불, 카드, 취소', subs:[{name:'결제취소',count:65},{name:'환불처리',count:55},{name:'결제오류',count:36}] },
-      { rank:5, name:'회원관리', count:134, talk:'03:28', silence:'00:22', keywords:'회원, 비밀번호, 탈퇴, 로그인', subs:[{name:'비밀번호재설정',count:58},{name:'회원탈퇴',count:42},{name:'정보수정',count:34}] },
-      { rank:6, name:'A/S접수', count:112, talk:'08:35', silence:'01:12', keywords:'수리, A/S, 파손, 보증', subs:[{name:'방문수리',count:48},{name:'택배수리',count:42},{name:'무상보증',count:22}] },
-      { rank:7, name:'프로모션', count:98, talk:'03:55', silence:'00:28', keywords:'쿠폰, 할인, 이벤트, 적립', subs:[{name:'쿠폰사용',count:42},{name:'포인트적립',count:35},{name:'이벤트문의',count:21}] },
-      { rank:8, name:'기술지원', count:87, talk:'09:22', silence:'01:28', keywords:'오류, 설치, 설정, 앱', subs:[{name:'앱오류',count:38},{name:'설치지원',count:32},{name:'설정문의',count:17}] },
-      { rank:9, name:'불만/클레임', count:76, talk:'11:48', silence:'01:05', keywords:'불만, 클레임, 항의, 보상', subs:[{name:'서비스불만',count:38},{name:'상품불만',count:28},{name:'직원불만',count:10}] },
-      { rank:10, name:'기타', count:43, talk:'04:02', silence:'00:35', keywords:'기타, 일반문의', subs:[{name:'일반문의',count:28},{name:'기타',count:15}] }
-    ];
+    /* ══════════════════════════ 상태 ══════════════════════════ */
 
-    function openSubModal(idx) {
-      const d = typeData[idx];
-      const total = d.subs.reduce((s, x) => s + x.count, 0);
-      const rows = d.subs.map(s => `
-        <tr>
-          <td style="font-weight:500;">${s.name}</td>
-          <td>${AICC_Fmt.number(s.count)}</td>
-          <td style="color:#00A3FF;">${AICC_Fmt.percent(s.count / total * 100, 0)}</td>
-          <td>${d.talk}</td>
-        </tr>
-      `).join('');
-      AICC_Modal.open({
-        title: d.name + ' 하위 분류',
-        content: `<div style="font-size:12px;color:#757575;margin-bottom:12px;">하위 분류 상세</div>
-          <table class="data-table">
-            <thead><tr><th>하위 분류</th><th>콜 건수</th><th>비율</th><th>평균 통화시간</th></tr></thead>
-            <tbody>${rows}</tbody>
-          </table>`,
-        footer: '<button class="btn btn-secondary" onclick="AICC_Modal.close()">닫기</button>',
-        size: 'md'
-      });
+    let currentPeriod = 'monthly';
+    let selectedKeyword = null;
+    let trendChart = null;
+
+    const periodConfig = {
+      daily:   { kpiPrefix:'금일', prevLabel:'전일' },
+      weekly:  { kpiPrefix:'금주', prevLabel:'전주' },
+      monthly: { kpiPrefix:'금월', prevLabel:'전월' },
+      yearly:  { kpiPrefix:'금년', prevLabel:'전년' },
+      custom:  { kpiPrefix:'기간 내', prevLabel:'이전 기간' }
+    };
+
+    const CALL_STATUS_URL = 'call-status.html';
+    function goCallStatus(filter, value) {
+      let url = CALL_STATUS_URL + '?filter=' + encodeURIComponent(filter);
+      if (value) url += '&value=' + encodeURIComponent(value);
+      window.location.href = url;
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      // 가로 막대 차트
-      new Chart(document.getElementById('type-chart'), {
-        type: 'bar',
-        data: {
-          labels: typeData.map(d => d.name),
-          datasets: [{
-            label: '콜 건수',
-            data: typeData.map(d => d.count),
-            backgroundColor: [
-              'rgba(0,163,255,0.75)','rgba(0,163,255,0.68)','rgba(0,163,255,0.62)',
-              'rgba(0,163,255,0.55)','rgba(0,163,255,0.50)','rgba(0,163,255,0.44)',
-              'rgba(0,163,255,0.38)','rgba(0,163,255,0.32)','rgba(0,163,255,0.27)','rgba(0,163,255,0.22)'
-            ],
-            borderRadius: 4
-          }]
-        },
-        options: {
-          indexAxis: 'y',
-          responsive: true, maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            x: { beginAtZero: true, grid: { color: '#F0F0F0' } },
-            y: { grid: { display: false } }
+    /* ══════════════════════════ 4댑스 상담유형 트리 ══════════════════════════ */
+
+    const categoryTree = [
+      { name:'주문', count:3222, children:[
+        { name:'주문조회', count:1205, children:[
+          { name:'주문상태', count:680, children:[{name:'배송현황확인',count:380},{name:'입금확인',count:300}] },
+          { name:'주문내역', count:525, children:[{name:'주문상세보기',count:320},{name:'영수증발급',count:205}] }
+        ]},
+        { name:'주문변경', count:987, children:[
+          {name:'수량변경',count:412},{name:'옵션변경',count:355},{name:'배송지변경',count:220}
+        ]},
+        { name:'주문취소', count:1030, children:[
+          { name:'단순변심', count:480, children:[{name:'전체취소',count:290},{name:'부분취소',count:190}] },
+          {name:'오류주문',count:320},{name:'품절취소',count:230}
+        ]}
+      ]},
+      { name:'결제', count:2105, children:[
+        { name:'카드결제', count:890, children:[
+          { name:'결제오류', count:520, children:[{name:'승인실패',count:310},{name:'한도초과',count:210}] },
+          {name:'할부변경',count:370}
+        ]},
+        { name:'간편결제', count:615, children:[
+          {name:'네이버페이',count:235},{name:'카카오페이',count:205},{name:'토스',count:175}
+        ]},
+        { name:'현금결제', count:350, children:[{name:'무통장입금',count:210},{name:'계좌이체',count:140}] },
+        { name:'결제취소', count:250, children:[{name:'부분취소',count:150},{name:'전액취소',count:100}] }
+      ]},
+      { name:'배송', count:5019, children:[
+        { name:'배송현황', count:2100, children:[
+          { name:'일반배송', count:1200, children:[{name:'택배추적',count:720},{name:'배송예정일',count:480}] },
+          { name:'특수배송', count:900, children:[{name:'새벽배송',count:520},{name:'당일배송',count:380}] }
+        ]},
+        { name:'배송기간', count:1450, children:[
+          { name:'배송지연', count:890, children:[{name:'택배지연',count:540},{name:'물류지연',count:350}] },
+          {name:'배송소요일',count:560}
+        ]},
+        { name:'배송지', count:832, children:[{name:'주소변경',count:520},{name:'수령인변경',count:312}] },
+        { name:'해외배송', count:637, children:[{name:'관세문의',count:387},{name:'해외배송추적',count:250}] }
+      ]},
+      { name:'교환/반품', count:4253, children:[
+        { name:'교환접수', count:1680, children:[
+          { name:'사이즈교환', count:890, children:[{name:'의류사이즈',count:540},{name:'신발사이즈',count:350}] },
+          {name:'색상교환',count:490},{name:'불량교환',count:300}
+        ]},
+        { name:'반품접수', count:1350, children:[
+          {name:'단순변심반품',count:780},
+          { name:'상품불량', count:570, children:[{name:'파손',count:340},{name:'오배송',count:230}] }
+        ]},
+        { name:'환불처리', count:823, children:[{name:'환불지연',count:450},{name:'환불방법',count:373}] },
+        { name:'수거문의', count:400, children:[{name:'수거일정',count:240},{name:'수거방법',count:160}] }
+      ]},
+      { name:'회원/계정', count:2890, children:[
+        { name:'회원가입', count:890, children:[{name:'가입방법',count:320},{name:'본인인증',count:370},{name:'인증오류',count:200}] },
+        { name:'로그인', count:760, children:[{name:'비밀번호찾기',count:480},{name:'아이디찾기',count:280}] },
+        { name:'회원정보', count:680, children:[{name:'정보변경',count:320},{name:'탈퇴문의',count:260},{name:'개인정보',count:100}] },
+        { name:'등급혜택', count:560, children:[{name:'등급조회',count:340},{name:'혜택안내',count:220}] }
+      ]},
+      { name:'상품', count:3450, children:[
+        { name:'상품정보', count:1420, children:[
+          { name:'사이즈정보', count:680, children:[{name:'사이즈표',count:420},{name:'실측문의',count:260}] },
+          {name:'소재성분',count:440},{name:'색상확인',count:300}
+        ]},
+        { name:'재입고', count:890, children:[{name:'재입고알림',count:530},{name:'입고일정',count:360}] },
+        { name:'가격문의', count:640, children:[{name:'할인정보',count:390},{name:'가격변동',count:250}] },
+        { name:'리뷰후기', count:500, children:[{name:'리뷰작성',count:300},{name:'리뷰수정',count:200}] }
+      ]},
+      { name:'프로모션', count:2199, children:[
+        { name:'쿠폰', count:900, children:[{name:'쿠폰적용',count:420},{name:'쿠폰오류',count:300},{name:'쿠폰발급',count:180}] },
+        { name:'적립금', count:580, children:[{name:'적립금사용',count:350},{name:'적립금확인',count:230}] },
+        { name:'이벤트', count:369, children:[{name:'이벤트참여',count:169},{name:'당첨확인',count:200}] },
+        { name:'할인', count:350, children:[{name:'기간한정',count:200},{name:'회원할인',count:150}] }
+      ]},
+      { name:'A/S', count:1456, children:[
+        { name:'A/S접수', count:680, children:[
+          { name:'수선요청', count:380, children:[{name:'의류수선',count:230},{name:'가방수선',count:150}] },
+          {name:'교체요청',count:180},{name:'부품교체',count:120}
+        ]},
+        { name:'A/S진행', count:476, children:[{name:'진행상태',count:150},{name:'소요기간',count:136},{name:'비용문의',count:190}] },
+        { name:'보증문의', count:300, children:[{name:'보증기간',count:100},{name:'보증범위',count:80},{name:'보증서분실',count:70},{name:'보증연장',count:50}] }
+      ]},
+      { name:'포인트/마일리지', count:987, children:[
+        { name:'포인트적립', count:420, children:[{name:'구매적립',count:250},{name:'리뷰적립',count:100},{name:'출석적립',count:70}] },
+        { name:'포인트사용', count:350, children:[{name:'사용방법',count:210},{name:'사용제한',count:140}] },
+        { name:'마일리지', count:217, children:[{name:'전환문의',count:120},{name:'소멸안내',count:97}] }
+      ]},
+      { name:'기타', count:654, children:[
+        { name:'매장문의', count:260, children:[{name:'영업시간',count:80},{name:'매장위치',count:60},{name:'주차안내',count:60},{name:'매장전화',count:60}] },
+        { name:'제휴문의', count:207, children:[{name:'제휴카드',count:120},{name:'기업제휴',count:87}] },
+        { name:'기타문의', count:187, children:[{name:'칭찬제안',count:50},{name:'불편사항',count:47},{name:'시스템오류',count:40},{name:'앱문의',count:30},{name:'기타',count:20}] }
+      ]},
+      { name:'고객불만', count:1180, children:[
+        { name:'서비스불만', count:520, children:[{name:'응대불만',count:280},{name:'대기시간',count:240}] },
+        { name:'품질불만', count:410, children:[{name:'제품하자',count:250},{name:'포장불량',count:160}] },
+        { name:'보상요구', count:250, children:[{name:'환불요구',count:150},{name:'추가보상',count:100}] }
+      ]},
+      { name:'앱/웹사이트', count:1050, children:[
+        { name:'앱오류', count:450, children:[{name:'로딩오류',count:200},{name:'결제오류',count:150},{name:'화면깨짐',count:100}] },
+        { name:'기능문의', count:350, children:[{name:'검색기능',count:180},{name:'필터기능',count:170}] },
+        { name:'계정연동', count:250, children:[{name:'SNS연동',count:150},{name:'기기변경',count:100}] }
+      ]},
+      { name:'멤버십', count:920, children:[
+        { name:'등급문의', count:380, children:[{name:'승급조건',count:220},{name:'등급유지',count:160}] },
+        { name:'혜택문의', count:310, children:[{name:'무료배송',count:180},{name:'전용쿠폰',count:130}] },
+        { name:'가입탈퇴', count:230, children:[{name:'가입방법',count:140},{name:'해지방법',count:90}] }
+      ]},
+      { name:'선물/기프트', count:780, children:[
+        { name:'기프트카드', count:350, children:[{name:'카드구매',count:200},{name:'카드사용',count:150}] },
+        { name:'선물포장', count:250, children:[{name:'포장옵션',count:150},{name:'메시지카드',count:100}] },
+        { name:'선물배송', count:180, children:[{name:'익명배송',count:100},{name:'예약배송',count:80}] }
+      ]},
+      { name:'구독서비스', count:650, children:[
+        { name:'정기배송', count:300, children:[{name:'주기변경',count:170},{name:'상품변경',count:130}] },
+        { name:'구독관리', count:220, children:[{name:'일시정지',count:130},{name:'해지문의',count:90}] },
+        { name:'구독혜택', count:130, children:[{name:'할인율',count:80},{name:'추가혜택',count:50}] }
+      ]},
+      { name:'매장안내', count:580, children:[
+        { name:'매장정보', count:280, children:[{name:'위치안내',count:150},{name:'영업시간',count:130}] },
+        { name:'픽업서비스', count:180, children:[{name:'매장픽업',count:110},{name:'드라이브스루',count:70}] },
+        { name:'매장재고', count:120, children:[{name:'재고확인',count:70},{name:'매장예약',count:50}] }
+      ]},
+      { name:'세금계산서', count:490, children:[
+        { name:'발급요청', count:250, children:[{name:'전자발급',count:160},{name:'수정발급',count:90}] },
+        { name:'현금영수증', count:150, children:[{name:'발급문의',count:90},{name:'취소문의',count:60}] },
+        { name:'영수증재발급', count:90, children:[{name:'이메일발송',count:50},{name:'팩스발송',count:40}] }
+      ]},
+      { name:'해외직구', count:430, children:[
+        { name:'통관문의', count:200, children:[{name:'관세계산',count:120},{name:'통관지연',count:80}] },
+        { name:'해외반품', count:130, children:[{name:'반품절차',count:80},{name:'반품비용',count:50}] },
+        { name:'사이즈문의', count:100, children:[{name:'해외사이즈',count:60},{name:'사이즈변환',count:40}] }
+      ]},
+      { name:'카탈로그', count:370, children:[
+        { name:'신상품', count:170, children:[{name:'신상알림',count:100},{name:'사전예약',count:70}] },
+        { name:'브랜드문의', count:120, children:[{name:'입점문의',count:70},{name:'브랜드정보',count:50}] },
+        { name:'품절상품', count:80, children:[{name:'재입고알림',count:50},{name:'대체상품',count:30}] }
+      ]},
+      { name:'챗봇/AI상담', count:320, children:[
+        { name:'챗봇오류', count:150, children:[{name:'응답오류',count:90},{name:'연결실패',count:60}] },
+        { name:'상담전환', count:100, children:[{name:'상담사연결',count:60},{name:'콜백요청',count:40}] },
+        { name:'AI추천', count:70, children:[{name:'추천오류',count:40},{name:'맞춤추천',count:30}] }
+      ]}
+    ];
+
+    /* ══════════════════════════ 데이터 가공 ══════════════════════════ */
+
+    /* 트리에서 리프 노드 추출 → 1댑스 기준 그룹화 */
+    let keywordGroups = [];
+    /* 키워드명 → 상담유형 경로 매핑 (동명 키워드 다중 경로 지원) */
+    let keywordTypeMap = {};
+    /* 스케일 팩터 (필터 적용 시 사용) */
+    let scaleFactor = 1;
+
+    /* 동일 키워드가 다른 상담유형 경로에도 등장하는 추가 더미 매핑 */
+    const extraMappings = {
+      '수량변경': [
+        { depth1:'교환/반품', depth2:'교환접수', depth3:'사이즈교환', depth4:'수량변경', count:125 },
+        { depth1:'결제', depth2:'결제취소', depth3:'부분취소', depth4:'수량변경', count:78 },
+        { depth1:'프로모션', depth2:'쿠폰', depth3:'쿠폰적용', depth4:'수량변경', count:52 },
+        { depth1:'배송', depth2:'배송현황', depth3:'일반배송', depth4:'수량변경', count:35 }
+      ],
+      '배송현황확인': [
+        { depth1:'배송', depth2:'배송현황', depth3:'일반배송', depth4:'배송현황확인', count:210 },
+        { depth1:'교환/반품', depth2:'반품접수', depth3:'상품불량', depth4:'배송현황확인', count:95 },
+        { depth1:'고객불만', depth2:'서비스불만', depth3:'대기시간', depth4:'배송현황확인', count:62 },
+        { depth1:'앱/웹사이트', depth2:'기능문의', depth3:'검색기능', depth4:'배송현황확인', count:38 }
+      ],
+      '입금확인': [
+        { depth1:'결제', depth2:'카드결제', depth3:'결제오류', depth4:'입금확인', count:145 },
+        { depth1:'결제', depth2:'현금결제', depth3:'무통장입금', depth4:'입금확인', count:88 },
+        { depth1:'세금계산서', depth2:'발급요청', depth3:'전자발급', depth4:'입금확인', count:42 },
+        { depth1:'프로모션', depth2:'적립금', depth3:'적립금확인', depth4:'입금확인', count:28 }
+      ]
+    };
+
+    function buildKeywordData() {
+      keywordGroups = [];
+      keywordTypeMap = {};
+
+      /* 트리를 순회하여 리프 노드(키워드)를 추출하고 1댑스 기준으로 그룹화 */
+      categoryTree.forEach(cat => {
+        const leaves = [];
+        function collect(node, path) {
+          if (!node.children || node.children.length === 0) {
+            const fullPath = [...path, node.name];
+            leaves.push({ name: node.name, count: node.count, fullPath: fullPath });
+
+            if (!keywordTypeMap[node.name]) keywordTypeMap[node.name] = [];
+            keywordTypeMap[node.name].push({
+              depth1: fullPath[0] || '-',
+              depth2: fullPath[1] || '-',
+              depth3: fullPath[2] || '-',
+              depth4: fullPath.length >= 4 ? fullPath[3] : '-',
+              count: node.count
+            });
+          } else {
+            node.children.forEach(c => collect(c, [...path, node.name]));
           }
+        }
+        collect(cat, []);
+        /* [비고] 그룹 내 키워드를 건수 기준 내림차순 정렬 — 대분류 순서는 categoryTree 원본 유지 */
+        leaves.sort((a, b) => b.count - a.count);
+        if (leaves.length > 0) {
+          keywordGroups.push({ category: cat.name, keywords: leaves });
         }
       });
 
-      // 테이블
-      document.getElementById('type-tbody').innerHTML = typeData.map(d => `
-        <tr style="cursor:pointer;" onclick="openSubModal(${d.rank - 1})">
-          <td style="font-weight:600;color:#00A3FF;">${d.rank}</td>
-          <td style="font-weight:500;">${d.name}</td>
-          <td>${AICC_Fmt.number(d.count)}</td>
-          <td>${d.talk}</td>
-          <td>${d.silence}</td>
-          <td style="font-size:12px;color:#757575;">${d.keywords}</td>
-        </tr>
-      `).join('');
+      /* 추가 더미 매핑 삽입 */
+      Object.keys(extraMappings).forEach(kwName => {
+        if (!keywordTypeMap[kwName]) keywordTypeMap[kwName] = [];
+        extraMappings[kwName].forEach(e => keywordTypeMap[kwName].push(e));
+      });
 
-      if (typeof AICC_PeriodPicker !== 'undefined') {
-        AICC_PeriodPicker.create('period-picker', { mode: 'monthly' });
+      Object.keys(keywordTypeMap).forEach(key => {
+        const entries = keywordTypeMap[key];
+        const total = entries.reduce((s, e) => s + e.count, 0);
+        entries.forEach(e => { e.ratio = Math.round(e.count / total * 1000) / 10; });
+        entries.sort((a, b) => b.count - a.count);
+      });
+    }
+
+    /* ══════════════════════════ 차트 시계열 데이터 ══════════════════════════ */
+
+    function hashCode(str) {
+      let h = 0;
+      for (let i = 0; i < str.length; i++) { h = ((h << 5) - h) + str.charCodeAt(i); h |= 0; }
+      return Math.abs(h);
+    }
+    function seededRand(seed) { const x = Math.sin(seed + 1) * 10000; return x - Math.floor(x); }
+
+    const trendCache = {};
+    function getTrendData(kwName) {
+      if (trendCache[kwName]) return trendCache[kwName];
+      const total = keywordTypeMap[kwName].reduce((s, e) => s + e.count, 0);
+      const seed = hashCode(kwName);
+
+      function gen(len, avg, offset) {
+        return Array.from({length: len}, (_, i) =>
+          Math.max(1, Math.round(avg * (0.5 + seededRand(seed + i * 7 + offset))))
+        );
+      }
+
+      const dayAvg = total / 31;
+      trendCache[kwName] = {
+        monthly: { current: gen(31, dayAvg, 0),   prev: gen(31, dayAvg * 0.85, 100) },
+        weekly:  { current: gen(7, total / 4, 200), prev: gen(7, total / 4 * 0.85, 300) },
+        daily:   { current: gen(24, dayAvg / 6, 400), prev: gen(24, dayAvg / 6 * 0.85, 500) },
+        yearly:  { current: gen(12, total, 600),   prev: gen(12, total * 0.85, 700) }
+      };
+      return trendCache[kwName];
+    }
+
+    function getLabels(period) {
+      if (period === 'daily')  return Array.from({length:24}, (_,i) => i + '시');
+      if (period === 'weekly') return ['월','화','수','목','금','토','일'];
+      if (period === 'yearly') return ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+      return Array.from({length:31}, (_,i) => (i+1) + '일');
+    }
+
+    /* ══════════════════════════ 키워드 리스트 렌더 ══════════════════════════ */
+    /*
+     * [비고] 키워드 리스트 동작 규칙
+     * - 키워드 = categoryTree의 리프 노드(마지막 댑스 항목)
+     * - 1댑스(대분류)는 그룹 헤더로만 사용, 선택 불가
+     * - 그룹 내 키워드는 건수 기준 내림차순 정렬
+     * - 검색창 입력 시 키워드명으로 자동 필터링 (oninput), 매칭 없는 그룹은 자동 숨김
+     * - 동명 키워드가 여러 대분류에 존재할 경우 각각 표시 (예: 가입방법 → 회원/계정, 멤버십)
+     * - 키워드 클릭 시 해당 키워드명의 모든 상담유형 경로가 우측 테이블에 표시
+     */
+
+    function renderKeywordList(filter) {
+      const container = document.getElementById('keyword-list');
+      const q = (filter || '').toLowerCase().trim();
+      let html = '';
+
+      keywordGroups.forEach(group => {
+        const filtered = group.keywords.filter(kw =>
+          q === '' || kw.name.toLowerCase().includes(q)
+        );
+        if (filtered.length === 0) return;
+
+        html += '<div class="kw-group-header">' + group.category + '</div>';
+        filtered.forEach(kw => {
+          const isActive = selectedKeyword === kw.name;
+          const scaledCount = Math.round(kw.count * scaleFactor);
+          html += '<div class="kw-item' + (isActive ? ' active' : '') + '" onclick="selectKeyword(\'' + kw.name.replace(/'/g, "\\'") + '\')">'
+            + '<span>' + kw.name + '</span>'
+            + '<span style="color:#9E9E9E;font-size:11px;">' + AICC_Fmt.number(scaledCount) + '</span>'
+            + '</div>';
+        });
+      });
+
+      if (html === '') {
+        html = '<div style="text-align:center;padding:40px 0;color:#BDBDBD;font-size:12px;">검색 결과가 없습니다</div>';
+      }
+      container.innerHTML = html;
+    }
+
+    function onKeywordSearch(val) {
+      renderKeywordList(val);
+    }
+
+    function selectKeyword(kwName) {
+      selectedKeyword = kwName;
+      renderKeywordList(document.getElementById('kw-search').value);
+      renderTypeTable();
+      renderTrendChart();
+    }
+
+    /* ══════════════════════════ 상담유형 테이블 렌더 ══════════════════════════ */
+
+    function renderTypeTable() {
+      const tbody = document.getElementById('type-table-body');
+      const badge = document.getElementById('selected-kw-badge');
+
+      if (!selectedKeyword || !keywordTypeMap[selectedKeyword]) {
+        badge.style.display = 'none';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:60px 0;color:#BDBDBD;font-size:13px;">키워드를 선택해주세요</td></tr>';
+        return;
+      }
+
+      badge.style.display = '';
+      badge.textContent = selectedKeyword;
+
+      const entries = keywordTypeMap[selectedKeyword];
+      tbody.innerHTML = entries.map(e => {
+        const sc = Math.round(e.count * scaleFactor);
+        const pathStr = e.depth1 + ' > ' + e.depth2 + ' > ' + e.depth3 + (e.depth4 !== '-' ? ' > ' + e.depth4 : '');
+        return '<tr data-clickable onclick="goCallStatus(\'consult_type\', \'' + pathStr.replace(/'/g, "\\'") + '\')">'
+          + '<td>' + e.depth1 + '</td>'
+          + '<td>' + e.depth2 + '</td>'
+          + '<td>' + e.depth3 + '</td>'
+          + '<td>' + (e.depth4 !== '-' ? e.depth4 : '-') + '</td>'
+          + '<td>' + AICC_Fmt.number(sc) + '</td>'
+          + '<td>' + e.ratio + '%</td>'
+          + '</tr>';
+      }).join('');
+    }
+
+    /* ══════════════════════════ 차트 렌더 ══════════════════════════ */
+
+    function renderTrendChart() {
+      if (trendChart) { trendChart.destroy(); trendChart = null; }
+
+      const chartBadge = document.getElementById('chart-kw-badge');
+      const canvas = document.getElementById('chart-keyword');
+      if (!canvas) return;
+
+      if (!selectedKeyword) {
+        chartBadge.style.display = 'none';
+        return;
+      }
+
+      chartBadge.style.display = '';
+      chartBadge.textContent = selectedKeyword;
+
+      const data = getTrendData(selectedKeyword);
+      const periodData = data[currentPeriod] || data.monthly;
+      const cfg = periodConfig[currentPeriod] || periodConfig.monthly;
+
+      trendChart = new Chart(canvas, {
+        type: 'bar',
+        data: {
+          labels: getLabels(currentPeriod),
+          datasets: [
+            {
+              label: '현재 기간',
+              data: periodData.current,
+              backgroundColor: 'rgba(0,163,255,0.7)',
+              borderRadius: 4,
+              order: 1
+            },
+            {
+              label: cfg.prevLabel + ' 기간',
+              data: periodData.prev,
+              type: 'line',
+              borderColor: '#BDBDBD',
+              borderDash: [4,4],
+              pointRadius: 2,
+              pointBackgroundColor: '#BDBDBD',
+              tension: 0.3,
+              borderWidth: 2,
+              order: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { display: false },
+            tooltip: { boxPadding: 6, itemSort: (a, b) => a.datasetIndex - b.datasetIndex }
+          },
+          scales: {
+            y: { beginAtZero: true, grid: { color: '#F0F0F0' }, ticks: { font: { size: 10 }, color: '#757575' } },
+            x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#757575', maxRotation: 0 } }
+          },
+          onHover: (e, els) => { e.native.target.style.cursor = els.length > 0 ? 'pointer' : 'default'; },
+          onClick: () => { if (selectedKeyword) goCallStatus('keyword', selectedKeyword); }
+        }
+      });
+    }
+
+    /* ══════════════════════════ 필터 핸들러 ══════════════════════════ */
+
+    function applyPeriod(period) {
+      currentPeriod = period;
+      const cfg = periodConfig[period] || periodConfig.monthly;
+
+      const factors = { daily:1/30, weekly:7/30, monthly:1, yearly:365/30, custom:15/30 };
+      scaleFactor = factors[period] || 1;
+
+      const legendCur = document.getElementById('legend-current');
+      const legendPrv = document.getElementById('legend-prev');
+      if (legendCur) legendCur.textContent = '현재 기간';
+      if (legendPrv) legendPrv.textContent = cfg.prevLabel + ' 기간';
+
+      renderKeywordList(document.getElementById('kw-search').value);
+      renderTypeTable();
+      renderTrendChart();
+      AICC_Toast.show(cfg.kpiPrefix + ' 데이터로 전환되었습니다.');
+    }
+
+    function onCenterChange() {
+      const wsId = document.getElementById('ws-filter').value;
+      const teamFilter = document.getElementById('team-filter');
+
+      if (wsId === 'all') {
+        teamFilter.disabled = true;
+        teamFilter.innerHTML = '<option value="all">전체 팀</option>';
+      } else {
+        teamFilter.disabled = false;
+        if (window._centersData) {
+          const center = window._centersData.find(c => c.id === wsId);
+          teamFilter.innerHTML = '<option value="all">전체 팀</option>';
+          if (center && center.teams) {
+            center.teams.forEach(t => {
+              teamFilter.innerHTML += '<option value="' + t.id + '">' + t.name + '</option>';
+            });
+          }
+        }
+      }
+      AICC_Toast.show('필터가 적용되었습니다.');
+    }
+
+    function onTeamChange() {
+      AICC_Toast.show('필터가 적용되었습니다.');
+    }
+
+    /* ══════════════════════════ 초기화 ══════════════════════════ */
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const data = await AICC_DataLoader.loadAll(['centers.json']);
+        const centers = data['centers.json'];
+        if (centers) {
+          window._centersData = centers;
+          const wsSelect = document.getElementById('ws-filter');
+          centers.forEach(ws => {
+            wsSelect.innerHTML += '<option value="' + ws.id + '">' + ws.name + '</option>';
+          });
+        }
+      } catch(e) { console.warn('센터 데이터 로드 실패', e); }
+
+      AICC_PeriodPicker.create('period-picker-container', {
+        defaultPeriod: 'monthly',
+        onChange: function(periodType) { applyPeriod(periodType); }
+      });
+
+      buildKeywordData();
+      renderKeywordList('');
+
+      /* 첫 번째 키워드 자동 선택 */
+      if (keywordGroups.length > 0 && keywordGroups[0].keywords.length > 0) {
+        selectKeyword(keywordGroups[0].keywords[0].name);
       }
     });
   </script>

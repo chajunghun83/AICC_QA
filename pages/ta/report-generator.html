@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="/image/faviconV2.png">
+  <title>리포트 생성기 - AICC Quality Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body class="bg-[#F5F5F5] text-[#212121]">
+  <div id="page-content">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <h1 style="font-size:20px;font-weight:700;margin:0;">리포트 생성기</h1>
+        <p style="font-size:12px;color:#757575;margin:4px 0 0;">TA 분석 리포트 설정 및 생성</p>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:400px 1fr;gap:16px;align-items:start;">
+      <!-- 좌측: 설정 폼 -->
+      <div>
+        <!-- 리포트 유형 -->
+        <div class="content-card" style="margin-bottom:16px;">
+          <div class="content-card-header">
+            <span style="font-size:14px;font-weight:600;">리포트 유형</span>
+          </div>
+          <div class="content-card-body">
+            <div style="display:flex;flex-direction:column;gap:8px;" id="report-type-group">
+              <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #E0E0E0;border-radius:6px;cursor:pointer;transition:all 0.15s;" class="report-type-option" onclick="selectReportType(this, 'daily')">
+                <input type="radio" name="reportType" value="daily" checked style="accent-color:#00A3FF;">
+                <div>
+                  <div style="font-size:13px;font-weight:500;">일간 리포트</div>
+                  <div style="font-size:11px;color:#757575;">오늘 기준 일별 TA 분석 요약</div>
+                </div>
+              </label>
+              <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #E0E0E0;border-radius:6px;cursor:pointer;transition:all 0.15s;" class="report-type-option" onclick="selectReportType(this, 'weekly')">
+                <input type="radio" name="reportType" value="weekly" style="accent-color:#00A3FF;">
+                <div>
+                  <div style="font-size:13px;font-weight:500;">주간 리포트</div>
+                  <div style="font-size:11px;color:#757575;">이번 주 추이 및 비교 분석</div>
+                </div>
+              </label>
+              <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #E0E0E0;border-radius:6px;cursor:pointer;transition:all 0.15s;" class="report-type-option" onclick="selectReportType(this, 'monthly')">
+                <input type="radio" name="reportType" value="monthly" style="accent-color:#00A3FF;">
+                <div>
+                  <div style="font-size:13px;font-weight:500;">월간 리포트</div>
+                  <div style="font-size:11px;color:#757575;">이번 달 종합 분석 및 개선 제안</div>
+                </div>
+              </label>
+              <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #E0E0E0;border-radius:6px;cursor:pointer;transition:all 0.15s;" class="report-type-option" onclick="selectReportType(this, 'yearly')">
+                <input type="radio" name="reportType" value="yearly" style="accent-color:#00A3FF;">
+                <div>
+                  <div style="font-size:13px;font-weight:500;">연간 리포트</div>
+                  <div style="font-size:11px;color:#757575;">올해 연간 TA 성과 총괄</div>
+                </div>
+              </label>
+              <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #E0E0E0;border-radius:6px;cursor:pointer;transition:all 0.15s;" class="report-type-option" onclick="selectReportType(this, 'custom')">
+                <input type="radio" name="reportType" value="custom" style="accent-color:#00A3FF;">
+                <div>
+                  <div style="font-size:13px;font-weight:500;">날짜 지정 리포트</div>
+                  <div style="font-size:11px;color:#757575;">사용자 지정 기간 분석</div>
+                </div>
+              </label>
+            </div>
+            <div id="custom-date-area" style="display:none;margin-top:12px;padding:12px;background:#F9F9F9;border-radius:6px;">
+              <label class="form-label">리포트 기간</label>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <input type="date" class="form-input" id="report-from" value="2025-01-01" style="flex:1;">
+                <span style="color:#757575;">~</span>
+                <input type="date" class="form-input" id="report-to" value="2025-01-19" style="flex:1;">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 범위 -->
+        <div class="content-card" style="margin-bottom:16px;">
+          <div class="content-card-header">
+            <span style="font-size:14px;font-weight:600;">범위</span>
+          </div>
+          <div class="content-card-body">
+            <div style="margin-bottom:12px;">
+              <label class="form-label">분석 범위</label>
+              <select class="form-select" id="scope-select" onchange="onScopeChange()" style="width:100%;">
+                <option value="all">전체 (모든 센터)</option>
+                <option value="center">센터 단위</option>
+                <option value="team">팀 단위</option>
+                <option value="individual">개인 단위</option>
+              </select>
+            </div>
+            <div id="scope-detail" style="display:none;">
+              <label class="form-label" id="scope-detail-label">센터</label>
+              <select class="form-select" id="scope-detail-select" style="width:100%;"></select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 포함 섹션 선택 -->
+        <div class="content-card" style="margin-bottom:16px;">
+          <div class="content-card-header">
+            <span style="font-size:14px;font-weight:600;">포함 섹션</span>
+          </div>
+          <div class="content-card-body">
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <div style="font-size:11px;font-weight:600;color:#00A3FF;margin-bottom:2px;">개요</div>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+                <input type="checkbox" id="sec-summary" checked onchange="updatePreview()" style="accent-color:#00A3FF;">
+                요약 (KPI 현황)
+              </label>
+
+              <div style="border-top:1px solid #F0F0F0;margin:6px 0;"></div>
+              <div style="font-size:11px;font-weight:600;color:#00A3FF;margin-bottom:2px;">콜 분석</div>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+                <input type="checkbox" id="sec-call-trend" checked onchange="updatePreview()" style="accent-color:#00A3FF;">
+                콜 건수 추이
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+                <input type="checkbox" id="sec-hourly" checked onchange="updatePreview()" style="accent-color:#00A3FF;">
+                시간대별 콜량
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+                <input type="checkbox" id="sec-reentry" checked onchange="updatePreview()" style="accent-color:#00A3FF;">
+                재인입 콜 추이
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+                <input type="checkbox" id="sec-issue-call" checked onchange="updatePreview()" style="accent-color:#00A3FF;">
+                이슈 콜 추이
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+                <input type="checkbox" id="sec-silence" checked onchange="updatePreview()" style="accent-color:#00A3FF;">
+                통화시간 대비 묵음시간
+              </label>
+
+              <div style="border-top:1px solid #F0F0F0;margin:6px 0;"></div>
+              <div style="font-size:11px;font-weight:600;color:#00A3FF;margin-bottom:2px;">키워드 분석</div>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+                <input type="checkbox" id="sec-keyword-top20" checked onchange="updatePreview()" style="accent-color:#00A3FF;">
+                주요 키워드 Top 20
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+                <input type="checkbox" id="sec-issue-keyword" checked onchange="updatePreview()" style="accent-color:#00A3FF;">
+                이슈 키워드 Top 5
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+                <input type="checkbox" id="sec-new-keyword" checked onchange="updatePreview()" style="accent-color:#00A3FF;">
+                신규 키워드 Top 5
+              </label>
+
+              <div style="border-top:1px solid #F0F0F0;margin:6px 0;"></div>
+              <div style="font-size:11px;font-weight:600;color:#00A3FF;margin-bottom:2px;">상담 유형</div>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+                <input type="checkbox" id="sec-consult-dist" checked onchange="updatePreview()" style="accent-color:#00A3FF;">
+                상담유형 분포
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+                <input type="checkbox" id="sec-consult-top5" checked onchange="updatePreview()" style="accent-color:#00A3FF;">
+                상담유형 Top 5
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+                <input type="checkbox" id="sec-consult-table" checked onchange="updatePreview()" style="accent-color:#00A3FF;">
+                상담유형별 건수 테이블
+              </label>
+
+              <div style="border-top:1px solid #F0F0F0;margin:6px 0;"></div>
+              <div style="font-size:11px;font-weight:600;color:#00A3FF;margin-bottom:2px;">팀 / 상담사</div>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+                <input type="checkbox" id="sec-team-table" checked onchange="updatePreview()" style="accent-color:#00A3FF;">
+                팀별 콜 현황
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+                <input type="checkbox" id="sec-agent" checked onchange="updatePreview()" style="accent-color:#00A3FF;">
+                상담사별 분석
+              </label>
+
+              <div style="border-top:1px solid #F0F0F0;margin:6px 0;"></div>
+              <div style="font-size:11px;font-weight:600;color:#00A3FF;margin-bottom:2px;">이슈 관리</div>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+                <input type="checkbox" id="sec-issue-status" checked onchange="updatePreview()" style="accent-color:#00A3FF;">
+                이슈 처리 현황
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+                <input type="checkbox" id="sec-issue-pending" checked onchange="updatePreview()" style="accent-color:#00A3FF;">
+                미처리 이슈 목록
+              </label>
+
+              <div style="border-top:1px solid #F0F0F0;margin:6px 0;"></div>
+              <div style="font-size:11px;font-weight:600;color:#00A3FF;margin-bottom:2px;">종합</div>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+                <input type="checkbox" id="sec-improvement" checked onchange="updatePreview()" style="accent-color:#00A3FF;">
+                개선 제안
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+                <input type="checkbox" id="sec-appendix" checked onchange="updatePreview()" style="accent-color:#00A3FF;">
+                부록 (상세 데이터)
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- 액션 버튼 -->
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-primary" onclick="generateReport()" style="flex:1;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            리포트 생성
+          </button>
+          <button class="btn btn-secondary" onclick="downloadReport()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            다운로드
+          </button>
+        </div>
+      </div>
+
+      <!-- 우측: 미리보기 -->
+      <div class="content-card" style="position:sticky;top:72px;">
+        <div class="content-card-header">
+          <span style="font-size:14px;font-weight:600;">미리보기</span>
+          <span class="badge badge-pending" id="preview-status">미생성</span>
+        </div>
+        <div class="content-card-body" id="preview-area" style="min-height:600px;max-height:calc(100vh - 180px);overflow-y:auto;">
+          <div id="preview-placeholder" style="text-align:center;padding:60px 20px;color:#9E9E9E;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#BDBDBD" stroke-width="1.5" style="margin:0 auto 16px;display:block;">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+            <div style="font-size:14px;font-weight:500;margin-bottom:4px;">리포트 미리보기</div>
+            <div style="font-size:12px;">좌측에서 설정을 완료한 후 "리포트 생성" 버튼을 클릭하세요.</div>
+          </div>
+          <div id="preview-content" style="display:none;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../assets/dummy-data/all-data.js"></script>
+  <script src="../../js/utils/data-loader.js"></script>
+  <script src="../../js/utils/auth-simulator.js"></script>
+  <script src="../../js/utils/formatters.js"></script>
+  <script src="../../js/components/sidebar.js"></script>
+  <script src="../../js/components/layout.js"></script>
+  <script src="../../js/components/modal.js"></script>
+  <script src="../../js/components/toast.js"></script>
+  <script>
+    /* ========== TA 더미 리포트 데이터 ========== */
+    const REPORT_DATA = {
+      summary: {
+        totalCalls: 12480, totalCalls_prev: 11920,
+        ibCalls: 8340, obCalls: 4140,
+        ibCalls_prev: 7950, obCalls_prev: 3970,
+        issueCalls: 387, issueCalls_prev: 342,
+        overCalls: 215, overCalls_prev: 198,
+        reentryCalls: 563, reentryCalls_prev: 521,
+        avgDuration: '4:32', avgDuration_prev: '4:48',
+        avgSilence: '0:18', avgSilence_prev: '0:22'
+      },
+      teams: [
+        { name: 'VIP상담팀', ws: '서울센터', agents: 12, calls: 1520, ibCalls: 1080, obCalls: 440, issueCalls: 28, overCalls: 15, reentryCalls: 42, avgDuration: '5:12' },
+        { name: '일반상담팀', ws: '서울센터', agents: 25, calls: 2340, ibCalls: 1680, obCalls: 660, issueCalls: 62, overCalls: 38, reentryCalls: 85, avgDuration: '4:48' },
+        { name: '기술지원팀', ws: '서울센터', agents: 18, calls: 1280, ibCalls: 1020, obCalls: 260, issueCalls: 45, overCalls: 32, reentryCalls: 58, avgDuration: '6:05' },
+        { name: '아웃바운드팀', ws: '서울센터', agents: 15, calls: 1100, ibCalls: 180, obCalls: 920, issueCalls: 38, overCalls: 12, reentryCalls: 35, avgDuration: '3:42' },
+        { name: '고객상담1팀', ws: '부산센터', agents: 20, calls: 1480, ibCalls: 1120, obCalls: 360, issueCalls: 42, overCalls: 28, reentryCalls: 65, avgDuration: '5:30' },
+        { name: '고객상담2팀', ws: '부산센터', agents: 22, calls: 1620, ibCalls: 1200, obCalls: 420, issueCalls: 55, overCalls: 30, reentryCalls: 78, avgDuration: '4:55' },
+        { name: '영업지원팀', ws: '부산센터', agents: 10, calls: 880, ibCalls: 320, obCalls: 560, issueCalls: 22, overCalls: 10, reentryCalls: 28, avgDuration: '4:18' },
+        { name: '종합상담팀', ws: '대구센터', agents: 15, calls: 1060, ibCalls: 840, obCalls: 220, issueCalls: 38, overCalls: 22, reentryCalls: 68, avgDuration: '5:45' },
+        { name: '클레임처리팀', ws: '대구센터', agents: 8, calls: 720, ibCalls: 580, obCalls: 140, issueCalls: 42, overCalls: 18, reentryCalls: 72, avgDuration: '7:10' },
+        { name: '신규고객팀', ws: '대구센터', agents: 10, calls: 480, ibCalls: 320, obCalls: 160, issueCalls: 15, overCalls: 10, reentryCalls: 32, avgDuration: '4:22' }
+      ],
+      topAgentsByCalls: [
+        { name: '김영수', team: 'VIP상담팀', ws: '서울센터', calls: 248 },
+        { name: '정수민', team: '일반상담팀', ws: '서울센터', calls: 235 },
+        { name: '배수현', team: '고객상담1팀', ws: '부산센터', calls: 221 },
+        { name: '오세진', team: '기술지원팀', ws: '서울센터', calls: 218 },
+        { name: '홍길동', team: 'VIP상담팀', ws: '서울센터', calls: 212 }
+      ],
+      bottomAgentsByCalls: [
+        { name: '문지혜', team: '클레임처리팀', ws: '대구센터', calls: 68 },
+        { name: '황서연', team: '종합상담팀', ws: '대구센터', calls: 72 },
+        { name: '서다은', team: '아웃바운드팀', ws: '서울센터', calls: 78 },
+        { name: '한동우', team: '일반상담팀', ws: '서울센터', calls: 85 },
+        { name: '김태희', team: '고객상담2팀', ws: '부산센터', calls: 92 }
+      ],
+      keywordTop20: [
+        { rank: 1, keyword: '해지', count: 842, change: 12.3 },
+        { rank: 2, keyword: '위약금', count: 756, change: 8.7 },
+        { rank: 3, keyword: '요금제', count: 698, change: -2.1 },
+        { rank: 4, keyword: '환불', count: 645, change: 15.8 },
+        { rank: 5, keyword: '배송', count: 612, change: 5.4 },
+        { rank: 6, keyword: '교환', count: 589, change: -1.3 },
+        { rank: 7, keyword: 'AS', count: 534, change: 3.2 },
+        { rank: 8, keyword: '결제 오류', count: 487, change: 22.1 },
+        { rank: 9, keyword: '포인트', count: 456, change: -5.8 },
+        { rank: 10, keyword: '멤버십', count: 423, change: 1.9 },
+        { rank: 11, keyword: '비밀번호', count: 398, change: -3.4 },
+        { rank: 12, keyword: '주소 변경', count: 376, change: 0.8 },
+        { rank: 13, keyword: '재발급', count: 354, change: 6.7 },
+        { rank: 14, keyword: '할인', count: 332, change: -7.2 },
+        { rank: 15, keyword: '약정', count: 318, change: 4.5 },
+        { rank: 16, keyword: '통화 품질', count: 295, change: 11.4 },
+        { rank: 17, keyword: '로밍', count: 278, change: 18.9 },
+        { rank: 18, keyword: '데이터', count: 264, change: -0.5 },
+        { rank: 19, keyword: '번호이동', count: 241, change: 9.3 },
+        { rank: 20, keyword: '명의변경', count: 228, change: 2.6 }
+      ],
+      issueKeywordTop5: [
+        { rank: 1, keyword: '고소', count: 42, desc: '법적 조치 언급' },
+        { rank: 2, keyword: '소송', count: 38, desc: '소송 의사 표시' },
+        { rank: 3, keyword: '상급자', count: 35, desc: '상위 관리자 연결 요청' },
+        { rank: 4, keyword: '소비자원', count: 28, desc: '외부 기관 신고 언급' },
+        { rank: 5, keyword: '녹음', count: 24, desc: '통화 녹음 사실 고지' }
+      ],
+      newKeywordTop5: [
+        { rank: 1, keyword: 'AI 상담', count: 156, desc: '신규 서비스 문의 급증' },
+        { rank: 2, keyword: '개인정보 유출', count: 89, desc: '최근 보안 이슈 관련' },
+        { rank: 3, keyword: '앱 오류', count: 72, desc: '최근 업데이트 후 발생' },
+        { rank: 4, keyword: '프로모션', count: 65, desc: '신규 프로모션 문의' },
+        { rank: 5, keyword: '5G 전환', count: 48, desc: '망 전환 관련 문의' }
+      ],
+      consultTypeDist: [
+        { category: '상품/서비스', count: 3840, ratio: 30.8 },
+        { category: '요금/결제', count: 2980, ratio: 23.9 },
+        { category: '고객불만', count: 2120, ratio: 17.0 },
+        { category: '기술지원', count: 1680, ratio: 13.5 },
+        { category: '계약/해지', count: 1240, ratio: 9.9 },
+        { category: '기타', count: 620, ratio: 4.9 }
+      ],
+      consultTypeTop5: [
+        { rank: 1, path: '요금/결제 > 청구 > 이중 청구', count: 312, ratio: 2.5 },
+        { rank: 2, path: '상품/서비스 > 변경 > 요금제 변경', count: 298, ratio: 2.4 },
+        { rank: 3, path: '고객불만 > 서비스불만 > 응대불만', count: 276, ratio: 2.2 },
+        { rank: 4, path: '계약/해지 > 해지 > 약정 해지', count: 254, ratio: 2.0 },
+        { rank: 5, path: '기술지원 > 장애 > 접속 불가', count: 238, ratio: 1.9 }
+      ],
+      consultTypeTable: [
+        { major: '상품/서비스', mid: '가입', minor: '신규 가입', detail: '온라인 가입', count: 186, ratio: 1.5 },
+        { major: '상품/서비스', mid: '변경', minor: '요금제 변경', detail: '다운그레이드', count: 298, ratio: 2.4 },
+        { major: '요금/결제', mid: '청구', minor: '이중 청구', detail: '카드 결제', count: 312, ratio: 2.5 },
+        { major: '요금/결제', mid: '환불', minor: '과오납 환불', detail: '자동이체 환불', count: 245, ratio: 2.0 },
+        { major: '고객불만', mid: '서비스불만', minor: '응대불만', detail: '태도 불만', count: 276, ratio: 2.2 },
+        { major: '고객불만', mid: '서비스불만', minor: '처리지연', detail: '교환 지연', count: 198, ratio: 1.6 },
+        { major: '기술지원', mid: '장애', minor: '접속 불가', detail: 'Wi-Fi 장애', count: 238, ratio: 1.9 },
+        { major: '기술지원', mid: '설정', minor: '초기 설정', detail: '기기 설정', count: 165, ratio: 1.3 },
+        { major: '계약/해지', mid: '해지', minor: '약정 해지', detail: '중도 해지', count: 254, ratio: 2.0 },
+        { major: '계약/해지', mid: '변경', minor: '명의 변경', detail: '양도 양수', count: 142, ratio: 1.1 }
+      ],
+      issueStatus: { pending: 48, review: 32, completed: 285, noIssue: 22 },
+      pendingIssues: [
+        { callId: 'TA-2025-00312', date: '2025-01-19 14:23', agent: '문지혜', team: '클레임처리팀', keyword: '고소', admin: '박관리자' },
+        { callId: 'TA-2025-00298', date: '2025-01-19 11:05', agent: '황서연', team: '종합상담팀', keyword: '소송', admin: '김관리자' },
+        { callId: 'TA-2025-00287', date: '2025-01-18 16:42', agent: '한동우', team: '일반상담팀', keyword: '상급자', admin: '박관리자' },
+        { callId: 'TA-2025-00275', date: '2025-01-18 10:18', agent: '서다은', team: '아웃바운드팀', keyword: '소비자원', admin: '이관리자' },
+        { callId: 'TA-2025-00261', date: '2025-01-17 15:33', agent: '김태희', team: '고객상담2팀', keyword: '녹음', admin: '김관리자' }
+      ],
+      improvements: [
+        '클레임처리팀의 이슈 콜 비율이 5.8%로 타 팀 대비 높아 집중 모니터링 필요',
+        '"결제 오류" 키워드 전기 대비 22.1% 급증 — 결제 시스템 점검 권장',
+        '재인입 콜 상위 팀(클레임처리팀 72건) 대상 1차 응대 완결률 개선 필요',
+        '"고소/소송" 이슈 키워드 증가 추세 — 법무팀 연계 대응 프로세스 점검 필요',
+        '묵음시간 평균 18초 → 22초에서 개선되었으나, 기술지원팀은 여전히 25초 이상'
+      ]
+    };
+
+    let reportGenerated = false;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const firstOption = document.querySelector('.report-type-option');
+      if (firstOption) { firstOption.style.borderColor = '#00A3FF'; firstOption.style.background = '#E3F2FD'; }
+      updatePreview();
+    });
+
+    /* ========== 리포트 유형 선택 ========== */
+    function selectReportType(el, type) {
+      document.querySelectorAll('.report-type-option').forEach(opt => {
+        opt.style.borderColor = '#E0E0E0'; opt.style.background = 'white';
+      });
+      el.style.borderColor = '#00A3FF'; el.style.background = '#E3F2FD';
+      document.getElementById('custom-date-area').style.display = type === 'custom' ? 'block' : 'none';
+      if (reportGenerated) updatePreview();
+    }
+
+    /* ========== 기간 계산 ========== */
+    const TODAY = new Date('2025-01-19');
+    function getReportPeriod() {
+      const type = document.querySelector('input[name="reportType"]:checked').value;
+      const fmt = d => d.toISOString().slice(0, 10);
+      if (type === 'daily') { const s = fmt(TODAY); return { from: s, to: s }; }
+      if (type === 'weekly') {
+        const day = TODAY.getDay(); const mon = new Date(TODAY);
+        mon.setDate(TODAY.getDate() - (day === 0 ? 6 : day - 1));
+        const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+        return { from: fmt(mon), to: fmt(sun) };
+      }
+      if (type === 'monthly') {
+        const first = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1);
+        const last = new Date(TODAY.getFullYear(), TODAY.getMonth() + 1, 0);
+        return { from: fmt(first), to: fmt(last) };
+      }
+      if (type === 'yearly') return { from: `${TODAY.getFullYear()}-01-01`, to: `${TODAY.getFullYear()}-12-31` };
+      return { from: document.getElementById('report-from').value, to: document.getElementById('report-to').value };
+    }
+
+    /* ========== 범위 변경 ========== */
+    function onScopeChange() {
+      const scope = document.getElementById('scope-select').value;
+      const detail = document.getElementById('scope-detail');
+      const label = document.getElementById('scope-detail-label');
+      const select = document.getElementById('scope-detail-select');
+      if (scope === 'all') { detail.style.display = 'none'; return; }
+      detail.style.display = 'block'; detail.style.marginTop = '12px';
+      if (scope === 'center') {
+        label.textContent = '센터';
+        select.innerHTML = '<option value="ws-1">서울센터</option><option value="ws-2">부산센터</option><option value="ws-3">대구센터</option>';
+      } else if (scope === 'team') {
+        label.textContent = '팀';
+        select.innerHTML = '<option value="tm-1">서울센터 / VIP상담팀</option><option value="tm-2">서울센터 / 일반상담팀</option><option value="tm-3">서울센터 / 기술지원팀</option><option value="tm-5">부산센터 / 고객상담1팀</option><option value="tm-6">부산센터 / 고객상담2팀</option><option value="tm-8">대구센터 / 종합상담팀</option><option value="tm-9">대구센터 / 클레임처리팀</option>';
+      } else {
+        label.textContent = '상담사';
+        select.innerHTML = '<option value="ag-1">홍길동 (VIP상담팀)</option><option value="ag-2">김영수 (VIP상담팀)</option><option value="ag-5">정수민 (일반상담팀)</option><option value="ag-8">오세진 (기술지원팀)</option><option value="ag-12">배수현 (고객상담1팀)</option>';
+      }
+    }
+
+    /* ========== 미리보기 제어 ========== */
+    function updatePreview() { if (reportGenerated) renderPreviewContent(); }
+
+    function generateReport() {
+      reportGenerated = true;
+      document.getElementById('preview-status').className = 'badge badge-active';
+      document.getElementById('preview-status').textContent = '생성 완료';
+      renderPreviewContent();
+      AICC_Toast.show('리포트가 생성되었습니다.');
+    }
+
+    /* ========== 렌더 헬퍼 ========== */
+    const num = v => v.toLocaleString('ko-KR');
+    const trendHtml = (cur, prev) => {
+      const diff = cur - prev; if (diff === 0) return '';
+      const pct = ((diff / prev) * 100).toFixed(1);
+      const color = diff > 0 ? '#4CAF50' : '#F44336';
+      const arrow = diff > 0 ? '▲' : '▼';
+      return `<span style="font-size:11px;color:${color};margin-left:4px;">${arrow} ${Math.abs(pct)}%</span>`;
+    };
+
+    /* ========== 미리보기 콘텐츠 렌더링 ========== */
+    function renderPreviewContent() {
+      document.getElementById('preview-placeholder').style.display = 'none';
+      const content = document.getElementById('preview-content');
+      content.style.display = 'block';
+
+      const reportType = document.querySelector('input[name="reportType"]:checked').value;
+      const period = getReportPeriod();
+      const scope = document.getElementById('scope-select').value;
+      const typeNames = { daily: '일간', weekly: '주간', monthly: '월간', yearly: '연간', custom: '기간 지정' };
+      const scopeNames = { all: '전체', center: '센터', team: '팀', individual: '개인' };
+
+      const SEC = {
+        summary:      document.getElementById('sec-summary').checked,
+        callTrend:    document.getElementById('sec-call-trend').checked,
+        hourly:       document.getElementById('sec-hourly').checked,
+        reentry:      document.getElementById('sec-reentry').checked,
+        issueCall:    document.getElementById('sec-issue-call').checked,
+        silence:      document.getElementById('sec-silence').checked,
+        keywordTop20: document.getElementById('sec-keyword-top20').checked,
+        issueKeyword: document.getElementById('sec-issue-keyword').checked,
+        newKeyword:   document.getElementById('sec-new-keyword').checked,
+        consultDist:  document.getElementById('sec-consult-dist').checked,
+        consultTop5:  document.getElementById('sec-consult-top5').checked,
+        consultTable: document.getElementById('sec-consult-table').checked,
+        teamTable:    document.getElementById('sec-team-table').checked,
+        agent:        document.getElementById('sec-agent').checked,
+        issueStatus:  document.getElementById('sec-issue-status').checked,
+        issuePending: document.getElementById('sec-issue-pending').checked,
+        improvement:  document.getElementById('sec-improvement').checked,
+        appendix:     document.getElementById('sec-appendix').checked
+      };
+
+      const s = REPORT_DATA.summary;
+      const D = REPORT_DATA;
+      let html = '';
+      let n = 0;
+      const secTitle = title => `<div style="font-size:14px;font-weight:700;color:#212121;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid #E0E0E0;">${++n}. ${title}</div>`;
+
+      html += `<div style="border-bottom:2px solid #00A3FF;padding-bottom:16px;margin-bottom:20px;">
+        <div style="font-size:18px;font-weight:700;color:#00A3FF;">AICC TA 분석 ${typeNames[reportType]} 리포트</div>
+        <div style="font-size:12px;color:#757575;margin-top:4px;">${period.from} ~ ${period.to} | 범위: ${scopeNames[scope]}</div>
+        <div style="font-size:11px;color:#9E9E9E;margin-top:2px;">생성일시: ${new Date().toLocaleString('ko-KR')}</div>
+      </div>`;
+
+      /* 1. 요약 (KPI 현황) */
+      if (SEC.summary) {
+        html += `<div style="margin-bottom:24px;">${secTitle('요약 (KPI 현황)')}
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+            <div style="background:#F5F5F5;border-radius:6px;padding:12px;">
+              <div style="font-size:11px;color:#757575;margin-bottom:6px;">총 콜수</div>
+              <div style="display:flex;align-items:baseline;gap:4px;">
+                <span style="font-size:22px;font-weight:700;">${num(s.totalCalls)}</span>${trendHtml(s.totalCalls, s.totalCalls_prev)}
+              </div>
+              <div style="font-size:10px;color:#9E9E9E;margin-top:6px;">I/B ${num(s.ibCalls)} · O/B ${num(s.obCalls)}</div>
+              <div style="font-size:10px;color:#BDBDBD;">전기: ${num(s.totalCalls_prev)}건</div>
+            </div>
+            <div style="background:#FFF3F3;border-radius:6px;padding:12px;">
+              <div style="font-size:11px;color:#C62828;margin-bottom:6px;">이슈 콜</div>
+              <div style="display:flex;align-items:baseline;gap:4px;">
+                <span style="font-size:22px;font-weight:700;color:#D32F2F;">${num(s.issueCalls)}</span>${trendHtml(s.issueCalls, s.issueCalls_prev)}
+              </div>
+              <div style="font-size:10px;color:#9E9E9E;margin-top:6px;">비율: ${(s.issueCalls/s.totalCalls*100).toFixed(1)}%</div>
+              <div style="font-size:10px;color:#BDBDBD;">전기: ${num(s.issueCalls_prev)}건</div>
+            </div>
+            <div style="background:#FFF8E1;border-radius:6px;padding:12px;">
+              <div style="font-size:11px;color:#F57F17;margin-bottom:6px;">초과 콜</div>
+              <div style="display:flex;align-items:baseline;gap:4px;">
+                <span style="font-size:22px;font-weight:700;color:#F57F17;">${num(s.overCalls)}</span>${trendHtml(s.overCalls, s.overCalls_prev)}
+              </div>
+              <div style="font-size:10px;color:#9E9E9E;margin-top:6px;">비율: ${(s.overCalls/s.totalCalls*100).toFixed(1)}%</div>
+              <div style="font-size:10px;color:#BDBDBD;">전기: ${num(s.overCalls_prev)}건</div>
+            </div>
+            <div style="background:#E3F2FD;border-radius:6px;padding:12px;">
+              <div style="font-size:11px;color:#1565C0;margin-bottom:6px;">재인입 콜</div>
+              <div style="display:flex;align-items:baseline;gap:4px;">
+                <span style="font-size:22px;font-weight:700;color:#1565C0;">${num(s.reentryCalls)}</span>${trendHtml(s.reentryCalls, s.reentryCalls_prev)}
+              </div>
+              <div style="font-size:10px;color:#9E9E9E;margin-top:6px;">비율: ${(s.reentryCalls/s.totalCalls*100).toFixed(1)}%</div>
+              <div style="font-size:10px;color:#BDBDBD;">전기: ${num(s.reentryCalls_prev)}건</div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px;">
+            <div style="background:#F5F5F5;border-radius:6px;padding:12px;display:flex;justify-content:space-between;align-items:center;">
+              <div><div style="font-size:11px;color:#757575;">평균 통화시간</div><span style="font-size:18px;font-weight:700;">${s.avgDuration}</span></div>
+              <div style="font-size:10px;color:#BDBDBD;">전기: ${s.avgDuration_prev}</div>
+            </div>
+            <div style="background:#F5F5F5;border-radius:6px;padding:12px;display:flex;justify-content:space-between;align-items:center;">
+              <div><div style="font-size:11px;color:#757575;">평균 묵음시간</div><span style="font-size:18px;font-weight:700;">${s.avgSilence}</span></div>
+              <div style="font-size:10px;color:#BDBDBD;">전기: ${s.avgSilence_prev}</div>
+            </div>
+          </div>
+        </div>`;
+      }
+
+      /* 2. 콜 건수 추이 */
+      if (SEC.callTrend) {
+        html += `<div style="margin-bottom:24px;">${secTitle('콜 건수 추이')}
+          <div style="background:#F9F9F9;border:1px solid #E0E0E0;border-radius:6px;padding:16px;height:220px;">
+            <canvas id="chart-call-trend"></canvas>
+          </div>
+        </div>`;
+      }
+
+      /* 3. 시간대별 콜량 */
+      if (SEC.hourly) {
+        html += `<div style="margin-bottom:24px;">${secTitle('시간대별 콜량')}
+          <div style="background:#F9F9F9;border:1px solid #E0E0E0;border-radius:6px;padding:16px;height:220px;">
+            <canvas id="chart-hourly"></canvas>
+          </div>
+        </div>`;
+      }
+
+      /* 4. 재인입 콜 추이 */
+      if (SEC.reentry) {
+        html += `<div style="margin-bottom:24px;">${secTitle('재인입 콜 추이')}
+          <div style="background:#F9F9F9;border:1px solid #E0E0E0;border-radius:6px;padding:16px;height:220px;">
+            <canvas id="chart-reentry"></canvas>
+          </div>
+        </div>`;
+      }
+
+      /* 5. 이슈 콜 추이 */
+      if (SEC.issueCall) {
+        html += `<div style="margin-bottom:24px;">${secTitle('이슈 콜 추이')}
+          <div style="background:#F9F9F9;border:1px solid #E0E0E0;border-radius:6px;padding:16px;height:220px;">
+            <canvas id="chart-issue-call"></canvas>
+          </div>
+        </div>`;
+      }
+
+      /* 6. 통화시간 대비 묵음시간 */
+      if (SEC.silence) {
+        html += `<div style="margin-bottom:24px;">${secTitle('통화시간 대비 묵음시간')}
+          <div style="background:#F9F9F9;border:1px solid #E0E0E0;border-radius:6px;padding:16px;height:220px;">
+            <canvas id="chart-silence"></canvas>
+          </div>
+        </div>`;
+      }
+
+      /* 7. 주요 키워드 Top 20 */
+      if (SEC.keywordTop20) {
+        const rows = D.keywordTop20.map(k => {
+          const chColor = k.change > 0 ? '#4CAF50' : k.change < 0 ? '#F44336' : '#9E9E9E';
+          const chArrow = k.change > 0 ? '▲' : k.change < 0 ? '▼' : '-';
+          return `<tr style="cursor:default;">
+            <td style="text-align:center;color:#757575;font-weight:600;">${k.rank}</td>
+            <td style="text-align:center;font-weight:500;">${k.keyword}</td>
+            <td style="text-align:center;">${num(k.count)}건</td>
+            <td style="text-align:center;color:${chColor};font-weight:500;">${chArrow} ${Math.abs(k.change)}%</td>
+          </tr>`;
+        }).join('');
+        html += `<div style="margin-bottom:24px;">${secTitle('주요 키워드 Top 20')}
+          <table class="data-table" style="font-size:12px;">
+            <thead><tr><th style="text-align:center">#</th><th style="text-align:center">키워드</th><th style="text-align:center">건수</th><th style="text-align:center">증감률</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>`;
+      }
+
+      /* 8. 이슈 키워드 Top 5 */
+      if (SEC.issueKeyword) {
+        const rows = D.issueKeywordTop5.map(k => `<tr style="cursor:default;">
+          <td style="text-align:center;color:#757575;font-weight:600;">${k.rank}</td>
+          <td style="text-align:center;font-weight:500;color:#D32F2F;">${k.keyword}</td>
+          <td style="text-align:center;">${k.count}건</td>
+          <td style="font-size:12px;color:#757575;">${k.desc}</td>
+        </tr>`).join('');
+        html += `<div style="margin-bottom:24px;">${secTitle('이슈 키워드 Top 5')}
+          <table class="data-table" style="font-size:12px;">
+            <thead><tr><th style="text-align:center">#</th><th style="text-align:center">키워드</th><th style="text-align:center">건수</th><th style="text-align:center">설명</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>`;
+      }
+
+      /* 9. 신규 키워드 Top 5 */
+      if (SEC.newKeyword) {
+        const rows = D.newKeywordTop5.map(k => `<tr style="cursor:default;">
+          <td style="text-align:center;color:#757575;font-weight:600;">${k.rank}</td>
+          <td style="text-align:center;font-weight:500;color:#1565C0;">${k.keyword}</td>
+          <td style="text-align:center;">${k.count}건</td>
+          <td style="font-size:12px;color:#757575;">${k.desc}</td>
+        </tr>`).join('');
+        html += `<div style="margin-bottom:24px;">${secTitle('신규 키워드 Top 5')}
+          <table class="data-table" style="font-size:12px;">
+            <thead><tr><th style="text-align:center">#</th><th style="text-align:center">키워드</th><th style="text-align:center">건수</th><th style="text-align:center">설명</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>`;
+      }
+
+      /* 10. 상담유형 분포 */
+      if (SEC.consultDist) {
+        html += `<div style="margin-bottom:24px;">${secTitle('상담유형 분포')}
+          <div style="display:flex;align-items:center;gap:20px;">
+            <div style="width:200px;height:200px;"><canvas id="chart-consult-donut"></canvas></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+              ${D.consultTypeDist.map((c, i) => {
+                const colors = ['#00A3FF','#4CAF50','#F44336','#FF9800','#9C27B0','#607D8B'];
+                return `<div style="display:flex;align-items:center;gap:8px;font-size:12px;">
+                  <span style="width:10px;height:10px;border-radius:2px;background:${colors[i]};display:inline-block;"></span>
+                  ${c.category} <b style="margin-left:auto;">${num(c.count)}건 (${c.ratio}%)</b>
+                </div>`;
+              }).join('')}
+            </div>
+          </div>
+        </div>`;
+      }
+
+      /* 11. 상담유형 Top 5 */
+      if (SEC.consultTop5) {
+        const rows = D.consultTypeTop5.map(c => `<tr style="cursor:default;">
+          <td style="text-align:center;color:#757575;font-weight:600;">${c.rank}</td>
+          <td style="font-weight:500;">${c.path}</td>
+          <td style="text-align:center;">${num(c.count)}건</td>
+          <td style="text-align:center;">${c.ratio}%</td>
+        </tr>`).join('');
+        html += `<div style="margin-bottom:24px;">${secTitle('상담유형 Top 5')}
+          <table class="data-table" style="font-size:12px;">
+            <thead><tr><th style="text-align:center">#</th><th style="text-align:center">상담유형 경로</th><th style="text-align:center">건수</th><th style="text-align:center">비율</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>`;
+      }
+
+      /* 12. 상담유형별 건수 테이블 */
+      if (SEC.consultTable) {
+        const rows = D.consultTypeTable.map(c => `<tr style="cursor:default;">
+          <td style="text-align:center;font-weight:500;">${c.major}</td>
+          <td style="text-align:center;">${c.mid}</td>
+          <td style="text-align:center;">${c.minor}</td>
+          <td style="text-align:center;">${c.detail}</td>
+          <td style="text-align:center;">${num(c.count)}건</td>
+          <td style="text-align:center;">${c.ratio}%</td>
+        </tr>`).join('');
+        html += `<div style="margin-bottom:24px;">${secTitle('상담유형별 건수 테이블')}
+          <div style="overflow-x:auto;">
+            <table class="data-table" style="font-size:12px;">
+              <thead><tr><th style="text-align:center">대분류</th><th style="text-align:center">중분류</th><th style="text-align:center">소분류</th><th style="text-align:center">세부분류</th><th style="text-align:center">건수</th><th style="text-align:center">비율</th></tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+        </div>`;
+      }
+
+      /* 13. 팀별 콜 현황 */
+      if (SEC.teamTable) {
+        const teamRows = D.teams.map(t => `<tr style="cursor:default;">
+          <td style="text-align:center;font-weight:500;">${t.name}</td>
+          <td style="text-align:center;font-size:12px;color:#757575;">${t.ws}</td>
+          <td style="text-align:center;">${t.agents}명</td>
+          <td style="text-align:center;">${num(t.calls)}</td>
+          <td style="text-align:center;">${num(t.ibCalls)}/${num(t.obCalls)}</td>
+          <td style="text-align:center;color:#D32F2F;">${t.issueCalls}</td>
+          <td style="text-align:center;color:#F57F17;">${t.overCalls}</td>
+          <td style="text-align:center;color:#1565C0;">${t.reentryCalls}</td>
+          <td style="text-align:center;">${t.avgDuration}</td>
+        </tr>`).join('');
+        html += `<div style="margin-bottom:24px;">${secTitle('팀별 콜 현황')}
+          <div style="overflow-x:auto;">
+            <table class="data-table" style="font-size:12px;">
+              <thead><tr><th style="text-align:center">팀</th><th style="text-align:center">센터</th><th style="text-align:center">상담사</th><th style="text-align:center">총 콜수</th><th style="text-align:center">IB/OB</th><th style="text-align:center">이슈</th><th style="text-align:center">초과</th><th style="text-align:center">재인입</th><th style="text-align:center">평균 통화</th></tr></thead>
+              <tbody>${teamRows}</tbody>
+            </table>
+          </div>
+        </div>`;
+      }
+
+      /* 14. 상담사별 분석 */
+      if (SEC.agent) {
+        const topRows = D.topAgentsByCalls.map((a, i) => `<tr style="cursor:default;">
+          <td style="text-align:center;font-weight:600;color:#757575;">${i+1}</td>
+          <td style="text-align:center;font-weight:500;">${a.name}</td>
+          <td style="text-align:center;font-size:12px;color:#757575;">${a.team}</td>
+          <td style="text-align:center;">${num(a.calls)}건</td>
+        </tr>`).join('');
+        const bottomRows = D.bottomAgentsByCalls.map((a, i) => `<tr style="cursor:default;">
+          <td style="text-align:center;font-weight:600;color:#757575;">${i+1}</td>
+          <td style="text-align:center;font-weight:500;">${a.name}</td>
+          <td style="text-align:center;font-size:12px;color:#757575;">${a.team}</td>
+          <td style="text-align:center;">${num(a.calls)}건</td>
+        </tr>`).join('');
+        html += `<div style="margin-bottom:24px;">${secTitle('상담사별 분석')}
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div>
+              <div style="font-size:12px;font-weight:600;color:#4CAF50;margin-bottom:8px;">콜 처리량 상위 Top 5</div>
+              <table class="data-table" style="font-size:12px;"><thead><tr><th style="text-align:center">#</th><th style="text-align:center">상담사</th><th style="text-align:center">팀</th><th style="text-align:center">콜수</th></tr></thead><tbody>${topRows}</tbody></table>
+            </div>
+            <div>
+              <div style="font-size:12px;font-weight:600;color:#F44336;margin-bottom:8px;">콜 처리량 하위 Top 5</div>
+              <table class="data-table" style="font-size:12px;"><thead><tr><th style="text-align:center">#</th><th style="text-align:center">상담사</th><th style="text-align:center">팀</th><th style="text-align:center">콜수</th></tr></thead><tbody>${bottomRows}</tbody></table>
+            </div>
+          </div>
+        </div>`;
+      }
+
+      /* 15. 이슈 처리 현황 */
+      if (SEC.issueStatus) {
+        const is = D.issueStatus;
+        const total = is.pending + is.review + is.completed + is.noIssue;
+        html += `<div style="margin-bottom:24px;">${secTitle('이슈 처리 현황')}
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+            <div style="background:#FFF3F3;border:1px solid #FFCDD2;border-radius:6px;padding:12px;text-align:center;">
+              <div style="font-size:11px;color:#C62828;">미처리</div>
+              <div style="font-size:22px;font-weight:700;color:#D32F2F;">${is.pending}<span style="font-size:12px;font-weight:400;"> 건</span></div>
+              <div style="font-size:11px;color:#757575;">${(is.pending/total*100).toFixed(1)}%</div>
+            </div>
+            <div style="background:#FFF8E1;border:1px solid #FFE082;border-radius:6px;padding:12px;text-align:center;">
+              <div style="font-size:11px;color:#F57F17;">검토 필요</div>
+              <div style="font-size:22px;font-weight:700;color:#F57F17;">${is.review}<span style="font-size:12px;font-weight:400;"> 건</span></div>
+              <div style="font-size:11px;color:#757575;">${(is.review/total*100).toFixed(1)}%</div>
+            </div>
+            <div style="background:#E8F5E9;border:1px solid #A5D6A7;border-radius:6px;padding:12px;text-align:center;">
+              <div style="font-size:11px;color:#2E7D32;">처리완료</div>
+              <div style="font-size:22px;font-weight:700;color:#2E7D32;">${is.completed}<span style="font-size:12px;font-weight:400;"> 건</span></div>
+              <div style="font-size:11px;color:#757575;">${(is.completed/total*100).toFixed(1)}%</div>
+            </div>
+            <div style="background:#F5F5F5;border:1px solid #E0E0E0;border-radius:6px;padding:12px;text-align:center;">
+              <div style="font-size:11px;color:#757575;">이슈 없음</div>
+              <div style="font-size:22px;font-weight:700;color:#757575;">${is.noIssue}<span style="font-size:12px;font-weight:400;"> 건</span></div>
+              <div style="font-size:11px;color:#757575;">${(is.noIssue/total*100).toFixed(1)}%</div>
+            </div>
+          </div>
+        </div>`;
+      }
+
+      /* 16. 미처리 이슈 목록 */
+      if (SEC.issuePending) {
+        const rows = D.pendingIssues.map(p => `<tr style="cursor:default;">
+          <td style="text-align:center;font-size:11px;color:#757575;">${p.callId}</td>
+          <td style="text-align:center;font-size:11px;">${p.date}</td>
+          <td style="text-align:center;font-weight:500;">${p.agent}</td>
+          <td style="text-align:center;font-size:12px;color:#757575;">${p.team}</td>
+          <td style="text-align:center;"><span style="background:#FFF3F3;color:#D32F2F;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:500;">${p.keyword}</span></td>
+          <td style="text-align:center;font-size:12px;">${p.admin}</td>
+        </tr>`).join('');
+        html += `<div style="margin-bottom:24px;">${secTitle('미처리 이슈 목록')}
+          <table class="data-table" style="font-size:12px;">
+            <thead><tr><th style="text-align:center">콜 ID</th><th style="text-align:center">일시</th><th style="text-align:center">상담사</th><th style="text-align:center">팀</th><th style="text-align:center">이슈 키워드</th><th style="text-align:center">관리자</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>`;
+      }
+
+      /* 17. 개선 제안 */
+      if (SEC.improvement) {
+        const items = D.improvements.map((item, i) => `
+          <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #F0F0F0;">
+            <span style="min-width:24px;height:24px;border-radius:50%;background:#E3F2FD;color:#00A3FF;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;">${i+1}</span>
+            <span style="font-size:13px;line-height:1.5;">${item}</span>
+          </div>`).join('');
+        html += `<div style="margin-bottom:24px;">${secTitle('개선 제안')}${items}</div>`;
+      }
+
+      /* 18. 부록 */
+      if (SEC.appendix) {
+        html += `<div style="margin-bottom:24px;">${secTitle('부록 (상세 데이터)')}
+          <div style="background:#F9F9F9;border:1px solid #E0E0E0;border-radius:6px;padding:16px;font-size:12px;color:#757575;">
+            <div style="margin-bottom:8px;">- 총 콜수: ${num(s.totalCalls)}건 (I/B ${num(s.ibCalls)} / O/B ${num(s.obCalls)})</div>
+            <div style="margin-bottom:8px;">- 이슈 콜: ${num(s.issueCalls)}건 (${(s.issueCalls/s.totalCalls*100).toFixed(1)}%)</div>
+            <div style="margin-bottom:8px;">- 초과 콜: ${num(s.overCalls)}건 (${(s.overCalls/s.totalCalls*100).toFixed(1)}%)</div>
+            <div style="margin-bottom:8px;">- 재인입 콜: ${num(s.reentryCalls)}건 (${(s.reentryCalls/s.totalCalls*100).toFixed(1)}%)</div>
+            <div style="margin-bottom:8px;">- 리포트 기간: ${period.from} ~ ${period.to}</div>
+            <div style="margin-bottom:8px;">- 데이터 기준: STT 텍스트 분석 + NLP 키워드 추출 결과</div>
+            <div>- 본 리포트는 시스템 자동 생성 리포트입니다.</div>
+          </div>
+          <div style="font-size:13px;font-weight:600;color:#424242;margin:20px 0 10px;">용어 정의 / 분석 기준 안내</div>
+          <table class="data-table" style="font-size:12px;">
+            <thead><tr><th style="text-align:center">용어</th><th style="text-align:center">설명</th></tr></thead>
+            <tbody>
+              <tr><td style="text-align:center;font-weight:500;">이슈 콜</td><td style="font-size:12px;color:#757575;">이슈 키워드(고소, 소송, 상급자 등)가 감지된 통화</td></tr>
+              <tr><td style="text-align:center;font-weight:500;">초과 콜</td><td style="font-size:12px;color:#757575;">설정된 기준 시간을 초과한 통화 (현재 기준: 분석 기준 관리 설정값)</td></tr>
+              <tr><td style="text-align:center;font-weight:500;">재인입 콜</td><td style="font-size:12px;color:#757575;">설정된 기간 내 동일 고객이 재문의한 통화 (현재 기준: 분석 기준 관리 설정값)</td></tr>
+              <tr><td style="text-align:center;font-weight:500;">묵음시간</td><td style="font-size:12px;color:#757575;">통화 중 설정된 기준 이상 무음 구간의 총 시간</td></tr>
+              <tr><td style="text-align:center;font-weight:500;">모니터링 키워드</td><td style="font-size:12px;color:#757575;">STT 분석 시 감지 대상으로 등록된 키워드</td></tr>
+              <tr><td style="text-align:center;font-weight:500;">제외 키워드</td><td style="font-size:12px;color:#757575;">분석에서 제외되는 일상적 표현 (예: 네, 감사합니다)</td></tr>
+              <tr><td style="text-align:center;font-weight:500;">신규 키워드</td><td style="font-size:12px;color:#757575;">전일 대비 새롭게 감지된 키워드</td></tr>
+            </tbody>
+          </table>
+        </div>`;
+      }
+
+      html += `<div style="border-top:1px solid #E0E0E0;padding-top:12px;margin-top:20px;text-align:center;">
+        <div style="font-size:11px;color:#9E9E9E;">AICC Quality Hub - TA 자동 생성 리포트</div>
+      </div>`;
+
+      content.innerHTML = html;
+
+      setTimeout(() => {
+        if (SEC.callTrend) renderCallTrendChart();
+        if (SEC.hourly) renderHourlyChart();
+        if (SEC.reentry) renderReentryChart();
+        if (SEC.issueCall) renderIssueCallChart();
+        if (SEC.silence) renderSilenceChart();
+        if (SEC.consultDist) renderConsultDonutChart();
+      }, 100);
+    }
+
+    /* ========== 차트 공통: 기간별 라벨 생성 ========== */
+    function getTimeLabels() {
+      const type = document.querySelector('input[name="reportType"]:checked').value;
+      const labels = [];
+      if (type === 'daily') { for (let h = 0; h < 24; h++) labels.push(`${h}시`); }
+      else if (type === 'weekly') { ['월','화','수','목','금','토','일'].forEach(d => labels.push(d)); }
+      else if (type === 'yearly') { for (let m = 1; m <= 12; m++) labels.push(`${m}월`); }
+      else {
+        const p = getReportPeriod();
+        const start = new Date(p.from), end = new Date(p.to);
+        const days = Math.min(Math.round((end - start) / 86400000) + 1, 31);
+        for (let i = 0; i < days; i++) { const d = new Date(start); d.setDate(start.getDate() + i); labels.push(`${d.getMonth()+1}/${d.getDate()}`); }
+      }
+      return labels;
+    }
+    function randData(labels, base, range) { return labels.map(() => Math.round(base + Math.random() * range)); }
+
+    /* ========== 콜 건수 추이 ========== */
+    function renderCallTrendChart() {
+      const ctx = document.getElementById('chart-call-trend'); if (!ctx) return;
+      const labels = getTimeLabels();
+      new Chart(ctx, { type: 'bar', data: {
+        labels, datasets: [
+          { label: '당기', data: randData(labels, 350, 200), backgroundColor: 'rgba(0,163,255,0.7)', borderRadius: 3, order: 2 },
+          { label: '전기', data: randData(labels, 320, 180), type: 'line', borderColor: '#BDBDBD', borderWidth: 1.5, borderDash: [4,4], pointRadius: 0, fill: false, order: 1 }
+        ]
+      }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { reverse: true, position: 'top', labels: { font: { size: 10 }, boxWidth: 12 } }, tooltip: { itemSort: (a, b) => a.datasetIndex - b.datasetIndex } },
+        scales: { y: { beginAtZero: true, grid: { color: '#EEEEEE' }, ticks: { font: { size: 10 }, color: '#9E9E9E' } }, x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#9E9E9E', maxTicksLimit: 10 } } }
+      }});
+    }
+
+    /* ========== 시간대별 콜량 ========== */
+    function renderHourlyChart() {
+      const ctx = document.getElementById('chart-hourly'); if (!ctx) return;
+      const labels = []; for (let h = 0; h < 24; h++) labels.push(`${h}시`);
+      const curData = labels.map((_, i) => i >= 9 && i <= 18 ? Math.round(300 + Math.random() * 400) : Math.round(20 + Math.random() * 80));
+      const prevData = labels.map((_, i) => i >= 9 && i <= 18 ? Math.round(280 + Math.random() * 380) : Math.round(15 + Math.random() * 70));
+      new Chart(ctx, { type: 'bar', data: {
+        labels, datasets: [
+          { label: '당기', data: curData, backgroundColor: 'rgba(0,163,255,0.6)', borderRadius: 2, order: 2 },
+          { label: '전기', data: prevData, type: 'line', borderColor: '#BDBDBD', borderWidth: 1.5, borderDash: [4,4], pointRadius: 0, fill: false, order: 1 }
+        ]
+      }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { reverse: true, position: 'top', labels: { font: { size: 10 }, boxWidth: 12 } }, tooltip: { itemSort: (a, b) => a.datasetIndex - b.datasetIndex } },
+        scales: { y: { beginAtZero: true, grid: { color: '#EEEEEE' }, ticks: { font: { size: 9 }, color: '#9E9E9E' } }, x: { grid: { display: false }, ticks: { font: { size: 9 }, color: '#9E9E9E', maxTicksLimit: 10 } } }
+      }});
+    }
+
+    /* ========== 재인입 콜 추이 ========== */
+    function renderReentryChart() {
+      const ctx = document.getElementById('chart-reentry'); if (!ctx) return;
+      const labels = getTimeLabels();
+      new Chart(ctx, { type: 'bar', data: {
+        labels, datasets: [
+          { label: '당기', data: randData(labels, 15, 25), backgroundColor: 'rgba(21,101,192,0.7)', borderRadius: 3, order: 2 },
+          { label: '전기', data: randData(labels, 12, 22), type: 'line', borderColor: '#BDBDBD', borderWidth: 1.5, borderDash: [4,4], pointRadius: 0, fill: false, order: 1 }
+        ]
+      }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { reverse: true, position: 'top', labels: { font: { size: 10 }, boxWidth: 12 } }, tooltip: { itemSort: (a, b) => a.datasetIndex - b.datasetIndex } },
+        scales: { y: { beginAtZero: true, grid: { color: '#EEEEEE' }, ticks: { font: { size: 10 }, color: '#9E9E9E' } }, x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#9E9E9E', maxTicksLimit: 10 } } }
+      }});
+    }
+
+    /* ========== 이슈 콜 추이 ========== */
+    function renderIssueCallChart() {
+      const ctx = document.getElementById('chart-issue-call'); if (!ctx) return;
+      const labels = getTimeLabels();
+      new Chart(ctx, { type: 'bar', data: {
+        labels, datasets: [
+          { label: '당기', data: randData(labels, 8, 18), backgroundColor: 'rgba(211,47,47,0.7)', borderRadius: 3, order: 2 },
+          { label: '전기', data: randData(labels, 6, 15), type: 'line', borderColor: '#BDBDBD', borderWidth: 1.5, borderDash: [4,4], pointRadius: 0, fill: false, order: 1 }
+        ]
+      }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { reverse: true, position: 'top', labels: { font: { size: 10 }, boxWidth: 12 } }, tooltip: { itemSort: (a, b) => a.datasetIndex - b.datasetIndex } },
+        scales: { y: { beginAtZero: true, grid: { color: '#EEEEEE' }, ticks: { font: { size: 10 }, color: '#9E9E9E' } }, x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#9E9E9E', maxTicksLimit: 10 } } }
+      }});
+    }
+
+    /* ========== 통화시간 대비 묵음시간 ========== */
+    function renderSilenceChart() {
+      const ctx = document.getElementById('chart-silence'); if (!ctx) return;
+      const labels = getTimeLabels();
+      new Chart(ctx, { type: 'bar', data: {
+        labels, datasets: [
+          { label: '통화시간(분)', data: randData(labels, 3, 5), backgroundColor: 'rgba(0,163,255,0.5)', borderRadius: 3, order: 2 },
+          { label: '묵음시간(초)', data: randData(labels, 10, 20), type: 'line', borderColor: '#F44336', borderWidth: 2, pointRadius: 2, fill: false, order: 1, yAxisID: 'y1' }
+        ]
+      }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { reverse: true, position: 'top', labels: { font: { size: 10 }, boxWidth: 12 } }, tooltip: { itemSort: (a, b) => a.datasetIndex - b.datasetIndex } },
+        scales: {
+          y: { beginAtZero: true, position: 'left', title: { display: true, text: '통화시간(분)', font: { size: 9 } }, grid: { color: '#EEEEEE' }, ticks: { font: { size: 9 }, color: '#9E9E9E' } },
+          y1: { beginAtZero: true, position: 'right', title: { display: true, text: '묵음시간(초)', font: { size: 9 } }, grid: { drawOnChartArea: false }, ticks: { font: { size: 9 }, color: '#F44336' } },
+          x: { grid: { display: false }, ticks: { font: { size: 9 }, color: '#9E9E9E', maxTicksLimit: 10 } }
+        }
+      }});
+    }
+
+    /* ========== 상담유형 분포 Donut ========== */
+    function renderConsultDonutChart() {
+      const ctx = document.getElementById('chart-consult-donut'); if (!ctx) return;
+      const d = REPORT_DATA.consultTypeDist;
+      new Chart(ctx, { type: 'doughnut', data: {
+        labels: d.map(c => c.category),
+        datasets: [{ data: d.map(c => c.count), backgroundColor: ['#00A3FF','#4CAF50','#F44336','#FF9800','#9C27B0','#607D8B'], borderWidth: 0 }]
+      }, options: { responsive: true, maintainAspectRatio: true, cutout: '60%', plugins: { legend: { display: false } } }});
+    }
+
+    /* ========== 다운로드 ========== */
+    function downloadReport() {
+      if (!reportGenerated) { AICC_Toast.show('먼저 리포트를 생성해주세요.'); return; }
+      const reportType = document.querySelector('input[name="reportType"]:checked').value;
+      const typeNames = { daily: '일간', weekly: '주간', monthly: '월간', yearly: '연간', custom: '기간 지정' };
+      const period = getReportPeriod();
+      AICC_Modal.open({
+        title: '리포트 다운로드',
+        content: `<div style="text-align:center;padding:20px;">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00A3FF" stroke-width="1.5" style="margin:0 auto 16px;display:block;">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          <div style="font-size:14px;font-weight:500;margin-bottom:4px;">다운로드 형식 선택</div>
+          <div style="font-size:12px;color:#757575;margin-bottom:20px;">${typeNames[reportType]} 리포트 (${period.from})</div>
+          <div style="display:flex;gap:8px;justify-content:center;">
+            <button class="btn btn-primary" onclick="doDownload('PDF')">PDF 다운로드</button>
+            <button class="btn btn-secondary" onclick="doDownload('Excel')">Excel 다운로드</button>
+          </div>
+        </div>`,
+        footer: `<button class="btn btn-secondary" onclick="AICC_Modal.close()">취소</button>`
+      });
+    }
+    function doDownload(format) { AICC_Modal.close(); AICC_Toast.show(`${format} 파일 다운로드를 시작합니다. (시뮬레이션)`); }
+  </script>
+</body>
+</html>

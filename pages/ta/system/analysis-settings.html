@@ -3,153 +3,118 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="/image/faviconV2.png">
   <title>분석 기준 관리 - AICC Quality Hub</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="../../../css/styles.css">
+  <style>
+    .kw-tabs { display:flex; gap:0; border-bottom:2px solid #E0E0E0; margin-bottom:0; }
+    .kw-tab { padding:10px 24px; font-size:13px; font-weight:600; color:#9E9E9E; background:none; border:none;
+              cursor:pointer; position:relative; transition:color .15s; border-bottom:2px solid transparent; margin-bottom:-2px; }
+    .kw-tab:hover { color:#424242; }
+    .kw-tab.active { color:#00A3FF; border-bottom-color:#00A3FF; }
+    .kw-tab .tab-count { font-weight:400; font-size:11px; margin-left:4px; color:#BDBDBD; }
+    .kw-tab.active .tab-count { color:#00A3FF; }
+
+    .tab-panel { display:none; }
+    .tab-panel.active { display:block; }
+
+    .data-table { font-size:12px; table-layout:fixed; width:100%; }
+    .data-table th, .data-table td { padding:10px 8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:center; }
+
+    .badge-active { display:inline-block; padding:2px 8px; font-size:11px; font-weight:600; border-radius:10px; background:#E3F2FD; color:#1976D2; }
+    .badge-inactive { display:inline-block; padding:2px 8px; font-size:11px; font-weight:600; border-radius:10px; background:#F5F5F5; color:#9E9E9E; }
+
+    .toggle-switch { position:relative; width:36px; height:20px; display:inline-block; vertical-align:middle; }
+    .toggle-switch input { opacity:0; width:0; height:0; }
+    .toggle-slider { position:absolute; inset:0; background:#ccc; border-radius:10px; cursor:pointer; transition:.2s; }
+    .toggle-slider::before { content:''; position:absolute; width:16px; height:16px; left:2px; top:2px; background:#fff; border-radius:50%; transition:.2s; }
+    .toggle-switch input:checked + .toggle-slider { background:#00A3FF; }
+    .toggle-switch input:checked + .toggle-slider::before { transform:translateX(16px); }
+
+    .action-btn { background:none; border:none; cursor:pointer; padding:4px; border-radius:4px; color:#757575; transition:all .15s; }
+    .action-btn:hover { background:#F5F5F5; color:#212121; }
+  </style>
 </head>
 <body class="bg-[#F5F5F5] text-[#212121]">
   <div id="page-content">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-      <div>
-        <h1 style="font-size:20px;font-weight:700;margin:0;">분석 기준 관리</h1>
-        <p style="font-size:12px;color:#757575;margin:4px 0 0;">분석 기준값 설정</p>
-      </div>
+    <div style="margin-bottom:20px;">
+      <h1 style="font-size:20px;font-weight:700;margin:0;">분석 기준 관리</h1>
+      <p style="font-size:12px;color:#757575;margin:4px 0 0;">묵음·재인입콜·초과콜·분석 제외콜 기준 설정 및 관리</p>
     </div>
 
     <div class="content-card">
-      <div class="content-card-body" style="padding:0;">
-        <div style="display:flex;align-items:center;padding:0 16px;border-bottom:2px solid #E0E0E0;">
-          <div class="tab-nav" style="border-bottom:none;">
-            <div class="tab-item active" onclick="switchTab('silence')">묵음 기준</div>
-            <div class="tab-item" onclick="switchTab('exclude')">제외 콜 기준</div>
-            <div class="tab-item" onclick="switchTab('overtime')">초과 콜 기준</div>
-            <div class="tab-item" onclick="switchTab('reentry')">재인입 기준</div>
-          </div>
+      <div class="content-card-header" style="padding-bottom:0;">
+        <div class="kw-tabs">
+          <button class="kw-tab active" data-tab="silence" onclick="switchTab('silence')">묵음 기준<span class="tab-count" id="silence-tab-count"></span></button>
+          <button class="kw-tab" data-tab="reentry" onclick="switchTab('reentry')">재인입콜 기준<span class="tab-count" id="reentry-tab-count"></span></button>
+          <button class="kw-tab" data-tab="overcall" onclick="switchTab('overcall')">초과 콜 기준<span class="tab-count" id="overcall-tab-count"></span></button>
+          <button class="kw-tab" data-tab="exclude" onclick="switchTab('exclude')">분석 제외콜 기준<span class="tab-count" id="exclude-tab-count"></span></button>
         </div>
+      </div>
 
+      <div class="content-card-body" style="padding:0;">
         <!-- 묵음 기준 -->
-        <div id="tab-silence" style="padding:24px;">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;">
-            <div class="kpi-card" style="background:#F0F7FF;border-color:#BBDEFB;">
-              <div style="font-size:12px;color:#1565C0;font-weight:600;margin-bottom:8px;">현재 설정값</div>
-              <div style="display:flex;align-items:baseline;gap:8px;">
-                <span style="font-size:28px;font-weight:700;color:#1565C0;">30</span>
-                <span style="font-size:14px;color:#757575;">초</span>
-              </div>
-              <div style="font-size:11px;color:#757575;margin-top:8px;">연속 묵음 30초 초과 시 묵음 콜로 분류</div>
-            </div>
-            <div class="kpi-card">
-              <div style="font-size:12px;color:#757575;font-weight:600;margin-bottom:8px;">최근 변경 이력</div>
-              <div style="font-size:13px;margin-bottom:4px;">2025-01-15 · <b>30초</b> 변경</div>
-              <div style="font-size:12px;color:#9E9E9E;">이전: 20초 → 현재: 30초</div>
-              <div style="font-size:12px;color:#9E9E9E;margin-top:2px;">변경자: 관리자</div>
-            </div>
+        <div class="tab-panel active" id="panel-silence">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px;">
+            <span style="font-size:12px;color:#757575;" id="silence-count"></span>
+            <button class="btn btn-primary btn-sm" onclick="openModal('silence')">+ 추가</button>
           </div>
-          <div style="margin-bottom:16px;">
-            <button class="btn btn-primary btn-sm" onclick="openEditModal('silence','묵음 기준','30','초','연속 묵음 지속 시간 (초)')">기준값 수정</button>
-          </div>
-          <div class="content-card-header" style="border:none;"><span style="font-size:14px;font-weight:600;">변경 이력</span></div>
           <table class="data-table">
-            <thead><tr><th>변경일시</th><th>이전 값</th><th>변경 값</th><th>변경자</th><th>변경사유</th></tr></thead>
-            <tbody>
-              <tr><td>2025-01-15 14:30</td><td>20초</td><td style="color:#00A3FF;font-weight:600;">30초</td><td>관리자</td><td>업무 지침 개정</td></tr>
-              <tr><td>2024-11-20 10:15</td><td>25초</td><td>20초</td><td>홍길동</td><td>QA팀 요청</td></tr>
-              <tr><td>2024-09-05 09:00</td><td>30초</td><td>25초</td><td>관리자</td><td>초기 설정 조정</td></tr>
-            </tbody>
+            <colgroup>
+              <col style="width:5%;"><col style="width:15%;"><col style="width:10%;"><col style="width:17%;">
+              <col style="width:10%;"><col style="width:17%;"><col style="width:12%;"><col style="width:14%;">
+            </colgroup>
+            <thead><tr><th>No</th><th>묵음 기준(시간)</th><th>등록자</th><th>등록일</th><th>수정자</th><th>수정일</th><th>상태</th><th>관리</th></tr></thead>
+            <tbody id="silence-tbody"></tbody>
           </table>
         </div>
 
-        <!-- 제외 콜 기준 -->
-        <div id="tab-exclude" style="display:none;padding:24px;">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;">
-            <div class="kpi-card" style="background:#F0F7FF;border-color:#BBDEFB;">
-              <div style="font-size:12px;color:#1565C0;font-weight:600;margin-bottom:8px;">현재 설정값</div>
-              <div style="display:flex;align-items:baseline;gap:8px;">
-                <span style="font-size:28px;font-weight:700;color:#1565C0;">10</span>
-                <span style="font-size:14px;color:#757575;">초</span>
-              </div>
-              <div style="font-size:11px;color:#757575;margin-top:8px;">통화시간 10초 미만 콜은 분석에서 제외</div>
-            </div>
-            <div class="kpi-card">
-              <div style="font-size:12px;color:#757575;font-weight:600;margin-bottom:8px;">최근 변경 이력</div>
-              <div style="font-size:13px;margin-bottom:4px;">2025-01-10 · <b>10초</b> 변경</div>
-              <div style="font-size:12px;color:#9E9E9E;">이전: 5초 → 현재: 10초</div>
-              <div style="font-size:12px;color:#9E9E9E;margin-top:2px;">변경자: 관리자</div>
-            </div>
+        <!-- 재인입콜 기준 -->
+        <div class="tab-panel" id="panel-reentry">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px;">
+            <span style="font-size:12px;color:#757575;" id="reentry-count"></span>
+            <button class="btn btn-primary btn-sm" onclick="openModal('reentry')">+ 추가</button>
           </div>
-          <div style="margin-bottom:16px;">
-            <button class="btn btn-primary btn-sm" onclick="openEditModal('exclude','제외 콜 기준','10','초','최소 통화 시간 (초)')">기준값 수정</button>
-          </div>
-          <div class="content-card-header" style="border:none;"><span style="font-size:14px;font-weight:600;">변경 이력</span></div>
           <table class="data-table">
-            <thead><tr><th>변경일시</th><th>이전 값</th><th>변경 값</th><th>변경자</th><th>변경사유</th></tr></thead>
-            <tbody>
-              <tr><td>2025-01-10 09:00</td><td>5초</td><td style="color:#00A3FF;font-weight:600;">10초</td><td>관리자</td><td>오류콜 제외 강화</td></tr>
-              <tr><td>2024-10-01 11:30</td><td>3초</td><td>5초</td><td>관리자</td><td>초기 운영 정책</td></tr>
-            </tbody>
+            <colgroup>
+              <col style="width:5%;"><col style="width:15%;"><col style="width:10%;"><col style="width:17%;">
+              <col style="width:10%;"><col style="width:17%;"><col style="width:12%;"><col style="width:14%;">
+            </colgroup>
+            <thead><tr><th>No</th><th>재인입콜 기준(기간)</th><th>등록자</th><th>등록일</th><th>수정자</th><th>수정일</th><th>상태</th><th>관리</th></tr></thead>
+            <tbody id="reentry-tbody"></tbody>
           </table>
         </div>
 
         <!-- 초과 콜 기준 -->
-        <div id="tab-overtime" style="display:none;padding:24px;">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;">
-            <div class="kpi-card" style="background:#F0F7FF;border-color:#BBDEFB;">
-              <div style="font-size:12px;color:#1565C0;font-weight:600;margin-bottom:8px;">현재 설정값</div>
-              <div style="display:flex;align-items:baseline;gap:8px;">
-                <span style="font-size:28px;font-weight:700;color:#1565C0;">600</span>
-                <span style="font-size:14px;color:#757575;">초</span>
-              </div>
-              <div style="font-size:11px;color:#757575;margin-top:8px;">통화시간 600초(10분) 초과 시 초과 콜로 분류</div>
-            </div>
-            <div class="kpi-card">
-              <div style="font-size:12px;color:#757575;font-weight:600;margin-bottom:8px;">최근 변경 이력</div>
-              <div style="font-size:13px;margin-bottom:4px;">2025-01-05 · <b>600초</b> 변경</div>
-              <div style="font-size:12px;color:#9E9E9E;">이전: 480초 → 현재: 600초</div>
-              <div style="font-size:12px;color:#9E9E9E;margin-top:2px;">변경자: 관리자</div>
-            </div>
+        <div class="tab-panel" id="panel-overcall">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px;">
+            <span style="font-size:12px;color:#757575;" id="overcall-count"></span>
+            <button class="btn btn-primary btn-sm" onclick="openModal('overcall')">+ 추가</button>
           </div>
-          <div style="margin-bottom:16px;">
-            <button class="btn btn-primary btn-sm" onclick="openEditModal('overtime','초과 콜 기준','600','초','최대 통화 시간 (초)')">기준값 수정</button>
-          </div>
-          <div class="content-card-header" style="border:none;"><span style="font-size:14px;font-weight:600;">변경 이력</span></div>
           <table class="data-table">
-            <thead><tr><th>변경일시</th><th>이전 값</th><th>변경 값</th><th>변경자</th><th>변경사유</th></tr></thead>
-            <tbody>
-              <tr><td>2025-01-05 14:00</td><td>480초</td><td style="color:#00A3FF;font-weight:600;">600초</td><td>관리자</td><td>업무 기준 완화</td></tr>
-              <tr><td>2024-12-01 10:00</td><td>600초</td><td>480초</td><td>홍길동</td><td>KPI 기준 변경</td></tr>
-            </tbody>
+            <colgroup>
+              <col style="width:5%;"><col style="width:15%;"><col style="width:10%;"><col style="width:17%;">
+              <col style="width:10%;"><col style="width:17%;"><col style="width:12%;"><col style="width:14%;">
+            </colgroup>
+            <thead><tr><th>No</th><th>초과 콜 기준(시간)</th><th>등록자</th><th>등록일</th><th>수정자</th><th>수정일</th><th>상태</th><th>관리</th></tr></thead>
+            <tbody id="overcall-tbody"></tbody>
           </table>
         </div>
 
-        <!-- 재인입 기준 -->
-        <div id="tab-reentry" style="display:none;padding:24px;">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;">
-            <div class="kpi-card" style="background:#F0F7FF;border-color:#BBDEFB;">
-              <div style="font-size:12px;color:#1565C0;font-weight:600;margin-bottom:8px;">현재 설정값</div>
-              <div style="display:flex;align-items:baseline;gap:8px;">
-                <span style="font-size:28px;font-weight:700;color:#1565C0;">24</span>
-                <span style="font-size:14px;color:#757575;">시간</span>
-              </div>
-              <div style="font-size:11px;color:#757575;margin-top:8px;">동일 고객 24시간 내 재인입 시 재인입 콜로 분류</div>
-            </div>
-            <div class="kpi-card">
-              <div style="font-size:12px;color:#757575;font-weight:600;margin-bottom:8px;">최근 변경 이력</div>
-              <div style="font-size:13px;margin-bottom:4px;">2025-01-12 · <b>24시간</b> 변경</div>
-              <div style="font-size:12px;color:#9E9E9E;">이전: 48시간 → 현재: 24시간</div>
-              <div style="font-size:12px;color:#9E9E9E;margin-top:2px;">변경자: 관리자</div>
-            </div>
+        <!-- 분석 제외콜 기준 -->
+        <div class="tab-panel" id="panel-exclude">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px;">
+            <span style="font-size:12px;color:#757575;" id="exclude-count"></span>
+            <button class="btn btn-primary btn-sm" onclick="openModal('exclude')">+ 추가</button>
           </div>
-          <div style="margin-bottom:16px;">
-            <button class="btn btn-primary btn-sm" onclick="openEditModal('reentry','재인입 기준','24','시간','재인입 판단 기준 시간')">기준값 수정</button>
-          </div>
-          <div class="content-card-header" style="border:none;"><span style="font-size:14px;font-weight:600;">변경 이력</span></div>
           <table class="data-table">
-            <thead><tr><th>변경일시</th><th>이전 값</th><th>변경 값</th><th>변경자</th><th>변경사유</th></tr></thead>
-            <tbody>
-              <tr><td>2025-01-12 11:00</td><td>48시간</td><td style="color:#00A3FF;font-weight:600;">24시간</td><td>관리자</td><td>재인입 감지 강화</td></tr>
-              <tr><td>2024-11-10 14:30</td><td>72시간</td><td>48시간</td><td>관리자</td><td>운영 지침 변경</td></tr>
-            </tbody>
+            <colgroup>
+              <col style="width:7%;"><col style="width:25%;"><col style="width:15%;"><col style="width:22%;">
+              <col style="width:12%;"><col style="width:14%;">
+            </colgroup>
+            <thead><tr><th>No</th><th>분석 제외 전화번호</th><th>등록자</th><th>등록일</th><th>상태</th><th>관리</th></tr></thead>
+            <tbody id="exclude-tbody"></tbody>
           </table>
         </div>
       </div>
@@ -164,37 +129,284 @@
   <script src="../../../js/components/layout.js"></script>
   <script src="../../../js/components/modal.js"></script>
   <script src="../../../js/components/toast.js"></script>
-  <script src="../../../js/components/period-picker.js"></script>
   <script>
-    function switchTab(tab) {
-      ['silence','exclude','overtime','reentry'].forEach(t => {
-        document.getElementById('tab-' + t).style.display = t === tab ? '' : 'none';
-      });
-      document.querySelectorAll('.tab-item').forEach((el, i) => {
-        const tabs = ['silence','exclude','overtime','reentry'];
-        el.classList.toggle('active', tabs[i] === tab);
-      });
+    /* ========== 더미 데이터 ========== */
+    const settingsData = {
+      silence: [
+        { no:4, value:'0분 5초',  min:0,  sec:5,  creator:'김관리', createdAt:'2025-03-28 13:01', modifier:'박운영', modifiedAt:'2025-04-02 09:30' },
+        { no:3, value:'0분 3초',  min:0,  sec:3,  creator:'박운영', createdAt:'2025-02-15 10:22', modifier:'박운영', modifiedAt:'2025-02-15 10:22' },
+        { no:2, value:'0분 10초', min:0,  sec:10, creator:'김관리', createdAt:'2025-01-10 14:05', modifier:'김관리', modifiedAt:'2025-01-10 14:05' },
+        { no:1, value:'0분 7초',  min:0,  sec:7,  creator:'이시스템',createdAt:'2024-12-01 11:00', modifier:'이시스템', modifiedAt:'2024-12-01 11:00' }
+      ],
+      reentry: [
+        { no:4, value:'7일 내',  days:7,  creator:'김관리', createdAt:'2025-03-20 09:15', modifier:'박운영', modifiedAt:'2025-04-01 14:20' },
+        { no:3, value:'5일 내',  days:5,  creator:'박운영', createdAt:'2025-02-10 11:30', modifier:'박운영', modifiedAt:'2025-02-10 11:30' },
+        { no:2, value:'3일 내',  days:3,  creator:'김관리', createdAt:'2025-01-05 16:45', modifier:'김관리', modifiedAt:'2025-01-05 16:45' },
+        { no:1, value:'14일 내', days:14, creator:'이시스템',createdAt:'2024-11-20 10:00', modifier:'이시스템', modifiedAt:'2024-11-20 10:00' }
+      ],
+      overcall: [
+        { no:3, value:'1분 30초', min:1,  sec:30, creator:'김관리', createdAt:'2025-03-25 15:00', modifier:'박운영', modifiedAt:'2025-04-03 10:10' },
+        { no:2, value:'2분 0초',  min:2,  sec:0,  creator:'박운영', createdAt:'2025-02-20 08:45', modifier:'박운영', modifiedAt:'2025-02-20 08:45' },
+        { no:1, value:'1분 0초',  min:1,  sec:0,  creator:'김관리', createdAt:'2025-01-15 13:30', modifier:'김관리', modifiedAt:'2025-01-15 13:30' }
+      ],
+      exclude: [
+        { no:12, phone:'1588-0000', creator:'김관리',  createdAt:'2025-04-01 09:00', active:true },
+        { no:11, phone:'1577-1234', creator:'김관리',  createdAt:'2025-03-28 14:20', active:true },
+        { no:10, phone:'1600-5678', creator:'박운영',  createdAt:'2025-03-25 10:15', active:true },
+        { no:9,  phone:'02-1234-0000', creator:'김관리', createdAt:'2025-03-20 11:30', active:true },
+        { no:8,  phone:'02-9999-9999', creator:'박운영', createdAt:'2025-03-15 16:00', active:true },
+        { no:7,  phone:'070-1111-2222', creator:'이시스템', createdAt:'2025-03-10 09:45', active:true },
+        { no:6,  phone:'070-3333-4444', creator:'이시스템', createdAt:'2025-03-05 13:20', active:true },
+        { no:5,  phone:'010-0000-0000', creator:'김관리', createdAt:'2025-02-28 10:00', active:true },
+        { no:4,  phone:'1899-0001', creator:'박운영',  createdAt:'2025-02-20 15:30', active:false },
+        { no:3,  phone:'1644-5000', creator:'김관리',  createdAt:'2025-02-15 08:50', active:false },
+        { no:2,  phone:'031-000-0000', creator:'이시스템', createdAt:'2025-02-10 14:10', active:false },
+        { no:1,  phone:'080-000-1234', creator:'김관리', createdAt:'2025-02-01 09:30', active:true }
+      ]
+    };
+
+    const tabLabels = {
+      silence: '묵음 기준', reentry: '재인입콜 기준',
+      overcall: '초과 콜 기준', exclude: '분석 제외콜 기준'
+    };
+    let currentTab = 'silence';
+
+    /* ========== 탭 전환 ========== */
+    function switchTab(type) {
+      currentTab = type;
+      document.querySelectorAll('.kw-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === type));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `panel-${type}`));
     }
 
-    function openEditModal(type, title, value, unit, label) {
+    /* ========== 테이블 렌더링 ========== */
+    function renderTable(type) {
+      const data = [...settingsData[type]].sort((a, b) => b.no - a.no);
+      const tbody = document.getElementById(`${type}-tbody`);
+      const countEl = document.getElementById(`${type}-count`);
+      const tabCountEl = document.getElementById(`${type}-tab-count`);
+
+      tabCountEl.textContent = `(${data.length})`;
+
+      if (type === 'exclude') {
+        const activeCount = data.filter(d => d.active).length;
+        countEl.textContent = `${activeCount} / ${data.length}건 활성`;
+        tbody.innerHTML = data.map(d => `
+          <tr>
+            <td>${d.no}</td>
+            <td style="font-weight:500;">${d.phone}</td>
+            <td>${d.creator}</td>
+            <td>${d.createdAt}</td>
+            <td>
+              <label class="toggle-switch">
+                <input type="checkbox" ${d.active ? 'checked' : ''} onchange="toggleExclude(${d.no})">
+                <span class="toggle-slider"></span>
+              </label>
+            </td>
+            <td>
+              <div style="display:flex;gap:8px;justify-content:center;">
+                <button class="action-btn" onclick="openEditModal('exclude',${d.no})" title="수정">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                </button>
+                <button class="action-btn" onclick="deleteRule('exclude',${d.no})" title="삭제">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+      } else {
+        /*
+         * [비고] 묵음/재인입콜/초과콜 상태 관리 규칙
+         * - 배열의 첫 번째 항목(idx===0)만 "적용 중", 나머지는 "미적용"
+         * - "미적용" 항목은 과거 이력이므로 수정/삭제 아이콘을 표시하지 않음
+         * - 새 항목 추가 시 unshift로 배열 맨 앞에 삽입되므로,
+         *   기존 첫 번째 항목은 자동으로 idx=1이 되어 "미적용"으로 전환됨
+         */
+        countEl.textContent = `총 ${data.length}건`;
+        tbody.innerHTML = data.map((d, idx) => {
+          const isActive = idx === 0;
+          return `
+          <tr>
+            <td>${d.no}</td>
+            <td style="font-weight:500;">${d.value}</td>
+            <td>${d.creator}</td>
+            <td>${d.createdAt}</td>
+            <td>${d.modifier}</td>
+            <td>${d.modifiedAt}</td>
+            <td>${isActive ? '<span class="badge-active">적용 중</span>' : '<span class="badge-inactive">미적용</span>'}</td>
+            <td>
+              ${isActive ? `
+              <div style="display:flex;gap:8px;justify-content:center;">
+                <button class="action-btn" onclick="openEditModal('${type}',${d.no})" title="수정">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                </button>
+                <button class="action-btn" onclick="deleteRule('${type}',${d.no})" title="삭제">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                </button>
+              </div>
+              ` : '<span style="color:#BDBDBD;">—</span>'}
+            </td>
+          </tr>`;
+        }).join('');
+      }
+    }
+
+    /* ========== 분석 제외콜 상태 토글 ========== */
+    function toggleExclude(no) {
+      const item = settingsData.exclude.find(d => d.no === no);
+      if (item) {
+        item.active = !item.active;
+        renderTable('exclude');
+        AICC_Toast.show(`"${item.phone}" ${item.active ? '활성화' : '비활성화'}되었습니다.`);
+      }
+    }
+
+    /* ========== 삭제 ========== */
+    function deleteRule(type, no) {
+      const data = settingsData[type];
+      const idx = data.findIndex(d => d.no === no);
+      if (idx === -1) return;
+      const label = type === 'exclude' ? data[idx].phone : data[idx].value;
+      data.splice(idx, 1);
+      renderTable(type);
+      AICC_Toast.show(`"${label}" 항목이 삭제되었습니다.`);
+    }
+
+    /* ========== 추가/수정 모달 ========== */
+    function openModal(type) {
       AICC_Modal.open({
-        title: title + ' 수정',
-        content: `
-          <div style="margin-bottom:16px;">
-            <label class="form-label">${label}</label>
-            <div style="display:flex;align-items:center;gap:8px;">
-              <input type="number" class="form-input" value="${value}" style="flex:1;">
-              <span style="font-size:14px;color:#757575;white-space:nowrap;">${unit}</span>
-            </div>
-          </div>
-          <div>
-            <label class="form-label">변경 사유</label>
-            <textarea class="form-input" style="width:100%;resize:none;height:72px;" placeholder="변경 사유를 입력하세요"></textarea>
-          </div>`,
-        footer: '<button class="btn btn-secondary" onclick="AICC_Modal.close()">취소</button><button class="btn btn-primary" onclick="AICC_Toast.show(\'기준값이 저장되었습니다.\');AICC_Modal.close()">저장</button>',
+        title: `${tabLabels[type]} 추가`,
+        content: buildModalContent(type, null),
+        footer: `
+          <button class="btn btn-secondary" onclick="AICC_Modal.close()">취소</button>
+          <button class="btn btn-primary" onclick="saveRule('${type}', null)">저장</button>
+        `,
         size: 'sm'
       });
     }
+
+    function openEditModal(type, no) {
+      const item = settingsData[type].find(d => d.no === no);
+      if (!item) return;
+      AICC_Modal.open({
+        title: `${tabLabels[type]} 수정`,
+        content: buildModalContent(type, item),
+        footer: `
+          <button class="btn btn-secondary" onclick="AICC_Modal.close()">취소</button>
+          <button class="btn btn-primary" onclick="saveRule('${type}', ${no})">저장</button>
+        `,
+        size: 'sm'
+      });
+    }
+
+    function buildModalContent(type, item) {
+      if (type === 'exclude') {
+        const val = item ? item.phone : '';
+        return `
+          <div>
+            <label class="form-label">분석 제외 전화번호</label>
+            <input type="text" class="form-input" id="modal-phone" value="${val}" placeholder="예: 1588-0000" style="width:100%;box-sizing:border-box;">
+          </div>
+        `;
+      }
+
+      if (type === 'reentry') {
+        const val = item ? item.days : 7;
+        return `
+          <div>
+            <label class="form-label">재인입콜 기준 (기간)</label>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input type="number" class="form-input" id="modal-days" value="${val}" min="1" max="90" style="width:80px;box-sizing:border-box;text-align:center;">
+              <span style="font-size:13px;color:#424242;">일 내</span>
+            </div>
+          </div>
+        `;
+      }
+
+      const maxMin = type === 'silence' ? 10 : 30;
+      const curMin = item ? item.min : 0;
+      const curSec = item ? item.sec : 0;
+      const label = type === 'silence' ? '묵음 기준 (시간)' : '초과 콜 기준 (시간)';
+
+      let minOptions = '';
+      for (let i = 0; i <= maxMin; i++) minOptions += `<option value="${i}" ${i===curMin?'selected':''}>${i}분</option>`;
+      let secOptions = '';
+      for (let i = 0; i <= 59; i++) secOptions += `<option value="${i}" ${i===curSec?'selected':''}>${i}초</option>`;
+
+      return `
+        <div>
+          <label class="form-label">${label}</label>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <select class="form-select" id="modal-min" style="width:90px;box-sizing:border-box;">${minOptions}</select>
+            <select class="form-select" id="modal-sec" style="width:90px;box-sizing:border-box;">${secOptions}</select>
+          </div>
+        </div>
+      `;
+    }
+
+    function getNow() {
+      const d = new Date();
+      const pad = n => String(n).padStart(2,'0');
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    function saveRule(type, editNo) {
+      const data = settingsData[type];
+      const now = getNow();
+      const user = '관리자';
+
+      if (type === 'exclude') {
+        const phone = document.getElementById('modal-phone').value.trim();
+        if (!phone) { AICC_Toast.show('전화번호를 입력해 주세요.'); return; }
+
+        if (editNo) {
+          const item = data.find(d => d.no === editNo);
+          if (item) item.phone = phone;
+          AICC_Toast.show(`"${phone}" 전화번호가 수정되었습니다.`);
+        } else {
+          const maxNo = data.length > 0 ? Math.max(...data.map(d => d.no)) : 0;
+          data.unshift({ no: maxNo + 1, phone, creator: user, createdAt: now, active: true });
+          AICC_Toast.show(`"${phone}" 전화번호가 추가되었습니다.`);
+        }
+      } else if (type === 'reentry') {
+        const days = parseInt(document.getElementById('modal-days').value) || 0;
+        if (days < 1) { AICC_Toast.show('1일 이상 입력해 주세요.'); return; }
+        const value = `${days}일 내`;
+
+        if (editNo) {
+          const item = data.find(d => d.no === editNo);
+          if (item) { item.value = value; item.days = days; item.modifier = user; item.modifiedAt = now; }
+          AICC_Toast.show(`"${value}" (으)로 수정되었습니다.`);
+        } else {
+          const maxNo = data.length > 0 ? Math.max(...data.map(d => d.no)) : 0;
+          data.unshift({ no: maxNo + 1, value, days, creator: user, createdAt: now, modifier: user, modifiedAt: now });
+          AICC_Toast.show(`"${value}" 기준이 추가되었습니다.`);
+        }
+      } else {
+        const min = parseInt(document.getElementById('modal-min').value);
+        const sec = parseInt(document.getElementById('modal-sec').value);
+        if (min === 0 && sec === 0) { AICC_Toast.show('0분 0초는 설정할 수 없습니다.'); return; }
+        const value = `${min}분 ${sec}초`;
+
+        if (editNo) {
+          const item = data.find(d => d.no === editNo);
+          if (item) { item.value = value; item.min = min; item.sec = sec; item.modifier = user; item.modifiedAt = now; }
+          AICC_Toast.show(`"${value}" (으)로 수정되었습니다.`);
+        } else {
+          const maxNo = data.length > 0 ? Math.max(...data.map(d => d.no)) : 0;
+          data.unshift({ no: maxNo + 1, value, min, sec, creator: user, createdAt: now, modifier: user, modifiedAt: now });
+          AICC_Toast.show(`"${value}" 기준이 추가되었습니다.`);
+        }
+      }
+
+      AICC_Modal.close();
+      renderTable(type);
+    }
+
+    /* ========== 초기화 ========== */
+    document.addEventListener('DOMContentLoaded', () => {
+      ['silence','reentry','overcall','exclude'].forEach(t => renderTable(t));
+    });
   </script>
 </body>
 </html>

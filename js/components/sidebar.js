@@ -67,16 +67,21 @@ window.AICC_Sidebar = {
           { id: 'ta-dashboard', label: 'TA 홈', href: '/pages/ta/ta-dashboard.html' },
           { id: 'call-status', label: '전체 콜 현황', href: '/pages/ta/call-status.html' },
           { id: 'call-consultation', label: '콜 상담', href: '/pages/ta/call-consultation.html' },
-          { id: 'consultation-type', label: '상담 유형', href: '/pages/ta/consultation-type.html' },
-          { id: 'keyword', label: '키워드', href: '/pages/ta/keyword.html' }
+          { id: 'consultation-type', label: '상담 유형', href: '/pages/ta/consultation-type.html' }
         ]
       },
       {
         group: '관리자 기능',
         items: [
-          { id: 'report-manage', label: '리포트 관리', href: '/pages/ta/report-manage.html' },
+          { id: 'issue-manage', label: '이슈 처리 관리', href: '/pages/ta/issue-manage.html' },
           { id: 'keyword-manage', label: '키워드 관리', href: '/pages/ta/system/keyword-manage.html' },
           { id: 'analysis-settings', label: '분석 기준 관리', href: '/pages/ta/system/analysis-settings.html' }
+        ]
+      },
+      {
+        group: '리포트',
+        items: [
+          { id: 'report-generator', label: '리포트 생성기', href: '/pages/ta/report-generator.html' }
         ]
       },
       {

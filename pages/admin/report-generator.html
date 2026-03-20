@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="/image/faviconV2.png">
   <title>리포트 생성기 - AICC Quality Hub</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -10,26 +11,98 @@
 </head>
 <body class="bg-[#F5F5F5] text-[#212121]">
   <div id="page-content">
-    <!-- 페이지 제목 + 기간/필터 -->
+    <!-- 페이지 제목 -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
       <div>
         <h1 style="font-size:20px;font-weight:700;margin:0;">리포트 생성기</h1>
         <p style="font-size:12px;color:#757575;margin:4px 0 0;">품질 분석 리포트 설정 및 생성</p>
-      </div>
-      <div style="display:flex;align-items:center;gap:12px;">
-        <div id="period-picker-container"></div>
-        <select class="form-select" id="ws-filter" onchange="onWsChange()">
-          <option value="all">전체 센터</option>
-        </select>
-        <select class="form-select" id="team-filter" onchange="onTeamChange()" disabled>
-          <option value="all">전체 팀</option>
-        </select>
       </div>
     </div>
 
     <div style="display:grid;grid-template-columns:400px 1fr;gap:16px;align-items:start;">
       <!-- 좌측: 설정 폼 -->
       <div>
+        <!-- 리포트 유형 -->
+        <div class="content-card" style="margin-bottom:16px;">
+          <div class="content-card-header">
+            <span style="font-size:14px;font-weight:600;">리포트 유형</span>
+          </div>
+          <div class="content-card-body">
+            <div style="display:flex;flex-direction:column;gap:8px;" id="report-type-group">
+              <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #E0E0E0;border-radius:6px;cursor:pointer;transition:all 0.15s;" class="report-type-option" onclick="selectReportType(this, 'daily')">
+                <input type="radio" name="reportType" value="daily" checked style="accent-color:#00A3FF;">
+                <div>
+                  <div style="font-size:13px;font-weight:500;">일간 리포트</div>
+                  <div style="font-size:11px;color:#757575;">오늘 기준 일별 품질 평가 요약</div>
+                </div>
+              </label>
+              <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #E0E0E0;border-radius:6px;cursor:pointer;transition:all 0.15s;" class="report-type-option" onclick="selectReportType(this, 'weekly')">
+                <input type="radio" name="reportType" value="weekly" style="accent-color:#00A3FF;">
+                <div>
+                  <div style="font-size:13px;font-weight:500;">주간 리포트</div>
+                  <div style="font-size:11px;color:#757575;">이번 주 추이 및 비교 분석</div>
+                </div>
+              </label>
+              <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #E0E0E0;border-radius:6px;cursor:pointer;transition:all 0.15s;" class="report-type-option" onclick="selectReportType(this, 'monthly')">
+                <input type="radio" name="reportType" value="monthly" style="accent-color:#00A3FF;">
+                <div>
+                  <div style="font-size:13px;font-weight:500;">월간 리포트</div>
+                  <div style="font-size:11px;color:#757575;">이번 달 종합 분석 및 개선 제안</div>
+                </div>
+              </label>
+              <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #E0E0E0;border-radius:6px;cursor:pointer;transition:all 0.15s;" class="report-type-option" onclick="selectReportType(this, 'yearly')">
+                <input type="radio" name="reportType" value="yearly" style="accent-color:#00A3FF;">
+                <div>
+                  <div style="font-size:13px;font-weight:500;">연간 리포트</div>
+                  <div style="font-size:11px;color:#757575;">올해 연간 품질 성과 총괄</div>
+                </div>
+              </label>
+              <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #E0E0E0;border-radius:6px;cursor:pointer;transition:all 0.15s;" class="report-type-option" onclick="selectReportType(this, 'custom')">
+                <input type="radio" name="reportType" value="custom" style="accent-color:#00A3FF;">
+                <div>
+                  <div style="font-size:13px;font-weight:500;">날짜 지정 리포트</div>
+                  <div style="font-size:11px;color:#757575;">사용자 지정 기간 분석</div>
+                </div>
+              </label>
+            </div>
+            <!-- 날짜 지정 선택 시에만 표시되는 기간 입력 -->
+            <div id="custom-date-area" style="display:none;margin-top:12px;padding:12px;background:#F9F9F9;border-radius:6px;">
+              <label class="form-label">리포트 기간</label>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <input type="date" class="form-input" id="report-from" value="2025-01-01" style="flex:1;">
+                <span style="color:#757575;">~</span>
+                <input type="date" class="form-input" id="report-to" value="2025-01-19" style="flex:1;">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 범위 -->
+        <div class="content-card" style="margin-bottom:16px;">
+          <div class="content-card-header">
+            <span style="font-size:14px;font-weight:600;">범위</span>
+          </div>
+          <div class="content-card-body">
+            <div style="margin-bottom:12px;">
+              <label class="form-label">분석 범위</label>
+              <select class="form-select" id="scope-select" onchange="onScopeChange()" style="width:100%;">
+                <option value="all">전체 (모든 센터)</option>
+                <option value="center">센터 단위</option>
+                <option value="team">팀 단위</option>
+                <option value="individual">개인 단위</option>
+              </select>
+            </div>
+            <div id="scope-detail" style="display:none;">
+              <label class="form-label" id="scope-detail-label">센터</label>
+              <select class="form-select" id="scope-detail-select" style="width:100%;">
+                <option value="ws-1">서울센터</option>
+                <option value="ws-2">부산센터</option>
+                <option value="ws-3">대구센터</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
         <!-- 포함 섹션 선택 -->
         <div class="content-card" style="margin-bottom:16px;">
           <div class="content-card-header">
@@ -164,7 +237,6 @@
   <script src="../../js/components/layout.js"></script>
   <script src="../../js/components/modal.js"></script>
   <script src="../../js/components/toast.js"></script>
-  <script src="../../js/components/period-picker.js"></script>
   <script>
     /* ========== 더미 리포트 데이터 ========== */
     const REPORT_DATA = {
@@ -255,146 +327,100 @@
     };
 
     let reportGenerated = false;
-    let centersData = null;
-    let currentPeriod = { type: 'monthly' };
 
-    document.addEventListener('DOMContentLoaded', async () => {
-      await loadCenters();
-      AICC_PeriodPicker.create('period-picker-container', {
-        defaultPeriod: 'monthly',
-        onChange(periodType, info) {
-          currentPeriod = info;
-          if (reportGenerated) updatePreview();
-        }
-      });
-      const now = new Date();
-      currentPeriod = { type: 'monthly', year: now.getFullYear(), month: now.getMonth() + 1 };
+    document.addEventListener('DOMContentLoaded', () => {
+      updatePreview();
     });
 
-    /* ========== 센터 데이터 로드 ========== */
-    async function loadCenters() {
-      centersData = await AICC_DataLoader.load('centers.json');
-      if (!centersData) return;
-      const wsSelect = document.getElementById('ws-filter');
-      centersData.forEach(ws => {
-        wsSelect.innerHTML += `<option value="${ws.id}">${ws.name}</option>`;
+    /* ========== 리포트 유형 선택 ========== */
+    function selectReportType(el, type) {
+      document.querySelectorAll('.report-type-option').forEach(opt => {
+        opt.style.borderColor = '#E0E0E0';
+        opt.style.background = 'white';
       });
-    }
+      el.style.borderColor = '#00A3FF';
+      el.style.background = '#E3F2FD';
 
-    /* ========== 센터/팀 필터 변경 ========== */
-    function onWsChange() {
-      const wsId = document.getElementById('ws-filter').value;
-      const teamFilter = document.getElementById('team-filter');
-      if (wsId === 'all') {
-        teamFilter.disabled = true;
-        teamFilter.innerHTML = '<option value="all">전체 팀</option>';
-      } else {
-        teamFilter.disabled = false;
-        const center = centersData ? centersData.find(c => c.id === wsId) : null;
-        teamFilter.innerHTML = '<option value="all">전체 팀</option>';
-        if (center) {
-          center.teams.forEach(t => {
-            teamFilter.innerHTML += `<option value="${t.id}">${t.name}</option>`;
-          });
-        }
-      }
+      const customArea = document.getElementById('custom-date-area');
+      customArea.style.display = type === 'custom' ? 'block' : 'none';
+
       if (reportGenerated) updatePreview();
     }
 
-    function onTeamChange() {
-      if (reportGenerated) updatePreview();
-    }
+    /* ========== 유형별 기간 자동 계산 ========== */
+    const TODAY = new Date('2025-01-19');
+    function getReportPeriod() {
+      const type = document.querySelector('input[name="reportType"]:checked').value;
+      const fmt = d => d.toISOString().slice(0, 10);
 
-    /* ========== 필터 유틸 ========== */
-    function getSelectedCenterName() {
-      const wsId = document.getElementById('ws-filter').value;
-      if (wsId === 'all' || !centersData) return null;
-      const c = centersData.find(ct => ct.id === wsId);
-      return c ? c.name : null;
-    }
-
-    function getSelectedTeamName() {
-      const wsId = document.getElementById('ws-filter').value;
-      const teamId = document.getElementById('team-filter').value;
-      if (wsId === 'all' || teamId === 'all' || !centersData) return null;
-      const c = centersData.find(ct => ct.id === wsId);
-      if (!c) return null;
-      const t = c.teams.find(tm => tm.id === teamId);
-      return t ? t.name : null;
-    }
-
-    function getFilteredTeams() {
-      let teams = REPORT_DATA.teams;
-      const wsName = getSelectedCenterName();
-      if (wsName) teams = teams.filter(t => t.ws === wsName);
-      const tmName = getSelectedTeamName();
-      if (tmName) teams = teams.filter(t => t.name === tmName);
-      return teams;
-    }
-
-    function getScopeText() {
-      const wsName = getSelectedCenterName();
-      const tmName = getSelectedTeamName();
-      if (!wsName) return '전체';
-      if (!tmName) return wsName;
-      return `${wsName} / ${tmName}`;
-    }
-
-    /* ========== 기간 정보 산출 ========== */
-    function getPeriodDates() {
-      const p = currentPeriod;
-      switch (p.type) {
-        case 'daily': return { from: p.date, to: p.date };
-        case 'weekly': return { from: p.from, to: p.to };
-        case 'monthly': {
-          const y = p.year || new Date().getFullYear();
-          const m = p.month || (new Date().getMonth() + 1);
-          const ld = new Date(y, m, 0).getDate();
-          return { from: `${y}-${String(m).padStart(2,'0')}-01`, to: `${y}-${String(m).padStart(2,'0')}-${String(ld).padStart(2,'0')}` };
-        }
-        case 'yearly': {
-          const y = p.year || new Date().getFullYear();
-          return { from: `${y}-01-01`, to: `${y}-12-31` };
-        }
-        case 'custom': return { from: p.from || '', to: p.to || '' };
-        default: return { from: '', to: '' };
+      if (type === 'daily') {
+        const s = fmt(TODAY);
+        return { from: s, to: s };
       }
-    }
-
-    /* 필터링된 팀 기준으로 요약 데이터 비례 산출 */
-    function getFilteredSummary(filteredTeams) {
-      const s = REPORT_DATA.summary;
-      const allTotal = REPORT_DATA.teams.reduce((sum, t) => sum + t.calls, 0);
-      const filtTotal = filteredTeams.reduce((sum, t) => sum + t.calls, 0);
-      const ratio = allTotal > 0 ? filtTotal / allTotal : 0;
-      const filtEvals = filteredTeams.reduce((sum, t) => sum + t.evals, 0);
-      const filtAgents = filteredTeams.reduce((sum, t) => sum + t.agents, 0);
-      const filtAvg = filtEvals > 0
-        ? parseFloat((filteredTeams.reduce((sum, t) => sum + t.score * t.evals, 0) / filtEvals).toFixed(1))
-        : 0;
-
+      if (type === 'weekly') {
+        const day = TODAY.getDay();
+        const mon = new Date(TODAY);
+        mon.setDate(TODAY.getDate() - (day === 0 ? 6 : day - 1));
+        const sun = new Date(mon);
+        sun.setDate(mon.getDate() + 6);
+        return { from: fmt(mon), to: fmt(sun) };
+      }
+      if (type === 'monthly') {
+        const first = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1);
+        const last = new Date(TODAY.getFullYear(), TODAY.getMonth() + 1, 0);
+        return { from: fmt(first), to: fmt(last) };
+      }
+      if (type === 'yearly') {
+        return { from: `${TODAY.getFullYear()}-01-01`, to: `${TODAY.getFullYear()}-12-31` };
+      }
       return {
-        totalCalls: filtTotal,
-        totalEvals: filtEvals,
-        totalCalls_prev: Math.round(s.totalCalls_prev * ratio),
-        totalEvals_prev: Math.round(s.totalEvals_prev * ratio),
-        avgScore: filtAvg,
-        prevAvgScore: s.prevAvgScore,
-        completionRate: s.completionRate,
-        issueCount: filteredTeams.reduce((sum, t) => sum + t.issues, 0),
-        agentCount: filtAgents,
-        agentCount_prev: Math.round(s.agentCount_prev * ratio),
-        calls_autoIB: Math.round(s.calls_autoIB * ratio), calls_autoIB_done: Math.round(s.calls_autoIB_done * ratio),
-        calls_autoIB_prev: Math.round(s.calls_autoIB_prev * ratio), calls_autoIB_done_prev: Math.round(s.calls_autoIB_done_prev * ratio),
-        calls_autoOB: Math.round(s.calls_autoOB * ratio), calls_autoOB_done: Math.round(s.calls_autoOB_done * ratio),
-        calls_autoOB_prev: Math.round(s.calls_autoOB_prev * ratio), calls_autoOB_done_prev: Math.round(s.calls_autoOB_done_prev * ratio),
-        calls_manual: Math.round(s.calls_manual * ratio), calls_manual_done: Math.round(s.calls_manual_done * ratio),
-        calls_manual_prev: Math.round(s.calls_manual_prev * ratio), calls_manual_done_prev: Math.round(s.calls_manual_done_prev * ratio),
-        avgScore_autoIB: s.avgScore_autoIB, avgScore_autoIB_prev: s.avgScore_autoIB_prev,
-        avgScore_autoOB: s.avgScore_autoOB, avgScore_autoOB_prev: s.avgScore_autoOB_prev,
-        avgScore_manual: s.avgScore_manual, avgScore_manual_prev: s.avgScore_manual_prev,
-        avgDuration: s.avgDuration, avgDuration_prev: s.avgDuration_prev
+        from: document.getElementById('report-from').value,
+        to: document.getElementById('report-to').value
       };
+    }
+
+    /* ========== 범위 변경 ========== */
+    function onScopeChange() {
+      const scope = document.getElementById('scope-select').value;
+      const detail = document.getElementById('scope-detail');
+      const label = document.getElementById('scope-detail-label');
+      const select = document.getElementById('scope-detail-select');
+
+      if (scope === 'all') {
+        detail.style.display = 'none';
+      } else {
+        detail.style.display = 'block';
+        detail.style.marginTop = '12px';
+
+        if (scope === 'center') {
+          label.textContent = '센터';
+          select.innerHTML = `
+            <option value="ws-1">서울센터</option>
+            <option value="ws-2">부산센터</option>
+            <option value="ws-3">대구센터</option>
+          `;
+        } else if (scope === 'team') {
+          label.textContent = '팀';
+          select.innerHTML = `
+            <option value="tm-1">서울센터 / VIP상담팀</option>
+            <option value="tm-2">서울센터 / 일반상담팀</option>
+            <option value="tm-3">서울센터 / 기술지원팀</option>
+            <option value="tm-5">부산센터 / 고객상담1팀</option>
+            <option value="tm-6">부산센터 / 고객상담2팀</option>
+            <option value="tm-8">대구센터 / 종합상담팀</option>
+            <option value="tm-9">대구센터 / 클레임처리팀</option>
+          `;
+        } else {
+          label.textContent = '상담사';
+          select.innerHTML = `
+            <option value="ag-1">홍길동 (VIP상담팀)</option>
+            <option value="ag-2">김영수 (VIP상담팀)</option>
+            <option value="ag-5">정수민 (일반상담팀)</option>
+            <option value="ag-8">오세진 (기술지원팀)</option>
+            <option value="ag-12">배수현 (고객상담1팀)</option>
+          `;
+        }
+      }
     }
 
     /* ========== 미리보기 업데이트 ========== */
@@ -408,42 +434,25 @@
       reportGenerated = true;
       document.getElementById('preview-status').className = 'badge badge-active';
       document.getElementById('preview-status').textContent = '생성 완료';
+
       renderPreviewContent();
       AICC_Toast.show('리포트가 생성되었습니다.');
     }
 
-    /* ========== 미리보기 콘텐츠 렌더링 ========== */
     function renderPreviewContent() {
       const placeholder = document.getElementById('preview-placeholder');
       const content = document.getElementById('preview-content');
       placeholder.style.display = 'none';
       content.style.display = 'block';
 
-      const typeNames = { daily: '일간', weekly: '주간', monthly: '월간', yearly: '연간', custom: '기간 지정' };
-      const periodType = currentPeriod.type || 'monthly';
-      const period = getPeriodDates();
+      const reportType = document.querySelector('input[name="reportType"]:checked').value;
+      const period = getReportPeriod();
       const fromDate = period.from;
       const toDate = period.to;
-      const scopeText = getScopeText();
+      const scope = document.getElementById('scope-select').value;
 
-      const filteredTeams = getFilteredTeams();
-      const s = getFilteredSummary(filteredTeams);
-      const D = REPORT_DATA;
-      const wsName = getSelectedCenterName();
-      const tmName = getSelectedTeamName();
-
-      const teamNames = filteredTeams.map(t => t.name);
-      const filteredTopAgents = wsName ? D.topAgents.filter(a => teamNames.includes(a.team)) : D.topAgents;
-      const filteredBottomAgents = wsName ? D.bottomAgents.filter(a => teamNames.includes(a.team)) : D.bottomAgents;
-      let filteredDeductionCall = D.topDeductionCall;
-      if (wsName) {
-        filteredDeductionCall = filteredDeductionCall.filter(c => c.center === wsName);
-        if (tmName) filteredDeductionCall = filteredDeductionCall.filter(c => c.team === tmName);
-      }
-      const filteredUrgent = wsName ? D.urgentIssues.filter(u => teamNames.includes(u.team)) : D.urgentIssues;
-
-      const allTotal = REPORT_DATA.teams.reduce((sum, t) => sum + t.calls, 0);
-      const filtRatio = allTotal > 0 ? filteredTeams.reduce((sum, t) => sum + t.calls, 0) / allTotal : 1;
+      const typeNames = { daily: '일간', weekly: '주간', monthly: '월간', yearly: '연간', custom: '기간 지정' };
+      const scopeNames = { all: '전체', center: '센터', team: '팀', individual: '개인' };
 
       const SEC = {
         summary:     document.getElementById('sec-summary').checked,
@@ -463,6 +472,8 @@
         appendix:    document.getElementById('sec-appendix').checked
       };
 
+      const s = REPORT_DATA.summary;
+      const D = REPORT_DATA;
       let html = '';
       let n = 0;
 
@@ -470,8 +481,8 @@
 
       html += `
         <div style="border-bottom:2px solid #00A3FF;padding-bottom:16px;margin-bottom:20px;">
-          <div style="font-size:18px;font-weight:700;color:#00A3FF;">AICC 품질 관리 ${typeNames[periodType]} 리포트</div>
-          <div style="font-size:12px;color:#757575;margin-top:4px;">${fromDate} ~ ${toDate} | 범위: ${scopeText}</div>
+          <div style="font-size:18px;font-weight:700;color:#00A3FF;">AICC 품질 관리 ${typeNames[reportType]} 리포트</div>
+          <div style="font-size:12px;color:#757575;margin-top:4px;">${fromDate} ~ ${toDate} | 범위: ${scopeNames[scope]}</div>
           <div style="font-size:11px;color:#9E9E9E;margin-top:2px;">생성일시: ${new Date().toLocaleString('ko-KR')}</div>
         </div>`;
 
@@ -571,7 +582,7 @@
 
       /* 4. 팀별 평가 현황 */
       if (SEC.teamTable) {
-        const teamRows = filteredTeams.map(t => {
+        const teamRows = D.teams.map(t => {
           const rate = (t.evals / t.calls * 100).toFixed(1);
           return `<tr style="cursor:default;">
             <td style="text-align:center;font-weight:500;">${t.name}</td>
@@ -597,12 +608,7 @@
 
       /* 5. 점수 분포 (Donut) */
       if (SEC.distribution) {
-        const dist = {
-          excellent: Math.round(D.distribution.excellent * filtRatio),
-          good: Math.round(D.distribution.good * filtRatio),
-          caution: Math.round(D.distribution.caution * filtRatio),
-          poor: Math.round(D.distribution.poor * filtRatio)
-        };
+        const dist = D.distribution;
         const total = dist.excellent + dist.good + dist.caution + dist.poor;
         html += `<div style="margin-bottom:24px;">${secTitle('점수 분포')}
           <div style="display:flex;align-items:center;gap:20px;">
@@ -692,7 +698,7 @@
 
       /* 10. 최다 감점 콜 Top 5 */
       if (SEC.topDeductionCall) {
-        const rows = filteredDeductionCall.map((d, i) => `
+        const rows = D.topDeductionCall.map((d, i) => `
           <tr style="cursor:default;">
             <td style="text-align:center;font-weight:600;color:#757575;">${i + 1}</td>
             <td style="text-align:center;font-size:12px;color:#757575;">${d.center}</td>
@@ -710,9 +716,9 @@
 
       /* 11. 상담사별 분석 */
       if (SEC.agent) {
-        const topRows = filteredTopAgents.map((a, i) => `
+        const topRows = D.topAgents.map((a, i) => `
           <tr style="cursor:default;"><td style="text-align:center;font-weight:600;color:#757575;">${i+1}</td><td style="text-align:center;font-weight:500;">${a.name}</td><td style="text-align:center;font-size:12px;color:#757575;">${a.team}</td><td style="text-align:center;">${AICC_Fmt.scoreHtml(a.score)}</td></tr>`).join('');
-        const bottomRows = filteredBottomAgents.map((a, i) => `
+        const bottomRows = D.bottomAgents.map((a, i) => `
           <tr style="cursor:default;"><td style="text-align:center;font-weight:600;color:#757575;">${i+1}</td><td style="text-align:center;font-weight:500;">${a.name}</td><td style="text-align:center;font-size:12px;color:#757575;">${a.team}</td><td style="text-align:center;">${AICC_Fmt.scoreHtml(a.score)}</td></tr>`).join('');
         html += `<div style="margin-bottom:24px;">${secTitle('상담사별 분석')}
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
@@ -730,7 +736,7 @@
 
       /* 12. 이슈 현황 */
       if (SEC.urgent) {
-        const items = filteredUrgent.map(u => {
+        const items = D.urgentIssues.map(u => {
           const color = u.level === 'critical' ? '#D32F2F' : u.level === 'warning' ? '#F57F17' : '#1565C0';
           const bg = u.level === 'critical' ? '#FFEBEE' : u.level === 'warning' ? '#FFF8E1' : '#E3F2FD';
           return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:6px;background:${bg};border:1px solid ${color}20;">
@@ -764,12 +770,7 @@
 
       /* 15. 부록 */
       if (SEC.appendix) {
-        const dist = {
-          excellent: Math.round(D.distribution.excellent * filtRatio),
-          good: Math.round(D.distribution.good * filtRatio),
-          caution: Math.round(D.distribution.caution * filtRatio),
-          poor: Math.round(D.distribution.poor * filtRatio)
-        };
+        const dist = D.distribution;
         const distTotal = dist.excellent + dist.good + dist.caution + dist.poor;
         const distPct = v => (v / distTotal * 100).toFixed(1);
 
@@ -818,7 +819,7 @@
 
       setTimeout(() => {
         if (SEC.trend) renderPreviewChart();
-        if (SEC.teamScore) renderTeamBarChart(filteredTeams);
+        if (SEC.teamScore) renderTeamBarChart();
         if (SEC.distribution) renderDonutChart();
         if (SEC.radar) renderRadarChart();
       }, 100);
@@ -829,27 +830,27 @@
       const ctx = document.getElementById('preview-trend-chart');
       if (!ctx) return;
 
-      const periodType = currentPeriod.type || 'monthly';
+      const reportType = document.querySelector('input[name="reportType"]:checked').value;
       const labels = [];
       const data = [];
 
-      if (periodType === 'daily') {
+      if (reportType === 'daily') {
         for (let h = 9; h <= 18; h++) {
           labels.push(`${h}시`);
           data.push(parseFloat((77 + Math.random() * 6).toFixed(1)));
         }
-      } else if (periodType === 'weekly') {
+      } else if (reportType === 'weekly') {
         ['월', '화', '수', '목', '금', '토', '일'].forEach(d => {
           labels.push(d);
           data.push(parseFloat((77 + Math.random() * 6).toFixed(1)));
         });
-      } else if (periodType === 'yearly') {
+      } else if (reportType === 'yearly') {
         for (let m = 1; m <= 12; m++) {
           labels.push(`${m}월`);
           data.push(parseFloat((77 + Math.random() * 6).toFixed(1)));
         }
       } else {
-        const period = getPeriodDates();
+        const period = getReportPeriod();
         const start = new Date(period.from);
         const end = new Date(period.to);
         const days = Math.round((end - start) / 86400000) + 1;
@@ -900,10 +901,10 @@
     }
 
     /* ========== 팀별 평균 점수 Bar Chart ========== */
-    function renderTeamBarChart(teams) {
+    function renderTeamBarChart() {
       const ctx = document.getElementById('preview-team-bar');
       if (!ctx) return;
-      teams = teams || REPORT_DATA.teams;
+      const teams = REPORT_DATA.teams;
       const colors = teams.map(t => t.score >= 80 ? '#4CAF50' : t.score >= 60 ? '#FF9800' : '#F44336');
       new Chart(ctx, {
         type: 'bar',
@@ -927,15 +928,7 @@
     function renderDonutChart() {
       const ctx = document.getElementById('preview-donut');
       if (!ctx) return;
-      const filteredTeams = getFilteredTeams();
-      const allTotal = REPORT_DATA.teams.reduce((sum, t) => sum + t.calls, 0);
-      const ratio = allTotal > 0 ? filteredTeams.reduce((sum, t) => sum + t.calls, 0) / allTotal : 1;
-      const d = {
-        excellent: Math.round(REPORT_DATA.distribution.excellent * ratio),
-        good: Math.round(REPORT_DATA.distribution.good * ratio),
-        caution: Math.round(REPORT_DATA.distribution.caution * ratio),
-        poor: Math.round(REPORT_DATA.distribution.poor * ratio)
-      };
+      const d = REPORT_DATA.distribution;
       new Chart(ctx, {
         type: 'doughnut',
         data: {
@@ -983,9 +976,9 @@
         return;
       }
 
+      const reportType = document.querySelector('input[name="reportType"]:checked').value;
       const typeNames = { daily: '일간', weekly: '주간', monthly: '월간', yearly: '연간', custom: '기간 지정' };
-      const periodType = currentPeriod.type || 'monthly';
-      const period = getPeriodDates();
+      const period = getReportPeriod();
       const fromDate = period.from;
 
       AICC_Modal.open({
@@ -998,7 +991,7 @@
               <line x1="12" y1="15" x2="12" y2="3"/>
             </svg>
             <div style="font-size:14px;font-weight:500;margin-bottom:4px;">다운로드 형식 선택</div>
-            <div style="font-size:12px;color:#757575;margin-bottom:20px;">${typeNames[periodType]} 리포트 (${fromDate})</div>
+            <div style="font-size:12px;color:#757575;margin-bottom:20px;">${typeNames[reportType]} 리포트 (${fromDate})</div>
             <div style="display:flex;gap:8px;justify-content:center;">
               <button class="btn btn-primary" onclick="doDownload('PDF')">PDF 다운로드</button>
               <button class="btn btn-secondary" onclick="doDownload('Excel')">Excel 다운로드</button>
@@ -1013,6 +1006,14 @@
       AICC_Modal.close();
       AICC_Toast.show(`${format} 파일 다운로드를 시작합니다. (시뮬레이션)`);
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const firstOption = document.querySelector('.report-type-option');
+      if (firstOption) {
+        firstOption.style.borderColor = '#00A3FF';
+        firstOption.style.background = '#E3F2FD';
+      }
+    });
   </script>
 </body>
 </html>
