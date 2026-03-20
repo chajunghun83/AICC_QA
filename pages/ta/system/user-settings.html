@@ -4,16 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/png" href="/image/faviconV2.png">
-  <title>사용자 관리 - AICC Quality Hub</title>
+  <title>사용자 설정 - AICC Quality Hub</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="../../../css/styles.css">
 </head>
 <body class="bg-[#F5F5F5] text-[#212121]">
   <div id="page-content">
-    <!-- 페이지 제목 -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
       <div>
-        <h1 style="font-size:20px;font-weight:700;margin:0;">사용자 관리</h1>
+        <h1 style="font-size:20px;font-weight:700;margin:0;">사용자 설정</h1>
         <p style="font-size:12px;color:#757575;margin:4px 0 0;">시스템 사용자 및 접근 범위 관리</p>
       </div>
       <button class="btn btn-primary btn-sm" onclick="openAddUserModal()">+ 사용자 등록</button>
@@ -68,7 +67,7 @@
     <div class="content-card">
       <div class="content-card-header">
         <span style="font-size:14px;font-weight:600;">사용자 목록</span>
-        <span style="font-size:12px;color:#757575;" id="total-count">총 10명</span>
+        <span style="font-size:12px;color:#757575;" id="total-count">총 0명</span>
       </div>
       <div class="content-card-body" style="padding:0;">
         <table class="data-table">
@@ -116,43 +115,25 @@
           { id: 'data-daegu-ob', label: '아웃바운드팀' }
         ]}
       ]},
-      { id: 'qa-menu', label: '접근 가능 메뉴', children: [
-        { id: 'admin', label: '관리자 영역', children: [
-          { id: 'admin-dashboard', label: '대시보드', children: [
-            { id: 'qa-dashboard', label: 'QA 대시보드' }
-          ]},
-          { id: 'admin-eval', label: '평가 현황', children: [
-            { id: 'auto-eval-status', label: '자동 평가 현황' },
-            { id: 'manual-eval-status', label: '수동 평가 현황' }
-          ]},
-          { id: 'admin-settings', label: '평가 설정', children: [
-            { id: 'eval-forms', label: '평가표 관리', children: [
-              { id: 'auto-eval-forms', label: '자동 평가표 관리' },
-              { id: 'manual-eval-forms', label: '수동 평가표 관리' }
-            ]},
-            { id: 'eval-items', label: '평가 항목 관리' },
-            { id: 'eval-plans', label: '평가 계획', children: [
-              { id: 'auto-eval-plans', label: '자동 평가 계획' },
-              { id: 'manual-eval-plans', label: '수동 평가 계획' }
-            ]}
-          ]},
-          { id: 'admin-analysis', label: '분석', children: [
-            { id: 'detail-analysis', label: '상세 분석' },
-            { id: 'comparative-analysis', label: '비교 분석' },
-            { id: 'report-gen', label: '보고서 생성' }
-          ]},
-          { id: 'dispute-inbox', label: '이의제기 처리함' },
-          { id: 'admin-system', label: '시스템 설정', children: [
-            { id: 'user-mgmt', label: '사용자 관리' },
-            { id: 'system-logs', label: '시스템 로그' },
-            { id: 'eval-exclusions', label: '평가 제외 설정' },
-            { id: 'prompt-templates', label: '프롬프트 템플릿' }
-          ]}
+      { id: 'ta-menu', label: '접근 가능 메뉴', children: [
+        { id: 'ta-home', label: '홈', children: [
+          { id: 'ta-dashboard', label: 'TA 홈' },
+          { id: 'ta-call-status', label: '전체 콜 현황' },
+          { id: 'ta-call-consultation', label: '콜 상담' },
+          { id: 'ta-consultation-type', label: '상담 유형' }
         ]},
-        { id: 'agent', label: '상담사 영역', children: [
-          { id: 'my-dashboard', label: '나의 성과 대시보드' },
-          { id: 'my-evaluations', label: '나의 평가 결과' },
-          { id: 'my-disputes', label: '나의 이의제기' }
+        { id: 'ta-admin', label: '관리자 기능', children: [
+          { id: 'ta-issue-manage', label: '이슈 처리 관리' },
+          { id: 'ta-keyword-manage', label: '키워드 관리' },
+          { id: 'ta-analysis-settings', label: '분석 기준 관리' },
+          { id: 'ta-improvement-manage', label: '개선 이행 관리' }
+        ]},
+        { id: 'ta-report', label: '리포트', children: [
+          { id: 'ta-report-generator', label: '리포트 생성기' }
+        ]},
+        { id: 'ta-system', label: '시스템 설정', children: [
+          { id: 'ta-user-settings', label: '사용자 설정' },
+          { id: 'ta-logs', label: '시스템 로그' }
         ]}
       ]}
     ];
@@ -194,7 +175,7 @@
     /* 메뉴 권한: 전체 메뉴 접근이면 '전체', 아니면 '일부 제한' */
     function menuPermBadge(perms) {
       if (!perms || perms.length === 0) return '<span style="color:#BDBDBD;font-size:11px;">미설정</span>';
-      const menuNode = PERM_TREE.find(n => n.id === 'qa-menu');
+      const menuNode = PERM_TREE.find(n => n.id === 'ta-menu');
       if (!menuNode) return '';
       const allMenuIds = getAllIds(menuNode.children);
       const allChecked = allMenuIds.every(id => perms.includes(id));
@@ -216,37 +197,37 @@
         permissions: getAllIds(PERM_TREE) },
       /* 부산센터 전체 팀 + 메뉴 일부 */
       { no:2, name:'박영희', email:'yhpark@company.com', center:'부산센터', team:'일반상담팀', status:'active', statusText:'활성', joinDate:'2023-05-20',
-        permissions: ['data-scope','data-busan','data-busan-general','data-busan-happycall','qa-menu','admin','admin-dashboard','qa-dashboard','admin-eval','auto-eval-status','manual-eval-status','admin-analysis','detail-analysis','comparative-analysis','report-gen','dispute-inbox'] },
+        permissions: ['data-scope','data-busan','data-busan-general','data-busan-happycall','ta-menu','ta-home','ta-dashboard','ta-call-status','ta-call-consultation','ta-consultation-type','ta-admin','ta-issue-manage','ta-report','ta-report-generator'] },
       /* 서울센터 2개 팀(VIP+일반) */
       { no:3, name:'이준호', email:'jhlee@company.com', center:'서울센터', team:'VIP상담팀', status:'active', statusText:'활성', joinDate:'2023-08-01',
-        permissions: ['data-scope','data-seoul','data-seoul-vip','data-seoul-general','qa-menu','admin','admin-dashboard','qa-dashboard','admin-eval','auto-eval-status','manual-eval-status','admin-analysis','detail-analysis','comparative-analysis'] },
-      /* 서울센터 1개 팀(일반) + 상담사 영역 */
+        permissions: ['data-scope','data-seoul','data-seoul-vip','data-seoul-general','ta-menu','ta-home','ta-dashboard','ta-call-status','ta-call-consultation','ta-consultation-type','ta-admin','ta-issue-manage'] },
+      /* 서울센터 1개 팀(일반) */
       { no:4, name:'김민수', email:'mskim@company.com', center:'서울센터', team:'일반상담팀', status:'active', statusText:'활성', joinDate:'2024-01-10',
-        permissions: ['data-scope','data-seoul','data-seoul-general','qa-menu','agent','my-dashboard','my-evaluations','my-disputes'] },
-      /* 서울센터 전체 팀 + 상담사 영역 */
+        permissions: ['data-scope','data-seoul','data-seoul-general','ta-menu','ta-home','ta-dashboard','ta-call-status','ta-call-consultation','ta-consultation-type'] },
+      /* 서울센터 전체 팀 */
       { no:5, name:'이서연', email:'sylee@company.com', center:'서울센터', team:'기술지원팀', status:'active', statusText:'활성', joinDate:'2024-02-15',
-        permissions: ['data-scope','data-seoul','data-seoul-vip','data-seoul-general','data-seoul-tech','qa-menu','agent','my-dashboard','my-evaluations','my-disputes'] },
-      /* 부산센터 1개 팀(일반) + 대구센터 1개 팀(CS) → 2개 센터 */
+        permissions: ['data-scope','data-seoul','data-seoul-vip','data-seoul-general','data-seoul-tech','ta-menu','ta-home','ta-dashboard','ta-call-status','ta-call-consultation','ta-consultation-type'] },
+      /* 부산센터 1개 팀(일반) + 대구센터 1개 팀(CS) → 2개 센터 걸침 */
       { no:6, name:'박지훈', email:'jhpark@company.com', center:'부산센터', team:'일반상담팀', status:'active', statusText:'활성', joinDate:'2024-03-01',
-        permissions: ['data-scope','data-busan','data-busan-general','data-daegu','data-daegu-cs','qa-menu','agent','my-dashboard','my-evaluations','my-disputes'] },
-      /* 부산센터 1개 팀(해피콜) + 상담사 영역 */
+        permissions: ['data-scope','data-busan','data-busan-general','data-daegu','data-daegu-cs','ta-menu','ta-home','ta-dashboard','ta-call-status','ta-call-consultation','ta-consultation-type'] },
+      /* 부산센터 1개 팀(해피콜) */
       { no:7, name:'최유진', email:'yjchoi@company.com', center:'부산센터', team:'해피콜팀', status:'active', statusText:'활성', joinDate:'2024-04-20',
-        permissions: ['data-scope','data-busan','data-busan-happycall','qa-menu','agent','my-dashboard','my-evaluations','my-disputes'] },
-      /* 대구센터 전체 팀 + 상담사 영역 */
+        permissions: ['data-scope','data-busan','data-busan-happycall','ta-menu','ta-home','ta-dashboard','ta-call-status'] },
+      /* 대구센터 전체 팀 */
       { no:8, name:'정다은', email:'dejung@company.com', center:'대구센터', team:'CS상담팀', status:'active', statusText:'활성', joinDate:'2024-05-10',
-        permissions: ['data-scope','data-daegu','data-daegu-cs','data-daegu-ob','qa-menu','agent','my-dashboard','my-evaluations','my-disputes'] },
+        permissions: ['data-scope','data-daegu','data-daegu-cs','data-daegu-ob','ta-menu','ta-home','ta-dashboard','ta-call-status','ta-call-consultation','ta-consultation-type'] },
       /* 서울센터 2개 팀(일반+기술) — 비활성 */
       { no:9, name:'한승우', email:'swhan@company.com', center:'서울센터', team:'일반상담팀', status:'inactive', statusText:'비활성', joinDate:'2024-06-01',
-        permissions: ['data-scope','data-seoul','data-seoul-general','data-seoul-tech','qa-menu','agent','my-dashboard','my-evaluations'] },
+        permissions: ['data-scope','data-seoul','data-seoul-general','data-seoul-tech','ta-menu','ta-home','ta-dashboard'] },
       /* 대구센터 1개 팀(아웃바운드) — 비활성 */
       { no:10, name:'윤하나', email:'hnyoon@company.com', center:'대구센터', team:'아웃바운드팀', status:'inactive', statusText:'비활성', joinDate:'2024-07-15',
-        permissions: ['data-scope','data-daegu','data-daegu-ob','qa-menu','agent','my-dashboard','my-evaluations'] },
-      /* 대구센터 1개 팀(CS) + 서울센터 1개 팀(VIP) → 2개 센터 */
+        permissions: ['data-scope','data-daegu','data-daegu-ob','ta-menu','ta-home','ta-dashboard'] },
+      /* 대구센터 1개 팀(CS) + 서울센터 1개 팀(VIP) → 2개 센터 걸침 */
       { no:11, name:'강민재', email:'mjkang@company.com', center:'대구센터', team:'CS상담팀', status:'active', statusText:'활성', joinDate:'2024-08-01',
-        permissions: ['data-scope','data-daegu','data-daegu-cs','data-seoul','data-seoul-vip','qa-menu','admin','admin-dashboard','qa-dashboard','admin-eval','auto-eval-status','manual-eval-status'] },
-      /* 대구센터 1개 팀(아웃바운드) + 상담사 영역 */
+        permissions: ['data-scope','data-daegu','data-daegu-cs','data-seoul','data-seoul-vip','ta-menu','ta-home','ta-dashboard','ta-call-status','ta-call-consultation','ta-consultation-type','ta-admin','ta-issue-manage','ta-keyword-manage'] },
+      /* 대구센터 1개 팀(아웃바운드) */
       { no:12, name:'조은서', email:'esjo@company.com', center:'대구센터', team:'아웃바운드팀', status:'active', statusText:'활성', joinDate:'2024-09-15',
-        permissions: ['data-scope','data-daegu','data-daegu-ob','qa-menu','agent','my-dashboard','my-evaluations'] }
+        permissions: ['data-scope','data-daegu','data-daegu-ob','ta-menu','ta-home','ta-dashboard','ta-call-status'] }
     ];
 
     function renderTable(data) {
@@ -436,7 +417,7 @@
     function buildEditHtml(u) {
       const centerOpts = Object.keys(centerTeamMap).map(c => `<option value="${c}" ${u.center === c ? 'selected' : ''}>${c}</option>`).join('');
       const teams = centerTeamMap[u.center] || [];
-      const teamOpts = teams.map(t => `<option ${u.team === t ? 'selected' : ''}>${t}</option>`).join('');
+      const teamOpts = `<option ${u.team === '전체' ? 'selected' : ''}>전체</option>` + teams.map(t => `<option ${u.team === t ? 'selected' : ''}>${t}</option>`).join('');
       return `
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
           <div><div class="form-label">이름 *</div><input type="text" class="form-input" id="uf-name" style="width:100%;" value="${u.name}"></div>
@@ -467,7 +448,7 @@
     function onEditWsChange() {
       const ws = document.getElementById('uf-ws').value;
       const teamSel = document.getElementById('uf-team');
-      teamSel.innerHTML = '';
+      teamSel.innerHTML = '<option>전체</option>';
       if (ws && centerTeamMap[ws]) {
         centerTeamMap[ws].forEach(t => { teamSel.innerHTML += `<option>${t}</option>`; });
       }

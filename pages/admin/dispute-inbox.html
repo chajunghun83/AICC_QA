@@ -442,7 +442,15 @@
       const itemSel = document.getElementById('item-filter');
       items.forEach(i => { itemSel.innerHTML += '<option value="' + i + '">' + i + '</option>'; });
 
-      renderTable(disputes);
+      // URL 파라미터로 상태 필터 자동 적용
+      const params = new URLSearchParams(window.location.search);
+      const statusParam = params.get('status');
+      if (statusParam === 'pending') {
+        document.getElementById('status-filter').value = '대기';
+        filterDisputes();
+      } else {
+        renderTable(disputes);
+      }
     });
   </script>
 </body>

@@ -184,7 +184,7 @@
       const totalEvals = Math.floor(totalCalls * Math.min(0.99, p.evalRateBase + Math.random()*0.03));
       const failCount = Math.max(0, Math.floor(totalEvals * (p.failRateBase + Math.random()*0.008)));
       const underCount = Math.max(0, Math.floor(totalEvals * (p.underRateBase + Math.random()*0.01)));
-      const numDays = Math.min(currentPeriod, 30);
+      const numDays = Math.min(currentPeriod, 31);
       const scores = [];
       for(let i=0;i<numDays;i++) scores.push(base + Math.random()*8 - 3 + (p.trendSlope * i / numDays * 4));
       const maxS = Math.max(...scores);
@@ -254,7 +254,8 @@
     /* ========== 상태 ========== */
     let compareType = 'center';
     let selectedTargets = ['ct-seoul','ct-busan'];
-    let currentPeriod = 30;
+    let currentPeriod = 31;
+    let currentPeriodInfo = null;
     const WIDGETS = [
       { id:'trend', label:'품질 점수 추이' },
       { id:'avgScore', label:'평균 QA 점수' },
@@ -277,10 +278,15 @@
       AICC_PeriodPicker.create('period-picker-container', {
         defaultPeriod:'monthly',
         onChange(pt, info) {
-          const map = { daily:1, weekly:7, monthly:30, yearly:365 };
-          currentPeriod = pt==='custom' && info.from && info.to
-            ? Math.max(1, Math.ceil((new Date(info.to)-new Date(info.from))/864e5))
-            : (map[pt]||30);
+          currentPeriodInfo = info || null;
+          if (pt === 'monthly' && info && info.year && info.month) {
+            currentPeriod = new Date(info.year, info.month, 0).getDate();
+          } else if (pt === 'custom' && info && info.from && info.to) {
+            currentPeriod = Math.max(1, Math.ceil((new Date(info.to)-new Date(info.from))/864e5));
+          } else {
+            const map = { daily:1, weekly:7, monthly:31, yearly:365 };
+            currentPeriod = map[pt] || 31;
+          }
           regenerateStats();
           renderAll();
         }
@@ -424,16 +430,22 @@
 
     /* ========== 날짜 유틸 ========== */
     function buildDateLabels(numDays) {
-      const today = new Date();
+      const now = new Date();
+      let year = now.getFullYear();
+      let month = now.getMonth();
+      if (currentPeriodInfo && currentPeriodInfo.year && currentPeriodInfo.month) {
+        year = currentPeriodInfo.year;
+        month = currentPeriodInfo.month - 1;
+      }
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const days = Math.min(numDays, daysInMonth);
       const displayLabels = [];
       const isoStrings = [];
-      for (let i = numDays - 1; i >= 0; i--) {
-        const d = new Date(today);
-        d.setDate(d.getDate() - i);
-        const mm = String(d.getMonth() + 1).padStart(2, '0');
-        const dd = String(d.getDate()).padStart(2, '0');
+      for (let d = 1; d <= days; d++) {
+        const mm = String(month + 1).padStart(2, '0');
+        const dd = String(d).padStart(2, '0');
         displayLabels.push(`${mm}/${dd}`);
-        isoStrings.push(`${d.getFullYear()}-${mm}-${dd}`);
+        isoStrings.push(`${year}-${mm}-${dd}`);
       }
       return { displayLabels, isoStrings };
     }
@@ -706,7 +718,7 @@
         borderColor: items[i].color,
         backgroundColor: items[i].color+'20',
         borderWidth: 2, fill:false, tension:0.3,
-        pointRadius: currentPeriod<=14?4:currentPeriod<=30?2:0,
+        pointRadius: currentPeriod<=14?4:currentPeriod<=31?2:0,
         pointHoverRadius: 5
       }));
       trendChart = new Chart(ctx, {
@@ -714,23 +726,13 @@
         options:{
           responsive:true, maintainAspectRatio:false,
           interaction:{ mode:'index', intersect:false },
-          onClick: (evt, elements) => {
-            if (elements.length > 0) {
-              const ptIdx = elements[0].index;
-              const date = isoStrings[ptIdx];
-              window.location.href = `integrated-evaluation.html?ws=all&date=${date}`;
-            }
-          },
-          onHover: (evt, elements) => {
-            evt.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
-          },
           plugins:{
             legend:{ position:'top', labels:{ usePointStyle:true, pointStyle:'circle', padding:20, font:{size:12} }},
             tooltip:{ backgroundColor:'rgba(0,0,0,0.8)', padding:12, callbacks:{ label:c=>`${c.dataset.label}: ${c.parsed.y.toFixed(1)}점` }}
           },
           scales:{
             y:{ min:60, max:100, grid:{color:'#F0F0F0'}, ticks:{ font:{size:11}, color:'#757575', callback:v=>v+'점' }},
-            x:{ grid:{display:false}, ticks:{ font:{size:11}, color:'#757575', maxTicksLimit:15, maxRotation:0 }}
+            x:{ grid:{display:false}, ticks:{ font:{size:11}, color:'#757575', maxTicksLimit:16, autoSkip:true, maxRotation:0 }}
           }
         }
       });

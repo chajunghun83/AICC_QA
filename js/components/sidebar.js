@@ -37,7 +37,8 @@ window.AICC_Sidebar = {
         group: '분석',
         items: [
           { id: 'comparative-analysis', label: '비교 분석', href: '/pages/admin/comparative-analysis.html' },
-          { id: 'report-generator', label: '리포트 생성기', href: '/pages/admin/report-generator.html' }
+          { id: 'report-generator', label: '리포트 생성기', href: '/pages/admin/report-generator.html' },
+          { id: 'improvement-manage', label: '개선 이행 관리', href: '/pages/admin/improvement-manage.html' }
         ]
       },
       {
@@ -73,9 +74,10 @@ window.AICC_Sidebar = {
       {
         group: '관리자 기능',
         items: [
-          { id: 'issue-manage', label: '이슈 처리 관리', href: '/pages/ta/issue-manage.html' },
           { id: 'keyword-manage', label: '키워드 관리', href: '/pages/ta/system/keyword-manage.html' },
-          { id: 'analysis-settings', label: '분석 기준 관리', href: '/pages/ta/system/analysis-settings.html' }
+          { id: 'analysis-settings', label: '분석 기준 관리', href: '/pages/ta/system/analysis-settings.html' },
+          { id: 'issue-manage', label: '이슈 처리 관리', href: '/pages/ta/issue-manage.html' },
+          { id: 'improvement-manage', label: '개선 이행 관리', href: '/pages/ta/improvement-manage.html' }
         ]
       },
       {
@@ -85,8 +87,9 @@ window.AICC_Sidebar = {
         ]
       },
       {
-        group: '이력 조회',
+        group: '시스템 설정',
         items: [
+          { id: 'user-settings', label: '사용자 설정', href: '/pages/ta/system/user-settings.html' },
           { id: 'logs', label: '시스템 로그', href: '/pages/ta/system/logs.html' }
         ]
       }

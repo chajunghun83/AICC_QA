@@ -121,7 +121,7 @@ window.AICC_DATA['dashboard-stats.json'] =
   ],
   "urgent_issues": [
     { "type": "FAIL(금지어)", "count": 3, "team": "VIP상담팀 외" },
-    { "type": "기준 미달", "count": 6, "team": "기술지원팀 외" },
+    { "type": "기준 미달", "count": 9, "team": "기술지원팀 외" },
     { "type": "이의 제기 대기", "count": 5, "status": "pending" }
   ],
   "fail_agents": [
@@ -140,7 +140,7 @@ window.AICC_DATA['dashboard-stats.json'] =
       "item": "공감 표현 부족",
       "item_id": "pos-neg-empathy",
       "category": "응대품질 > 공감 멘트",
-      "score": 55,
+      "calls": 48,
       "status": "danger"
     },
     {
@@ -151,7 +151,7 @@ window.AICC_DATA['dashboard-stats.json'] =
       "item": "비전문적 화법",
       "item_id": "professional-speech",
       "category": "응대품질 > 전문적 상담 태도",
-      "score": 58,
+      "calls": 41,
       "status": "danger"
     },
     {
@@ -162,7 +162,7 @@ window.AICC_DATA['dashboard-stats.json'] =
       "item": "응답 지연",
       "item_id": "speed",
       "category": "응대품질 > 전문적 상담 태도",
-      "score": 72,
+      "calls": 35,
       "status": "warning"
     },
     {
@@ -173,7 +173,7 @@ window.AICC_DATA['dashboard-stats.json'] =
       "item": "고객 불편 공감 부족",
       "item_id": "customer-discomfort",
       "category": "응대품질 > 화답인사",
-      "score": 78,
+      "calls": 28,
       "status": "warning"
     },
     {
@@ -184,7 +184,7 @@ window.AICC_DATA['dashboard-stats.json'] =
       "item": "설명 불충분",
       "item_id": "easy-explanation",
       "category": "응대내용 > 해결력",
-      "score": 79,
+      "calls": 22,
       "status": "warning"
     }
   ],

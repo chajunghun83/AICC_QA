@@ -38,7 +38,7 @@
       <!-- 품질 추세 차트 -->
       <div class="content-card">
         <div class="content-card-header">
-          <span style="font-size:14px;font-weight:600;" id="trend-title">품질 추세 (최근 30일)</span>
+          <span style="font-size:14px;font-weight:600;" id="trend-title">품질 추세</span>
         </div>
         <div class="content-card-body" style="height:280px;">
           <canvas id="trend-chart"></canvas>
@@ -109,7 +109,7 @@
     <div class="content-card" style="margin-top:16px;">
       <div class="content-card-header">
         <span style="font-size:14px;font-weight:600;">팀별 평가 현황</span>
-        <a href="evaluation-status.html" style="font-size:12px;color:#00A3FF;text-decoration:none;">상세 보기 &rarr;</a>
+        <a href="integrated-evaluation.html" style="font-size:12px;color:#00A3FF;text-decoration:none;">상세 보기 &rarr;</a>
       </div>
       <div class="content-card-body" style="padding:0;">
         <table class="data-table" style="table-layout:fixed;">
@@ -159,21 +159,22 @@
 
       AICC_PeriodPicker.create('period-picker-container', {
         defaultPeriod: 'monthly',
-        onChange: function(periodType) { applyPeriod(periodType); }
+        onChange: function(periodType, info) { applyPeriod(periodType, info); }
       });
     });
 
     let centersData = null;
 
-    /* 최근 30일 날짜 라벨을 동적 생성 (A-002/A-008: 1월 고정 → 오늘 기준) */
-    function generateRecentDates(days) {
-      const today = new Date();
+    /* 선택 월의 1일~말일 전체 데이터 생성 */
+    function generateMonthTrendData(year, month) {
+      const daysInMonth = new Date(year, month, 0).getDate();
       const result = [];
-      for (let i = days - 1; i >= 0; i -= 2) {
-        const d = new Date(today);
-        d.setDate(today.getDate() - i);
+      for (let d = 1; d <= daysInMonth; d++) {
+        const mm = String(month).padStart(2, '0');
+        const dd = String(d).padStart(2, '0');
         result.push({
-          date: String(d.getMonth() + 1).padStart(2, '0') + '/' + String(d.getDate()).padStart(2, '0'),
+          date: `${mm}/${dd}`,
+          fullDate: `${year}-${mm}-${dd}`,
           score: Math.round((80 + Math.random() * 8) * 10) / 10
         });
       }
@@ -194,7 +195,8 @@
         return;
       }
 
-      dashboardData.quality_trend_30days = generateRecentDates(30);
+      const now = new Date();
+      dashboardData.quality_trend_monthly = generateMonthTrendData(now.getFullYear(), now.getMonth() + 1);
 
       if (centersData) {
         const wsSelect = document.getElementById('ws-filter');
@@ -209,7 +211,7 @@
     function renderAllWidgets() {
       const cfg = periodConfig[currentPeriod || 'monthly'];
       renderKPICards(dashboardData.summary, cfg);
-      renderTrendChart(dashboardData.quality_trend_30days);
+      renderTrendChart(dashboardData.quality_trend_monthly);
       renderTeamChart(dashboardData.team_scores);
       renderIssues(dashboardData.urgent_issues);
       renderDistribution();
@@ -376,8 +378,8 @@
           onClick: (evt, elements) => {
             if (elements.length > 0) {
               const idx = elements[0].index;
-              const date = trendLabels[idx];
-              window.location.href = `integrated-evaluation.html?date=${encodeURIComponent(date)}${getWsParam()}`;
+              const fullDate = trendData[idx].fullDate;
+              window.location.href = `integrated-evaluation.html?date=${encodeURIComponent(fullDate)}${getWsParam()}`;
             }
           },
           onHover: (evt, elements) => {
@@ -395,7 +397,12 @@
             },
             x: {
               grid: { display: false },
-              ticks: { font: { size: 11 }, color: '#757575' }
+              ticks: {
+                font: { size: 10 }, color: '#757575',
+                maxTicksLimit: 16,
+                autoSkip: true,
+                maxRotation: 0
+              }
             }
           }
         }
@@ -557,14 +564,13 @@
       const container = document.getElementById('deduction-items-list');
       if (!container || !items) return;
       container.innerHTML = items.slice(0, 5).map((item, i) => {
-        const scoreColor = AICC_Fmt.scoreColor(item.score);
-        const linkUrl = `integrated-evaluation.html?deduction=${encodeURIComponent(item.item_id)}${getWsParam()}`;
+        const linkUrl = `integrated-evaluation.html?deduction=${encodeURIComponent(item.item_id)}&team=${encodeURIComponent(item.team_id)}${getWsParam()}`;
         return `
           <div onclick="window.location.href='${linkUrl}'" style="display:flex;align-items:center;gap:8px;padding:8px 0;cursor:pointer;transition:background 0.15s;${i < 4 ? 'border-bottom:1px solid #F0F0F0;' : ''}" onmouseenter="this.style.background='#FAFAFA'" onmouseleave="this.style.background=''">
             <span style="width:18px;height:18px;border-radius:4px;background:${item.status === 'danger' ? '#FFEBEE' : '#FFF8E1'};color:${item.status === 'danger' ? '#C62828' : '#F57F17'};font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${i + 1}</span>
             <div style="flex:1;min-width:0;display:flex;justify-content:space-between;align-items:center;">
               <span style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><span style="font-weight:500;">${item.item}</span> <span style="color:#9E9E9E;font-size:11px;margin-left:6px;">(${item.category})</span></span>
-              <span style="font-size:13px;font-weight:600;color:${scoreColor};flex-shrink:0;margin-left:8px;">${item.score}점</span>
+              <span style="font-size:13px;font-weight:600;color:#757575;flex-shrink:0;margin-left:8px;">${item.calls}건</span>
             </div>
           </div>
         `;
@@ -577,7 +583,7 @@
       const sorted = [...agents].sort((a, b) => a.score - b.score).slice(0, 5);
       container.innerHTML = sorted.map((agent, i) => {
         const scoreColor = AICC_Fmt.scoreColor(agent.score);
-        const linkUrl = `integrated-evaluation.html?score_range=low${getWsParam()}`;
+        const linkUrl = `integrated-evaluation.html?agent=${encodeURIComponent(agent.name)}${getWsParam()}`;
         return `
           <div onclick="window.location.href='${linkUrl}'" style="display:flex;align-items:center;gap:8px;padding:8px 0;cursor:pointer;transition:background 0.15s;${i < sorted.length - 1 ? 'border-bottom:1px solid #F0F0F0;' : ''}" onmouseenter="this.style.background='#FAFAFA'" onmouseleave="this.style.background=''">
             <span style="width:18px;height:18px;border-radius:4px;background:${agent.score < 60 ? '#FFEBEE' : '#FFF8E1'};color:${agent.score < 60 ? '#C62828' : '#F57F17'};font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${i + 1}</span>
@@ -631,13 +637,13 @@
     const periodConfig = {
       daily:   { trendTitle: '품질 추세 (시간대별)',   kpiPrefix: '금일',    prevLabel: '전일' },
       weekly:  { trendTitle: '품질 추세 (최근 7일)',   kpiPrefix: '금주',    prevLabel: '전주' },
-      monthly: { trendTitle: '품질 추세 (최근 30일)',  kpiPrefix: '금월',    prevLabel: '전월' },
+      monthly: { trendTitle: '품질 추세',  kpiPrefix: '금월',    prevLabel: '전월' },
       yearly:  { trendTitle: '품질 추세 (최근 12개월)', kpiPrefix: '금년',   prevLabel: '전년' },
       custom:  { trendTitle: '품질 추세 (사용자 지정)', kpiPrefix: '기간 내', prevLabel: '이전 기간' }
     };
 
-    // 기간 유형별로 x축 라벨과 데이터 포인트 수를 다르게 생성하여 적절한 차트 형태를 시뮬레이션
-    function generateTrendData(period) {
+    // 기간 유형별로 x축 라벨과 데이터 포인트 수를 다르게 생성
+    function generateTrendData(period, info) {
       const base = 82;
       const variance = () => (Math.random() * 6 - 3);
       switch (period) {
@@ -649,8 +655,12 @@
         case 'weekly':
           const days = ['월', '화', '수', '목', '금', '토', '일'];
           return days.map(d => ({ date: d, score: Math.round((base + variance()) * 10) / 10 }));
-        case 'monthly':
-          return dashboardData.quality_trend_30days;
+        case 'monthly': {
+          const year = info && info.year ? info.year : new Date().getFullYear();
+          const month = info && info.month ? info.month : new Date().getMonth() + 1;
+          dashboardData.quality_trend_monthly = generateMonthTrendData(year, month);
+          return dashboardData.quality_trend_monthly;
+        }
         case 'yearly':
           const months = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
           return months.map(m => ({ date: m, score: Math.round((base + variance()) * 10) / 10 }));
@@ -660,7 +670,7 @@
             score: Math.round((base + variance()) * 10) / 10
           }));
         default:
-          return dashboardData.quality_trend_30days;
+          return dashboardData.quality_trend_monthly;
       }
     }
 
@@ -717,7 +727,7 @@
       return wsId !== 'all' ? `&ws=${encodeURIComponent(wsId)}` : '';
     }
 
-    function applyPeriod(period) {
+    function applyPeriod(period, info) {
       if (!dashboardData) return;
       currentPeriod = period;
       const cfg = periodConfig[period];
@@ -726,7 +736,7 @@
       const kpiData = generateKPIVariation(period);
       renderKPICards(kpiData, cfg);
 
-      const trendData = generateTrendData(period);
+      const trendData = generateTrendData(period, info);
       renderTrendChart(trendData);
 
       renderDistribution(generateDistribution());

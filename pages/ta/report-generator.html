@@ -130,7 +130,7 @@
               </label>
               <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
                 <input type="checkbox" id="sec-silence" checked onchange="updatePreview()" style="accent-color:#00A3FF;">
-                통화시간 대비 묵음시간
+                묵음 비율
               </label>
 
               <div style="border-top:1px solid #F0F0F0;margin:6px 0;"></div>
@@ -185,8 +185,34 @@
                 미처리 이슈 목록
               </label>
 
+              <!--
+                [개발 시나리오 — 전기 개선 이행 현황 & 개선 제안]
+
+                ■ 전기 개선 이행 현황
+                - "불러오기" 버튼 클릭 → 개선 이행 관리 테이블에서 항목을 조회하는 모달 표시
+                - 실제 구현 시: GET /api/improvements?status=&keyword= 로 목록 조회
+                - 사용자가 항목을 선택 후 "선택 완료" → 선택된 항목이 리포트 프리뷰에 반영
+
+                ■ 개선 제안
+                - 리포트 생성 시 AI가 자동으로 개선 제안 항목 생성 (source: 'ai')
+                - 관리자가 항목을 삭제하거나 수동으로 추가 가능 (source: 'manual')
+                - "개선 제안 확정" 버튼 클릭 → 개선 이행 관리 DB에 저장
+                - 실제 구현 시: POST /api/improvements { reportType, period, contents[], source[] }
+
+                ■ 순환 흐름
+                리포트 생성 → AI 개선 제안 → 관리자 편집 → 확정(저장) → 개선 이행 관리에서 처리
+                → 다음 리포트 생성 시 "불러오기"로 이전 이행 현황 확인
+              -->
               <div style="border-top:1px solid #F0F0F0;margin:6px 0;"></div>
               <div style="font-size:11px;font-weight:600;color:#00A3FF;margin-bottom:2px;">종합</div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
+                <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+                  <input type="checkbox" id="sec-prev-improvement" checked onchange="updatePreview()" style="accent-color:#00A3FF;">
+                  전기 개선 이행 현황
+                </label>
+                <span id="prev-imp-count" style="font-size:11px;color:#9E9E9E;"></span>
+                <button class="btn btn-secondary" style="font-size:10px;padding:2px 8px;margin-left:auto;" onclick="openLoadImprovementModal()">불러오기</button>
+              </div>
               <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
                 <input type="checkbox" id="sec-improvement" checked onchange="updatePreview()" style="accent-color:#00A3FF;">
                 개선 제안
@@ -248,12 +274,18 @@
     /* ========== TA 더미 리포트 데이터 ========== */
     const REPORT_DATA = {
       summary: {
-        totalCalls: 12480, totalCalls_prev: 11920,
-        ibCalls: 8340, obCalls: 4140,
-        ibCalls_prev: 7950, obCalls_prev: 3970,
-        issueCalls: 387, issueCalls_prev: 342,
-        overCalls: 215, overCalls_prev: 198,
-        reentryCalls: 563, reentryCalls_prev: 521,
+        totalCalls: 12161, totalCalls_prev: 11465,
+        ibCalls: 7892, obCalls: 4269,
+        ibCalls_prev: 7456, obCalls_prev: 4009,
+        issueCalls: 8974, issueCalls_prev: 8977,
+        issueCalls_ib: 5840, issueCalls_ob: 3134,
+        issueCalls_ibPrev: 5843, issueCalls_obPrev: 3134,
+        overCalls: 2185, overCalls_prev: 1876,
+        overCalls_ib: 1420, overCalls_ob: 765,
+        overCalls_ibPrev: 1220, overCalls_obPrev: 656,
+        reentryCalls: 8675, reentryCalls_prev: 8371,
+        reentryCalls_ib: 5639, reentryCalls_ob: 3036,
+        reentryCalls_ibPrev: 5463, reentryCalls_obPrev: 2908,
         avgDuration: '4:32', avgDuration_prev: '4:48',
         avgSilence: '0:18', avgSilence_prev: '0:22'
       },
@@ -284,26 +316,26 @@
         { name: '김태희', team: '고객상담2팀', ws: '부산센터', calls: 92 }
       ],
       keywordTop20: [
-        { rank: 1, keyword: '해지', count: 842, change: 12.3 },
-        { rank: 2, keyword: '위약금', count: 756, change: 8.7 },
-        { rank: 3, keyword: '요금제', count: 698, change: -2.1 },
-        { rank: 4, keyword: '환불', count: 645, change: 15.8 },
-        { rank: 5, keyword: '배송', count: 612, change: 5.4 },
-        { rank: 6, keyword: '교환', count: 589, change: -1.3 },
-        { rank: 7, keyword: 'AS', count: 534, change: 3.2 },
-        { rank: 8, keyword: '결제 오류', count: 487, change: 22.1 },
-        { rank: 9, keyword: '포인트', count: 456, change: -5.8 },
-        { rank: 10, keyword: '멤버십', count: 423, change: 1.9 },
-        { rank: 11, keyword: '비밀번호', count: 398, change: -3.4 },
-        { rank: 12, keyword: '주소 변경', count: 376, change: 0.8 },
-        { rank: 13, keyword: '재발급', count: 354, change: 6.7 },
-        { rank: 14, keyword: '할인', count: 332, change: -7.2 },
-        { rank: 15, keyword: '약정', count: 318, change: 4.5 },
-        { rank: 16, keyword: '통화 품질', count: 295, change: 11.4 },
-        { rank: 17, keyword: '로밍', count: 278, change: 18.9 },
-        { rank: 18, keyword: '데이터', count: 264, change: -0.5 },
-        { rank: 19, keyword: '번호이동', count: 241, change: 9.3 },
-        { rank: 20, keyword: '명의변경', count: 228, change: 2.6 }
+        { rank: 1, keyword: '해지', count: 842, prevCount: 750, change: 12.3 },
+        { rank: 2, keyword: '위약금', count: 756, prevCount: 695, change: 8.7 },
+        { rank: 3, keyword: '요금제', count: 698, prevCount: 713, change: -2.1 },
+        { rank: 4, keyword: '환불', count: 645, prevCount: 557, change: 15.8 },
+        { rank: 5, keyword: '배송', count: 612, prevCount: 581, change: 5.4 },
+        { rank: 6, keyword: '교환', count: 589, prevCount: 597, change: -1.3 },
+        { rank: 7, keyword: 'AS', count: 534, prevCount: 517, change: 3.2 },
+        { rank: 8, keyword: '결제 오류', count: 487, prevCount: 399, change: 22.1 },
+        { rank: 9, keyword: '포인트', count: 456, prevCount: 484, change: -5.8 },
+        { rank: 10, keyword: '멤버십', count: 423, prevCount: 415, change: 1.9 },
+        { rank: 11, keyword: '비밀번호', count: 398, prevCount: 412, change: -3.4 },
+        { rank: 12, keyword: '주소 변경', count: 376, prevCount: 373, change: 0.8 },
+        { rank: 13, keyword: '재발급', count: 354, prevCount: 332, change: 6.7 },
+        { rank: 14, keyword: '할인', count: 332, prevCount: 358, change: -7.2 },
+        { rank: 15, keyword: '약정', count: 318, prevCount: 304, change: 4.5 },
+        { rank: 16, keyword: '통화 품질', count: 295, prevCount: 265, change: 11.4 },
+        { rank: 17, keyword: '로밍', count: 278, prevCount: 234, change: 18.9 },
+        { rank: 18, keyword: '데이터', count: 264, prevCount: 265, change: -0.5 },
+        { rank: 19, keyword: '번호이동', count: 241, prevCount: 220, change: 9.3 },
+        { rank: 20, keyword: '명의변경', count: 228, prevCount: 222, change: 2.6 }
       ],
       issueKeywordTop5: [
         { rank: 1, keyword: '고소', count: 42, desc: '법적 조치 언급' },
@@ -313,11 +345,11 @@
         { rank: 5, keyword: '녹음', count: 24, desc: '통화 녹음 사실 고지' }
       ],
       newKeywordTop5: [
-        { rank: 1, keyword: 'AI 상담', count: 156, desc: '신규 서비스 문의 급증' },
-        { rank: 2, keyword: '개인정보 유출', count: 89, desc: '최근 보안 이슈 관련' },
-        { rank: 3, keyword: '앱 오류', count: 72, desc: '최근 업데이트 후 발생' },
-        { rank: 4, keyword: '프로모션', count: 65, desc: '신규 프로모션 문의' },
-        { rank: 5, keyword: '5G 전환', count: 48, desc: '망 전환 관련 문의' }
+        { rank: 1, keyword: 'AI 상담', count: 156, firstDate: '2025-01-12 09:23' },
+        { rank: 2, keyword: '개인정보 유출', count: 89, firstDate: '2025-01-14 14:07' },
+        { rank: 3, keyword: '앱 오류', count: 72, firstDate: '2025-01-15 11:42' },
+        { rank: 4, keyword: '프로모션', count: 65, firstDate: '2025-01-16 10:15' },
+        { rank: 5, keyword: '5G 전환', count: 48, firstDate: '2025-01-17 16:38' }
       ],
       consultTypeDist: [
         { category: '상품/서비스', count: 3840, ratio: 30.8 },
@@ -337,31 +369,89 @@
       consultTypeTable: [
         { major: '상품/서비스', mid: '가입', minor: '신규 가입', detail: '온라인 가입', count: 186, ratio: 1.5 },
         { major: '상품/서비스', mid: '변경', minor: '요금제 변경', detail: '다운그레이드', count: 298, ratio: 2.4 },
+        { major: '상품/서비스', mid: '조회', minor: '상품 조회', detail: '부가서비스 확인', count: 224, ratio: 1.8 },
         { major: '요금/결제', mid: '청구', minor: '이중 청구', detail: '카드 결제', count: 312, ratio: 2.5 },
         { major: '요금/결제', mid: '환불', minor: '과오납 환불', detail: '자동이체 환불', count: 245, ratio: 2.0 },
+        { major: '요금/결제', mid: '납부', minor: '납부 방법', detail: '자동이체 변경', count: 178, ratio: 1.4 },
         { major: '고객불만', mid: '서비스불만', minor: '응대불만', detail: '태도 불만', count: 276, ratio: 2.2 },
         { major: '고객불만', mid: '서비스불만', minor: '처리지연', detail: '교환 지연', count: 198, ratio: 1.6 },
+        { major: '고객불만', mid: '품질불만', minor: '상품 하자', detail: '초기 불량', count: 152, ratio: 1.2 },
         { major: '기술지원', mid: '장애', minor: '접속 불가', detail: 'Wi-Fi 장애', count: 238, ratio: 1.9 },
         { major: '기술지원', mid: '설정', minor: '초기 설정', detail: '기기 설정', count: 165, ratio: 1.3 },
+        { major: '기술지원', mid: '업데이트', minor: '앱 업데이트', detail: '오류 발생', count: 128, ratio: 1.0 },
         { major: '계약/해지', mid: '해지', minor: '약정 해지', detail: '중도 해지', count: 254, ratio: 2.0 },
-        { major: '계약/해지', mid: '변경', minor: '명의 변경', detail: '양도 양수', count: 142, ratio: 1.1 }
+        { major: '계약/해지', mid: '변경', minor: '명의 변경', detail: '양도 양수', count: 142, ratio: 1.1 },
+        { major: '계약/해지', mid: '갱신', minor: '약정 갱신', detail: '재약정 할인', count: 118, ratio: 0.9 },
+        { major: '기타', mid: '일반문의', minor: '영업시간', detail: '센터 위치 안내', count: 95, ratio: 0.8 },
+        { major: '기타', mid: '칭찬/제안', minor: '서비스 칭찬', detail: '상담사 칭찬', count: 68, ratio: 0.5 }
       ],
       issueStatus: { pending: 48, review: 32, completed: 285, noIssue: 22 },
       pendingIssues: [
-        { callId: 'TA-2025-00312', date: '2025-01-19 14:23', agent: '문지혜', team: '클레임처리팀', keyword: '고소', admin: '박관리자' },
-        { callId: 'TA-2025-00298', date: '2025-01-19 11:05', agent: '황서연', team: '종합상담팀', keyword: '소송', admin: '김관리자' },
-        { callId: 'TA-2025-00287', date: '2025-01-18 16:42', agent: '한동우', team: '일반상담팀', keyword: '상급자', admin: '박관리자' },
-        { callId: 'TA-2025-00275', date: '2025-01-18 10:18', agent: '서다은', team: '아웃바운드팀', keyword: '소비자원', admin: '이관리자' },
-        { callId: 'TA-2025-00261', date: '2025-01-17 15:33', agent: '김태희', team: '고객상담2팀', keyword: '녹음', admin: '김관리자' }
+        { callId: 'TA-2025-00312', date: '2025-01-19 14:23', agent: '문지혜', ws: '대구센터', team: '클레임처리팀', keyword: '고소', admin: '박관리자' },
+        { callId: 'TA-2025-00298', date: '2025-01-19 11:05', agent: '황서연', ws: '대구센터', team: '종합상담팀', keyword: '소송', admin: '김관리자' },
+        { callId: 'TA-2025-00287', date: '2025-01-18 16:42', agent: '한동우', ws: '서울센터', team: '일반상담팀', keyword: '상급자', admin: '박관리자' },
+        { callId: 'TA-2025-00275', date: '2025-01-18 10:18', agent: '서다은', ws: '서울센터', team: '아웃바운드팀', keyword: '소비자원', admin: '이관리자' },
+        { callId: 'TA-2025-00261', date: '2025-01-17 15:33', agent: '김태희', ws: '부산센터', team: '고객상담2팀', keyword: '녹음', admin: '김관리자' }
       ],
       improvements: [
-        '클레임처리팀의 이슈 콜 비율이 5.8%로 타 팀 대비 높아 집중 모니터링 필요',
-        '"결제 오류" 키워드 전기 대비 22.1% 급증 — 결제 시스템 점검 권장',
-        '재인입 콜 상위 팀(클레임처리팀 72건) 대상 1차 응대 완결률 개선 필요',
-        '"고소/소송" 이슈 키워드 증가 추세 — 법무팀 연계 대응 프로세스 점검 필요',
-        '묵음시간 평균 18초 → 22초에서 개선되었으나, 기술지원팀은 여전히 25초 이상'
-      ]
+        { content: '클레임처리팀의 이슈 콜 비율이 5.8%로 타 팀 대비 높아 집중 모니터링 필요', source: 'ai' },
+        { content: '"결제 오류" 키워드 전기 대비 22.1% 급증 — 결제 시스템 점검 권장', source: 'ai' },
+        { content: '재인입 콜 상위 팀(클레임처리팀 72건) 대상 1차 응대 완결률 개선 필요', source: 'ai' },
+        { content: '"고소/소송" 이슈 키워드 증가 추세 — 법무팀 연계 대응 프로세스 점검 필요', source: 'ai' },
+        { content: '묵음 비율 평균 6.2% → 기술지원팀은 9.8%로 높아 상담 스크립트 개선 필요', source: 'ai' }
+      ],
+      prevImprovements: []
     };
+
+    /* 개선 이행 관리 전체 목록 (불러오기 모달용) — 리포트 단위로 묶은 개선 제안 */
+    const IMPROVEMENT_POOL = [
+      { no:1, reportType:'월간', period:'2024-11-01 ~ 2024-11-30', admin:'박관리자', status:'완료', memo:'응대 교육 실시 및 환불 프로세스 개선 완료.',
+        contents: [
+          '일반상담팀 재인입 콜 65건 — 1차 응대 완결률 교육 필요',
+          '"환불 지연" 키워드 전기 대비 18% 증가 — 환불 프로세스 개선 권장',
+          'VIP상담팀 평균 통화시간 6분 초과 — 콜 효율화 방안 마련 필요',
+          '야간(20~23시) 콜 응답률 68%로 낮음 — 야간 인력 배치 재조정 필요'
+        ]},
+      { no:2, reportType:'월간', period:'2024-12-01 ~ 2024-12-31', admin:'이팀장', status:'진행중', memo:'물류사 SLA 재협상 진행 중. 배송 지연 보상 기준 강화.',
+        contents: [
+          '"배송 지연" 키워드 3개월 연속 상위 — 물류사 SLA 재검토 필요',
+          '기술지원팀 묵음 비율 9.8% — 상담 스크립트 개선 필요',
+          '"이중결제" 키워드 급증 — 결제 모듈 긴급 점검 필요'
+        ]},
+      { no:3, reportType:'주간', period:'2025-01-06 ~ 2025-01-12', admin:'최수석', status:'완료', memo:'PG사 연동 오류 수정 배포. 스크립트 개선 완료.',
+        contents: [
+          '고객상담2팀 재인입 콜 78건 최다 — 1차 응대 품질 점검 필요',
+          '오전 9~10시 콜 집중(전체 18%) — 상담사 근무 시간 조정 권장',
+          '"개인정보 유출" 신규 키워드 감지 — 보안팀 연계 필요',
+          '클레임처리팀 이슈 콜 비율 5.8% — 집중 모니터링 필요'
+        ]},
+      { no:4, reportType:'월간', period:'2025-01-01 ~ 2025-01-31', admin:'정매니저', status:'진행중', memo:'인력 추가 배치 요청 승인 완료. 3월부터 적용 예정.',
+        contents: [
+          '야간(20~23시) 콜 응답률 62% — 야간 인력 배치 재조정 필요',
+          '"결제 오류" 키워드 전기 대비 22.1% 급증 — 시스템 점검 권장',
+          '종합상담팀 묵음 비율 8.5% — 상담 매뉴얼 보완 필요'
+        ]},
+      { no:5, reportType:'월간', period:'2025-02-01 ~ 2025-02-28', admin:'한차장', status:'미이행', memo:'',
+        contents: [
+          '아웃바운드팀 이슈 콜 비율 3.5% — 콜 스크립트 표준화 필요',
+          '종합상담팀 묵음 비율 8.5%로 평균 대비 높음 — 상담 매뉴얼 보완 필요',
+          '오전 9~10시 콜 집중(전체의 18%) — 상담사 근무 시간 조정 권장',
+          '신규 키워드 "AI 상담" 급증 — FAQ 및 챗봇 시나리오 업데이트 필요'
+        ]},
+      { no:6, reportType:'주간', period:'2025-02-17 ~ 2025-02-23', admin:'박관리자', status:'완료', memo:'모니터링 체계 구축 완료. 이슈 콜 실시간 알림 설정.',
+        contents: [
+          '클레임처리팀 이슈 콜 비율 5.8% — 집중 모니터링 필요',
+          '"고소/소송" 이슈 키워드 증가 추세 — 법무팀 연계 대응 프로세스 점검 필요',
+          '재인입 콜 상위 팀(클레임처리팀 72건) 대상 1차 응대 완결률 개선 필요'
+        ]},
+      { no:7, reportType:'주간', period:'2025-03-03 ~ 2025-03-09', admin:'이팀장', status:'미이행', memo:'',
+        contents: [
+          '묵음 비율 평균 6.2% → 기술지원팀은 9.8%로 높아 상담 스크립트 개선 필요',
+          '"배송지연" 키워드 지속 상위 — 물류 파트너 SLA 재검토 권장',
+          '신규 키워드 "AI 상담" 급증 — FAQ 및 챗봇 시나리오 업데이트 필요',
+          '"개인정보 유출" 신규 키워드 감지 — 보안팀 연계 및 고객 안내 스크립트 마련'
+        ]}
+    ];
 
     let reportGenerated = false;
 
@@ -472,6 +562,7 @@
         agent:        document.getElementById('sec-agent').checked,
         issueStatus:  document.getElementById('sec-issue-status').checked,
         issuePending: document.getElementById('sec-issue-pending').checked,
+        prevImprovement: document.getElementById('sec-prev-improvement').checked,
         improvement:  document.getElementById('sec-improvement').checked,
         appendix:     document.getElementById('sec-appendix').checked
       };
@@ -490,40 +581,29 @@
 
       /* 1. 요약 (KPI 현황) */
       if (SEC.summary) {
+        const kpiCard = (label, cur, prev, ib, ob, bg, labelColor, valColor) => {
+          const diff = cur - prev;
+          const arrow = diff > 0 ? '&#9650;' : diff < 0 ? '&#9660;' : '';
+          const tc = diff > 0 ? '#F44336' : diff < 0 ? '#4CAF50' : '#757575';
+          const trendSpan = diff !== 0 ? `<span style="font-size:12px;color:${tc};">${arrow} ${num(Math.abs(diff))}</span>` : '';
+          const ibPct = Math.round(ib / cur * 100);
+          const obPct = Math.round(ob / cur * 100);
+          return `<div style="background:${bg};border-radius:6px;padding:12px;">
+            <div style="font-size:11px;color:${labelColor};margin-bottom:6px;">${label}</div>
+            <div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;">
+              <span style="font-size:22px;font-weight:700;${valColor ? 'color:'+valColor+';' : ''}">${num(cur)}</span>${trendSpan}
+              <span style="margin-left:auto;font-size:10px;white-space:nowrap;color:#9E9E9E;">I/B <span style="color:#616161;font-weight:600;">${num(ib)}</span>건<span style="font-size:9px;">(${ibPct}%)</span>&ensp;O/B <span style="color:#616161;font-weight:600;">${num(ob)}</span>건<span style="font-size:9px;">(${obPct}%)</span></span>
+            </div>
+            <div style="font-size:10px;color:#BDBDBD;margin-top:4px;">전기: ${num(prev)}건</div>
+          </div>`;
+        };
+
         html += `<div style="margin-bottom:24px;">${secTitle('요약 (KPI 현황)')}
           <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
-            <div style="background:#F5F5F5;border-radius:6px;padding:12px;">
-              <div style="font-size:11px;color:#757575;margin-bottom:6px;">총 콜수</div>
-              <div style="display:flex;align-items:baseline;gap:4px;">
-                <span style="font-size:22px;font-weight:700;">${num(s.totalCalls)}</span>${trendHtml(s.totalCalls, s.totalCalls_prev)}
-              </div>
-              <div style="font-size:10px;color:#9E9E9E;margin-top:6px;">I/B ${num(s.ibCalls)} · O/B ${num(s.obCalls)}</div>
-              <div style="font-size:10px;color:#BDBDBD;">전기: ${num(s.totalCalls_prev)}건</div>
-            </div>
-            <div style="background:#FFF3F3;border-radius:6px;padding:12px;">
-              <div style="font-size:11px;color:#C62828;margin-bottom:6px;">이슈 콜</div>
-              <div style="display:flex;align-items:baseline;gap:4px;">
-                <span style="font-size:22px;font-weight:700;color:#D32F2F;">${num(s.issueCalls)}</span>${trendHtml(s.issueCalls, s.issueCalls_prev)}
-              </div>
-              <div style="font-size:10px;color:#9E9E9E;margin-top:6px;">비율: ${(s.issueCalls/s.totalCalls*100).toFixed(1)}%</div>
-              <div style="font-size:10px;color:#BDBDBD;">전기: ${num(s.issueCalls_prev)}건</div>
-            </div>
-            <div style="background:#FFF8E1;border-radius:6px;padding:12px;">
-              <div style="font-size:11px;color:#F57F17;margin-bottom:6px;">초과 콜</div>
-              <div style="display:flex;align-items:baseline;gap:4px;">
-                <span style="font-size:22px;font-weight:700;color:#F57F17;">${num(s.overCalls)}</span>${trendHtml(s.overCalls, s.overCalls_prev)}
-              </div>
-              <div style="font-size:10px;color:#9E9E9E;margin-top:6px;">비율: ${(s.overCalls/s.totalCalls*100).toFixed(1)}%</div>
-              <div style="font-size:10px;color:#BDBDBD;">전기: ${num(s.overCalls_prev)}건</div>
-            </div>
-            <div style="background:#E3F2FD;border-radius:6px;padding:12px;">
-              <div style="font-size:11px;color:#1565C0;margin-bottom:6px;">재인입 콜</div>
-              <div style="display:flex;align-items:baseline;gap:4px;">
-                <span style="font-size:22px;font-weight:700;color:#1565C0;">${num(s.reentryCalls)}</span>${trendHtml(s.reentryCalls, s.reentryCalls_prev)}
-              </div>
-              <div style="font-size:10px;color:#9E9E9E;margin-top:6px;">비율: ${(s.reentryCalls/s.totalCalls*100).toFixed(1)}%</div>
-              <div style="font-size:10px;color:#BDBDBD;">전기: ${num(s.reentryCalls_prev)}건</div>
-            </div>
+            ${kpiCard('총 콜수', s.totalCalls, s.totalCalls_prev, s.ibCalls, s.obCalls, '#F5F5F5', '#757575', '')}
+            ${kpiCard('이슈 콜', s.issueCalls, s.issueCalls_prev, s.issueCalls_ib, s.issueCalls_ob, '#FFF3F3', '#C62828', '#D32F2F')}
+            ${kpiCard('초과 콜', s.overCalls, s.overCalls_prev, s.overCalls_ib, s.overCalls_ob, '#FFF8E1', '#F57F17', '#F57F17')}
+            ${kpiCard('재인입 콜', s.reentryCalls, s.reentryCalls_prev, s.reentryCalls_ib, s.reentryCalls_ob, '#E3F2FD', '#1565C0', '#1565C0')}
           </div>
           <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px;">
             <div style="background:#F5F5F5;border-radius:6px;padding:12px;display:flex;justify-content:space-between;align-items:center;">
@@ -574,9 +654,9 @@
         </div>`;
       }
 
-      /* 6. 통화시간 대비 묵음시간 */
+      /* 6. 묵음 비율 */
       if (SEC.silence) {
-        html += `<div style="margin-bottom:24px;">${secTitle('통화시간 대비 묵음시간')}
+        html += `<div style="margin-bottom:24px;">${secTitle('묵음 비율')}
           <div style="background:#F9F9F9;border:1px solid #E0E0E0;border-radius:6px;padding:16px;height:220px;">
             <canvas id="chart-silence"></canvas>
           </div>
@@ -585,6 +665,8 @@
 
       /* 7. 주요 키워드 Top 20 */
       if (SEC.keywordTop20) {
+        const prevColNames = { daily:'전일 건수', weekly:'전주 건수', monthly:'전월 건수', yearly:'전년 건수', custom:'이전 기간 건수' };
+        const prevColName = prevColNames[reportType] || '전월 건수';
         const rows = D.keywordTop20.map(k => {
           const chColor = k.change > 0 ? '#4CAF50' : k.change < 0 ? '#F44336' : '#9E9E9E';
           const chArrow = k.change > 0 ? '▲' : k.change < 0 ? '▼' : '-';
@@ -592,12 +674,13 @@
             <td style="text-align:center;color:#757575;font-weight:600;">${k.rank}</td>
             <td style="text-align:center;font-weight:500;">${k.keyword}</td>
             <td style="text-align:center;">${num(k.count)}건</td>
+            <td style="text-align:center;color:#9E9E9E;">${num(k.prevCount)}건</td>
             <td style="text-align:center;color:${chColor};font-weight:500;">${chArrow} ${Math.abs(k.change)}%</td>
           </tr>`;
         }).join('');
         html += `<div style="margin-bottom:24px;">${secTitle('주요 키워드 Top 20')}
           <table class="data-table" style="font-size:12px;">
-            <thead><tr><th style="text-align:center">#</th><th style="text-align:center">키워드</th><th style="text-align:center">건수</th><th style="text-align:center">증감률</th></tr></thead>
+            <thead><tr><th style="text-align:center">#</th><th style="text-align:center">키워드</th><th style="text-align:center">건수</th><th style="text-align:center">${prevColName}</th><th style="text-align:center">증감률</th></tr></thead>
             <tbody>${rows}</tbody>
           </table>
         </div>`;
@@ -625,11 +708,11 @@
           <td style="text-align:center;color:#757575;font-weight:600;">${k.rank}</td>
           <td style="text-align:center;font-weight:500;color:#1565C0;">${k.keyword}</td>
           <td style="text-align:center;">${k.count}건</td>
-          <td style="font-size:12px;color:#757575;">${k.desc}</td>
+          <td style="text-align:center;font-size:12px;color:#757575;">${k.firstDate}</td>
         </tr>`).join('');
         html += `<div style="margin-bottom:24px;">${secTitle('신규 키워드 Top 5')}
           <table class="data-table" style="font-size:12px;">
-            <thead><tr><th style="text-align:center">#</th><th style="text-align:center">키워드</th><th style="text-align:center">건수</th><th style="text-align:center">설명</th></tr></thead>
+            <thead><tr><th style="text-align:center">#</th><th style="text-align:center">키워드</th><th style="text-align:center">건수</th><th style="text-align:center">최초 감지일</th></tr></thead>
             <tbody>${rows}</tbody>
           </table>
         </div>`;
@@ -717,24 +800,24 @@
         const topRows = D.topAgentsByCalls.map((a, i) => `<tr style="cursor:default;">
           <td style="text-align:center;font-weight:600;color:#757575;">${i+1}</td>
           <td style="text-align:center;font-weight:500;">${a.name}</td>
-          <td style="text-align:center;font-size:12px;color:#757575;">${a.team}</td>
+          <td style="text-align:center;font-size:12px;color:#757575;">${a.ws} / ${a.team}</td>
           <td style="text-align:center;">${num(a.calls)}건</td>
         </tr>`).join('');
         const bottomRows = D.bottomAgentsByCalls.map((a, i) => `<tr style="cursor:default;">
           <td style="text-align:center;font-weight:600;color:#757575;">${i+1}</td>
           <td style="text-align:center;font-weight:500;">${a.name}</td>
-          <td style="text-align:center;font-size:12px;color:#757575;">${a.team}</td>
+          <td style="text-align:center;font-size:12px;color:#757575;">${a.ws} / ${a.team}</td>
           <td style="text-align:center;">${num(a.calls)}건</td>
         </tr>`).join('');
         html += `<div style="margin-bottom:24px;">${secTitle('상담사별 분석')}
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
             <div>
               <div style="font-size:12px;font-weight:600;color:#4CAF50;margin-bottom:8px;">콜 처리량 상위 Top 5</div>
-              <table class="data-table" style="font-size:12px;"><thead><tr><th style="text-align:center">#</th><th style="text-align:center">상담사</th><th style="text-align:center">팀</th><th style="text-align:center">콜수</th></tr></thead><tbody>${topRows}</tbody></table>
+              <table class="data-table" style="font-size:12px;"><thead><tr><th style="text-align:center">#</th><th style="text-align:center">상담사</th><th style="text-align:center">센터/팀</th><th style="text-align:center">콜수</th></tr></thead><tbody>${topRows}</tbody></table>
             </div>
             <div>
               <div style="font-size:12px;font-weight:600;color:#F44336;margin-bottom:8px;">콜 처리량 하위 Top 5</div>
-              <table class="data-table" style="font-size:12px;"><thead><tr><th style="text-align:center">#</th><th style="text-align:center">상담사</th><th style="text-align:center">팀</th><th style="text-align:center">콜수</th></tr></thead><tbody>${bottomRows}</tbody></table>
+              <table class="data-table" style="font-size:12px;"><thead><tr><th style="text-align:center">#</th><th style="text-align:center">상담사</th><th style="text-align:center">센터/팀</th><th style="text-align:center">콜수</th></tr></thead><tbody>${bottomRows}</tbody></table>
             </div>
           </div>
         </div>`;
@@ -776,29 +859,93 @@
           <td style="text-align:center;font-size:11px;color:#757575;">${p.callId}</td>
           <td style="text-align:center;font-size:11px;">${p.date}</td>
           <td style="text-align:center;font-weight:500;">${p.agent}</td>
-          <td style="text-align:center;font-size:12px;color:#757575;">${p.team}</td>
+          <td style="text-align:center;font-size:12px;color:#757575;">${p.ws} / ${p.team}</td>
           <td style="text-align:center;"><span style="background:#FFF3F3;color:#D32F2F;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:500;">${p.keyword}</span></td>
           <td style="text-align:center;font-size:12px;">${p.admin}</td>
         </tr>`).join('');
         html += `<div style="margin-bottom:24px;">${secTitle('미처리 이슈 목록')}
           <table class="data-table" style="font-size:12px;">
-            <thead><tr><th style="text-align:center">콜 ID</th><th style="text-align:center">일시</th><th style="text-align:center">상담사</th><th style="text-align:center">팀</th><th style="text-align:center">이슈 키워드</th><th style="text-align:center">관리자</th></tr></thead>
+            <thead><tr><th style="text-align:center">콜 ID</th><th style="text-align:center">일시</th><th style="text-align:center">상담사</th><th style="text-align:center">센터/팀</th><th style="text-align:center">이슈 키워드</th><th style="text-align:center">관리자</th></tr></thead>
             <tbody>${rows}</tbody>
           </table>
         </div>`;
       }
 
-      /* 17. 개선 제안 */
-      if (SEC.improvement) {
-        const items = D.improvements.map((item, i) => `
-          <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #F0F0F0;">
-            <span style="min-width:24px;height:24px;border-radius:50%;background:#E3F2FD;color:#00A3FF;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;">${i+1}</span>
-            <span style="font-size:13px;line-height:1.5;">${item}</span>
-          </div>`).join('');
-        html += `<div style="margin-bottom:24px;">${secTitle('개선 제안')}${items}</div>`;
+      /*
+       * 17. 전기 개선 이행 현황
+       *
+       * [데이터 소스] 개선 이행 관리 DB에서 불러온 항목 (REPORT_DATA.prevImprovements)
+       * [조회 API]   GET /api/improvements — 불러오기 모달에서 상태/키워드 필터로 조회
+       * [표시 컬럼]  리포트 유형, 기간, 개선 제안 내용(복수), 담당자, 상태(완료/진행중/미이행), 처리 메모
+       * [빈 상태]    불러오기 전에는 안내 문구 표시 → 불러오기 후 테이블 렌더링
+       */
+      if (SEC.prevImprovement) {
+        if (D.prevImprovements.length === 0) {
+          html += `<div style="margin-bottom:24px;">${secTitle('전기 개선 이행 현황')}
+            <div style="text-align:center;padding:32px;color:#9E9E9E;font-size:13px;background:#FAFAFA;border-radius:6px;border:1px dashed #E0E0E0;">
+              선택된 항목이 없습니다. 좌측 "불러오기" 버튼을 통해 항목을 선택하세요.
+            </div></div>`;
+        } else {
+          const statusBadge = (s) => {
+            const colors = { '완료': '#E8F5E9;color:#2E7D32', '진행중': '#FFF3E0;color:#E65100', '미이행': '#FFEBEE;color:#C62828' };
+            return `<span style="display:inline-block;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;background:${colors[s] || '#F5F5F5;color:#9E9E9E'}">${s}</span>`;
+          };
+          const rtBadge = (t) => {
+            const c = { '일간':'background:#E3F2FD;color:#1565C0', '주간':'background:#E8F5E9;color:#2E7D32', '월간':'background:#F3E5F5;color:#7B1FA2' };
+            return `<span style="padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500;${c[t]||'background:#F5F5F5;color:#757575'}">${t}</span>`;
+          };
+          const piRows = D.prevImprovements.map((p, i) => `
+            <tr>
+              <td style="text-align:center;padding:8px;">${rtBadge(p.reportType||'')}</td>
+              <td style="text-align:center;padding:8px;font-size:11px;color:#757575;white-space:nowrap;">${p.period||''}</td>
+              <td style="padding:8px;font-size:12px;line-height:1.6;">${(p.contents||[p.content]).map((c,j) => `<div style="padding:1px 0;">${j+1}. ${c}</div>`).join('')}</td>
+              <td style="text-align:center;padding:8px;">${p.admin}</td>
+              <td style="text-align:center;padding:8px;">${statusBadge(p.status)}</td>
+              <td style="padding:8px;font-size:12px;color:#616161;">${p.memo || '-'}</td>
+            </tr>`).join('');
+          html += `<div style="margin-bottom:24px;">${secTitle('전기 개선 이행 현황')}
+            <table style="width:100%;border-collapse:collapse;font-size:13px;">
+              <thead><tr style="background:#F5F5F5;">
+                <th style="padding:8px;text-align:center;width:7%;">유형</th>
+                <th style="padding:8px;text-align:center;width:14%;">기간</th>
+                <th style="padding:8px;text-align:left;width:33%;">개선 제안 내용</th>
+                <th style="padding:8px;text-align:center;width:8%;">담당자</th>
+                <th style="padding:8px;text-align:center;width:8%;">상태</th>
+                <th style="padding:8px;text-align:left;width:30%;">처리 메모</th>
+              </tr></thead>
+              <tbody>${piRows}</tbody>
+            </table></div>`;
+        }
       }
 
-      /* 18. 부록 */
+      /*
+       * 18. 개선 제안
+       *
+       * [데이터 구조] { content: string, source: 'ai' | 'manual' }
+       * [AI 자동 생성] 리포트 생성 시 분석 결과 기반으로 AI가 자동 제안 (source: 'ai')
+       * [수동 편집]    관리자가 항목 삭제(X 버튼) 또는 추가(+ 항목 추가 → source: 'manual')
+       * [확정 저장]    "개선 제안 확정" 버튼 → 확인 모달 → POST /api/improvements로 저장
+       *               저장 시 리포트 유형, 기간, 전체 contents 배열이 개선 이행 관리로 전달됨
+       * [배지 표시]    AI 항목은 파란색 'AI' 배지, 수동 항목은 회색 '수동' 배지
+       */
+      if (SEC.improvement) {
+        const srcBadge = (s) => s === 'ai'
+          ? '<span style="display:inline-block;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;background:#E3F2FD;color:#1565C0;margin-left:6px;">AI</span>'
+          : '<span style="display:inline-block;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;background:#F5F5F5;color:#757575;margin-left:6px;">수동</span>';
+        const items = D.improvements.map((item, i) => `
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #F0F0F0;">
+            <span style="min-width:24px;height:24px;border-radius:50%;background:#E3F2FD;color:#00A3FF;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;">${i+1}</span>
+            <span style="flex:1;font-size:13px;line-height:1.5;">${item.content}${srcBadge(item.source)}</span>
+            <button onclick="removeImprovement(${i})" style="background:none;border:none;cursor:pointer;padding:4px;color:#BDBDBD;font-size:16px;line-height:1;" title="삭제">&times;</button>
+          </div>`).join('');
+        html += `<div style="margin-bottom:24px;">${secTitle('개선 제안')}${items}
+          <div style="padding:10px 0;display:flex;justify-content:space-between;align-items:center;">
+            <button class="btn btn-secondary btn-sm" onclick="addManualImprovement()" style="font-size:11px;">+ 항목 추가</button>
+            <button class="btn btn-primary btn-sm" onclick="confirmImprovements()" style="font-size:11px;">개선 제안 확정</button>
+          </div></div>`;
+      }
+
+      /* 19. 부록 */
       if (SEC.appendix) {
         html += `<div style="margin-bottom:24px;">${secTitle('부록 (상세 데이터)')}
           <div style="background:#F9F9F9;border:1px solid #E0E0E0;border-radius:6px;padding:16px;font-size:12px;color:#757575;">
@@ -817,7 +964,7 @@
               <tr><td style="text-align:center;font-weight:500;">이슈 콜</td><td style="font-size:12px;color:#757575;">이슈 키워드(고소, 소송, 상급자 등)가 감지된 통화</td></tr>
               <tr><td style="text-align:center;font-weight:500;">초과 콜</td><td style="font-size:12px;color:#757575;">설정된 기준 시간을 초과한 통화 (현재 기준: 분석 기준 관리 설정값)</td></tr>
               <tr><td style="text-align:center;font-weight:500;">재인입 콜</td><td style="font-size:12px;color:#757575;">설정된 기간 내 동일 고객이 재문의한 통화 (현재 기준: 분석 기준 관리 설정값)</td></tr>
-              <tr><td style="text-align:center;font-weight:500;">묵음시간</td><td style="font-size:12px;color:#757575;">통화 중 설정된 기준 이상 무음 구간의 총 시간</td></tr>
+              <tr><td style="text-align:center;font-weight:500;">묵음 비율</td><td style="font-size:12px;color:#757575;">통화시간 대비 묵음시간의 비율(%). 묵음시간(초) ÷ (통화시간(분) × 60) × 100 으로 산출</td></tr>
               <tr><td style="text-align:center;font-weight:500;">모니터링 키워드</td><td style="font-size:12px;color:#757575;">STT 분석 시 감지 대상으로 등록된 키워드</td></tr>
               <tr><td style="text-align:center;font-weight:500;">제외 키워드</td><td style="font-size:12px;color:#757575;">분석에서 제외되는 일상적 표현 (예: 네, 감사합니다)</td></tr>
               <tr><td style="text-align:center;font-weight:500;">신규 키워드</td><td style="font-size:12px;color:#757575;">전일 대비 새롭게 감지된 키워드</td></tr>
@@ -832,12 +979,16 @@
 
       content.innerHTML = html;
 
+      const prevLabels = { daily:'전일 기간', weekly:'전주 기간', monthly:'전월 기간', yearly:'전년 기간', custom:'이전 기간' };
+      const curLabel = '현재 기간';
+      const prevLabel = prevLabels[reportType] || '전월 기간';
+
       setTimeout(() => {
-        if (SEC.callTrend) renderCallTrendChart();
-        if (SEC.hourly) renderHourlyChart();
-        if (SEC.reentry) renderReentryChart();
-        if (SEC.issueCall) renderIssueCallChart();
-        if (SEC.silence) renderSilenceChart();
+        if (SEC.callTrend) renderCallTrendChart(curLabel, prevLabel);
+        if (SEC.hourly) renderHourlyChart(curLabel, prevLabel);
+        if (SEC.reentry) renderReentryChart(curLabel, prevLabel);
+        if (SEC.issueCall) renderIssueCallChart(curLabel, prevLabel);
+        if (SEC.silence) renderSilenceChart(curLabel, prevLabel);
         if (SEC.consultDist) renderConsultDonutChart();
       }, 100);
     }
@@ -860,13 +1011,13 @@
     function randData(labels, base, range) { return labels.map(() => Math.round(base + Math.random() * range)); }
 
     /* ========== 콜 건수 추이 ========== */
-    function renderCallTrendChart() {
+    function renderCallTrendChart(curLabel, prevLabel) {
       const ctx = document.getElementById('chart-call-trend'); if (!ctx) return;
       const labels = getTimeLabels();
       new Chart(ctx, { type: 'bar', data: {
         labels, datasets: [
-          { label: '당기', data: randData(labels, 350, 200), backgroundColor: 'rgba(0,163,255,0.7)', borderRadius: 3, order: 2 },
-          { label: '전기', data: randData(labels, 320, 180), type: 'line', borderColor: '#BDBDBD', borderWidth: 1.5, borderDash: [4,4], pointRadius: 0, fill: false, order: 1 }
+          { label: curLabel, data: randData(labels, 350, 200), backgroundColor: 'rgba(0,163,255,0.7)', borderRadius: 3, order: 2 },
+          { label: prevLabel, data: randData(labels, 320, 180), type: 'line', borderColor: '#BDBDBD', borderWidth: 1.5, borderDash: [4,4], pointRadius: 0, fill: false, order: 1 }
         ]
       }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { reverse: true, position: 'top', labels: { font: { size: 10 }, boxWidth: 12 } }, tooltip: { itemSort: (a, b) => a.datasetIndex - b.datasetIndex } },
         scales: { y: { beginAtZero: true, grid: { color: '#EEEEEE' }, ticks: { font: { size: 10 }, color: '#9E9E9E' } }, x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#9E9E9E', maxTicksLimit: 10 } } }
@@ -874,15 +1025,15 @@
     }
 
     /* ========== 시간대별 콜량 ========== */
-    function renderHourlyChart() {
+    function renderHourlyChart(curLabel, prevLabel) {
       const ctx = document.getElementById('chart-hourly'); if (!ctx) return;
       const labels = []; for (let h = 0; h < 24; h++) labels.push(`${h}시`);
       const curData = labels.map((_, i) => i >= 9 && i <= 18 ? Math.round(300 + Math.random() * 400) : Math.round(20 + Math.random() * 80));
       const prevData = labels.map((_, i) => i >= 9 && i <= 18 ? Math.round(280 + Math.random() * 380) : Math.round(15 + Math.random() * 70));
       new Chart(ctx, { type: 'bar', data: {
         labels, datasets: [
-          { label: '당기', data: curData, backgroundColor: 'rgba(0,163,255,0.6)', borderRadius: 2, order: 2 },
-          { label: '전기', data: prevData, type: 'line', borderColor: '#BDBDBD', borderWidth: 1.5, borderDash: [4,4], pointRadius: 0, fill: false, order: 1 }
+          { label: curLabel, data: curData, backgroundColor: 'rgba(0,163,255,0.6)', borderRadius: 2, order: 2 },
+          { label: prevLabel, data: prevData, type: 'line', borderColor: '#BDBDBD', borderWidth: 1.5, borderDash: [4,4], pointRadius: 0, fill: false, order: 1 }
         ]
       }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { reverse: true, position: 'top', labels: { font: { size: 10 }, boxWidth: 12 } }, tooltip: { itemSort: (a, b) => a.datasetIndex - b.datasetIndex } },
         scales: { y: { beginAtZero: true, grid: { color: '#EEEEEE' }, ticks: { font: { size: 9 }, color: '#9E9E9E' } }, x: { grid: { display: false }, ticks: { font: { size: 9 }, color: '#9E9E9E', maxTicksLimit: 10 } } }
@@ -890,13 +1041,13 @@
     }
 
     /* ========== 재인입 콜 추이 ========== */
-    function renderReentryChart() {
+    function renderReentryChart(curLabel, prevLabel) {
       const ctx = document.getElementById('chart-reentry'); if (!ctx) return;
       const labels = getTimeLabels();
       new Chart(ctx, { type: 'bar', data: {
         labels, datasets: [
-          { label: '당기', data: randData(labels, 15, 25), backgroundColor: 'rgba(21,101,192,0.7)', borderRadius: 3, order: 2 },
-          { label: '전기', data: randData(labels, 12, 22), type: 'line', borderColor: '#BDBDBD', borderWidth: 1.5, borderDash: [4,4], pointRadius: 0, fill: false, order: 1 }
+          { label: curLabel, data: randData(labels, 15, 25), backgroundColor: 'rgba(21,101,192,0.7)', borderRadius: 3, order: 2 },
+          { label: prevLabel, data: randData(labels, 12, 22), type: 'line', borderColor: '#BDBDBD', borderWidth: 1.5, borderDash: [4,4], pointRadius: 0, fill: false, order: 1 }
         ]
       }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { reverse: true, position: 'top', labels: { font: { size: 10 }, boxWidth: 12 } }, tooltip: { itemSort: (a, b) => a.datasetIndex - b.datasetIndex } },
         scales: { y: { beginAtZero: true, grid: { color: '#EEEEEE' }, ticks: { font: { size: 10 }, color: '#9E9E9E' } }, x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#9E9E9E', maxTicksLimit: 10 } } }
@@ -904,32 +1055,34 @@
     }
 
     /* ========== 이슈 콜 추이 ========== */
-    function renderIssueCallChart() {
+    function renderIssueCallChart(curLabel, prevLabel) {
       const ctx = document.getElementById('chart-issue-call'); if (!ctx) return;
       const labels = getTimeLabels();
       new Chart(ctx, { type: 'bar', data: {
         labels, datasets: [
-          { label: '당기', data: randData(labels, 8, 18), backgroundColor: 'rgba(211,47,47,0.7)', borderRadius: 3, order: 2 },
-          { label: '전기', data: randData(labels, 6, 15), type: 'line', borderColor: '#BDBDBD', borderWidth: 1.5, borderDash: [4,4], pointRadius: 0, fill: false, order: 1 }
+          { label: curLabel, data: randData(labels, 8, 18), backgroundColor: 'rgba(211,47,47,0.7)', borderRadius: 3, order: 2 },
+          { label: prevLabel, data: randData(labels, 6, 15), type: 'line', borderColor: '#BDBDBD', borderWidth: 1.5, borderDash: [4,4], pointRadius: 0, fill: false, order: 1 }
         ]
       }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { reverse: true, position: 'top', labels: { font: { size: 10 }, boxWidth: 12 } }, tooltip: { itemSort: (a, b) => a.datasetIndex - b.datasetIndex } },
         scales: { y: { beginAtZero: true, grid: { color: '#EEEEEE' }, ticks: { font: { size: 10 }, color: '#9E9E9E' } }, x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#9E9E9E', maxTicksLimit: 10 } } }
       }});
     }
 
-    /* ========== 통화시간 대비 묵음시간 ========== */
-    function renderSilenceChart() {
+    /* ========== 묵음 비율 ========== */
+    function renderSilenceChart(curLabel, prevLabel) {
       const ctx = document.getElementById('chart-silence'); if (!ctx) return;
       const labels = getTimeLabels();
+      const curData = labels.map(() => +(3 + Math.random() * 7).toFixed(1));
+      const prevData = labels.map(() => +(2.5 + Math.random() * 6.5).toFixed(1));
       new Chart(ctx, { type: 'bar', data: {
         labels, datasets: [
-          { label: '통화시간(분)', data: randData(labels, 3, 5), backgroundColor: 'rgba(0,163,255,0.5)', borderRadius: 3, order: 2 },
-          { label: '묵음시간(초)', data: randData(labels, 10, 20), type: 'line', borderColor: '#F44336', borderWidth: 2, pointRadius: 2, fill: false, order: 1, yAxisID: 'y1' }
+          { label: curLabel, data: curData, backgroundColor: 'rgba(0,163,255,0.7)', borderRadius: 3, order: 2 },
+          { label: prevLabel, data: prevData, type: 'line', borderColor: '#BDBDBD', borderWidth: 1.5, borderDash: [4,4], pointRadius: 0, fill: false, order: 1 }
         ]
-      }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { reverse: true, position: 'top', labels: { font: { size: 10 }, boxWidth: 12 } }, tooltip: { itemSort: (a, b) => a.datasetIndex - b.datasetIndex } },
+      }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+        plugins: { legend: { reverse: true, position: 'top', labels: { font: { size: 10 }, boxWidth: 12 } }, tooltip: { itemSort: (a, b) => a.datasetIndex - b.datasetIndex, callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y}%` } } },
         scales: {
-          y: { beginAtZero: true, position: 'left', title: { display: true, text: '통화시간(분)', font: { size: 9 } }, grid: { color: '#EEEEEE' }, ticks: { font: { size: 9 }, color: '#9E9E9E' } },
-          y1: { beginAtZero: true, position: 'right', title: { display: true, text: '묵음시간(초)', font: { size: 9 } }, grid: { drawOnChartArea: false }, ticks: { font: { size: 9 }, color: '#F44336' } },
+          y: { beginAtZero: true, title: { display: true, text: '묵음 비율(%)', font: { size: 9 } }, grid: { color: '#EEEEEE' }, ticks: { font: { size: 9 }, color: '#9E9E9E', callback: v => v + '%' } },
           x: { grid: { display: false }, ticks: { font: { size: 9 }, color: '#9E9E9E', maxTicksLimit: 10 } }
         }
       }});
@@ -968,6 +1121,187 @@
       });
     }
     function doDownload(format) { AICC_Modal.close(); AICC_Toast.show(`${format} 파일 다운로드를 시작합니다. (시뮬레이션)`); }
+
+    /* ========== 전기 개선 이행 현황 — 불러오기 모달 ========== */
+
+    function updatePrevImpCount() {
+      const cnt = REPORT_DATA.prevImprovements.length;
+      document.getElementById('prev-imp-count').textContent = cnt > 0 ? `(${cnt}건 선택)` : '';
+    }
+
+    /* 모달 내 선택 상태를 임시 보관 */
+    let _impSelectedNos = new Set();
+
+    function openLoadImprovementModal() {
+      _impSelectedNos = new Set(REPORT_DATA.prevImprovements.map(p => p._no));
+
+      const body = `
+        <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
+          <select id="imp-modal-status" class="form-select" style="min-width:100px;font-size:12px;">
+            <option value="all">전체 상태</option>
+            <option value="미이행">미이행</option>
+            <option value="진행중">진행중</option>
+            <option value="완료">완료</option>
+          </select>
+          <input type="text" id="imp-modal-keyword" class="form-input" placeholder="내용 검색" style="flex:1;font-size:12px;">
+          <button class="btn btn-primary btn-sm" onclick="filterImpModal()">검색</button>
+        </div>
+        <div style="max-height:360px;overflow-y:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead><tr style="background:#F5F5F5;">
+              <th style="padding:6px;width:5%;">NO</th>
+              <th style="padding:6px;width:7%;">유형</th>
+              <th style="padding:6px;width:20%;">기간</th>
+              <th style="padding:6px;text-align:left;">개선 제안 내용</th>
+              <th style="padding:6px;width:8%;">담당자</th>
+              <th style="padding:6px;width:8%;">상태</th>
+            </tr></thead>
+            <tbody id="imp-modal-tbody">${renderImpRows(IMPROVEMENT_POOL)}</tbody>
+          </table>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;">
+          <span id="imp-sel-count" style="font-size:12px;color:#757575;">${_impSelectedNos.size}건 선택</span>
+          <button class="btn btn-primary btn-sm" onclick="confirmLoadImprovement()">선택 완료</button>
+        </div>`;
+
+      AICC_Modal.open({ title: '전기 개선 이행 항목 불러오기', content: body, size: 'xl' });
+    }
+
+    function impStatusBadge(s) {
+      const c = { '완료':'#E8F5E9;color:#2E7D32', '진행중':'#FFF3E0;color:#E65100', '미이행':'#FFEBEE;color:#C62828' };
+      return `<span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:600;background:${c[s]||'#F5F5F5;color:#9E9E9E'}">${s}</span>`;
+    }
+
+    function renderImpRows(list) {
+      return list.map(d => {
+        const sel = _impSelectedNos.has(d.no);
+        return `
+        <tr onclick="toggleImpRow(${d.no})" style="cursor:pointer;transition:background 0.15s;${sel ? 'background:#E3F2FD;' : ''}" onmouseenter="if(!this.dataset.sel)this.style.background='#F5F5F5'" onmouseleave="this.style.background='${sel ? '#E3F2FD' : ''}'" data-sel="${sel?1:''}">
+          <td style="text-align:center;padding:8px;color:#757575;font-size:11px;vertical-align:top;">${sel ? '<span style="color:#1565C0;font-weight:700;">✓</span>' : d.no}</td>
+          <td style="text-align:center;padding:8px;font-size:11px;vertical-align:top;">${d.reportType}</td>
+          <td style="padding:8px;font-size:11px;color:#757575;white-space:nowrap;vertical-align:top;">${d.period}</td>
+          <td style="padding:8px;font-size:12px;line-height:1.6;vertical-align:top;">
+            ${d.contents.map((c, i) => `<div style="padding:1px 0;">${i+1}. ${c}</div>`).join('')}
+          </td>
+          <td style="text-align:center;padding:8px;font-size:11px;vertical-align:top;">${d.admin}</td>
+          <td style="text-align:center;padding:8px;vertical-align:top;">${impStatusBadge(d.status)}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function toggleImpRow(no) {
+      if (_impSelectedNos.has(no)) _impSelectedNos.delete(no);
+      else _impSelectedNos.add(no);
+      refreshImpModalRows();
+    }
+
+    function refreshImpModalRows() {
+      const status = document.getElementById('imp-modal-status')?.value || 'all';
+      const keyword = (document.getElementById('imp-modal-keyword')?.value || '').trim().toLowerCase();
+      const list = IMPROVEMENT_POOL.filter(d => {
+        if (status !== 'all' && d.status !== status) return false;
+        if (keyword && !d.content.toLowerCase().includes(keyword)) return false;
+        return true;
+      });
+      document.getElementById('imp-modal-tbody').innerHTML = renderImpRows(list);
+      const countEl = document.getElementById('imp-sel-count');
+      if (countEl) countEl.textContent = `${_impSelectedNos.size}건 선택`;
+    }
+
+    function filterImpModal() {
+      refreshImpModalRows();
+    }
+
+    function confirmLoadImprovement() {
+      REPORT_DATA.prevImprovements = IMPROVEMENT_POOL.filter(d => _impSelectedNos.has(d.no)).map(d => ({
+        _no: d.no, reportType: d.reportType, period: d.period, contents: d.contents, admin: d.admin, status: d.status, memo: d.memo
+      }));
+      updatePrevImpCount();
+      AICC_Modal.close();
+      AICC_Toast.show(`${REPORT_DATA.prevImprovements.length}건의 항목을 불러왔습니다.`);
+      if (reportGenerated) updatePreview();
+    }
+
+    /* ========== 개선 제안 — 항목 삭제/추가 ========== */
+
+    function removeImprovement(idx) {
+      REPORT_DATA.improvements.splice(idx, 1);
+      if (reportGenerated) updatePreview();
+    }
+
+    function addManualImprovement() {
+      AICC_Modal.open({
+        title: '개선 제안 수동 추가',
+        content: `<div style="padding:4px 0;">
+          <div style="font-size:12px;color:#757575;margin-bottom:6px;">개선 제안 내용을 입력하세요.</div>
+          <textarea id="manual-imp-input" class="form-input" style="width:100%;min-height:80px;resize:none;" placeholder="개선 제안 내용 입력"></textarea>
+        </div>`,
+        footer: `<button class="btn btn-secondary" onclick="AICC_Modal.close()">취소</button>
+                 <button class="btn btn-primary" onclick="confirmAddManualImprovement()">추가</button>`
+      });
+    }
+
+    function confirmAddManualImprovement() {
+      const text = document.getElementById('manual-imp-input').value.trim();
+      if (!text) { AICC_Toast.show('내용을 입력해주세요.'); return; }
+      REPORT_DATA.improvements.push({ content: text, source: 'manual' });
+      AICC_Modal.close();
+      AICC_Toast.show('개선 제안이 추가되었습니다.');
+      if (reportGenerated) updatePreview();
+    }
+
+    /*
+     * ========== 개선 제안 확정 → 개선 이행 관리로 저장 ==========
+     *
+     * [트리거]    "개선 제안 확정" 버튼 클릭
+     * [확인 모달] 확정할 항목 목록 + 리포트 유형/기간 정보를 표시하여 관리자 확인
+     * [저장 API]  POST /api/improvements
+     *             Body: {
+     *               reportType: '일간' | '주간' | '월간' | ...,
+     *               periodFrom: 'YYYY-MM-DD',
+     *               periodTo:   'YYYY-MM-DD',
+     *               contents:   ['제안1', '제안2', ...],
+     *               sources:    ['ai', 'manual', ...],   // 각 항목의 출처
+     *               confirmedBy: '관리자ID'
+     *             }
+     * [저장 후]   개선 이행 관리 테이블에 신규 레코드 생성 (상태: '미이행', 담당자: 미배정)
+     *             → 개선 이행 관리 페이지에서 담당자 배정 및 이행 처리 진행
+     */
+    function confirmImprovements() {
+      const items = REPORT_DATA.improvements;
+      if (items.length === 0) { AICC_Toast.show('확정할 개선 제안 항목이 없습니다.'); return; }
+
+      const reportType = document.querySelector('input[name="reportType"]:checked')?.value || 'monthly';
+      const typeNames = { daily:'일간', weekly:'주간', monthly:'월간', yearly:'연간', custom:'기간 지정' };
+      const period = getReportPeriod();
+
+      AICC_Modal.open({
+        title: '개선 제안 확정',
+        content: `<div style="padding:4px 0;">
+          <div style="font-size:13px;color:#424242;margin-bottom:12px;">
+            현재 <strong>${items.length}건</strong>의 개선 제안을 확정하시겠습니까?
+          </div>
+          <div style="background:#F9F9F9;border:1px solid #EEEEEE;border-radius:6px;padding:12px;max-height:200px;overflow-y:auto;">
+            ${items.map((item, i) => `<div style="font-size:12px;line-height:1.5;padding:2px 0;color:#424242;">
+              ${i+1}. ${item.content}
+              ${item.source === 'ai'
+                ? '<span style="background:#E3F2FD;color:#1565C0;padding:1px 4px;border-radius:3px;font-size:9px;font-weight:700;margin-left:4px;">AI</span>'
+                : '<span style="background:#F5F5F5;color:#757575;padding:1px 4px;border-radius:3px;font-size:9px;font-weight:700;margin-left:4px;">수동</span>'}
+            </div>`).join('')}
+          </div>
+          <div style="font-size:11px;color:#9E9E9E;margin-top:10px;">
+            확정 시 개선 이행 관리에 ${typeNames[reportType]} 리포트 (${period.from} ~ ${period.to}) 항목으로 저장됩니다.
+          </div>
+        </div>`,
+        footer: `<button class="btn btn-secondary" onclick="AICC_Modal.close()">취소</button>
+                 <button class="btn btn-primary" onclick="doConfirmImprovements()">확정</button>`
+      });
+    }
+
+    function doConfirmImprovements() {
+      AICC_Modal.close();
+      AICC_Toast.show('개선 제안이 확정되어 개선 이행 관리에 저장되었습니다. (시뮬레이션)');
+    }
   </script>
 </body>
 </html>

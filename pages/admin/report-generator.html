@@ -131,11 +131,11 @@
                 점수 분포
               </label>
               <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
-                <input type="checkbox" id="sec-radar" onchange="updatePreview()" style="accent-color:#00A3FF;">
+                <input type="checkbox" id="sec-radar" checked onchange="updatePreview()" style="accent-color:#00A3FF;">
                 종합 성과
               </label>
               <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
-                <input type="checkbox" id="sec-deviation" onchange="updatePreview()" style="accent-color:#00A3FF;">
+                <input type="checkbox" id="sec-deviation" checked onchange="updatePreview()" style="accent-color:#00A3FF;">
                 추세 및 편차
               </label>
 
@@ -153,7 +153,7 @@
               <div style="border-top:1px solid #F0F0F0;margin:6px 0;"></div>
               <div style="font-size:11px;font-weight:600;color:#00A3FF;margin-bottom:2px;">이슈 및 감점</div>
               <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
-                <input type="checkbox" id="sec-issue-rate" onchange="updatePreview()" style="accent-color:#00A3FF;">
+                <input type="checkbox" id="sec-issue-rate" checked onchange="updatePreview()" style="accent-color:#00A3FF;">
                 이슈 발생률
               </label>
               <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
@@ -165,22 +165,48 @@
                 최다 감점 콜 Top 5
               </label>
               <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
-                <input type="checkbox" id="sec-urgent" onchange="updatePreview()" style="accent-color:#00A3FF;">
+                <input type="checkbox" id="sec-urgent" checked onchange="updatePreview()" style="accent-color:#00A3FF;">
                 이슈 현황
               </label>
               <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
-                <input type="checkbox" id="sec-issue" onchange="updatePreview()" style="accent-color:#00A3FF;">
+                <input type="checkbox" id="sec-issue" checked onchange="updatePreview()" style="accent-color:#00A3FF;">
                 긴급 이슈 현황
               </label>
 
+              <!--
+                [개발 시나리오 — 전기 개선 이행 현황 & 개선 제안]
+
+                ■ 전기 개선 이행 현황
+                - "불러오기" 버튼 클릭 → 개선 이행 관리 테이블에서 항목을 조회하는 모달 표시
+                - 실제 구현 시: GET /api/improvements?status=&keyword= 로 목록 조회
+                - 사용자가 항목을 선택 후 "선택 완료" → 선택된 항목이 리포트 프리뷰에 반영
+
+                ■ 개선 제안
+                - 리포트 생성 시 AI가 자동으로 개선 제안 항목 생성 (source: 'ai')
+                - 관리자가 항목을 삭제하거나 수동으로 추가 가능 (source: 'manual')
+                - "개선 제안 확정" 버튼 클릭 → 개선 이행 관리 DB에 저장
+                - 실제 구현 시: POST /api/improvements { reportType, period, contents[], source[] }
+
+                ■ 순환 흐름
+                리포트 생성 → AI 개선 제안 → 관리자 편집 → 확정(저장) → 개선 이행 관리에서 처리
+                → 다음 리포트 생성 시 "불러오기"로 이전 이행 현황 확인
+              -->
               <div style="border-top:1px solid #F0F0F0;margin:6px 0;"></div>
               <div style="font-size:11px;font-weight:600;color:#00A3FF;margin-bottom:2px;">종합</div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
+                <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+                  <input type="checkbox" id="sec-prev-improvement" checked onchange="updatePreview()" style="accent-color:#00A3FF;">
+                  전기 개선 이행 현황
+                </label>
+                <span id="prev-imp-count" style="font-size:11px;color:#9E9E9E;"></span>
+                <button class="btn btn-secondary" style="font-size:10px;padding:2px 8px;margin-left:auto;" onclick="openLoadImprovementModal()">불러오기</button>
+              </div>
               <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
-                <input type="checkbox" id="sec-improvement" onchange="updatePreview()" style="accent-color:#00A3FF;">
+                <input type="checkbox" id="sec-improvement" checked onchange="updatePreview()" style="accent-color:#00A3FF;">
                 개선 제안
               </label>
               <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
-                <input type="checkbox" id="sec-appendix" onchange="updatePreview()" style="accent-color:#00A3FF;">
+                <input type="checkbox" id="sec-appendix" checked onchange="updatePreview()" style="accent-color:#00A3FF;">
                 부록 (상세 데이터)
               </label>
             </div>
@@ -295,11 +321,12 @@
         { type: '고객확인 미흡', count: 6, desc: '고객 본인확인 절차 불충분' }
       ],
       improvements: [
-        '클레임처리팀 대상 "고객 응대 스킬" 재교육 권장 (평균 72.8점)',
-        '필수 스크립트 준수율 향상을 위한 모니터링 강화 필요',
-        '아웃바운드팀 "동의 확보" 관련 프로세스 재정비 필요',
-        '신규 입사자 대상 품질 기준 안내 교육 실시 권장'
+        { content: '클레임처리팀 대상 "고객 응대 스킬" 재교육 권장 (평균 72.8점)', source: 'ai' },
+        { content: '필수 스크립트 준수율 향상을 위한 모니터링 강화 필요', source: 'ai' },
+        { content: '아웃바운드팀 "동의 확보" 관련 프로세스 재정비 필요', source: 'ai' },
+        { content: '신규 입사자 대상 품질 기준 안내 교육 실시 권장', source: 'ai' }
       ],
+      prevImprovements: [],
       distribution: { excellent: 1820, good: 3210, caution: 2140, poor: 840 },
       radarData: { score: 79.2, completionRate: 86.9, normalRate: 89.5, excellentRate: 22.7, efficiency: 74.3 },
       issueRate: { failCount: 5, failRate: 0.6, belowCount: 18, belowRate: 2.2, normalRate: 97.2 },
@@ -325,6 +352,56 @@
         { type: '이의 제기', agent: '한동우', team: '일반상담팀', desc: '평가 결과 이의 제기 접수', level: 'info' }
       ]
     };
+
+    /* 개선 이행 관리 전체 목록 (불러오기 모달용) — QA 평가 기반 개선 제안 */
+    const IMPROVEMENT_POOL = [
+      { no:1, reportType:'월간', period:'2024-11-01 ~ 2024-11-30', admin:'김관리자', status:'완료', memo:'클레임처리팀 재교육 실시 완료. 스크립트 준수율 개선 확인.',
+        contents: [
+          '클레임처리팀 평균 점수 72.8점 — "고객 응대 스킬" 재교육 권장',
+          '필수 스크립트 준수율 68% — 모니터링 강화 및 주간 피드백 필요',
+          '고객확인 절차 누락 48건 — 본인확인 프로세스 체크리스트 배포 필요',
+          '기준 미달 건수 전기 대비 12% 증가 — 품질 기준 재안내 필요'
+        ]},
+      { no:2, reportType:'월간', period:'2024-12-01 ~ 2024-12-31', admin:'박매니저', status:'진행중', memo:'아웃바운드팀 동의 확보 매뉴얼 업데이트 진행 중.',
+        contents: [
+          '아웃바운드팀 "동의 확보" 관련 FAIL 판정 5건 — 프로세스 재정비 필요',
+          '스크립트 순서 오류 41건 — 스크립트 매뉴얼 업데이트 필요',
+          '고객상담2팀 FAIL 판정 비율 2.8% — 금지어 관련 재교육 필요'
+        ]},
+      { no:3, reportType:'주간', period:'2025-01-06 ~ 2025-01-12', admin:'이팀장', status:'완료', memo:'신규 입사자 온보딩 교육에 품질 기준 섹션 추가 완료.',
+        contents: [
+          '신규 입사자 대상 품질 기준 안내 교육 실시 권장',
+          '고객지원1팀 필수 인사말 누락률 12% — 인사 스크립트 교육 실시 권장',
+          '수동 평가 완료율 73.5% — 평가 일정 재조정 및 담당자 추가 배정 필요',
+          'VIP상담팀 평균 점수 85.1점으로 기준 미달 근접 — 집중 모니터링 권장'
+        ]},
+      { no:4, reportType:'월간', period:'2025-01-01 ~ 2025-01-31', admin:'최수석', status:'진행중', memo:'이의 제기 처리 프로세스 개선안 수립 완료. 시스템 반영 진행 중.',
+        contents: [
+          '이의 제기 처리 평균 3.2일 소요 — 처리 기한 단축 방안 마련 필요',
+          '야간 상담사 평가 점수 평균 68.5점 — 야간 전용 교육 프로그램 개발 필요',
+          '종합상담팀 평균 통화시간 8분 초과 — 콜 효율화 방안 마련 필요'
+        ]},
+      { no:5, reportType:'월간', period:'2025-02-01 ~ 2025-02-28', admin:'정차장', status:'미이행', memo:'',
+        contents: [
+          '월간 FAIL 판정 건수 전기 대비 15% 증가 — 금지어 목록 재검토 필요',
+          '기술지원팀 고객 확인 절차 누락 48건 — 본인확인 프로세스 강화 필요',
+          '스크립트 순서 오류 지속 발생 — 스크립트 매뉴얼 업데이트 및 교육 실시',
+          '고객상담1팀 감점 빈도 최다 — 감점 항목별 집중 코칭 필요'
+        ]},
+      { no:6, reportType:'주간', period:'2025-02-17 ~ 2025-02-23', admin:'김관리자', status:'완료', memo:'금지어 재교육 전사 실시 완료. 교육 효과 모니터링 중.',
+        contents: [
+          '고객상담2팀 FAIL 판정 비율 2.8% — 금지어 관련 재교육 필요',
+          '수동 평가 미완료 건 42건 — 평가 마감일 전 완료율 점검 체계 구축 필요',
+          'VIP상담팀 이의 제기 승인율 45% — 평가 기준 적정성 재검토 필요'
+        ]},
+      { no:7, reportType:'주간', period:'2025-03-03 ~ 2025-03-09', admin:'박매니저', status:'미이행', memo:'',
+        contents: [
+          '클레임처리팀 이슈 건수 전주 대비 22% 증가 — 원인 분석 및 대응 필요',
+          '고객확인 미흡 항목 감점 빈도 최다 — 본인확인 절차 점검표 배포 권장',
+          '야간 상담사 평가 점수 평균 68.5점 — 야간 전용 교육 프로그램 개발 필요',
+          '이의 제기 처리 지연 건 8건 — 처리 기한 초과 방지 알림 설정 필요'
+        ]}
+    ];
 
     let reportGenerated = false;
 
@@ -468,6 +545,7 @@
         teamTable:   document.getElementById('sec-team-table').checked,
         agent:       document.getElementById('sec-agent').checked,
         issue:       document.getElementById('sec-issue').checked,
+        prevImprovement: document.getElementById('sec-prev-improvement').checked,
         improvement: document.getElementById('sec-improvement').checked,
         appendix:    document.getElementById('sec-appendix').checked
       };
@@ -758,17 +836,51 @@
         </div>`;
       }
 
-      /* 14. 개선 제안 */
-      if (SEC.improvement) {
-        const impList = D.improvements.map((item, i) => `
-          <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #F0F0F0;">
-            <span style="min-width:24px;height:24px;border-radius:50%;background:#E3F2FD;color:#00A3FF;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;">${i+1}</span>
-            <span style="font-size:13px;line-height:1.5;">${item}</span>
-          </div>`).join('');
-        html += `<div style="margin-bottom:24px;">${secTitle('개선 제안')}${impList}</div>`;
+      /* 14. 전기 개선 이행 현황 */
+      if (SEC.prevImprovement) {
+        let piBody = '';
+        if (D.prevImprovements.length === 0) {
+          piBody = '<div style="text-align:center;color:#9E9E9E;font-size:13px;padding:24px 0;">불러온 항목이 없습니다. "불러오기" 버튼으로 항목을 선택하세요.</div>';
+        } else {
+          const piRows = D.prevImprovements.map(p => {
+            const stBadge = impStatusBadge(p.status);
+            const contentList = (p.contents || []).map((c, i) => `<div style="padding:1px 0;">${i+1}. ${c}</div>`).join('');
+            return `<tr>
+              <td style="text-align:center;font-size:11px;">${p.reportType||''}</td>
+              <td style="text-align:center;font-size:11px;white-space:nowrap;">${p.period||''}</td>
+              <td style="font-size:12px;text-align:left;line-height:1.6;">${contentList}</td>
+              <td style="text-align:center;font-size:12px;">${p.admin}</td>
+              <td style="text-align:center;">${stBadge}</td>
+              <td style="font-size:11px;color:#616161;">${p.memo||'-'}</td>
+            </tr>`;
+          }).join('');
+          piBody = `<table class="data-table" style="font-size:12px;">
+            <thead><tr><th>유형</th><th>기간</th><th>개선 제안 내용</th><th>담당자</th><th>상태</th><th>처리 메모</th></tr></thead>
+            <tbody>${piRows}</tbody>
+          </table>`;
+        }
+        html += `<div style="margin-bottom:24px;">${secTitle('전기 개선 이행 현황')}${piBody}</div>`;
       }
 
-      /* 15. 부록 */
+      /* 15. 개선 제안 */
+      if (SEC.improvement) {
+        const srcBadge = (s) => s === 'ai'
+          ? '<span style="display:inline-block;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;background:#E3F2FD;color:#1565C0;margin-left:6px;">AI</span>'
+          : '<span style="display:inline-block;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;background:#F5F5F5;color:#757575;margin-left:6px;">수동</span>';
+        const items = D.improvements.map((item, i) => `
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #F0F0F0;">
+            <span style="min-width:24px;height:24px;border-radius:50%;background:#E3F2FD;color:#00A3FF;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;">${i+1}</span>
+            <span style="flex:1;font-size:13px;line-height:1.5;">${item.content}${srcBadge(item.source)}</span>
+            <button onclick="removeImprovement(${i})" style="background:none;border:none;cursor:pointer;padding:4px;color:#BDBDBD;font-size:16px;line-height:1;" title="삭제">&times;</button>
+          </div>`).join('');
+        html += `<div style="margin-bottom:24px;">${secTitle('개선 제안')}${items}
+          <div style="padding:10px 0;display:flex;justify-content:space-between;align-items:center;">
+            <button class="btn btn-secondary btn-sm" onclick="addManualImprovement()" style="font-size:11px;">+ 항목 추가</button>
+            <button class="btn btn-primary btn-sm" onclick="confirmImprovements()" style="font-size:11px;">개선 제안 확정</button>
+          </div></div>`;
+      }
+
+      /* 16. 부록 */
       if (SEC.appendix) {
         const dist = D.distribution;
         const distTotal = dist.excellent + dist.good + dist.caution + dist.poor;
@@ -1014,6 +1126,176 @@
         firstOption.style.background = '#E3F2FD';
       }
     });
+
+    /* ========== 전기 개선 이행 현황 — 불러오기 ========== */
+
+    function impStatusBadge(st) {
+      const m = { '미이행':'background:#FFEBEE;color:#C62828', '진행중':'background:#FFF3E0;color:#E65100', '완료':'background:#E8F5E9;color:#2E7D32' };
+      return `<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;${m[st]||''}">${st}</span>`;
+    }
+
+    let _impSelectedNos = new Set();
+
+    function updatePrevImpCount() {
+      const el = document.getElementById('prev-imp-count');
+      if (el) el.textContent = REPORT_DATA.prevImprovements.length > 0 ? `(${REPORT_DATA.prevImprovements.length}건 선택됨)` : '';
+    }
+
+    function openLoadImprovementModal() {
+      _impSelectedNos = new Set(REPORT_DATA.prevImprovements.map(p => p._no));
+      const body = `
+        <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
+          <select id="imp-modal-status" class="form-select" style="min-width:100px;font-size:12px;">
+            <option value="all">전체 상태</option>
+            <option value="미이행">미이행</option>
+            <option value="진행중">진행중</option>
+            <option value="완료">완료</option>
+          </select>
+          <input type="text" id="imp-modal-keyword" class="form-input" placeholder="내용 검색" style="flex:1;font-size:12px;">
+          <button class="btn btn-primary btn-sm" onclick="filterImpModal()">검색</button>
+        </div>
+        <div style="max-height:360px;overflow-y:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead><tr style="background:#F5F5F5;">
+              <th style="padding:6px;width:5%;">NO</th>
+              <th style="padding:6px;width:7%;">유형</th>
+              <th style="padding:6px;width:20%;">기간</th>
+              <th style="padding:6px;text-align:left;">개선 제안 내용</th>
+              <th style="padding:6px;width:8%;">담당자</th>
+              <th style="padding:6px;width:8%;">상태</th>
+            </tr></thead>
+            <tbody id="imp-modal-tbody">${renderImpRows(IMPROVEMENT_POOL)}</tbody>
+          </table>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;">
+          <span id="imp-sel-count" style="font-size:12px;color:#757575;">${_impSelectedNos.size}건 선택</span>
+          <button class="btn btn-primary btn-sm" onclick="confirmLoadImprovement()">선택 완료</button>
+        </div>`;
+      AICC_Modal.open({ title: '전기 개선 이행 항목 불러오기', content: body, size: 'xl' });
+    }
+
+    function renderImpRows(list) {
+      return list.map(d => {
+        const sel = _impSelectedNos.has(d.no);
+        return `
+        <tr onclick="toggleImpRow(${d.no})" style="cursor:pointer;transition:background 0.15s;${sel ? 'background:#E3F2FD;' : ''}" onmouseenter="if(!this.dataset.sel)this.style.background='#F5F5F5'" onmouseleave="this.style.background='${sel ? '#E3F2FD' : ''}'" data-sel="${sel?1:''}">
+          <td style="text-align:center;padding:8px;color:#757575;font-size:11px;vertical-align:top;">${sel ? '<span style="color:#1565C0;font-weight:700;">✓</span>' : d.no}</td>
+          <td style="text-align:center;padding:8px;font-size:11px;vertical-align:top;">${d.reportType}</td>
+          <td style="padding:8px;font-size:11px;color:#757575;white-space:nowrap;vertical-align:top;">${d.period}</td>
+          <td style="padding:8px;font-size:12px;line-height:1.6;vertical-align:top;">
+            ${d.contents.map((c, i) => `<div style="padding:1px 0;">${i+1}. ${c}</div>`).join('')}
+          </td>
+          <td style="text-align:center;padding:8px;font-size:11px;vertical-align:top;">${d.admin}</td>
+          <td style="text-align:center;padding:8px;vertical-align:top;">${impStatusBadge(d.status)}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function toggleImpRow(no) {
+      if (_impSelectedNos.has(no)) _impSelectedNos.delete(no);
+      else _impSelectedNos.add(no);
+      refreshImpModalRows();
+    }
+
+    function refreshImpModalRows() {
+      const status = document.getElementById('imp-modal-status')?.value || 'all';
+      const keyword = (document.getElementById('imp-modal-keyword')?.value || '').trim().toLowerCase();
+      const list = IMPROVEMENT_POOL.filter(d => {
+        if (status !== 'all' && d.status !== status) return false;
+        if (keyword && !d.contents.some(c => c.toLowerCase().includes(keyword))) return false;
+        return true;
+      });
+      document.getElementById('imp-modal-tbody').innerHTML = renderImpRows(list);
+      const countEl = document.getElementById('imp-sel-count');
+      if (countEl) countEl.textContent = `${_impSelectedNos.size}건 선택`;
+    }
+
+    function filterImpModal() {
+      refreshImpModalRows();
+    }
+
+    function confirmLoadImprovement() {
+      REPORT_DATA.prevImprovements = IMPROVEMENT_POOL.filter(d => _impSelectedNos.has(d.no)).map(d => ({
+        _no: d.no, reportType: d.reportType, period: d.period, contents: d.contents, admin: d.admin, status: d.status, memo: d.memo
+      }));
+      updatePrevImpCount();
+      AICC_Modal.close();
+      AICC_Toast.show(`${REPORT_DATA.prevImprovements.length}건의 항목을 불러왔습니다.`);
+      if (reportGenerated) updatePreview();
+    }
+
+    /* ========== 개선 제안 — 삭제/수동추가/확정 ========== */
+
+    function removeImprovement(idx) {
+      REPORT_DATA.improvements.splice(idx, 1);
+      updatePreview();
+    }
+
+    function addManualImprovement() {
+      const body = `
+        <div style="padding:4px 0;">
+          <label class="form-label">개선 제안 내용</label>
+          <textarea id="manual-imp-text" class="form-input" style="width:100%;min-height:80px;resize:vertical;" placeholder="개선 제안 내용을 입력하세요"></textarea>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;">
+          <button class="btn btn-secondary btn-sm" onclick="AICC_Modal.close()">취소</button>
+          <button class="btn btn-primary btn-sm" onclick="confirmAddManualImprovement()">추가</button>
+        </div>`;
+      AICC_Modal.open({ title: '개선 제안 수동 추가', content: body, size: 'md' });
+    }
+
+    function confirmAddManualImprovement() {
+      const text = document.getElementById('manual-imp-text').value.trim();
+      if (!text) { AICC_Toast.show('내용을 입력해주세요.'); return; }
+      REPORT_DATA.improvements.push({ content: text, source: 'manual' });
+      AICC_Modal.close();
+      updatePreview();
+      AICC_Toast.show('항목이 추가되었습니다.');
+    }
+
+    /*
+     * 개선 제안 확정 — 현재 개선 제안 목록을 개선 이행 관리 DB에 저장
+     * 실제 구현 시: POST /api/improvements { reportType, periodFrom, periodTo, contents[], source[] }
+     */
+    /*
+     * 개선 제안 확정 → 개선 이행 관리로 저장
+     * 실제 구현 시: POST /api/improvements { reportType, periodFrom, periodTo, contents[], sources[] }
+     */
+    function confirmImprovements() {
+      const items = REPORT_DATA.improvements;
+      if (items.length === 0) { AICC_Toast.show('확정할 개선 제안 항목이 없습니다.'); return; }
+
+      const reportType = document.querySelector('input[name="reportType"]:checked')?.value || 'monthly';
+      const typeNames = { daily:'일간', weekly:'주간', monthly:'월간', yearly:'연간', custom:'기간 지정' };
+      const period = getReportPeriod();
+
+      AICC_Modal.open({
+        title: '개선 제안 확정',
+        content: `<div style="padding:4px 0;">
+          <div style="font-size:13px;color:#424242;margin-bottom:12px;">
+            현재 <strong>${items.length}건</strong>의 개선 제안을 확정하시겠습니까?
+          </div>
+          <div style="background:#F9F9F9;border:1px solid #EEEEEE;border-radius:6px;padding:12px;max-height:200px;overflow-y:auto;">
+            ${items.map((item, i) => `<div style="font-size:12px;line-height:1.5;padding:2px 0;color:#424242;">
+              ${i+1}. ${item.content}
+              ${item.source === 'ai'
+                ? '<span style="background:#E3F2FD;color:#1565C0;padding:1px 4px;border-radius:3px;font-size:9px;font-weight:700;margin-left:4px;">AI</span>'
+                : '<span style="background:#F5F5F5;color:#757575;padding:1px 4px;border-radius:3px;font-size:9px;font-weight:700;margin-left:4px;">수동</span>'}
+            </div>`).join('')}
+          </div>
+          <div style="font-size:11px;color:#9E9E9E;margin-top:10px;">
+            확정 시 개선 이행 관리에 ${typeNames[reportType]} 리포트 (${period.from} ~ ${period.to}) 항목으로 저장됩니다.
+          </div>
+        </div>`,
+        footer: `<button class="btn btn-secondary" onclick="AICC_Modal.close()">취소</button>
+                 <button class="btn btn-primary" onclick="doConfirmImprovements()">확정</button>`
+      });
+    }
+
+    function doConfirmImprovements() {
+      AICC_Modal.close();
+      AICC_Toast.show('개선 제안이 확정되어 개선 이행 관리에 저장되었습니다.');
+    }
   </script>
 </body>
 </html>

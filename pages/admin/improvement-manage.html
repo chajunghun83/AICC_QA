@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="/image/faviconV2.png">
+  <title>개선 이행 관리 - AICC Quality Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../../css/styles.css">
+  <style>
+    .status-badge {
+      display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;white-space:nowrap;
+    }
+    .status-미이행   { background:#FFEBEE;color:#C62828; }
+    .status-진행중   { background:#FFF3E0;color:#E65100; }
+    .status-완료     { background:#E8F5E9;color:#2E7D32; }
+
+    .detail-btn {
+      padding:4px 12px;border-radius:4px;font-size:11px;font-weight:600;
+      background:#E3F2FD;color:#1565C0;border:1px solid #BBDEFB;cursor:pointer;
+      transition:all 0.15s;
+    }
+    .detail-btn:hover { background:#BBDEFB; }
+
+    .tl-item { display:flex;gap:12px;position:relative;padding-left:20px; }
+    .tl-item::before {
+      content:'';position:absolute;left:6px;top:24px;bottom:-8px;width:2px;background:#E0E0E0;
+    }
+    .tl-item:last-child::before { display:none; }
+    .tl-dot {
+      position:absolute;left:0;top:6px;width:14px;height:14px;border-radius:50%;border:2px solid #E0E0E0;background:white;flex-shrink:0;
+    }
+    .tl-dot.active { border-color:#00A3FF;background:#E3F2FD; }
+  </style>
+</head>
+<body class="bg-[#F5F5F5] text-[#212121]">
+  <div id="page-content">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div>
+        <h1 style="font-size:20px;font-weight:700;margin:0;">개선 이행 관리</h1>
+        <p style="font-size:12px;color:#757575;margin:4px 0 0;">리포트 개선 제안에 대한 이행 현황 관리</p>
+      </div>
+    </div>
+
+    <!-- 검색 필터 -->
+    <div class="filter-section">
+      <div class="filter-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'flex':'none'">
+        <span>검색조건</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#757575" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+      <div class="filter-body">
+        <div>
+          <label class="form-label">기간 (시작)</label>
+          <input type="date" class="form-input" id="f-date-from" style="min-width:130px;">
+        </div>
+        <div>
+          <label class="form-label">기간 (종료)</label>
+          <input type="date" class="form-input" id="f-date-to" style="min-width:130px;">
+        </div>
+        <div>
+          <label class="form-label">리포트 유형</label>
+          <select class="form-select" id="f-report-type" style="min-width:120px;">
+            <option value="all">전체</option>
+            <option value="일간">일간</option>
+            <option value="주간">주간</option>
+            <option value="월간">월간</option>
+            <option value="연간">연간</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">담당자</label>
+          <input type="text" class="form-input" id="f-admin" placeholder="담당자 검색" style="min-width:110px;">
+        </div>
+        <div>
+          <label class="form-label">상태</label>
+          <select class="form-select" id="f-status" style="min-width:120px;">
+            <option value="all">전체</option>
+            <option value="미이행">미이행</option>
+            <option value="진행중">진행중</option>
+            <option value="완료">완료</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">&nbsp;</label>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-secondary btn-sm" onclick="resetFilter()">초기화</button>
+            <button class="btn btn-primary btn-sm" onclick="applyFilter()">검색</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 테이블 -->
+    <div class="content-card">
+      <div class="content-card-header">
+        <span style="font-size:14px;font-weight:600;">개선 이행 목록</span>
+        <span style="font-size:12px;color:#757575;" id="item-count">총 0건</span>
+      </div>
+      <div class="content-card-body" style="padding:0;">
+        <div style="overflow-x:auto;">
+          <table class="data-table" style="min-width:1100px;">
+            <colgroup>
+              <col style="width:4%"><col style="width:8%"><col style="width:9%">
+              <col style="width:35%"><col style="width:8%"><col style="width:7%">
+              <col style="width:9%"><col style="width:7%">
+            </colgroup>
+            <thead>
+              <tr>
+                <th>NO</th><th>리포트 유형</th><th>리포트 기간</th>
+                <th>개선 제안 내용</th><th>담당자</th><th>상태</th>
+                <th>처리일</th><th>처리내역</th>
+              </tr>
+            </thead>
+            <tbody id="imp-tbody"></tbody>
+          </table>
+        </div>
+        <div class="pagination">
+          <button class="pagination-btn" onclick="goPage('first')">&laquo;</button>
+          <span id="page-buttons"></span>
+          <button class="pagination-btn" onclick="goPage('last')">&raquo;</button>
+          <span style="margin-left:16px;font-size:12px;color:#757575;">페이지당:
+            <select class="form-select" id="page-size-select" style="min-width:60px;padding:2px 24px 2px 8px;" onchange="changePageSize()">
+              <option>10</option>
+              <option selected>20</option>
+              <option>50</option>
+            </select>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../assets/dummy-data/all-data.js"></script>
+  <script src="../../js/utils/data-loader.js"></script>
+  <script src="../../js/utils/auth-simulator.js"></script>
+  <script src="../../js/utils/formatters.js"></script>
+  <script src="../../js/components/sidebar.js"></script>
+  <script src="../../js/components/layout.js"></script>
+  <script src="../../js/components/modal.js"></script>
+  <script src="../../js/components/toast.js"></script>
+  <script>
+    /*
+     * ══════════════════════════════════════════════════════════════════
+     *  개선 이행 관리 페이지 (QA) — 데이터 소스 및 리포트 연동 시나리오
+     * ══════════════════════════════════════════════════════════════════
+     *
+     *  [데이터 흐름]
+     *  1. QA 리포트 생성기에서 "개선 제안 확정" → POST /api/improvements로 저장
+     *  2. 이 페이지에서 GET /api/improvements로 목록 조회 (필터: 기간, 상태, 리포트 유형)
+     *  3. 관리자가 처리내역 모달에서 담당자 배정, 상태 변경(미이행→진행중→완료), 처리 메모 입력
+     *  4. PUT /api/improvements/:id { status, admin, memo } 로 업데이트
+     *  5. 다음 리포트 생성 시 "전기 개선 이행 현황 > 불러오기"로 이 목록을 조회/선택
+     *
+     *  [테이블 데이터 구조]
+     *  {
+     *    no:          Number,
+     *    reportType:  '일간'|'주간'|'월간',
+     *    periodFrom:  'YYYY-MM-DD',
+     *    periodTo:    'YYYY-MM-DD',
+     *    contents:    String[],        // 개선 제안 내용 배열
+     *    admin:       String,
+     *    status:      '미이행'|'진행중'|'완료',
+     *    completedDate: 'YYYY-MM-DD',
+     *    history:     [{ date, admin, status, memo }]
+     *  }
+     * ══════════════════════════════════════════════════════════════════
+     */
+
+    /* ══════════════════════════ 더미데이터 ══════════════════════════ */
+
+    const admins = ['김관리자','박매니저','이팀장','최수석','정차장'];
+
+    const contentPool = [
+      '클레임처리팀 대상 "고객 응대 스킬" 재교육 권장 (평균 72.8점)',
+      '필수 스크립트 준수율 향상을 위한 모니터링 강화 필요',
+      '아웃바운드팀 "동의 확보" 관련 프로세스 재정비 필요',
+      '고객지원1팀 필수 인사말 누락률 12% — 인사 스크립트 교육 실시 권장',
+      '신규 입사자 대상 품질 기준 안내 교육 실시 권장',
+      '기술지원팀 고객 확인 절차 누락 48건 — 본인확인 프로세스 강화 필요',
+      'VIP상담팀 평균 점수 85.1점으로 기준 미달 근접 — 집중 모니터링 권장',
+      '고객상담2팀 FAIL 판정 비율 2.8% — 금지어 관련 재교육 필요',
+      '수동 평가 완료율 73.5%로 목표 대비 미달 — 평가 일정 재조정 필요',
+      '이의 제기 처리 평균 3.2일 소요 — 처리 기한 단축 방안 마련 필요',
+      '스크립트 순서 오류 41건 — 스크립트 매뉴얼 업데이트 및 교육 실시',
+      '종합상담팀 평균 통화시간 8분 초과 — 콜 효율화 방안 마련 필요',
+      '고객확인 미흡 항목 감점 빈도 최다 — 본인확인 절차 점검표 배포 권장',
+      '야간 상담사 평가 점수 평균 68.5점 — 야간 전용 교육 프로그램 개발 필요',
+      '월간 FAIL 판정 건수 전기 대비 15% 증가 — 금지어 목록 재검토 필요'
+    ];
+
+    const adminMemoPool = [
+      '클레임처리팀 대상 고객 응대 스킬 재교육 실시 완료(3/15). 후속 평가 모니터링 진행 중.',
+      '필수 스크립트 준수율 모니터링 체계 구축 완료. 주간 리포트 발송 설정.',
+      '아웃바운드팀 동의 확보 프로세스 매뉴얼 업데이트 완료. 전 상담사 공유 완료.',
+      '고객지원1팀 인사말 교육 실시(3/10). 준수율 개선 추이 확인 중.',
+      '신규 입사자 온보딩 교육에 품질 기준 섹션 추가. 교육 자료 배포 완료.',
+      '기술지원팀 본인확인 절차 체크리스트 배포. 시스템 알림 설정 완료.',
+      'VIP상담팀 주간 집중 모니터링 시작. QA 매니저 직접 코칭 진행 중.',
+      '금지어 관련 재교육 자료 제작 완료. 전사 교육 일정 확정(3/25).',
+      '수동 평가 일정 재조정 완료. 평가 담당자 추가 배정.',
+      '이의 제기 처리 프로세스 개선안 수립. 처리 기한 2일 이내로 단축.'
+    ];
+
+    function getNow() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    }
+
+    function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+    function pickContents() {
+      const count = 3 + Math.floor(Math.random() * 2);
+      const shuffled = [...contentPool].sort(() => Math.random() - 0.5);
+      return shuffled.slice(0, count);
+    }
+
+    function generateData() {
+      const data = [];
+      const reportTypes = ['일간','주간','월간'];
+      const statuses = ['미이행','진행중','완료','완료','완료','진행중'];
+      let no = 1;
+
+      for (let m = 0; m < 4; m++) {
+        const monthStr = `2025-${String(m + 1).padStart(2, '0')}`;
+        const count = 2 + Math.floor(Math.random() * 2);
+        for (let i = 0; i < count; i++) {
+          const reportType = pickRandom(reportTypes);
+          let periodFrom, periodTo;
+          if (reportType === '월간') {
+            periodFrom = `${monthStr}-01`;
+            periodTo = `${monthStr}-${[31,28,31,30][m]}`;
+          } else if (reportType === '주간') {
+            const startDay = 1 + Math.floor(Math.random() * 3) * 7;
+            periodFrom = `${monthStr}-${String(startDay).padStart(2,'0')}`;
+            periodTo = `${monthStr}-${String(Math.min(startDay + 6, [31,28,31,30][m])).padStart(2,'0')}`;
+          } else {
+            const day = 1 + Math.floor(Math.random() * [31,28,31,30][m]);
+            periodFrom = `${monthStr}-${String(day).padStart(2,'0')}`;
+            periodTo = periodFrom;
+          }
+
+          const status = pickRandom(statuses);
+          const admin = pickRandom(admins);
+          const completedDate = status === '완료'
+            ? `${monthStr}-${String(10 + Math.floor(Math.random() * 18)).padStart(2, '0')}`
+            : '-';
+
+          const history = [];
+          if (status !== '미이행') {
+            history.push({
+              date: `${monthStr}-${String(5 + Math.floor(Math.random() * 5)).padStart(2, '0')} ${String(9 + Math.floor(Math.random() * 8)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`,
+              author: admin,
+              status: '진행중',
+              memo: pickRandom(adminMemoPool)
+            });
+          }
+          if (status === '완료') {
+            history.push({
+              date: `${completedDate} ${String(9 + Math.floor(Math.random() * 8)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`,
+              author: admin,
+              status: '완료',
+              memo: '개선 조치 완료 확인. 후속 리포트에서 지표 개선 여부 모니터링 예정.'
+            });
+          }
+
+          data.push({
+            no: no++,
+            reportType,
+            periodFrom,
+            periodTo,
+            contents: pickContents(),
+            admin,
+            status,
+            completedDate,
+            history
+          });
+        }
+      }
+
+      return data.sort((a, b) => b.no - a.no);
+    }
+
+    let allData = generateData();
+    let filtered = [...allData];
+    let currentPage = 1;
+    let pageSize = 20;
+
+    let expandedNo = null;
+
+    const reportTypeBadge = (type) => {
+      const colors = { '일간':'background:#E3F2FD;color:#1565C0', '주간':'background:#E8F5E9;color:#2E7D32', '월간':'background:#F3E5F5;color:#7B1FA2' };
+      return `<span style="padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500;${colors[type]||'background:#F5F5F5;color:#757575'}">${type}</span>`;
+    };
+
+    /* ══════════════════════════ 렌더링 ══════════════════════════ */
+
+    function renderTable() {
+      const start = (currentPage - 1) * pageSize;
+      const pageData = filtered.slice(start, start + pageSize);
+      document.getElementById('item-count').textContent = `총 ${filtered.length}건`;
+
+      document.getElementById('imp-tbody').innerHTML = pageData.map(d => {
+        const isExpanded = expandedNo === d.no;
+        const firstContent = d.contents[0] || '';
+        const periodStr = d.periodFrom === d.periodTo ? d.periodFrom : `${d.periodFrom} ~ ${d.periodTo}`;
+        return `
+        <tr onclick="toggleAccordion(${d.no})" style="cursor:pointer;transition:background 0.15s;" onmouseenter="this.style.background='#FAFAFA'" onmouseleave="this.style.background=''">
+          <td style="text-align:center;color:#757575;">${d.no}</td>
+          <td style="text-align:center;">${reportTypeBadge(d.reportType)}</td>
+          <td style="text-align:center;font-size:11px;color:#757575;white-space:nowrap;">${periodStr}</td>
+          <td style="font-size:12px;padding:8px 10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0;text-align:left;">
+            ${firstContent}${d.contents.length > 1 ? `<span style="color:#9E9E9E;font-size:10px;margin-left:6px;">[외${d.contents.length - 1}건]</span>` : ''}
+          </td>
+          <td style="text-align:center;">${d.admin}</td>
+          <td style="text-align:center;"><span class="status-badge status-${d.status}">${d.status}</span></td>
+          <td style="text-align:center;font-size:11px;color:#757575;">${d.completedDate}</td>
+          <td style="text-align:center;"><button class="detail-btn" onclick="event.stopPropagation();openDetail(${d.no})">처리내역</button></td>
+        </tr>
+        ${isExpanded ? `<tr style="background:#FAFAFA;">
+          <td colspan="3" style="padding:0;"></td>
+          <td colspan="5" style="padding:2px 10px 10px 10px;text-align:left;">
+            ${d.contents.map((c, i) => `<div style="font-size:12px;line-height:1.5;color:#424242;padding:3px 0;">${i+1}. ${c}</div>`).join('')}
+          </td>
+        </tr>` : ''}`;
+      }).join('');
+
+      renderPagination();
+    }
+
+    function toggleAccordion(no) {
+      expandedNo = expandedNo === no ? null : no;
+      renderTable();
+    }
+
+    function renderPagination() {
+      const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+      if (currentPage > totalPages) currentPage = totalPages;
+      let html = '';
+      const startPage = Math.max(1, currentPage - 2);
+      const endPage = Math.min(totalPages, startPage + 4);
+      for (let i = startPage; i <= endPage; i++) {
+        html += `<button class="pagination-btn${i === currentPage ? ' active' : ''}" onclick="goPage(${i})">${i}</button>`;
+      }
+      document.getElementById('page-buttons').innerHTML = html;
+    }
+
+    function goPage(p) {
+      const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+      if (p === 'first') currentPage = 1;
+      else if (p === 'last') currentPage = totalPages;
+      else currentPage = p;
+      renderTable();
+    }
+
+    function changePageSize() {
+      pageSize = parseInt(document.getElementById('page-size-select').value);
+      currentPage = 1;
+      renderTable();
+    }
+
+    /* ══════════════════════════ 필터 ══════════════════════════ */
+
+    function applyFilter() {
+      const dateFrom = document.getElementById('f-date-from').value;
+      const dateTo = document.getElementById('f-date-to').value;
+      const reportType = document.getElementById('f-report-type').value;
+      const admin = document.getElementById('f-admin').value.trim().toLowerCase();
+      const status = document.getElementById('f-status').value;
+
+      filtered = allData.filter(d => {
+        if (dateFrom && d.periodFrom < dateFrom) return false;
+        if (dateTo && d.periodTo > dateTo) return false;
+        if (reportType !== 'all' && d.reportType !== reportType) return false;
+        if (admin && !d.admin.toLowerCase().includes(admin)) return false;
+        if (status !== 'all' && d.status !== status) return false;
+        return true;
+      });
+
+      currentPage = 1;
+      renderTable();
+    }
+
+    function resetFilter() {
+      document.getElementById('f-date-from').value = '';
+      document.getElementById('f-date-to').value = '';
+      document.getElementById('f-report-type').value = 'all';
+      document.getElementById('f-admin').value = '';
+      document.getElementById('f-status').value = 'all';
+      filtered = [...allData];
+      currentPage = 1;
+      renderTable();
+    }
+
+    /* ══════════════════════════ 모달 ══════════════════════════ */
+
+    function openDetail(no) {
+      const d = allData.find(x => x.no === no);
+      if (!d) return;
+
+      const statusOptions = ['미이행','진행중','완료'].map(s =>
+        `<option${d.status === s ? ' selected' : ''}>${s}</option>`
+      ).join('');
+
+      const timelineHtml = d.history.length > 0
+        ? d.history.map((h, i) => `
+          <div class="tl-item" style="margin-bottom:10px;">
+            <div class="tl-dot${i === d.history.length - 1 ? ' active' : ''}"></div>
+            <div style="flex:1;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
+                <span style="font-size:11px;color:#757575;">${h.date}</span>
+                <span class="status-badge status-${h.status}" style="font-size:10px;padding:2px 8px;">${h.status}</span>
+              </div>
+              <div style="font-size:11px;font-weight:600;color:#424242;">${h.author}</div>
+              <div style="font-size:12px;color:#616161;margin-top:2px;line-height:1.4;">${h.memo}</div>
+            </div>
+          </div>
+        `).join('')
+        : '<div style="font-size:12px;color:#9E9E9E;text-align:center;padding:16px;">처리 이력 없음</div>';
+
+      const body = `
+        <div style="display:flex;gap:0;height:100%;">
+          <div style="flex:1;padding:20px;border-right:1px solid #EEEEEE;display:flex;flex-direction:column;max-height:520px;overflow-y:auto;">
+            <div style="font-size:14px;font-weight:700;color:#212121;margin-bottom:16px;">개선 제안 정보</div>
+            <div style="margin-bottom:12px;">
+              <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">리포트 유형</div>
+              <div style="font-size:13px;font-weight:500;">${d.reportType} 리포트</div>
+            </div>
+            <div style="margin-bottom:12px;">
+              <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">리포트 기간</div>
+              <div style="font-size:13px;font-weight:500;">${d.periodFrom} ~ ${d.periodTo}</div>
+            </div>
+            <div style="flex:1;">
+              <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">개선 제안 내용</div>
+              <div style="font-size:13px;line-height:1.6;background:#F9F9F9;border-radius:6px;padding:12px;border:1px solid #EEEEEE;">
+                ${d.contents.map((c, i) => `<div style="padding:2px 0;">${i+1}. ${c}</div>`).join('')}
+              </div>
+            </div>
+          </div>
+
+          <div style="flex:1;padding:20px;display:flex;flex-direction:column;gap:16px;max-height:520px;overflow-y:auto;">
+            <div style="font-size:14px;font-weight:700;color:#212121;">처리 관리</div>
+            <div>
+              <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">담당자</div>
+              <div style="font-size:13px;font-weight:600;">${d.admin}</div>
+            </div>
+            <div>
+              <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">이행 상태</div>
+              <select id="modal-status" class="form-select" style="width:100%;">${statusOptions}</select>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;">
+              <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">처리 메모</div>
+              <textarea id="modal-memo" class="form-input" style="flex:1;min-height:80px;resize:none;" placeholder="처리 내용을 입력하세요"></textarea>
+              <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+                <button class="btn btn-primary btn-sm" onclick="saveDetail(${d.no})">저장</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="border-top:1px solid #EEEEEE;padding:16px 20px;max-height:200px;overflow-y:auto;">
+          <div style="font-size:13px;font-weight:700;color:#212121;margin-bottom:12px;">처리 이력</div>
+          ${timelineHtml}
+        </div>
+      `;
+
+      AICC_Modal.open({
+        title: `개선 이행 관리 — NO.${d.no}`,
+        content: body,
+        size: 'xl'
+      });
+    }
+
+    function saveDetail(no) {
+      const d = allData.find(x => x.no === no);
+      if (!d) return;
+
+      const newStatus = document.getElementById('modal-status').value;
+      const memo = document.getElementById('modal-memo').value.trim();
+      if (!memo) { AICC_Toast.show('처리 메모를 입력해주세요.'); return; }
+
+      d.status = newStatus;
+      if (newStatus === '완료') {
+        d.completedDate = getNow().split(' ')[0];
+      }
+
+      d.history.push({
+        date: getNow(),
+        author: d.admin,
+        status: newStatus,
+        memo
+      });
+
+      AICC_Modal.close();
+      AICC_Toast.show('처리내역이 저장되었습니다.');
+      renderTable();
+    }
+
+    /* ══════════════════════════ 초기화 ══════════════════════════ */
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderTable();
+    });
+  </script>
+</body>
+</html>

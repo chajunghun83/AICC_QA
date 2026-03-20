@@ -33,12 +33,15 @@ window.AICC_Layout = {
   /** menuItems를 검색하여 현재 페이지의 id/label/href 반환 */
   getCurrentPageInfo() {
     const filename = window.location.pathname.split('/').pop().replace('.html', '');
-    const allItems = [
-      ...(AICC_Sidebar.menuItems.admin || []).flatMap(g => g.items),
-      ...(AICC_Sidebar.menuItems.agent || []).flatMap(g => g.items),
-      ...(AICC_Sidebar.menuItems.ta || []).flatMap(g => g.items)
-    ];
-    const found = allItems.find(item => item.id === filename);
+    const isTa = window.location.pathname.includes('/pages/ta/');
+    const moduleFirst = isTa
+      ? [...(AICC_Sidebar.menuItems.ta || []).flatMap(g => g.items),
+         ...(AICC_Sidebar.menuItems.admin || []).flatMap(g => g.items),
+         ...(AICC_Sidebar.menuItems.agent || []).flatMap(g => g.items)]
+      : [...(AICC_Sidebar.menuItems.admin || []).flatMap(g => g.items),
+         ...(AICC_Sidebar.menuItems.agent || []).flatMap(g => g.items),
+         ...(AICC_Sidebar.menuItems.ta || []).flatMap(g => g.items)];
+    const found = moduleFirst.find(item => item.id === filename);
     if (found) return { id: found.id, label: found.label, href: found.href };
 
     // menuItems에 없는 숨겨진 페이지는 document.title에서 추출
