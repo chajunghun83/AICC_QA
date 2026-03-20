@@ -330,10 +330,180 @@
     let currentPage = 1;
     let pageSize = 20;
 
-    /* ══════════════════════════ 전체 콜 현황 연동 ══════════════════════════ */
+    /* ══════════════════════════ 콜 상세 모달 ══════════════════════════ */
 
-    function goCallStatus(keyword) {
-      window.location.href = 'call-status.html?filter=keyword&value=' + encodeURIComponent(keyword);
+    const transcriptTemplates = [
+      [
+        {speaker:'상담사',text:'안녕하세요, {team} {agent}입니다. 무엇을 도와드릴까요?'},
+        {speaker:'고객',text:'주문한 상품이 아직 안 왔어요. 주문번호 알려드릴게요.'},
+        {speaker:'상담사',text:'네, 주문번호 확인해보겠습니다.'},
+        {speaker:'고객',text:'배송이 너무 늦어서 불만이에요.'},
+        {speaker:'상담사',text:'확인해보니 택배사에서 지연이 발생한 것 같습니다.'},
+        {speaker:'고객',text:'그럼 언제쯤 받을 수 있나요?'},
+        {speaker:'상담사',text:'내일 중으로 배송 완료될 예정입니다.'},
+        {speaker:'고객',text:'빨리 보내주세요.'},
+        {speaker:'상담사',text:'네, 최대한 빠르게 처리하겠습니다. 더 도움 필요하신 게 있으실까요?'},
+        {speaker:'고객',text:'아니요, 감사합니다.'},
+        {speaker:'상담사',text:'감사합니다. 좋은 하루 되세요.'}
+      ],
+      [
+        {speaker:'상담사',text:'안녕하세요, {team} {agent}입니다.'},
+        {speaker:'고객',text:'받은 상품이 불량인데 교환하고 싶어요.'},
+        {speaker:'상담사',text:'불편을 드려 죄송합니다. 어떤 부분이 불량인가요?'},
+        {speaker:'고객',text:'지퍼 부분이 파손되어 있어요.'},
+        {speaker:'상담사',text:'사진을 보내주시면 빠르게 처리해드리겠습니다.'},
+        {speaker:'고객',text:'네, 지금 보내드릴게요.'},
+        {speaker:'상담사',text:'확인했습니다. 교환 접수 도와드리겠습니다.'},
+        {speaker:'고객',text:'수거는 언제 오나요?'},
+        {speaker:'상담사',text:'내일 오전 중 수거 예정입니다.'},
+        {speaker:'고객',text:'감사합니다.'}
+      ],
+      [
+        {speaker:'상담사',text:'안녕하세요, {team} {agent}입니다. 무엇을 도와드릴까요?'},
+        {speaker:'고객',text:'환불 신청했는데 아직 안 들어왔어요.'},
+        {speaker:'상담사',text:'주문번호 알려주시겠어요?'},
+        {speaker:'고객',text:'ORD-20250115-0042예요.'},
+        {speaker:'상담사',text:'확인해보겠습니다. 잠시만요.'},
+        {speaker:'고객',text:'결제 취소가 왜 이렇게 오래 걸리나요?'},
+        {speaker:'상담사',text:'카드사 처리에 영업일 기준 3~5일 소요됩니다.'},
+        {speaker:'고객',text:'알겠습니다.'},
+        {speaker:'상담사',text:'추가로 도움 필요하신 부분 있으신가요?'},
+        {speaker:'고객',text:'없습니다. 감사합니다.'}
+      ]
+    ];
+
+    const extractedKeywordPool = {
+      issue: ['배송지연','상품불량','환불지연','포장파손','오배송','결제오류','택배분실','교환지연','사이즈불일치','응대불만','대기시간','쿠폰오류','재고부족','품절안내','누락배송','이중결제','배송추적불가','상품파손','가격오류','수량불일치'],
+      consult: ['주문번호','배송조회','교환접수','반품접수','환불방법','결제확인','주문취소','주소변경','사이즈변경','적립금','회원탈퇴','비밀번호변경','쿠폰적용','카드결제','무통장입금','배송비확인','선물포장','수령인변경','출고일정','재입고알림'],
+      product: ['슬랙스','패딩','스니커즈','모자','벨트','자켓','니트','후드티','맨투맨','샌들','부츠','스카프','지갑','시계']
+    };
+
+    function buildCallDetail(d) {
+      const tpl = transcriptTemplates[Math.floor(Math.random() * transcriptTemplates.length)];
+      const transcript = tpl.map((line, idx) => ({
+        time: `${Math.floor(idx * 0.5)}:${String((idx * 30) % 60).padStart(2,'0')}`,
+        speaker: line.speaker,
+        text: line.text.replace('{team}', d.team).replace('{agent}', d.agent)
+      }));
+      const pick = (arr, n) => [...arr].sort(() => 0.5 - Math.random()).slice(0, n);
+      const mkKw = (pool, n) => pick(pool, n).map(name => ({
+        name, count: Math.floor(Math.random() * 4) + 1,
+        transcriptIdx: Array.from({length: Math.floor(Math.random() * 3) + 1}, () => Math.floor(Math.random() * transcript.length))
+      }));
+      const issueKws = d.issueKeywords.map(name => ({
+        name, count: Math.floor(Math.random() * 4) + 1,
+        transcriptIdx: Array.from({length: Math.floor(Math.random() * 3) + 1}, () => Math.floor(Math.random() * transcript.length))
+      }));
+      return { transcript, extractedKeywords: { issue: issueKws, consult: mkKw(extractedKeywordPool.consult, 4), product: mkKw(extractedKeywordPool.product, 4) } };
+    }
+
+    function showCallDetailModal(callId) {
+      const d = issueData.find(x => x.id === callId);
+      if (!d) return;
+      const detail = buildCallDetail(d);
+
+      const infoRows = [
+        { label:'콜 ID', value:`<span style="font-weight:600;">${d.id}</span>` },
+        { label:'일시', value:`<span style="font-weight:600;">${d.date} ${d.time}</span>` },
+        { label:'센터', value: d.center },
+        { label:'팀', value: d.team },
+        { label:'상담사', value: d.agent },
+        { label:'상담 유형', value:`<span style="font-size:12px;">${d.consultationType}</span>` },
+        { label:'유형', value: d.callType === 'I/B'
+          ? '<span style="display:inline-block;padding:2px 8px;background:#e8f5e9;color:#2e7d32;border-radius:4px;font-size:11px;font-weight:600;">I/B</span>'
+          : '<span style="display:inline-block;padding:2px 8px;background:#fff3e0;color:#e65100;border-radius:4px;font-size:11px;font-weight:600;">O/B</span>' },
+        { label:'통화시간', value: d.duration }
+      ];
+      const infoHtml = `<div style="font-size:13px;">${infoRows.map(r =>
+        `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #F0F0F0;">
+          <span style="color:#757575;font-size:12px;flex-shrink:0;">${r.label}</span>
+          <span style="text-align:right;font-weight:500;color:#212121;">${r.value}</span>
+        </div>`).join('')}</div>`;
+
+      const scriptHtml = detail.transcript.map((line, idx) => {
+        const isAgent = line.speaker === '상담사';
+        const bg = isAgent ? '#E3F2FD' : '#F5F5F5';
+        const labelColor = isAgent ? '#00A3FF' : '#424242';
+        const iconFill = isAgent ? '#00A3FF' : '#757575';
+        return `<div style="display:flex;gap:10px;padding:6px 4px;border-radius:6px;">
+          <div style="min-width:40px;font-size:10px;color:#757575;padding-top:2px;">${line.time}</div>
+          <div style="flex:1;">
+            <div style="font-size:10px;font-weight:600;color:${labelColor};margin-bottom:2px;">${line.speaker}</div>
+            <div style="background:${bg};padding:6px 10px;border-radius:6px;font-size:12px;line-height:1.5;display:flex;align-items:start;gap:6px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="${iconFill}" style="flex-shrink:0;margin-top:3px;opacity:0.5;"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <span>${line.text}</span>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+
+      const kwCategories = [
+        { key:'issue', label:'이슈 키워드', bg:'#FFF3F3', color:'#E53935', border:'#FFCDD2' },
+        { key:'consult', label:'상담 키워드', bg:'#E3F2FD', color:'#1565C0', border:'#BBDEFB' },
+        { key:'product', label:'상품 키워드', bg:'#F3E5F5', color:'#7B1FA2', border:'#E1BEE7' }
+      ];
+      const kwHtml = kwCategories.map(cat => {
+        const items = detail.extractedKeywords[cat.key] || [];
+        if (!items.length) return '';
+        const chips = items.map(kw =>
+          `<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;margin:3px;border-radius:12px;font-size:12px;background:${cat.bg};color:${cat.color};border:1px solid ${cat.border};">
+            ${kw.name}<span style="background:${cat.color};color:#fff;border-radius:8px;padding:0 5px;font-size:10px;font-weight:600;margin-left:2px;">${kw.count}</span>
+          </span>`
+        ).join('');
+        return `<div style="margin-bottom:16px;">
+          <div style="font-size:12px;font-weight:600;color:#424242;margin-bottom:8px;padding-left:2px;">${cat.label}</div>
+          <div style="display:flex;flex-wrap:wrap;">${chips}</div>
+        </div>`;
+      }).join('');
+
+      const playerHtml = `
+        <div style="margin-top:10px;background:#F5F5F5;border:1px solid #E0E0E0;border-radius:8px;padding:10px 14px;flex-shrink:0;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <button style="background:none;border:none;cursor:pointer;padding:0;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="#424242"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            </button>
+            <div style="flex:1;">
+              <div style="width:100%;height:4px;background:#BDBDBD;border-radius:2px;position:relative;">
+                <div style="width:0%;height:100%;background:#00A3FF;border-radius:2px;"></div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;padding-left:30px;">
+            <span style="font-size:10px;color:#757575;">0:00</span>
+            <span style="font-size:10px;color:#757575;">${d.duration}</span>
+          </div>
+        </div>`;
+
+      const modalBody = `
+        <div style="display:grid;grid-template-columns:30% 40% 30%;gap:0;height:calc(90vh - 160px);max-height:660px;">
+          <div style="padding:20px;border-right:1px solid #EEEEEE;overflow-y:auto;">
+            <div style="font-size:14px;font-weight:700;margin-bottom:16px;color:#212121;">콜 정보</div>
+            ${infoHtml}
+          </div>
+          <div style="padding:20px;display:flex;flex-direction:column;min-width:0;min-height:0;">
+            <div style="font-size:13px;font-weight:700;color:#424242;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #424242;flex-shrink:0;">스크립트</div>
+            <div style="flex:1;min-height:0;background:#FAFAFA;border:1px solid #E0E0E0;border-radius:8px;padding:12px;overflow-y:auto;">
+              ${scriptHtml}
+            </div>
+            ${playerHtml}
+          </div>
+          <div style="padding:20px;border-left:1px solid #EEEEEE;overflow-y:auto;">
+            <div style="font-size:14px;font-weight:700;margin-bottom:16px;color:#212121;">추출 키워드</div>
+            ${kwHtml}
+          </div>
+        </div>`;
+
+      AICC_Modal.open({
+        title: `콜 상세 - ${d.id}`,
+        content: modalBody,
+        size: 'xxl',
+        footer: '<button class="btn btn-secondary" onclick="AICC_Modal.close()">닫기</button>'
+      });
+
+      requestAnimationFrame(() => {
+        const body = document.querySelector('#aicc-modal-backdrop .modal-body');
+        if (body) { body.style.overflow = 'auto'; body.style.padding = '0'; }
+      });
     }
 
     /* ══════════════════════════ 필터 ══════════════════════════ */
@@ -402,7 +572,7 @@
 
         const cls = statusCls[d.status] || 'status-미처리';
 
-        return `<tr style="cursor:pointer;" onclick="goCallStatus('${d.issueKeywords[0]}')">
+        return `<tr style="cursor:pointer;" onclick="showCallDetailModal('${d.id}')">
           <td style="font-size:12px;">${d.id}</td>
           <td style="font-size:12px;white-space:nowrap;">${d.date} ${d.time}</td>
           <td style="font-size:12px;white-space:nowrap;">${d.center} &gt; ${d.team}</td>
