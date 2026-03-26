@@ -125,11 +125,11 @@ window.AICC_DATA['dashboard-stats.json'] =
     { "type": "이의 제기 대기", "count": 5, "status": "pending" }
   ],
   "fail_agents": [
-    { "name": "최수진", "center": "서울센터", "team": "기술지원팀", "score": 45, "reason": "공감 부족 + 기준 미달" },
-    { "name": "정민호", "center": "서울센터", "team": "기술지원팀", "score": 52, "reason": "신속성 미달" },
-    { "name": "이영희", "center": "서울센터", "team": "VIP상담팀", "score": 58, "reason": "FAIL(금지어)" },
-    { "name": "박지훈", "center": "대구센터", "team": "CS상담팀", "score": 62, "reason": "해결력 부족" },
-    { "name": "김하늘", "center": "부산센터", "team": "일반상담팀", "score": 66, "reason": "인사 멘트 누락" }
+    { "name": "진민호", "center": "서울센터", "team": "기술지원팀", "score": 45, "reason": "공감 부족 + 기준 미달" },
+    { "name": "변서현", "center": "서울센터", "team": "기술지원팀", "score": 52, "reason": "신속성 미달" },
+    { "name": "김민수", "center": "서울센터", "team": "VIP상담팀", "score": 58, "reason": "FAIL(금지어)" },
+    { "name": "서지원", "center": "대구센터", "team": "종합상담팀", "score": 62, "reason": "해결력 부족" },
+    { "name": "김하늘", "center": "부산센터", "team": "고객상담1팀", "score": 66, "reason": "인사 멘트 누락" }
   ],
   "improvement_needed_top5": [
     {

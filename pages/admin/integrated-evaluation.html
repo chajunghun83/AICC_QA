@@ -38,7 +38,7 @@
           </div>
           <div>
             <label class="form-label">팀</label>
-            <select class="form-select" id="team-filter" onchange="applyFilter()" disabled>
+            <select class="form-select" id="team-filter" disabled>
               <option value="all">전체</option>
             </select>
           </div>
@@ -72,14 +72,13 @@
             <label class="form-label">평가방식</label>
             <select class="form-select" id="method-filter">
               <option value="all">전체</option>
-              <option value="AI">AI</option>
-              <option value="NLP">NLP</option>
+              <option value="auto">자동</option>
               <option value="manual">수동</option>
             </select>
           </div>
           <div>
             <label class="form-label">이슈 유형</label>
-            <select class="form-select" id="issue-filter" onchange="applyFilter()">
+            <select class="form-select" id="issue-filter">
               <option value="all">전체</option>
               <option value="fail">FAIL (금지어)</option>
               <option value="under">기준 미달 (평가표 기준 미만)</option>
@@ -95,6 +94,18 @@
         </div>
       </div>
 
+      <!-- 개선 제안 롤링 바 -->
+      <div id="suggestion-bar" style="display:none;margin-top:16px;padding:12px 20px;background:linear-gradient(135deg,#EDE7F6 0%,#E8EAF6 100%);border-radius:8px;border:1px solid #D1C4E9;align-items:center;gap:30px;">
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 2.38 1.19 4.47 3 5.74V17a1 1 0 001 1h6a1 1 0 001-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.87-3.13-7-7-7z" fill="#7C4DFF"/><rect x="9" y="19" width="6" height="2" rx="1" fill="#7C4DFF" opacity="0.6"/><circle cx="12" cy="9" r="2" fill="#fff" opacity="0.8"/></svg>
+          <span style="font-size:12px;font-weight:700;color:#5E35B1;white-space:nowrap;">AI 개선 제안</span>
+        </div>
+        <div id="suggestion-text-wrap" style="flex:1;overflow:hidden;height:20px;position:relative;">
+          <div id="suggestion-text" style="font-size:13px;color:#424242;line-height:20px;position:absolute;width:100%;transition:all 0.4s ease;"></div>
+        </div>
+        <button class="btn btn-sm" onclick="openActionModal()" style="flex-shrink:0;background:#5E35B1;color:#fff;border:none;padding:5px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">조치 등록</button>
+      </div>
+
       <div class="content-card" style="margin-top:16px;">
         <div class="content-card-header">
           <span style="font-size:14px;font-weight:600;">통합 평가 결과</span>
@@ -103,28 +114,34 @@
         <div class="content-card-body" style="padding:0;">
           <table class="data-table">
             <colgroup>
+              <col style="width:7%">
               <col style="width:9%">
-              <col style="width:10%">
-              <col style="width:11%">
-              <col style="width:6%">
-              <col style="width:16%">
-              <col style="width:7%">
-              <col style="width:7%">
-              <col style="width:14%">
               <col style="width:5%">
-              <col style="width:15%">
+              <col style="width:8%">
+              <col style="width:5%">
+              <col style="width:13%">
+              <col style="width:5%">
+              <col style="width:5%">
+              <col style="width:6%">
+              <col style="width:11%">
+              <col style="width:5%">
+              <col style="width:5%">
+              <col style="width:16%">
             </colgroup>
             <thead>
               <tr>
-                <th style="text-align:center;">평가 ID</th>
-                <th style="text-align:center;">일시</th>
-                <th style="text-align:center;">센터/팀</th>
-                <th style="text-align:center;">상담사</th>
-                <th style="text-align:center;">상담 유형</th>
-                <th style="text-align:center;">유형</th>
-                <th style="text-align:center;">평가방식</th>
-                <th style="text-align:center;">평가표</th>
-                <th style="text-align:center;">점수</th>
+                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="toggleSort('id')">평가 ID <span id="sort-icon-id" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="toggleSort('date')">일시 <span id="sort-icon-date" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="toggleSort('empid')">사번 <span id="sort-icon-empid" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="toggleSort('center')">센터/팀 <span id="sort-icon-center" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="toggleSort('agent')">상담사 <span id="sort-icon-agent" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="toggleSort('consult')">상담 유형 <span id="sort-icon-consult" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="toggleSort('duration')">통화 시간 <span id="sort-icon-duration" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="toggleSort('type')">유형 <span id="sort-icon-type" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="toggleSort('method')">평가방식 <span id="sort-icon-method" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="toggleSort('form')">평가표 <span id="sort-icon-form" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="toggleSort('score')">점수 <span id="sort-icon-score" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="toggleSort('confidence')">신뢰도 <span id="sort-icon-confidence" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
                 <th style="text-align:center;">이슈</th>
               </tr>
             </thead>
@@ -169,6 +186,9 @@
     let pageSize = 20;
     let deductionParam = null;
     let dateParam = null;
+    let sortKey = null;
+    let sortDir = null;
+    let periodFilterInfo = null;
 
     document.addEventListener('DOMContentLoaded', async () => {
       allData = await AICC_DataLoader.loadAll([
@@ -184,7 +204,7 @@
 
       AICC_PeriodPicker.create('period-picker-container', {
         defaultPeriod: 'monthly',
-        onChange: function() { applyFilter(); }
+        onChange: function(type, info) { periodFilterInfo = info; }
       });
 
       renderTable();
@@ -279,8 +299,24 @@
       return generated;
     }
 
-    // 자동 평가와 수동 평가를 eval_method 필드 부여 후 시간순 병합
-    // 원본 데이터의 FAIL/저점수 항목을 정리하여 대시보드 숫자와 일치시킴
+    // agent_id -> 사번 매핑
+    const EMPLOYEE_ID_MAP = {
+      'agent001': 'S-1001', 'agent002': 'S-1002', 'agent003': 'S-1003', 'agent004': 'S-1004',
+      'agent005': 'S-1005', 'agent006': 'S-1006', 'agent007': 'S-1007', 'agent008': 'S-1008',
+      'agent009': 'S-1009', 'agent010': 'S-1010', 'agent011': 'S-1011', 'agent012': 'S-1012'
+    };
+    // agent_name -> 사번 매핑 (generateRecentEvals에서 생성된 데이터용)
+    const EMPLOYEE_NAME_MAP = {
+      '홍길동': 'S-1001', '이영희': 'S-1002', '김철수': 'S-1003', '박지민': 'S-1004',
+      '최수진': 'S-1005', '정민호': 'S-1006', '강현우': 'S-1007', '윤서연': 'S-1008',
+      '박지훈': 'S-2001', '김하늘': 'S-2002', '오세훈': 'S-2003', '한지민': 'S-2004', '장현우': 'S-2005'
+    };
+    function assignEmployeeId(ev) {
+      if (ev.employee_id) return ev;
+      const eid = EMPLOYEE_ID_MAP[ev.agent_id] || EMPLOYEE_NAME_MAP[ev.agent_name] || '-';
+      return { ...ev, employee_id: eid };
+    }
+
     function mergeEvaluations() {
       const autoEvals = (allData['evaluations.json'] || []).map(e => ({
         ...e,
@@ -297,8 +333,8 @@
 
       const recentAuto = generateRecentEvals(allData['evaluations.json'] || []);
 
-      const tagged_auto = [...autoEvals, ...recentAuto].map(e => ({ ...e, eval_method: 'auto' }));
-      const tagged_manual = manualEvals.map(e => ({ ...e, eval_method: 'manual' }));
+      const tagged_auto = [...autoEvals, ...recentAuto].map(e => ({ ...assignEmployeeId(e), eval_method: 'auto' }));
+      const tagged_manual = manualEvals.map(e => ({ ...assignEmployeeId(e), eval_method: 'manual' }));
 
       allEvals = [...tagged_auto, ...tagged_manual].sort((a, b) => {
         const da = (a.date || '') + ' ' + (a.call_time || '');
@@ -324,12 +360,27 @@
       const issueParam = params.get('issue');
       if (issueParam) document.getElementById('issue-filter').value = issueParam;
 
+      // ws 파라미터(센터 ID)로 센터 필터를 먼저 설정한 뒤 팀 필터 적용
+      const wsParam = params.get('ws');
       const teamParam = params.get('team');
-      if (teamParam) {
+      const centerParam = params.get('center');
+      const centers = allData['centers.json'] || [];
+
+      if (wsParam) {
+        const foundCenter = centers.find(c => c.id === wsParam);
+        if (foundCenter) {
+          document.getElementById('ws-filter').value = foundCenter.id;
+          onWsChange();
+          if (teamParam) {
+            const foundTeam = foundCenter.teams.find(t => t.name === teamParam);
+            if (foundTeam) {
+              document.getElementById('team-filter').value = foundTeam.id;
+            }
+          }
+        }
+      } else if (teamParam) {
         const teamFilter = document.getElementById('team-filter');
-        const ws = allData['centers.json'] || [];
-        // 팀명으로 센터를 역추적해 센터 필터도 함께 설정
-        for (const center of ws) {
+        for (const center of centers) {
           const found = center.teams.find(t => t.name === teamParam);
           if (found) {
             document.getElementById('ws-filter').value = center.id;
@@ -338,12 +389,8 @@
             break;
           }
         }
-      }
-
-      const centerParam = params.get('center');
-      if (centerParam) {
-        const ws = allData['centers.json'] || [];
-        const found = ws.find(w => w.name === centerParam);
+      } else if (centerParam) {
+        const found = centers.find(w => w.name === centerParam);
         if (found) {
           document.getElementById('ws-filter').value = found.id;
           onWsChange();
@@ -359,8 +406,13 @@
 
       const methodParam = params.get('method');
       if (methodParam) {
-        const map = { 'auto': 'AI', 'manual': 'manual' };
-        document.getElementById('method-filter').value = map[methodParam] || 'all';
+        document.getElementById('method-filter').value = methodParam;
+      }
+
+      const typeParam = params.get('type');
+      if (typeParam) {
+        const map = { 'IB': 'I/B', 'OB': 'O/B' };
+        document.getElementById('type-filter').value = map[typeParam] || 'all';
       }
 
       const agentParam = params.get('agent');
@@ -368,6 +420,28 @@
 
       deductionParam = params.get('deduction') || null;
       dateParam = params.get('date') || null;
+
+      // tab=detail이면 "상세 분석" 탭을 활성화하고 iframe에 센터/팀 파라미터 전달
+      const tabParam = params.get('tab');
+      if (tabParam === 'detail') {
+        const tabs = document.querySelectorAll('.tab-item');
+        tabs.forEach(t => t.classList.remove('active'));
+        if (tabs[1]) tabs[1].classList.add('active');
+        document.getElementById('tab-all').style.display = 'none';
+        document.getElementById('tab-detail').style.display = '';
+
+        const iframe = document.getElementById('detail-iframe');
+        let iframeSrc = 'detail-analysis.html?embed';
+        const ct = params.get('ct');
+        const tm = params.get('team');
+        const ag = params.get('agent');
+        if (ct) iframeSrc += '&ct=' + encodeURIComponent(ct);
+        if (tm) iframeSrc += '&team=' + encodeURIComponent(tm);
+        if (ag) iframeSrc += '&agent=' + encodeURIComponent(ag);
+        iframe.src = iframeSrc;
+        iframe.onload = function() { adjustIframeHeight(iframe); };
+        detailIframeLoaded = true;
+      }
     }
 
     // 3단계 중첩 구조를 flat map으로 변환해 ID 기반 O(1) 조회 지원
@@ -419,8 +493,7 @@
       if (ev.eval_method === 'manual') {
         return '<span class="badge badge-manual">수동</span>';
       }
-      const label = getAutoMethodLabel(ev);
-      return AICC_Fmt.typeBadge(label);
+      return '<span class="badge badge-ai">자동</span>';
     }
 
     function getCallTypeBadge(callType) {
@@ -432,6 +505,29 @@
 
     function renderTable() {
       filteredEvals = getFilteredEvals();
+
+      if (sortKey && sortDir) {
+        filteredEvals.sort((a, b) => {
+          let va, vb;
+          switch (sortKey) {
+            case 'id': va = a.id; vb = b.id; break;
+            case 'date': va = (a.date||'')+(a.call_time||''); vb = (b.date||'')+(b.call_time||''); break;
+            case 'empid': va = a.employee_id||''; vb = b.employee_id||''; break;
+            case 'center': va = (a.center||'')+(a.team||''); vb = (b.center||'')+(b.team||''); break;
+            case 'agent': va = a.agent_name||''; vb = b.agent_name||''; break;
+            case 'duration': va = a.duration||''; vb = b.duration||''; break;
+            case 'consult': va = a.consultation_type||''; vb = b.consultation_type||''; break;
+            case 'type': va = a.call_type||''; vb = b.call_type||''; break;
+            case 'method': va = a.eval_method||''; vb = b.eval_method||''; break;
+            case 'form': va = a.eval_form||''; vb = b.eval_form||''; break;
+            case 'score': return sortDir === 'asc' ? a.total_score - b.total_score : b.total_score - a.total_score;
+            case 'confidence': va = a.confidence||''; vb = b.confidence||''; break;
+          }
+          const cmp = String(va).localeCompare(String(vb), 'ko');
+          return sortDir === 'asc' ? cmp : -cmp;
+        });
+      }
+
       const totalPages = Math.max(1, Math.ceil(filteredEvals.length / pageSize));
       if (currentPage > totalPages) currentPage = totalPages;
 
@@ -456,21 +552,59 @@
               ? '<div style="font-size:10px;color:#F57F17;">기준 미달</div>'
               : '<span style="color:#9E9E9E;font-size:11px;">-</span>'));
 
+        const conf = ev.confidence || (ev.eval_method === 'auto' ? ['High','Medium','High','High','Medium'][Math.floor(Math.random()*5)] : '-');
+        const confBadge = conf === 'High' ? '<span style="display:inline-block;padding:2px 6px;background:#e8f5e9;color:#2e7d32;border-radius:4px;font-size:10px;font-weight:600;">High</span>'
+          : conf === 'Medium' ? '<span style="display:inline-block;padding:2px 6px;background:#fff8e1;color:#f57f17;border-radius:4px;font-size:10px;font-weight:600;">Mid</span>'
+          : conf === 'Low' ? '<span style="display:inline-block;padding:2px 6px;background:#fbe9e7;color:#d32f2f;border-radius:4px;font-size:10px;font-weight:600;">Low</span>'
+          : '<span style="color:#9E9E9E;font-size:11px;">-</span>';
+
         return `<tr onclick="showEvalDetail('${ev.id}')" style="cursor:pointer;">
-          <td style="font-size:11px;font-family:monospace;text-align:center;">${ev.id}</td>
+          <td style="font-size:11px;text-align:center;">${ev.id}</td>
           <td style="font-size:11px;white-space:nowrap;text-align:center;">${ev.date} ${ev.call_time || ''}</td>
+          <td style="font-size:11px;text-align:center;">${ev.employee_id || '-'}</td>
           <td style="font-size:11px;text-align:center;">${ev.center || '-'} &gt; ${ev.team || '-'}</td>
           <td style="font-size:12px;text-align:center;">${ev.agent_name || '-'}</td>
           <td style="font-size:11px;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;" title="${ev.consultation_type || '-'}">${ev.consultation_type || '-'}</td>
+          <td style="font-size:11px;text-align:center;white-space:nowrap;">${ev.duration || '-'}</td>
           <td style="text-align:center;">${callTypeBadge}</td>
           <td style="text-align:center;">${methodBadge}</td>
           <td style="font-size:11px;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px;" title="${ev.eval_form || '-'}">${ev.eval_form || '-'}</td>
           <td style="text-align:center;">${scoreHtml}</td>
+          <td style="text-align:center;">${confBadge}</td>
           <td style="text-align:center;font-size:11px;">${issueHtml}</td>
         </tr>`;
       }).join('');
 
       renderPagination(totalPages);
+    }
+
+    const SORT_KEYS = ['id','date','empid','center','agent','duration','consult','type','method','form','score','confidence'];
+
+    function toggleSort(key) {
+      if (sortKey === key) {
+        if (sortDir === 'asc') sortDir = 'desc';
+        else { sortKey = null; sortDir = null; }
+      } else {
+        sortKey = key;
+        sortDir = 'asc';
+      }
+      updateSortIcons();
+      currentPage = 1;
+      renderTable();
+    }
+
+    function updateSortIcons() {
+      SORT_KEYS.forEach(k => {
+        const icon = document.getElementById('sort-icon-' + k);
+        if (!icon) return;
+        if (k === sortKey) {
+          icon.textContent = sortDir === 'asc' ? '▲' : '▼';
+          icon.style.color = '#1976D2';
+        } else {
+          icon.textContent = '⇅';
+          icon.style.color = '#BDBDBD';
+        }
+      });
     }
 
     function renderPagination(totalPages) {
@@ -505,6 +639,16 @@
     function getFilteredEvals() {
       let filtered = [...allEvals];
 
+      if (periodFilterInfo) {
+        let pFrom = '', pTo = '';
+        if (periodFilterInfo.type === 'daily') { pFrom = periodFilterInfo.date; pTo = periodFilterInfo.date; }
+        else if (periodFilterInfo.type === 'weekly' || periodFilterInfo.type === 'custom') { pFrom = periodFilterInfo.from || ''; pTo = periodFilterInfo.to || ''; }
+        else if (periodFilterInfo.type === 'monthly') { pFrom = `${periodFilterInfo.year}-${String(periodFilterInfo.month).padStart(2,'0')}-01`; pTo = `${periodFilterInfo.year}-${String(periodFilterInfo.month).padStart(2,'0')}-31`; }
+        else if (periodFilterInfo.type === 'yearly') { pFrom = `${periodFilterInfo.year}-01-01`; pTo = `${periodFilterInfo.year}-12-31`; }
+        if (pFrom) filtered = filtered.filter(e => (e.date || '') >= pFrom);
+        if (pTo) filtered = filtered.filter(e => (e.date || '') <= pTo);
+      }
+
       const wsId = document.getElementById('ws-filter').value;
       if (wsId !== 'all') filtered = filtered.filter(e => e.center_id === wsId);
 
@@ -515,10 +659,10 @@
       if (typeVal !== 'all') filtered = filtered.filter(e => e.call_type === typeVal);
 
       const methodVal = document.getElementById('method-filter').value;
-      if (methodVal === 'manual') {
+      if (methodVal === 'auto') {
+        filtered = filtered.filter(e => e.eval_method === 'auto');
+      } else if (methodVal === 'manual') {
         filtered = filtered.filter(e => e.eval_method === 'manual');
-      } else if (methodVal === 'AI' || methodVal === 'NLP') {
-        filtered = filtered.filter(e => e.eval_method === 'auto' && getAutoMethodLabel(e) === methodVal);
       }
 
       const issueVal = document.getElementById('issue-filter').value;
@@ -829,12 +973,13 @@
           });
         }
       }
-      applyFilter();
     }
 
     function applyFilter() {
       currentPage = 1;
       renderTable();
+      if (hasActiveFilter()) { showSuggestionBar(); }
+      else { hideSuggestionBar(); }
       AICC_Toast.show('필터가 적용되었습니다.');
     }
 
@@ -849,9 +994,468 @@
       document.getElementById('score-filter').value = 'all';
       deductionParam = null;
       dateParam = null;
+      periodFilterInfo = null;
       currentPage = 1;
+      hideSuggestionBar();
       renderTable();
     }
+
+    /* ══════════════════════════ 개선 제안 롤링 바 ══════════════════════════ */
+
+    const suggestionPool = [
+      '클레임처리팀 대상 "고객 응대 스킬" 재교육 권장 (평균 72.8점)',
+      '필수 스크립트 준수율 향상을 위한 모니터링 강화 필요',
+      '아웃바운드팀 "동의 확보" 관련 프로세스 재정비 필요',
+      '고객지원1팀 필수 인사말 누락률 12% — 인사 스크립트 교육 실시 권장',
+      '신규 입사자 대상 품질 기준 안내 교육 실시 권장',
+      '기술지원팀 고객 확인 절차 누락 48건 — 본인확인 프로세스 강화 필요',
+      'VIP상담팀 평균 점수 85.1점으로 기준 미달 근접 — 집중 모니터링 권장',
+      '고객상담2팀 FAIL 판정 비율 2.8% — 금지어 관련 재교육 필요',
+      '수동 평가 완료율 73.5%로 목표 대비 미달 — 평가 일정 재조정 필요',
+      '이의 제기 처리 평균 3.2일 소요 — 처리 기한 단축 방안 마련 필요',
+      '스크립트 순서 오류 41건 — 스크립트 매뉴얼 업데이트 및 교육 실시',
+      '종합상담팀 평균 통화시간 8분 초과 — 콜 효율화 방안 마련 필요',
+      '고객확인 미흡 항목 감점 빈도 최다 — 본인확인 절차 점검표 배포 권장',
+      '야간 상담사 평가 점수 평균 68.5점 — 야간 전용 교육 프로그램 개발 필요',
+      '월간 FAIL 판정 건수 전기 대비 15% 증가 — 금지어 목록 재검토 필요'
+    ];
+
+    let activeSuggestions = [];
+    let suggestionIdx = 0;
+    let suggestionTimer = null;
+
+    function pickSuggestions() {
+      const count = 3 + Math.floor(Math.random() * 3);
+      const shuffled = [...suggestionPool].sort(() => Math.random() - 0.5);
+      return shuffled.slice(0, count);
+    }
+
+    function showSuggestionBar() {
+      activeSuggestions = pickSuggestions();
+      suggestionIdx = 0;
+      const bar = document.getElementById('suggestion-bar');
+      const textEl = document.getElementById('suggestion-text');
+      bar.style.display = 'flex';
+      textEl.style.opacity = '1';
+      textEl.style.transform = 'translateY(0)';
+      textEl.textContent = activeSuggestions[0];
+
+      if (suggestionTimer) clearInterval(suggestionTimer);
+      if (activeSuggestions.length > 1) {
+        suggestionTimer = setInterval(rollSuggestion, 4000);
+      }
+    }
+
+    function rollSuggestion() {
+      const textEl = document.getElementById('suggestion-text');
+      textEl.style.opacity = '0';
+      textEl.style.transform = 'translateY(-10px)';
+      setTimeout(() => {
+        suggestionIdx = (suggestionIdx + 1) % activeSuggestions.length;
+        textEl.textContent = activeSuggestions[suggestionIdx];
+        textEl.style.transform = 'translateY(10px)';
+        requestAnimationFrame(() => {
+          textEl.style.opacity = '1';
+          textEl.style.transform = 'translateY(0)';
+        });
+      }, 350);
+    }
+
+    function hideSuggestionBar() {
+      document.getElementById('suggestion-bar').style.display = 'none';
+      if (suggestionTimer) { clearInterval(suggestionTimer); suggestionTimer = null; }
+    }
+
+    function hasActiveFilter() {
+      if (periodFilterInfo) return true;
+      if (document.getElementById('ws-filter').value !== 'all') return true;
+      if (document.getElementById('team-filter').value !== 'all') return true;
+      if (document.getElementById('type-filter').value !== 'all') return true;
+      if (document.getElementById('method-filter').value !== 'all') return true;
+      if (document.getElementById('issue-filter').value !== 'all') return true;
+      if (document.getElementById('score-filter').value !== 'all') return true;
+      if ((document.getElementById('agent-search').value || '').trim()) return true;
+      return false;
+    }
+
+    /* ══════════════════════════ 검색 조건 요약 ══════════════════════════ */
+
+    function getFilterSummary() {
+      const lines = [];
+      if (periodFilterInfo) {
+        let periodText = '';
+        if (periodFilterInfo.type === 'daily') periodText = periodFilterInfo.date;
+        else if (periodFilterInfo.type === 'weekly') periodText = `${periodFilterInfo.from} ~ ${periodFilterInfo.to}`;
+        else if (periodFilterInfo.type === 'monthly') periodText = `${periodFilterInfo.year}년 ${periodFilterInfo.month}월`;
+        else if (periodFilterInfo.type === 'yearly') periodText = `${periodFilterInfo.year}년`;
+        else if (periodFilterInfo.type === 'custom') periodText = `${periodFilterInfo.from || ''} ~ ${periodFilterInfo.to || ''}`;
+        if (periodText) lines.push({ label: '기간', value: periodText });
+      }
+      const wsId = document.getElementById('ws-filter').value;
+      if (wsId !== 'all') {
+        lines.push({ label: '센터', value: document.getElementById('ws-filter').options[document.getElementById('ws-filter').selectedIndex].text });
+      }
+      const teamId = document.getElementById('team-filter').value;
+      if (teamId !== 'all') {
+        lines.push({ label: '팀', value: document.getElementById('team-filter').options[document.getElementById('team-filter').selectedIndex].text });
+      }
+      const agent = (document.getElementById('agent-search').value || '').trim();
+      if (agent) lines.push({ label: '상담사', value: agent });
+      const scoreVal = document.getElementById('score-filter').value;
+      if (scoreVal !== 'all') {
+        lines.push({ label: '점수 범위', value: document.getElementById('score-filter').options[document.getElementById('score-filter').selectedIndex].text });
+      }
+      const typeVal = document.getElementById('type-filter').value;
+      if (typeVal !== 'all') {
+        lines.push({ label: '통화유형', value: document.getElementById('type-filter').options[document.getElementById('type-filter').selectedIndex].text });
+      }
+      const methodVal = document.getElementById('method-filter').value;
+      if (methodVal !== 'all') {
+        lines.push({ label: '평가방식', value: methodVal === 'auto' ? '자동' : '수동' });
+      }
+      const issueVal = document.getElementById('issue-filter').value;
+      if (issueVal !== 'all') {
+        lines.push({ label: '이슈 유형', value: document.getElementById('issue-filter').options[document.getElementById('issue-filter').selectedIndex].text });
+      }
+      return lines;
+    }
+
+    function getFilterSummaryText() {
+      const lines = getFilterSummary();
+      return lines.length > 0 ? lines.map(l => l.value).join(' / ') : '조건 검색';
+    }
+
+    /* ══════════════════════════ 조치 등록 모달 ══════════════════════════ */
+
+    const _admins = ['김관리자','박매니저','이팀장','최수석','정차장'];
+
+    let _dtpState = { year: 0, month: 0, day: 0, hour: 0, minute: 0, open: false };
+
+    function _initDtp() {
+      const now = new Date();
+      _dtpState = { year: now.getFullYear(), month: now.getMonth(), day: now.getDate(), hour: now.getHours(), minute: Math.floor(now.getMinutes() / 10) * 10, open: false };
+    }
+
+    function _dtpFmt() {
+      return `${_dtpState.year}-${String(_dtpState.month+1).padStart(2,'0')}-${String(_dtpState.day).padStart(2,'0')} ${String(_dtpState.hour).padStart(2,'0')}:${String(_dtpState.minute).padStart(2,'0')}`;
+    }
+
+    function _getNow() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    }
+
+    function _toggleDtp() {
+      if (_dtpState.open) { _closeDtp(); return; }
+      _dtpState.open = true;
+      _renderDtp();
+    }
+
+    function _closeDtp() {
+      _dtpState.open = false;
+      const ov = document.getElementById('act-dtp-overlay');
+      if (ov) ov.remove();
+    }
+
+    function _renderDtp() {
+      let ov = document.getElementById('act-dtp-overlay');
+      if (!ov) {
+        ov = document.createElement('div');
+        ov.id = 'act-dtp-overlay';
+        ov.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:10001;';
+        ov.addEventListener('click', (e) => { if (e.target === ov) _closeDtp(); });
+        document.body.appendChild(ov);
+      }
+      const trigger = document.getElementById('act-date-trigger');
+      const rect = trigger.getBoundingClientRect();
+      const pw = 300, ph = 420;
+      let top = rect.bottom + 4, left = rect.left;
+      if (top + ph > window.innerHeight) top = rect.top - ph - 4;
+      if (left + pw > window.innerWidth) left = window.innerWidth - pw - 8;
+
+      const y = _dtpState.year, m = _dtpState.month;
+      const daysIn = new Date(y, m + 1, 0).getDate();
+      const firstDay = new Date(y, m, 1).getDay();
+      const todayStr = _getNow().split(' ')[0];
+      const selStr = `${y}-${String(m+1).padStart(2,'0')}-${String(_dtpState.day).padStart(2,'0')}`;
+
+      let calCells = '';
+      ['일','월','화','수','목','금','토'].forEach(w => { calCells += `<div class="pp-weekday">${w}</div>`; });
+      for (let i = 0; i < firstDay; i++) calCells += '<div class="pp-day empty"></div>';
+      for (let d = 1; d <= daysIn; d++) {
+        const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        let cls = 'pp-day';
+        if (ds === todayStr) cls += ' today';
+        if (d === _dtpState.day) cls += ' selected';
+        calCells += `<div class="${cls}" onclick="_dtpDay(${d})">${d}</div>`;
+      }
+      let hOpts = '';
+      for (let h = 0; h < 24; h++) { hOpts += `<option value="${h}" ${h===_dtpState.hour?'selected':''}>${String(h).padStart(2,'0')}시</option>`; }
+      let mOpts = '';
+      for (let mi = 0; mi < 60; mi += 10) { mOpts += `<option value="${mi}" ${mi===_dtpState.minute?'selected':''}>${String(mi).padStart(2,'0')}분</option>`; }
+
+      ov.innerHTML = `
+        <div style="position:fixed;top:${top}px;left:${left}px;background:#fff;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.15);border:1px solid #E6E8F0;width:300px;">
+          <div class="pp-body" style="padding:12px;">
+            <div class="pp-nav">
+              <button type="button" class="pp-nav-btn" onclick="_dtpNav(-1)">‹</button>
+              <span class="pp-nav-title">${y}년 ${m+1}월</span>
+              <button type="button" class="pp-nav-btn" onclick="_dtpNav(1)">›</button>
+            </div>
+            <div class="pp-cal-grid">${calCells}</div>
+            <div style="display:flex;gap:8px;margin-top:12px;align-items:center;">
+              <span style="font-size:12px;color:#616161;font-weight:500;white-space:nowrap;">시간</span>
+              <select class="form-select" style="flex:1;min-width:0;padding:4px 8px;font-size:13px;" onchange="_dtpState.hour=parseInt(this.value)">${hOpts}</select>
+              <select class="form-select" style="flex:1;min-width:0;padding:4px 8px;font-size:13px;" onchange="_dtpState.minute=parseInt(this.value)">${mOpts}</select>
+            </div>
+          </div>
+          <div class="pp-footer">
+            <button type="button" class="pp-footer-btn" onclick="_closeDtp()">취소</button>
+            <button type="button" class="pp-footer-btn primary" onclick="_dtpApply()">확인</button>
+          </div>
+        </div>`;
+    }
+
+    function _dtpNav(dir) {
+      _dtpState.month += dir;
+      if (_dtpState.month < 0) { _dtpState.month = 11; _dtpState.year--; }
+      if (_dtpState.month > 11) { _dtpState.month = 0; _dtpState.year++; }
+      const mx = new Date(_dtpState.year, _dtpState.month + 1, 0).getDate();
+      if (_dtpState.day > mx) _dtpState.day = mx;
+      _renderDtp();
+    }
+
+    function _dtpDay(d) { _dtpState.day = d; _renderDtp(); }
+
+    function _dtpApply() {
+      const val = _dtpFmt();
+      document.getElementById('act-date-val').value = val;
+      document.getElementById('act-date-display').textContent = val;
+      _closeDtp();
+    }
+
+    function _openAdminSearch() {
+      if (document.getElementById('act-admin-overlay')) return;
+      const ov = document.createElement('div');
+      ov.id = 'act-admin-overlay';
+      ov.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.3);z-index:10000;display:flex;align-items:center;justify-content:center;';
+      ov.innerHTML = `
+        <div style="background:#fff;border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,0.18);width:360px;max-height:420px;display:flex;flex-direction:column;overflow:hidden;">
+          <div style="padding:16px 20px;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:14px;font-weight:700;">담당자 검색</span>
+            <span style="cursor:pointer;font-size:18px;color:#9E9E9E;" onclick="_closeAdminSearch()">&times;</span>
+          </div>
+          <div style="padding:12px 20px;">
+            <input type="text" id="act-admin-search-input" class="form-input" style="width:100%;" placeholder="이름을 입력하세요" oninput="_filterAdminList()">
+          </div>
+          <div id="act-admin-search-list" style="flex:1;overflow-y:auto;padding:0 20px 16px;min-height:280px;"></div>
+        </div>`;
+      ov.addEventListener('click', (e) => { if (e.target === ov) _closeAdminSearch(); });
+      document.body.appendChild(ov);
+      _filterAdminList();
+      document.getElementById('act-admin-search-input').focus();
+    }
+
+    function _filterAdminList() {
+      const q = (document.getElementById('act-admin-search-input')?.value || '').trim().toLowerCase();
+      const list = _admins.filter(n => n.toLowerCase().includes(q));
+      const el = document.getElementById('act-admin-search-list');
+      if (!el) return;
+      el.innerHTML = list.length === 0
+        ? '<div style="text-align:center;color:#9E9E9E;font-size:12px;padding:16px;">검색 결과가 없습니다</div>'
+        : list.map(n => `
+          <div onclick="_selectAdmin('${n}')" style="padding:10px 12px;border-radius:6px;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:8px;transition:background 0.15s;" onmouseenter="this.style.background='#F5F5F5'" onmouseleave="this.style.background=''">
+            <span style="display:inline-block;width:28px;height:28px;border-radius:50%;background:#E3F2FD;color:#1976D2;font-size:12px;font-weight:600;text-align:center;line-height:28px;">${n.charAt(0)}</span>
+            <span>${n}</span>
+            <span style="font-size:11px;color:#9E9E9E;margin-left:auto;">관리자</span>
+          </div>`).join('');
+    }
+
+    function _selectAdmin(name) {
+      const inp = document.getElementById('act-admin');
+      if (inp) inp.value = name;
+      _closeAdminSearch();
+    }
+
+    function _closeAdminSearch() {
+      const ov = document.getElementById('act-admin-overlay');
+      if (ov) ov.remove();
+    }
+
+    function openActionModal() {
+      _initDtp();
+      modalSuggestions = [...activeSuggestions];
+      const filterLines = getFilterSummary();
+      const filterHtml = filterLines.map(l => `<div style="font-size:13px;padding:2px 0;"><span style="color:#9E9E9E;font-weight:400;">${l.label}</span> <span style="margin:0 4px;color:#BDBDBD;">›</span> <span style="font-weight:500;color:#424242;">${l.value}</span></div>`).join('');
+      const userName = typeof AICC_Auth !== 'undefined' ? AICC_Auth.getCurrentUser().name : '관리자';
+
+      const statusOpts = ['미이행','진행중','완료'].map(s =>
+        `<option${s === '미이행' ? ' selected' : ''}>${s}</option>`
+      ).join('');
+
+      const body = `
+        <div style="display:flex;gap:0;height:100%;">
+          <div style="flex:1;padding:20px;border-right:1px solid #EEEEEE;display:flex;flex-direction:column;max-height:520px;overflow-y:auto;">
+            <div style="font-size:14px;font-weight:700;color:#212121;margin-bottom:16px;">개선 제안 정보</div>
+            <div style="margin-bottom:12px;">
+              <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">조건</div>
+              <div>${filterHtml}</div>
+            </div>
+            <div style="margin-bottom:12px;">
+              <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">검색 결과</div>
+              <div style="font-size:13px;font-weight:500;">${filteredEvals.length}건</div>
+            </div>
+            <div style="flex:1;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+                <div style="font-size:11px;color:#9E9E9E;">개선 제안 내용</div>
+                <button class="btn btn-sm" onclick="_showAddInput()" style="border:1px solid #D1C4E9;background:#fff;color:#5E35B1;font-size:11px;padding:2px 10px;">+ 추가</button>
+              </div>
+              <div id="act-suggestions-box" style="font-size:13px;line-height:1.6;background:#F9F9F9;border-radius:6px;padding:12px;border:1px solid #EEEEEE;"></div>
+            </div>
+          </div>
+          <div style="flex:1;padding:20px;display:flex;flex-direction:column;gap:16px;max-height:520px;overflow-y:auto;overflow-x:visible;">
+            <div style="font-size:14px;font-weight:700;color:#212121;">처리 관리</div>
+            <div>
+              <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">조치 날짜</div>
+              <div id="act-date-trigger" class="form-input" style="width:203px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;" onclick="_toggleDtp()">
+                <span id="act-date-display">${_getNow()}</span>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5" stroke="#9E9E9E" stroke-width="1.2"/><path d="M1.5 6h13" stroke="#9E9E9E" stroke-width="1.2"/><path d="M5 1v3M11 1v3" stroke="#9E9E9E" stroke-width="1.2" stroke-linecap="round"/></svg>
+              </div>
+              <input type="hidden" id="act-date-val" value="${_getNow()}">
+            </div>
+            <div>
+              <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">담당자</div>
+              <div style="display:flex;gap:6px;">
+                <input type="text" id="act-admin" class="form-input" style="width:203px;" value="${userName}" onfocus="this.select()">
+                <button class="btn btn-sm" onclick="_openAdminSearch()" style="white-space:nowrap;border:1px solid #D8DAE5;background:#fff;color:#424242;">검색</button>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">이행 상태</div>
+              <select id="act-status" class="form-select" style="width:203px;">${statusOpts}</select>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;">
+              <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">처리 메모</div>
+              <textarea id="act-memo" class="form-input" style="flex:1;min-height:80px;resize:none;" placeholder="처리 내용을 입력하세요"></textarea>
+              <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+                <button class="btn btn-primary btn-sm" onclick="saveAction()">저장</button>
+              </div>
+            </div>
+          </div>
+        </div>`;
+
+      AICC_Modal.open({
+        title: '조치 등록 — 개선 제안',
+        content: body,
+        size: 'xl'
+      });
+      _renderSuggestionItems();
+    }
+
+    let modalSuggestions = [];
+
+    function _renderSuggestionItems() {
+      const box = document.getElementById('act-suggestions-box');
+      if (!box) return;
+      box.innerHTML = modalSuggestions.map((c, i) => `
+        <div style="display:flex;align-items:flex-start;gap:6px;padding:3px 0;">
+          <span style="flex:1;color:#424242;">${i+1}. ${c}</span>
+          <span onclick="_removeSuggestionItem(${i})" style="cursor:pointer;color:#BDBDBD;font-size:16px;line-height:1;flex-shrink:0;padding:0 2px;transition:color 0.15s;" onmouseenter="this.style.color='#F44336'" onmouseleave="this.style.color='#BDBDBD'">&times;</span>
+        </div>
+      `).join('');
+    }
+
+    function _removeSuggestionItem(idx) {
+      if (modalSuggestions.length <= 1) { AICC_Toast.show('최소 1개의 개선 제안이 필요합니다.'); return; }
+      modalSuggestions.splice(idx, 1);
+      _renderSuggestionItems();
+    }
+
+    function _showAddInput() {
+      const box = document.getElementById('act-suggestions-box');
+      if (!box || document.getElementById('act-new-suggestion-row')) return;
+      const row = document.createElement('div');
+      row.id = 'act-new-suggestion-row';
+      row.style.cssText = 'display:flex;align-items:center;gap:6px;padding:6px 0 0;';
+      row.innerHTML = `
+        <input type="text" id="act-new-suggestion-input" class="form-input" style="flex:1;font-size:12px;padding:4px 8px;" placeholder="개선 제안 내용을 입력하세요">
+        <button class="btn btn-sm" onclick="_confirmAddItem()" style="white-space:nowrap;background:#5E35B1;color:#fff;border:none;font-size:11px;padding:4px 10px;">확인</button>`;
+      box.appendChild(row);
+      document.getElementById('act-new-suggestion-input').focus();
+    }
+
+    function _confirmAddItem() {
+      const input = document.getElementById('act-new-suggestion-input');
+      if (!input || !input.value.trim()) { AICC_Toast.show('내용을 입력해주세요.'); return; }
+      modalSuggestions.push(input.value.trim());
+      _renderSuggestionItems();
+    }
+
+    function saveAction() {
+      const actionDate = document.getElementById('act-date-val').value;
+      if (!actionDate) { AICC_Toast.show('조치 날짜를 선택해주세요.'); return; }
+      const adminName = document.getElementById('act-admin').value.trim();
+      if (!adminName) { AICC_Toast.show('담당자를 입력해주세요.'); return; }
+      const status = document.getElementById('act-status').value;
+      const memo = document.getElementById('act-memo').value.trim();
+      if (!memo) { AICC_Toast.show('처리 메모를 입력해주세요.'); return; }
+
+      const filterSummary = getFilterSummaryText();
+      const today = new Date();
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+
+      const newItem = {
+        reportType: filterSummary,
+        periodFrom: todayStr,
+        periodTo: todayStr,
+        contents: [...modalSuggestions],
+        admin: adminName,
+        status: status,
+        completedDate: status === '완료' ? todayStr : '-',
+        history: [{
+          date: actionDate,
+          author: adminName,
+          status: status,
+          memo: memo
+        }]
+      };
+
+      const stored = JSON.parse(localStorage.getItem('AICC_IMPROVEMENT_ITEMS') || '[]');
+      stored.push(newItem);
+      localStorage.setItem('AICC_IMPROVEMENT_ITEMS', JSON.stringify(stored));
+
+      AICC_Modal.close();
+      AICC_Toast.show('조치가 등록되었습니다. 개선 이행 관리에서 확인할 수 있습니다.');
+    }
+
+    // iframe(detail-analysis.html)에서 모달을 열 때 전체 화면 오버레이 처리
+    let _iframeOrigStyle = null;
+    window.addEventListener('message', function(e) {
+      if (!e.data || !e.data.type) return;
+      const iframe = document.getElementById('detail-iframe');
+      if (!iframe) return;
+
+      if (e.data.type === 'da-modal-expand') {
+        if (document.getElementById('da-parent-backdrop')) return;
+        const backdrop = document.createElement('div');
+        backdrop.id = 'da-parent-backdrop';
+        backdrop.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9998;';
+        document.body.appendChild(backdrop);
+        _iframeOrigStyle = iframe.style.cssText;
+        iframe.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;border:none;';
+      }
+
+      if (e.data.type === 'da-modal-restore') {
+        setTimeout(function() {
+          var bd = document.getElementById('da-parent-backdrop');
+          if (bd) bd.remove();
+          if (_iframeOrigStyle !== null) {
+            iframe.style.cssText = _iframeOrigStyle;
+            _iframeOrigStyle = null;
+          }
+        }, 220);
+      }
+    });
   </script>
 </body>
 </html>

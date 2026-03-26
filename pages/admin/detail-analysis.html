@@ -38,6 +38,18 @@
       <!-- JS로 동적 생성 -->
     </div>
 
+    <!-- AI 개선 제안 롤링 바 -->
+    <div id="da-suggestion-bar" style="display:none;margin-bottom:16px;padding:12px 20px;background:linear-gradient(135deg,#EDE7F6 0%,#E8EAF6 100%);border-radius:8px;border:1px solid #D1C4E9;align-items:center;gap:30px;">
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 2.38 1.19 4.47 3 5.74V17a1 1 0 001 1h6a1 1 0 001-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.87-3.13-7-7-7z" fill="#7C4DFF"/><rect x="9" y="19" width="6" height="2" rx="1" fill="#7C4DFF" opacity="0.6"/><circle cx="12" cy="9" r="2" fill="#fff" opacity="0.8"/></svg>
+        <span style="font-size:12px;font-weight:700;color:#5E35B1;white-space:nowrap;">AI 개선 제안</span>
+      </div>
+      <div style="flex:1;overflow:hidden;height:20px;position:relative;">
+        <div id="da-suggestion-text" style="font-size:13px;color:#424242;line-height:20px;position:absolute;width:100%;transition:all 0.4s ease;"></div>
+      </div>
+      <button class="btn btn-sm" onclick="daOpenActionModal()" style="flex-shrink:0;background:#5E35B1;color:#fff;border:none;padding:5px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">조치 등록</button>
+    </div>
+
     <!-- 데이터 테이블 -->
     <div class="content-card">
       <div class="content-card-header">
@@ -1053,6 +1065,7 @@
           activeFilter = null;
           renderLevel2Table(ws, team, agents);
           updateCardHighlight(null);
+          daShowSuggestionBar();
           return;
         }
         activeFilter = filterKey;
@@ -1066,6 +1079,7 @@
         }
         renderLevel2Table(ws, team, filtered, FILTER_LABELS[filterKey]);
         updateCardHighlight(filterKey);
+        daShowSuggestionBar();
         return;
       }
 
@@ -1076,6 +1090,7 @@
         activeFilter = null;
         renderLevel3Table(ws, team, agent, evals);
         updateCardHighlight(null);
+        daShowSuggestionBar();
         return;
       }
       activeFilter = filterKey;
@@ -1097,6 +1112,7 @@
       }
       renderLevel3Table(ws, team, agent, filtered, FILTER_LABELS[filterKey]);
       updateCardHighlight(filterKey);
+      daShowSuggestionBar();
     }
 
     function updateCardHighlight(activeKey) {
@@ -1136,7 +1152,20 @@
       const wsName = params.get('ct');
       const teamName = params.get('team');
 
-      if (wsName && teamName) {
+      const agentName = params.get('agent');
+      if (wsName && teamName && agentName) {
+        const ws = DUMMY.centers.find(w => w.name === wsName);
+        if (ws) {
+          const team = ws.teams.find(t => t.name === teamName);
+          if (team) {
+            const agent = team.agents.find(a => a.name === agentName);
+            if (agent) {
+              drillToAgent(ws.id, team.id, agent.id);
+              return;
+            }
+          }
+        }
+      } else if (wsName && teamName) {
         const ws = DUMMY.centers.find(w => w.name === wsName);
         if (ws) {
           const team = ws.teams.find(t => t.name === teamName);
@@ -1497,6 +1526,7 @@
       `).join('');
 
       renderPagination(ws.length, 1, 10);
+      daShowSuggestionBar();
     }
 
     /* ========== Level 1: 팀 목록 (센터 내) ========== */
@@ -1570,6 +1600,7 @@
       `).join('');
 
       renderPagination(teams.length, 1, 10);
+      daShowSuggestionBar();
     }
 
     /* ========== Level 2: 상담사 목록 (팀 내) ========== */
@@ -1641,6 +1672,7 @@
       renderKpiTwoRows(row1, row2);
       activeFilter = null;
       renderLevel2Table(ws, team, agents);
+      daShowSuggestionBar();
     }
 
     function renderLevel2Table(ws, team, agentList, filterLabel) {
@@ -1774,6 +1806,7 @@
       renderKpiTwoRows(row1, row2, '1.4fr 0.8fr 0.8fr');
       activeFilter = null;
       renderLevel3Table(ws, team, agent, evals);
+      daShowSuggestionBar();
     }
 
     function renderLevel3Table(ws, team, agent, evalList, filterLabel) {
@@ -2029,9 +2062,11 @@
 
       const infoRow = (label, value) => `<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:6px 0;border-bottom:1px solid #F0F0F0;"><span style="font-size:11px;color:#9E9E9E;white-space:nowrap;">${label}</span><span style="font-size:12px;font-weight:500;text-align:right;margin-left:8px;">${value}</span></div>`;
 
+      _daExpandIframe();
       AICC_Modal.open({
         title: `평가 상세 - ${ev.id}`,
         size: 'xxl',
+        onClose: _daRestoreIframe,
         content: `
           <div style="display:grid;grid-template-columns:300px 1fr 400px;gap:20px;height:calc(90vh - 140px);max-height:650px;">
             <!-- 왼쪽: 콜 정보 -->
@@ -2209,6 +2244,349 @@
     // 기간·유형·점수 필터 적용 stub — 실제 구현 시 현재 레벨의 데이터를 재조회하여 렌더링
     function applyPeriodFilter() {
       AICC_Toast.show('필터가 적용되었습니다. (시뮬레이션)');
+    }
+
+    /* ══════════════════════════ AI 개선 제안 롤링 바 ══════════════════════════ */
+
+    const daSuggestionPool = [
+      '클레임처리팀 대상 "고객 응대 스킬" 재교육 권장 (평균 72.8점)',
+      '필수 스크립트 준수율 향상을 위한 모니터링 강화 필요',
+      '아웃바운드팀 "동의 확보" 관련 프로세스 재정비 필요',
+      '고객지원1팀 필수 인사말 누락률 12% — 인사 스크립트 교육 실시 권장',
+      '신규 입사자 대상 품질 기준 안내 교육 실시 권장',
+      '기술지원팀 고객 확인 절차 누락 48건 — 본인확인 프로세스 강화 필요',
+      'VIP상담팀 평균 점수 85.1점으로 기준 미달 근접 — 집중 모니터링 권장',
+      '고객상담2팀 FAIL 판정 비율 2.8% — 금지어 관련 재교육 필요',
+      '수동 평가 완료율 73.5%로 목표 대비 미달 — 평가 일정 재조정 필요',
+      '이의 제기 처리 평균 3.2일 소요 — 처리 기한 단축 방안 마련 필요',
+      '스크립트 순서 오류 41건 — 스크립트 매뉴얼 업데이트 및 교육 실시',
+      '종합상담팀 평균 통화시간 8분 초과 — 콜 효율화 방안 마련 필요',
+      '고객확인 미흡 항목 감점 빈도 최다 — 본인확인 절차 점검표 배포 권장',
+      '야간 상담사 평가 점수 평균 68.5점 — 야간 전용 교육 프로그램 개발 필요',
+      '월간 FAIL 판정 건수 전기 대비 15% 증가 — 금지어 목록 재검토 필요'
+    ];
+
+    let daActiveSuggestions = [];
+    let daSuggestionIdx = 0;
+    let daSuggestionTimer = null;
+
+    function daPickSuggestions() {
+      const count = 3 + Math.floor(Math.random() * 3);
+      return [...daSuggestionPool].sort(() => Math.random() - 0.5).slice(0, count);
+    }
+
+    function daShowSuggestionBar() {
+      daActiveSuggestions = daPickSuggestions();
+      daSuggestionIdx = 0;
+      const bar = document.getElementById('da-suggestion-bar');
+      const textEl = document.getElementById('da-suggestion-text');
+      bar.style.display = 'flex';
+      textEl.style.opacity = '1';
+      textEl.style.transform = 'translateY(0)';
+      textEl.textContent = daActiveSuggestions[0];
+      if (daSuggestionTimer) clearInterval(daSuggestionTimer);
+      if (daActiveSuggestions.length > 1) {
+        daSuggestionTimer = setInterval(daRollSuggestion, 4000);
+      }
+    }
+
+    function daRollSuggestion() {
+      const textEl = document.getElementById('da-suggestion-text');
+      textEl.style.opacity = '0';
+      textEl.style.transform = 'translateY(-10px)';
+      setTimeout(() => {
+        daSuggestionIdx = (daSuggestionIdx + 1) % daActiveSuggestions.length;
+        textEl.textContent = daActiveSuggestions[daSuggestionIdx];
+        textEl.style.transform = 'translateY(10px)';
+        requestAnimationFrame(() => {
+          textEl.style.opacity = '1';
+          textEl.style.transform = 'translateY(0)';
+        });
+      }, 350);
+    }
+
+    /* ══════════════════════════ 조건 요약 ══════════════════════════ */
+
+    function daGetFilterSummary() {
+      const lines = [];
+      if (currentLevel === 0) {
+        lines.push({ label: '범위', value: '전체 센터' });
+      }
+      if (currentLevel >= 1 && navStack[0]) {
+        lines.push({ label: '센터', value: navStack[0].label });
+      }
+      if (currentLevel >= 2 && navStack[1]) {
+        lines.push({ label: '팀', value: navStack[1].label });
+      }
+      if (currentLevel >= 3 && navStack[2]) {
+        lines.push({ label: '상담사', value: navStack[2].label });
+      }
+      if (activeFilter && FILTER_LABELS[activeFilter]) {
+        lines.push({ label: '필터', value: FILTER_LABELS[activeFilter] });
+      }
+      return lines;
+    }
+
+    function daGetFilterSummaryText() {
+      return daGetFilterSummary().map(l => l.value).join(' / ') || '상세 분석';
+    }
+
+    /* ══════════════════════════ 조치 등록 모달 ══════════════════════════ */
+
+    const _daAdmins = ['김관리자','박매니저','이팀장','최수석','정차장'];
+    let _daDtp = { year:0, month:0, day:0, hour:0, minute:0, open:false };
+    let daModalSuggestions = [];
+
+    function _daInitDtp() {
+      const now = new Date();
+      _daDtp = { year:now.getFullYear(), month:now.getMonth(), day:now.getDate(), hour:now.getHours(), minute:Math.floor(now.getMinutes()/10)*10, open:false };
+    }
+    function _daDtpFmt() {
+      return `${_daDtp.year}-${String(_daDtp.month+1).padStart(2,'0')}-${String(_daDtp.day).padStart(2,'0')} ${String(_daDtp.hour).padStart(2,'0')}:${String(_daDtp.minute).padStart(2,'0')}`;
+    }
+    function _daGetNow() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    }
+
+    // postMessage로 부모에게 iframe 전체화면 확장/복원을 요청하고, 페이지 콘텐츠를 숨겨 모달만 표시
+    function _daExpandIframe() {
+      if (!window.parent || window.parent === window) return;
+      window.parent.postMessage({ type: 'da-modal-expand' }, '*');
+      var pc = document.getElementById('page-content');
+      if (pc) pc.style.visibility = 'hidden';
+    }
+    function _daRestoreIframe() {
+      if (!window.parent || window.parent === window) return;
+      window.parent.postMessage({ type: 'da-modal-restore' }, '*');
+      var pc = document.getElementById('page-content');
+      if (pc) pc.style.visibility = '';
+    }
+
+    function daOpenActionModal() {
+      _daInitDtp();
+      daModalSuggestions = [...daActiveSuggestions];
+      const filterLines = daGetFilterSummary();
+      const filterHtml = filterLines.map(l => `<div style="font-size:13px;padding:2px 0;"><span style="color:#9E9E9E;font-weight:400;">${l.label}</span> <span style="margin:0 4px;color:#BDBDBD;">›</span> <span style="font-weight:500;color:#424242;">${l.value}</span></div>`).join('');
+      const userName = typeof AICC_Auth !== 'undefined' ? AICC_Auth.getCurrentUser().name : '관리자';
+      const statusOpts = ['미이행','진행중','완료'].map(s => `<option${s==='미이행'?' selected':''}>${s}</option>`).join('');
+
+      const body = `
+        <div style="display:flex;gap:0;height:100%;">
+          <div style="flex:1;padding:20px;border-right:1px solid #EEEEEE;display:flex;flex-direction:column;max-height:520px;overflow-y:auto;">
+            <div style="font-size:14px;font-weight:700;color:#212121;margin-bottom:16px;">개선 제안 정보</div>
+            <div style="margin-bottom:12px;">
+              <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">조건</div>
+              <div>${filterHtml}</div>
+            </div>
+            <div style="flex:1;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+                <div style="font-size:11px;color:#9E9E9E;">개선 제안 내용</div>
+                <button class="btn btn-sm" onclick="_daShowAddInput()" style="border:1px solid #D1C4E9;background:#fff;color:#5E35B1;font-size:11px;padding:2px 10px;">+ 추가</button>
+              </div>
+              <div id="da-suggestions-box" style="font-size:13px;line-height:1.6;background:#F9F9F9;border-radius:6px;padding:12px;border:1px solid #EEEEEE;"></div>
+            </div>
+          </div>
+          <div style="flex:1;padding:20px;display:flex;flex-direction:column;gap:16px;max-height:520px;overflow-y:auto;overflow-x:visible;">
+            <div style="font-size:14px;font-weight:700;color:#212121;">처리 관리</div>
+            <div>
+              <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">조치 날짜</div>
+              <div id="da-date-trigger" class="form-input" style="width:203px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;" onclick="_daToggleDtp()">
+                <span id="da-date-display">${_daGetNow()}</span>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5" stroke="#9E9E9E" stroke-width="1.2"/><path d="M1.5 6h13" stroke="#9E9E9E" stroke-width="1.2"/><path d="M5 1v3M11 1v3" stroke="#9E9E9E" stroke-width="1.2" stroke-linecap="round"/></svg>
+              </div>
+              <input type="hidden" id="da-date-val" value="${_daGetNow()}">
+            </div>
+            <div>
+              <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">담당자</div>
+              <div style="display:flex;gap:6px;">
+                <input type="text" id="da-admin" class="form-input" style="width:203px;" value="${userName}" onfocus="this.select()">
+                <button class="btn btn-sm" onclick="_daOpenAdminSearch()" style="white-space:nowrap;border:1px solid #D8DAE5;background:#fff;color:#424242;">검색</button>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">이행 상태</div>
+              <select id="da-status" class="form-select" style="width:203px;">${statusOpts}</select>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;">
+              <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">처리 메모</div>
+              <textarea id="da-memo" class="form-input" style="flex:1;min-height:80px;resize:none;" placeholder="처리 내용을 입력하세요"></textarea>
+              <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+                <button class="btn btn-primary btn-sm" onclick="daSaveAction()">저장</button>
+              </div>
+            </div>
+          </div>
+        </div>`;
+
+      _daExpandIframe();
+      AICC_Modal.open({ title: '조치 등록 — 개선 제안', content: body, size: 'xl', onClose: _daRestoreIframe });
+      _daRenderSuggestionItems();
+    }
+
+    function _daRenderSuggestionItems() {
+      const box = document.getElementById('da-suggestions-box');
+      if (!box) return;
+      box.innerHTML = daModalSuggestions.map((c, i) => `
+        <div style="display:flex;align-items:flex-start;gap:6px;padding:3px 0;">
+          <span style="flex:1;color:#424242;">${i+1}. ${c}</span>
+          <span onclick="_daRemoveSuggestion(${i})" style="cursor:pointer;color:#BDBDBD;font-size:16px;line-height:1;flex-shrink:0;padding:0 2px;transition:color 0.15s;" onmouseenter="this.style.color='#F44336'" onmouseleave="this.style.color='#BDBDBD'">&times;</span>
+        </div>`).join('');
+    }
+    function _daRemoveSuggestion(idx) {
+      if (daModalSuggestions.length <= 1) { AICC_Toast.show('최소 1개의 개선 제안이 필요합니다.'); return; }
+      daModalSuggestions.splice(idx, 1);
+      _daRenderSuggestionItems();
+    }
+    function _daShowAddInput() {
+      const box = document.getElementById('da-suggestions-box');
+      if (!box || document.getElementById('da-new-suggestion-row')) return;
+      const row = document.createElement('div'); row.id = 'da-new-suggestion-row';
+      row.style.cssText = 'display:flex;align-items:center;gap:6px;padding:6px 0 0;';
+      row.innerHTML = `<input type="text" id="da-new-suggestion-input" class="form-input" style="flex:1;font-size:12px;padding:4px 8px;" placeholder="개선 제안 내용을 입력하세요">
+        <button class="btn btn-sm" onclick="_daConfirmAddItem()" style="white-space:nowrap;background:#5E35B1;color:#fff;border:none;font-size:11px;padding:4px 10px;">확인</button>`;
+      box.appendChild(row);
+      document.getElementById('da-new-suggestion-input').focus();
+    }
+    function _daConfirmAddItem() {
+      const inp = document.getElementById('da-new-suggestion-input');
+      if (!inp || !inp.value.trim()) { AICC_Toast.show('내용을 입력해주세요.'); return; }
+      daModalSuggestions.push(inp.value.trim());
+      _daRenderSuggestionItems();
+    }
+
+    function _daToggleDtp() {
+      if (_daDtp.open) { _daCloseDtp(); return; }
+      _daDtp.open = true;
+      _daRenderDtp();
+    }
+    function _daCloseDtp() {
+      _daDtp.open = false;
+      const ov = document.getElementById('da-dtp-overlay');
+      if (ov) ov.remove();
+    }
+    function _daRenderDtp() {
+      let ov = document.getElementById('da-dtp-overlay');
+      if (!ov) {
+        ov = document.createElement('div'); ov.id = 'da-dtp-overlay';
+        ov.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:10001;';
+        ov.addEventListener('click', e => { if (e.target === ov) _daCloseDtp(); });
+        document.body.appendChild(ov);
+      }
+      const trigger = document.getElementById('da-date-trigger');
+      const rect = trigger.getBoundingClientRect();
+      let top = rect.bottom + 4, left = rect.left;
+      if (top + 420 > window.innerHeight) top = rect.top - 424;
+      if (left + 300 > window.innerWidth) left = window.innerWidth - 308;
+
+      const y = _daDtp.year, m = _daDtp.month;
+      const daysIn = new Date(y, m+1, 0).getDate();
+      const firstDay = new Date(y, m, 1).getDay();
+      const todayStr = _daGetNow().split(' ')[0];
+
+      let cal = '';
+      ['일','월','화','수','목','금','토'].forEach(w => { cal += `<div class="pp-weekday">${w}</div>`; });
+      for (let i = 0; i < firstDay; i++) cal += '<div class="pp-day empty"></div>';
+      for (let d = 1; d <= daysIn; d++) {
+        const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        let cls = 'pp-day';
+        if (ds === todayStr) cls += ' today';
+        if (d === _daDtp.day) cls += ' selected';
+        cal += `<div class="${cls}" onclick="_daDtpDay(${d})">${d}</div>`;
+      }
+      let hO = ''; for (let h = 0; h < 24; h++) hO += `<option value="${h}" ${h===_daDtp.hour?'selected':''}>${String(h).padStart(2,'0')}시</option>`;
+      let mO = ''; for (let mi = 0; mi < 60; mi += 10) mO += `<option value="${mi}" ${mi===_daDtp.minute?'selected':''}>${String(mi).padStart(2,'0')}분</option>`;
+
+      ov.innerHTML = `<div style="position:fixed;top:${top}px;left:${left}px;background:#fff;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.15);border:1px solid #E6E8F0;width:300px;z-index:10002;">
+        <div class="pp-body" style="padding:12px;">
+          <div class="pp-nav"><button type="button" class="pp-nav-btn" onclick="_daDtpNav(-1)">‹</button><span class="pp-nav-title">${y}년 ${m+1}월</span><button type="button" class="pp-nav-btn" onclick="_daDtpNav(1)">›</button></div>
+          <div class="pp-cal-grid">${cal}</div>
+          <div style="display:flex;gap:8px;margin-top:12px;align-items:center;">
+            <span style="font-size:12px;color:#616161;font-weight:500;white-space:nowrap;">시간</span>
+            <select class="form-select" style="flex:1;min-width:0;padding:4px 8px;font-size:13px;" onchange="_daDtp.hour=parseInt(this.value)">${hO}</select>
+            <select class="form-select" style="flex:1;min-width:0;padding:4px 8px;font-size:13px;" onchange="_daDtp.minute=parseInt(this.value)">${mO}</select>
+          </div>
+        </div>
+        <div class="pp-footer"><button type="button" class="pp-footer-btn" onclick="_daCloseDtp()">취소</button><button type="button" class="pp-footer-btn primary" onclick="_daDtpApply()">확인</button></div>
+      </div>`;
+    }
+    function _daDtpNav(dir) {
+      _daDtp.month += dir;
+      if (_daDtp.month < 0) { _daDtp.month = 11; _daDtp.year--; }
+      if (_daDtp.month > 11) { _daDtp.month = 0; _daDtp.year++; }
+      const mx = new Date(_daDtp.year, _daDtp.month+1, 0).getDate();
+      if (_daDtp.day > mx) _daDtp.day = mx;
+      _daRenderDtp();
+    }
+    function _daDtpDay(d) { _daDtp.day = d; _daRenderDtp(); }
+    function _daDtpApply() {
+      const v = _daDtpFmt();
+      document.getElementById('da-date-val').value = v;
+      document.getElementById('da-date-display').textContent = v;
+      _daCloseDtp();
+    }
+
+    function _daOpenAdminSearch() {
+      if (document.getElementById('da-admin-overlay')) return;
+      const ov = document.createElement('div'); ov.id = 'da-admin-overlay';
+      ov.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.3);z-index:10000;display:flex;align-items:center;justify-content:center;';
+      ov.innerHTML = `<div style="background:#fff;border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,0.18);width:360px;max-height:420px;display:flex;flex-direction:column;overflow:hidden;">
+        <div style="padding:16px 20px;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:14px;font-weight:700;">담당자 검색</span>
+          <span style="cursor:pointer;font-size:18px;color:#9E9E9E;" onclick="_daCloseAdminSearch()">&times;</span>
+        </div>
+        <div style="padding:12px 20px;"><input type="text" id="da-admin-search-input" class="form-input" style="width:100%;" placeholder="이름을 입력하세요" oninput="_daFilterAdminList()"></div>
+        <div id="da-admin-search-list" style="flex:1;overflow-y:auto;padding:0 20px 16px;min-height:280px;"></div>
+      </div>`;
+      ov.addEventListener('click', e => { if (e.target === ov) _daCloseAdminSearch(); });
+      document.body.appendChild(ov);
+      _daFilterAdminList();
+      document.getElementById('da-admin-search-input').focus();
+    }
+    function _daFilterAdminList() {
+      const q = (document.getElementById('da-admin-search-input')?.value || '').trim().toLowerCase();
+      const list = _daAdmins.filter(n => n.toLowerCase().includes(q));
+      const el = document.getElementById('da-admin-search-list');
+      if (!el) return;
+      el.innerHTML = list.length === 0
+        ? '<div style="text-align:center;color:#9E9E9E;font-size:12px;padding:16px;">검색 결과가 없습니다</div>'
+        : list.map(n => `<div onclick="_daSelectAdmin('${n}')" style="padding:10px 12px;border-radius:6px;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:8px;transition:background 0.15s;" onmouseenter="this.style.background='#F5F5F5'" onmouseleave="this.style.background=''">
+            <span style="display:inline-block;width:28px;height:28px;border-radius:50%;background:#E3F2FD;color:#1976D2;font-size:12px;font-weight:600;text-align:center;line-height:28px;">${n.charAt(0)}</span>
+            <span>${n}</span><span style="font-size:11px;color:#9E9E9E;margin-left:auto;">관리자</span>
+          </div>`).join('');
+    }
+    function _daSelectAdmin(name) { const inp = document.getElementById('da-admin'); if (inp) inp.value = name; _daCloseAdminSearch(); }
+    function _daCloseAdminSearch() { const ov = document.getElementById('da-admin-overlay'); if (ov) ov.remove(); }
+
+    function daSaveAction() {
+      const actionDate = document.getElementById('da-date-val').value;
+      if (!actionDate) { AICC_Toast.show('조치 날짜를 선택해주세요.'); return; }
+      const adminName = document.getElementById('da-admin').value.trim();
+      if (!adminName) { AICC_Toast.show('담당자를 입력해주세요.'); return; }
+      const status = document.getElementById('da-status').value;
+      const memo = document.getElementById('da-memo').value.trim();
+      if (!memo) { AICC_Toast.show('처리 메모를 입력해주세요.'); return; }
+
+      const summaryText = daGetFilterSummaryText();
+      const today = new Date();
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+
+      const newItem = {
+        reportType: summaryText,
+        periodFrom: todayStr,
+        periodTo: todayStr,
+        contents: [...daModalSuggestions],
+        admin: adminName,
+        status: status,
+        completedDate: status === '완료' ? todayStr : '-',
+        history: [{ date: actionDate, author: adminName, status: status, memo: memo }]
+      };
+
+      const stored = JSON.parse(localStorage.getItem('AICC_IMPROVEMENT_ITEMS') || '[]');
+      stored.push(newItem);
+      localStorage.setItem('AICC_IMPROVEMENT_ITEMS', JSON.stringify(stored));
+
+      AICC_Modal.close();
+      AICC_Toast.show('조치가 등록되었습니다. 개선 이행 관리에서 확인할 수 있습니다.');
     }
   </script>
 </body>

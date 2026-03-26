@@ -106,34 +106,34 @@
       <div class="content-card-body" style="padding:0;">
         <table class="data-table" style="table-layout:fixed;width:100%;">
           <colgroup>
-            <col style="width:10%;"><!-- 평가 ID -->
-            <col style="width:10%;"><!-- 일시 -->
-            <col style="width:10%;"><!-- 팀 -->
-            <col style="width:9%;"><!-- 상담유형 -->
-            <col style="width:4%;"><!-- 유형 -->
-            <col style="width:5%;"><!-- 통화시간 -->
+            <col style="width:8%;"><!-- 평가 ID -->
+            <col style="width:9%;"><!-- 일시 -->
+            <col style="width:5%;"><!-- 사번 -->
+            <col style="width:9%;"><!-- 센터/팀 -->
             <col style="width:6%;"><!-- 상담사 -->
-            <col style="width:12%;"><!-- 평가 계획 -->
-            <col style="width:10%;"><!-- 평가표 -->
-            <col style="width:5%;"><!-- 평가자 -->
-            <col style="width:4%;"><!-- 점수 -->
+            <col style="width:13%;"><!-- 상담유형 -->
+            <col style="width:5%;"><!-- 통화 시간 -->
+            <col style="width:4%;"><!-- 유형 -->
+            <col style="width:11%;"><!-- 평가표 -->
+            <col style="width:5%;"><!-- 점수 -->
+            <col style="width:6%;"><!-- 평가자 -->
             <col style="width:6%;"><!-- 평가 상태 -->
-            <col style="width:9%;"><!-- 이슈 -->
+            <col style="width:13%;"><!-- 이슈 -->
           </colgroup>
           <thead>
             <tr>
-              <th>평가 ID</th>
-              <th>일시</th>
-              <th>팀</th>
-              <th class="col-left">상담유형</th>
-              <th>유형</th>
-              <th>통화시간</th>
-              <th>상담사</th>
-              <th class="col-left">평가 계획</th>
-              <th class="col-left">평가표</th>
-              <th>평가자</th>
-              <th>점수</th>
-              <th>평가 상태</th>
+              <th style="cursor:pointer;user-select:none;" onclick="toggleSort('id')">평가 ID <span id="sort-icon-id" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="toggleSort('date')">일시 <span id="sort-icon-date" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="toggleSort('empid')">사번 <span id="sort-icon-empid" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="toggleSort('center')">센터/팀 <span id="sort-icon-center" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="toggleSort('agent')">상담사 <span id="sort-icon-agent" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="toggleSort('consult')">상담유형 <span id="sort-icon-consult" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="toggleSort('duration')">통화 시간 <span id="sort-icon-duration" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="toggleSort('type')">유형 <span id="sort-icon-type" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="toggleSort('form')">평가표 <span id="sort-icon-form" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="toggleSort('score')">점수 <span id="sort-icon-score" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="toggleSort('reviewer')">평가자 <span id="sort-icon-reviewer" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="toggleSort('status')">평가 상태 <span id="sort-icon-status" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
               <th>이슈</th>
             </tr>
           </thead>
@@ -168,6 +168,74 @@
   <script>
     let allData = {};
     let manualEvals = [];
+    let sortKey = null;
+    let sortDir = null;
+
+    const EMPLOYEE_ID_MAP = {
+      'agent001': 'S-1001', 'agent002': 'S-1002', 'agent003': 'S-1003', 'agent004': 'S-1004',
+      'agent005': 'S-1005', 'agent006': 'S-1006', 'agent007': 'S-1007', 'agent008': 'S-1008',
+      'agent009': 'S-1009', 'agent010': 'S-1010', 'agent011': 'S-1011', 'agent012': 'S-1012'
+    };
+    const EMPLOYEE_NAME_MAP = {
+      '홍길동': 'S-1001', '이영희': 'S-1002', '김철수': 'S-1003', '박지민': 'S-1004',
+      '최수진': 'S-1005', '정민호': 'S-1006', '강현우': 'S-1007', '윤서연': 'S-1008',
+      '김신입': 'S-2001', '박신입': 'S-2003', '박상현': 'S-2013', '정대리': 'S-2014',
+      '한과장': 'S-2015', '강신입': 'S-2016', '윤해피': 'S-2017'
+    };
+    function getEmployeeId(ev) {
+      return ev.employee_id || EMPLOYEE_ID_MAP[ev.agent_id] || EMPLOYEE_NAME_MAP[ev.agent_name] || '-';
+    }
+
+    const SORT_KEYS = ['id','date','empid','center','agent','consult','duration','type','form','score','reviewer','status'];
+
+    function toggleSort(key) {
+      if (sortKey === key) {
+        if (sortDir === 'asc') sortDir = 'desc';
+        else { sortKey = null; sortDir = null; }
+      } else {
+        sortKey = key;
+        sortDir = 'asc';
+      }
+      updateSortIcons();
+      applyFilter();
+    }
+
+    function updateSortIcons() {
+      SORT_KEYS.forEach(k => {
+        const icon = document.getElementById('sort-icon-' + k);
+        if (!icon) return;
+        if (k === sortKey) {
+          icon.textContent = sortDir === 'asc' ? '▲' : '▼';
+          icon.style.color = '#1976D2';
+        } else {
+          icon.textContent = '⇅';
+          icon.style.color = '#BDBDBD';
+        }
+      });
+    }
+
+    function applySorting(arr) {
+      if (!sortKey || !sortDir) return arr;
+      return [...arr].sort((a, b) => {
+        let va, vb;
+        switch (sortKey) {
+          case 'id': va = a.id; vb = b.id; break;
+          case 'date': va = (a.date||'')+(a.call_time||''); vb = (b.date||'')+(b.call_time||''); break;
+          case 'empid': va = getEmployeeId(a); vb = getEmployeeId(b); break;
+          case 'center': va = (a.center||'')+(a.team||''); vb = (b.center||'')+(b.team||''); break;
+          case 'agent': va = a.agent_name||''; vb = b.agent_name||''; break;
+          case 'consult': va = a.consultation_type||''; vb = b.consultation_type||''; break;
+          case 'duration': va = a.duration||''; vb = b.duration||''; break;
+          case 'type': va = a.call_type||''; vb = b.call_type||''; break;
+          case 'form': va = a.eval_form||''; vb = b.eval_form||''; break;
+          case 'score': return sortDir === 'asc' ? a.total_score - b.total_score : b.total_score - a.total_score;
+          case 'reviewer': va = (a.manual_review?.reviewer)||''; vb = (b.manual_review?.reviewer)||''; break;
+          case 'status': va = a.eval_status||''; vb = b.eval_status||''; break;
+        }
+        const cmp = String(va).localeCompare(String(vb), 'ko');
+        return sortDir === 'asc' ? cmp : -cmp;
+      });
+    }
 
     const _inlineManualEvals = [
       { id: 'ME-2025-00001', date: '2025-01-27', call_time: '09:15', center: '서울센터', center_id: 'ws-seoul', team: 'VIP상담팀', team_id: 'team-vip', agent_name: '김신입', call_type: 'I/B', duration: '06:42', total_score: 0, eval_form: 'I/B VIP 평가표 v1.0', consultation_type: '상품문의 > 의류 > 사이즈안내', manual_plan: '2025년 1분기 신입 상담사 수동 평가', manual_plan_criteria: '근무일수 30일 미만', eval_status: 'pending', issues: [], ai_feedback: 'AI 자동 평가 점수: 72점. 신입 상담사로 수동 평가 대상입니다.', scores: { 'item-greeting': { type: 'NLP', score: 8, max: 10, status: 'pass', confidence: 92 }, 'item-empathy': { type: 'AI', score: 7, max: 10, status: 'warn', confidence: 78 }, 'item-solution': { type: 'AI', score: 6, max: 15, status: 'warn', confidence: 65 }, 'item-closing': { type: 'NLP', score: 9, max: 10, status: 'pass', confidence: 95 }, 'item-forbidden': { type: 'NLP', score: 10, max: 10, status: 'pass', confidence: 99 } }, transcript: [{ time: '0:00', speaker: 'agent', text: '안녕하세요, VIP상담팀 김신입입니다.' }, { time: '0:05', speaker: 'customer', text: '네, 사이즈 문의 좀 하려고요.' }, { time: '0:12', speaker: 'agent', text: '네, 어떤 상품 사이즈가 궁금하신가요?' }, { time: '0:20', speaker: 'customer', text: '이번에 나온 겨울 코트 M사이즈 실측이 어떻게 되나요?' }, { time: '0:30', speaker: 'agent', text: '확인해 드리겠습니다. 잠시만 기다려 주세요.' }] },
@@ -233,17 +301,17 @@
 
         return `
           <tr onclick="showDetail('${ev.id}')">
-            <td style="font-size:12px;font-family:monospace;">${ev.id}</td>
-            <td style="font-size:12px;">${ev.date} ${ev.call_time}</td>
-            <td style="font-size:12px;color:#757575;">${ev.center} &gt; ${ev.team}</td>
+            <td style="font-size:11px;">${ev.id}</td>
+            <td style="font-size:11px;white-space:nowrap;">${ev.date} ${ev.call_time}</td>
+            <td style="font-size:11px;">${getEmployeeId(ev)}</td>
+            <td style="font-size:11px;color:#757575;">${ev.center} &gt; ${ev.team}</td>
+            <td style="font-size:12px;font-weight:500;">${ev.agent_name}</td>
             <td class="col-left" style="font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${ev.consultation_type || ''}">${ev.consultation_type || '-'}</td>
+            <td style="font-size:11px;white-space:nowrap;">${ev.duration}</td>
             <td><span class="badge ${ev.call_type === 'I/B' ? 'badge-nlp' : 'badge-ai'}" style="font-size:10px;">${ev.call_type}</span></td>
-            <td style="font-size:12px;">${ev.duration}</td>
-            <td style="font-weight:500;">${ev.agent_name}</td>
-            <td class="col-left" style="font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${ev.manual_plan}">${ev.manual_plan}</td>
             <td class="col-left" style="font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ev.eval_form || '-'}</td>
-            <td style="font-size:12px;">${ev.eval_status === 'completed' && ev.manual_review?.reviewer ? ev.manual_review.reviewer : '-'}</td>
             <td>${scoreDisplay}</td>
+            <td style="font-size:12px;">${ev.eval_status === 'completed' && ev.manual_review?.reviewer ? ev.manual_review.reviewer : '-'}</td>
             <td>${statusBadge}</td>
             <td style="overflow:hidden;text-overflow:ellipsis;">${issueHtml}</td>
           </tr>
@@ -682,6 +750,7 @@
       if (formVal !== 'all') filtered = filtered.filter(e => e.eval_form === formVal);
       const consultSearch = (document.getElementById('consult-search').value || '').trim().toLowerCase();
       if (consultSearch) filtered = filtered.filter(e => (e.consultation_type || '').toLowerCase().includes(consultSearch));
+      filtered = applySorting(filtered);
       renderTable(filtered);
     }
 
@@ -734,7 +803,15 @@
       const formSel = document.getElementById('form-filter');
       formNames.forEach(f => { formSel.innerHTML += '<option value="' + f + '">' + f + '</option>'; });
 
-      renderTable(manualEvals);
+      // URL 파라미터 기반 필터 적용
+      const params = new URLSearchParams(window.location.search);
+      const scoreRange = params.get('score_range');
+      if (scoreRange) {
+        const map = { 'excellent': 'high', 'good': 'high', 'caution': 'mid', 'low': 'low' };
+        document.getElementById('score-filter').value = map[scoreRange] || 'all';
+      }
+
+      applyFilter();
     });
   </script>
 </body>

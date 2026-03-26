@@ -117,16 +117,17 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>평가 ID</th>
-              <th>일시</th>
-              <th>팀</th>
-              <th class="col-left">상담유형</th>
-              <th>유형</th>
-              <th>통화시간</th>
-              <th>상담사</th>
-              <th class="col-left">평가표</th>
-              <th>점수</th>
-              <th>신뢰도</th>
+              <th style="cursor:pointer;user-select:none;" onclick="toggleSort('id')">평가 ID <span id="sort-icon-id" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="toggleSort('date')">일시 <span id="sort-icon-date" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="toggleSort('empid')">사번 <span id="sort-icon-empid" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="toggleSort('center')">센터/팀 <span id="sort-icon-center" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="toggleSort('agent')">상담사 <span id="sort-icon-agent" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="toggleSort('consult')">상담유형 <span id="sort-icon-consult" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="toggleSort('duration')">통화시간 <span id="sort-icon-duration" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="toggleSort('type')">유형 <span id="sort-icon-type" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="toggleSort('form')">평가표 <span id="sort-icon-form" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="toggleSort('score')">점수 <span id="sort-icon-score" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="toggleSort('confidence')">신뢰도 <span id="sort-icon-confidence" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
               <th>이슈</th>
             </tr>
           </thead>
@@ -160,6 +161,71 @@
   <script src="../../js/components/period-picker.js"></script>
   <script>
     let allData = {};
+    let sortKey = null;
+    let sortDir = null;
+
+    const EMPLOYEE_ID_MAP = {
+      'agent001': 'S-1001', 'agent002': 'S-1002', 'agent003': 'S-1003', 'agent004': 'S-1004',
+      'agent005': 'S-1005', 'agent006': 'S-1006', 'agent007': 'S-1007', 'agent008': 'S-1008',
+      'agent009': 'S-1009', 'agent010': 'S-1010', 'agent011': 'S-1011', 'agent012': 'S-1012'
+    };
+    const EMPLOYEE_NAME_MAP = {
+      '홍길동': 'S-1001', '이영희': 'S-1002', '김철수': 'S-1003', '박지민': 'S-1004',
+      '최수진': 'S-1005', '정민호': 'S-1006', '강현우': 'S-1007', '윤서연': 'S-1008'
+    };
+    function getEmployeeId(ev) {
+      return ev.employee_id || EMPLOYEE_ID_MAP[ev.agent_id] || EMPLOYEE_NAME_MAP[ev.agent_name] || '-';
+    }
+
+    const SORT_KEYS = ['id','date','empid','center','agent','consult','duration','type','form','score','confidence'];
+
+    function toggleSort(key) {
+      if (sortKey === key) {
+        if (sortDir === 'asc') sortDir = 'desc';
+        else { sortKey = null; sortDir = null; }
+      } else {
+        sortKey = key;
+        sortDir = 'asc';
+      }
+      updateSortIcons();
+      applyFilter();
+    }
+
+    function updateSortIcons() {
+      SORT_KEYS.forEach(k => {
+        const icon = document.getElementById('sort-icon-' + k);
+        if (!icon) return;
+        if (k === sortKey) {
+          icon.textContent = sortDir === 'asc' ? '▲' : '▼';
+          icon.style.color = '#1976D2';
+        } else {
+          icon.textContent = '⇅';
+          icon.style.color = '#BDBDBD';
+        }
+      });
+    }
+
+    function applySorting(arr) {
+      if (!sortKey || !sortDir) return arr;
+      return [...arr].sort((a, b) => {
+        let va, vb;
+        switch (sortKey) {
+          case 'id': va = a.id; vb = b.id; break;
+          case 'date': va = (a.date||'')+(a.call_time||''); vb = (b.date||'')+(b.call_time||''); break;
+          case 'empid': va = getEmployeeId(a); vb = getEmployeeId(b); break;
+          case 'center': va = (a.center||'')+(a.team||''); vb = (b.center||'')+(b.team||''); break;
+          case 'agent': va = a.agent_name||''; vb = b.agent_name||''; break;
+          case 'consult': va = a.consultation_type||''; vb = b.consultation_type||''; break;
+          case 'duration': va = a.duration||''; vb = b.duration||''; break;
+          case 'type': va = a.call_type||''; vb = b.call_type||''; break;
+          case 'form': va = a.eval_form||''; vb = b.eval_form||''; break;
+          case 'score': return sortDir === 'asc' ? a.total_score - b.total_score : b.total_score - a.total_score;
+          case 'confidence': va = a.confidence||''; vb = b.confidence||''; break;
+        }
+        const cmp = String(va).localeCompare(String(vb), 'ko');
+        return sortDir === 'asc' ? cmp : -cmp;
+      });
+    }
 
     // 페이지 진입 시 필요한 모든 데이터를 일괄 로드하여 이후 필터·상세 조회에서 추가 요청 없이 사용
     document.addEventListener('DOMContentLoaded', async () => {
@@ -278,13 +344,14 @@
 
         return `
           <tr onclick="showEvalDetail('${ev.id}')">
-            <td style="font-size:12px;font-family:monospace;">${ev.id}${reviewBadge}</td>
-            <td style="font-size:12px;">${ev.date} ${ev.call_time}</td>
-            <td style="font-size:12px;color:#757575;">${ev.center} &gt; ${ev.team}</td>
+            <td style="font-size:11px;">${ev.id}${reviewBadge}</td>
+            <td style="font-size:11px;white-space:nowrap;">${ev.date} ${ev.call_time}</td>
+            <td style="font-size:11px;">${getEmployeeId(ev)}</td>
+            <td style="font-size:11px;color:#757575;">${ev.center} &gt; ${ev.team}</td>
+            <td style="font-size:12px;font-weight:500;">${ev.agent_name}</td>
             <td class="col-left" style="font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${ev.consultation_type || ''}">${ev.consultation_type || '-'}</td>
+            <td style="font-size:11px;white-space:nowrap;">${ev.duration}</td>
             <td><span class="badge ${ev.call_type === 'I/B' ? 'badge-nlp' : 'badge-ai'}" style="font-size:10px;">${ev.call_type}</span></td>
-            <td style="font-size:12px;">${ev.duration}</td>
-            <td style="font-weight:500;">${ev.agent_name}</td>
             <td class="col-left" style="font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ev.eval_form || '-'}</td>
             <td>${AICC_Fmt.scoreHtml(ev.total_score)}</td>
             <td>${confBadge}</td>
@@ -839,6 +906,7 @@
         }
         const consultSearch = (document.getElementById('consult-search').value || '').trim().toLowerCase();
         if (consultSearch) filtered = filtered.filter(e => (e.consultation_type || '').toLowerCase().includes(consultSearch));
+        filtered = applySorting(filtered);
         renderEvalTable(filtered);
       }
 

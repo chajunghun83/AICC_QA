@@ -50,15 +50,11 @@
       </div>
       <div class="filter-body">
         <div>
-          <label class="form-label">기간 (시작)</label>
-          <input type="date" class="form-input" id="f-date-from" style="min-width:130px;">
+          <label class="form-label">기간</label>
+          <div id="f-period-picker"></div>
         </div>
         <div>
-          <label class="form-label">기간 (종료)</label>
-          <input type="date" class="form-input" id="f-date-to" style="min-width:130px;">
-        </div>
-        <div>
-          <label class="form-label">리포트 유형</label>
+          <label class="form-label">유형</label>
           <select class="form-select" id="f-report-type" style="min-width:120px;">
             <option value="all">전체</option>
             <option value="일간">일간</option>
@@ -106,7 +102,7 @@
             </colgroup>
             <thead>
               <tr>
-                <th>NO</th><th>리포트 유형</th><th>리포트 기간</th>
+                <th>NO</th><th>유형</th><th>기간</th>
                 <th>개선 제안 내용</th><th>담당자</th><th>상태</th>
                 <th>처리일</th><th>처리내역</th>
               </tr>
@@ -138,6 +134,7 @@
   <script src="../../js/components/layout.js"></script>
   <script src="../../js/components/modal.js"></script>
   <script src="../../js/components/toast.js"></script>
+  <script src="../../js/components/period-picker.js"></script>
   <script>
     /*
      * ══════════════════════════════════════════════════════════════════
@@ -201,9 +198,198 @@
       '이의 제기 처리 프로세스 개선안 수립. 처리 기한 2일 이내로 단축.'
     ];
 
+    function formatPeriod(d) {
+      if (d.reportType === '월간') {
+        const parts = d.periodFrom.split('-');
+        return `${parts[0]}-${parseInt(parts[1])}월`;
+      }
+      if (d.reportType === '주간') {
+        const parts = d.periodFrom.split('-');
+        const day = parseInt(parts[2]);
+        const weekNum = Math.ceil(day / 7);
+        const weekNames = ['첫째 주','둘째 주','셋째 주','넷째 주','다섯째 주'];
+        return `${parts[0]}-${parseInt(parts[1])}월 ${weekNames[weekNum - 1] || weekNum + '주'}`;
+      }
+      if (d.reportType === '년간') {
+        return `${d.periodFrom.split('-')[0]}년`;
+      }
+      return d.periodFrom;
+    }
+
     function getNow() {
       const d = new Date();
       return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    }
+
+    // 커스텀 날짜+시간 선택기 상태
+    let dtpState = { year: 0, month: 0, day: 0, hour: 0, minute: 0, open: false };
+
+    function initDtpState() {
+      const now = new Date();
+      dtpState.year = now.getFullYear();
+      dtpState.month = now.getMonth();
+      dtpState.day = now.getDate();
+      dtpState.hour = now.getHours();
+      dtpState.minute = Math.floor(now.getMinutes() / 10) * 10;
+    }
+
+    function dtpFmt() {
+      return `${dtpState.year}-${String(dtpState.month+1).padStart(2,'0')}-${String(dtpState.day).padStart(2,'0')} ${String(dtpState.hour).padStart(2,'0')}:${String(dtpState.minute).padStart(2,'0')}`;
+    }
+
+    function toggleDatetimePicker() {
+      if (dtpState.open) { closeDatetimePicker(); return; }
+      dtpState.open = true;
+      renderDatetimePicker();
+    }
+
+    function closeDatetimePicker() {
+      dtpState.open = false;
+      const overlay = document.getElementById('dtp-overlay');
+      if (overlay) overlay.remove();
+    }
+
+    function renderDatetimePicker() {
+      let overlay = document.getElementById('dtp-overlay');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'dtp-overlay';
+        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:10001;';
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) closeDatetimePicker(); });
+        document.body.appendChild(overlay);
+      }
+
+      const trigger = document.getElementById('modal-action-date-trigger');
+      const rect = trigger.getBoundingClientRect();
+      const pickerW = 300, pickerH = 420;
+      let top = rect.bottom + 4;
+      let left = rect.left;
+      if (top + pickerH > window.innerHeight) top = rect.top - pickerH - 4;
+      if (left + pickerW > window.innerWidth) left = window.innerWidth - pickerW - 8;
+
+      const y = dtpState.year, m = dtpState.month;
+      const daysIn = new Date(y, m + 1, 0).getDate();
+      const firstDay = new Date(y, m, 1).getDay();
+      const todayStr = getNow().split(' ')[0];
+      const selStr = `${y}-${String(m+1).padStart(2,'0')}-${String(dtpState.day).padStart(2,'0')}`;
+
+      let calCells = '';
+      ['일','월','화','수','목','금','토'].forEach(w => {
+        calCells += `<div class="pp-weekday">${w}</div>`;
+      });
+      for (let i = 0; i < firstDay; i++) calCells += '<div class="pp-day empty"></div>';
+      for (let d = 1; d <= daysIn; d++) {
+        const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        let cls = 'pp-day';
+        if (ds === todayStr) cls += ' today';
+        if (d === dtpState.day) cls += ' selected';
+        calCells += `<div class="${cls}" onclick="dtpSelectDay(${d})">${d}</div>`;
+      }
+
+      // 시간 옵션
+      let hourOpts = '';
+      for (let h = 0; h < 24; h++) {
+        const sel = h === dtpState.hour ? 'selected' : '';
+        hourOpts += `<option value="${h}" ${sel}>${String(h).padStart(2,'0')}시</option>`;
+      }
+      let minOpts = '';
+      for (let mi = 0; mi < 60; mi += 10) {
+        const sel = mi === dtpState.minute ? 'selected' : '';
+        minOpts += `<option value="${mi}" ${sel}>${String(mi).padStart(2,'0')}분</option>`;
+      }
+
+      overlay.innerHTML = `
+        <div style="position:fixed;top:${top}px;left:${left}px;background:#fff;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.15);border:1px solid #E6E8F0;width:300px;">
+          <div class="pp-body" style="padding:12px;">
+            <div class="pp-nav">
+              <button type="button" class="pp-nav-btn" onclick="dtpNav(-1)">‹</button>
+              <span class="pp-nav-title">${y}년 ${m+1}월</span>
+              <button type="button" class="pp-nav-btn" onclick="dtpNav(1)">›</button>
+            </div>
+            <div class="pp-cal-grid">${calCells}</div>
+            <div style="display:flex;gap:8px;margin-top:12px;align-items:center;">
+              <span style="font-size:12px;color:#616161;font-weight:500;white-space:nowrap;">시간</span>
+              <select class="form-select" style="flex:1;min-width:0;padding:4px 8px;font-size:13px;" onchange="dtpState.hour=parseInt(this.value)">${hourOpts}</select>
+              <select class="form-select" style="flex:1;min-width:0;padding:4px 8px;font-size:13px;" onchange="dtpState.minute=parseInt(this.value)">${minOpts}</select>
+            </div>
+          </div>
+          <div class="pp-footer">
+            <button type="button" class="pp-footer-btn" onclick="closeDatetimePicker()">취소</button>
+            <button type="button" class="pp-footer-btn primary" onclick="dtpApply()">확인</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function dtpNav(dir) {
+      dtpState.month += dir;
+      if (dtpState.month < 0) { dtpState.month = 11; dtpState.year--; }
+      if (dtpState.month > 11) { dtpState.month = 0; dtpState.year++; }
+      const maxDay = new Date(dtpState.year, dtpState.month + 1, 0).getDate();
+      if (dtpState.day > maxDay) dtpState.day = maxDay;
+      renderDatetimePicker();
+    }
+
+    function dtpSelectDay(d) {
+      dtpState.day = d;
+      renderDatetimePicker();
+    }
+
+    function dtpApply() {
+      const val = dtpFmt();
+      document.getElementById('modal-action-date').value = val;
+      document.getElementById('modal-action-date-display').textContent = val;
+      closeDatetimePicker();
+    }
+
+    function openAdminSearch() {
+      if (document.getElementById('admin-search-overlay')) return;
+      const overlay = document.createElement('div');
+      overlay.id = 'admin-search-overlay';
+      overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.3);z-index:10000;display:flex;align-items:center;justify-content:center;';
+      overlay.innerHTML = `
+        <div style="background:#fff;border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,0.18);width:360px;max-height:420px;display:flex;flex-direction:column;overflow:hidden;">
+          <div style="padding:16px 20px;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:14px;font-weight:700;">담당자 검색</span>
+            <span style="cursor:pointer;font-size:18px;color:#9E9E9E;" onclick="closeAdminSearch()">&times;</span>
+          </div>
+          <div style="padding:12px 20px;">
+            <input type="text" id="admin-search-input" class="form-input" style="width:100%;" placeholder="이름을 입력하세요" oninput="filterAdminList()">
+          </div>
+          <div id="admin-search-list" style="flex:1;overflow-y:auto;padding:0 20px 16px;min-height:280px;"></div>
+        </div>
+      `;
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) closeAdminSearch(); });
+      document.body.appendChild(overlay);
+      filterAdminList();
+      document.getElementById('admin-search-input').focus();
+    }
+
+    function filterAdminList() {
+      const query = (document.getElementById('admin-search-input')?.value || '').trim().toLowerCase();
+      const filtered = admins.filter(name => name.toLowerCase().includes(query));
+      const listEl = document.getElementById('admin-search-list');
+      if (!listEl) return;
+      listEl.innerHTML = filtered.length === 0
+        ? '<div style="text-align:center;color:#9E9E9E;font-size:12px;padding:16px;">검색 결과가 없습니다</div>'
+        : filtered.map(name => `
+          <div onclick="selectAdmin('${name}')" style="padding:10px 12px;border-radius:6px;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:8px;transition:background 0.15s;" onmouseenter="this.style.background='#F5F5F5'" onmouseleave="this.style.background=''">
+            <span style="display:inline-block;width:28px;height:28px;border-radius:50%;background:#E3F2FD;color:#1976D2;font-size:12px;font-weight:600;text-align:center;line-height:28px;">${name.charAt(0)}</span>
+            <span>${name}</span>
+            <span style="font-size:11px;color:#9E9E9E;margin-left:auto;">관리자</span>
+          </div>
+        `).join('');
+    }
+
+    function selectAdmin(name) {
+      const input = document.getElementById('modal-admin');
+      if (input) input.value = name;
+      closeAdminSearch();
+    }
+
+    function closeAdminSearch() {
+      const overlay = document.getElementById('admin-search-overlay');
+      if (overlay) overlay.remove();
     }
 
     function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
@@ -280,15 +466,40 @@
     }
 
     let allData = generateData();
+
+    // localStorage에서 통합 평가 현황 등 외부에서 등록한 조치 항목 병합
+    (function mergeExternalItems() {
+      const stored = JSON.parse(localStorage.getItem('AICC_IMPROVEMENT_ITEMS') || '[]');
+      if (stored.length === 0) return;
+      let maxNo = allData.reduce((mx, d) => Math.max(mx, d.no), 0);
+      stored.forEach(item => {
+        maxNo++;
+        allData.unshift({
+          no: maxNo,
+          reportType: item.reportType || '조건 검색',
+          periodFrom: item.periodFrom || '',
+          periodTo: item.periodTo || '',
+          contents: item.contents || [],
+          admin: item.admin || '',
+          status: item.status || '미이행',
+          completedDate: item.completedDate || '-',
+          history: item.history || []
+        });
+      });
+    })();
+
     let filtered = [...allData];
+    let periodInfo = null;
     let currentPage = 1;
     let pageSize = 20;
 
     let expandedNo = null;
 
     const reportTypeBadge = (type) => {
-      const colors = { '일간':'background:#E3F2FD;color:#1565C0', '주간':'background:#E8F5E9;color:#2E7D32', '월간':'background:#F3E5F5;color:#7B1FA2' };
-      return `<span style="padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500;${colors[type]||'background:#F5F5F5;color:#757575'}">${type}</span>`;
+      const reportLabels = { '일간':'일간 리포트', '주간':'주간 리포트', '월간':'월간 리포트', '연간':'연간 리포트' };
+      const colors = { '일간':'background:#E3F2FD;color:#1565C0', '주간':'background:#E8F5E9;color:#2E7D32', '월간':'background:#F3E5F5;color:#7B1FA2', '연간':'background:#FFF3E0;color:#E65100' };
+      const label = reportLabels[type] || type;
+      return `<span style="padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500;white-space:nowrap;${colors[type]||'background:#F5F5F5;color:#757575'}">${label}</span>`;
     };
 
     /* ══════════════════════════ 렌더링 ══════════════════════════ */
@@ -301,7 +512,7 @@
       document.getElementById('imp-tbody').innerHTML = pageData.map(d => {
         const isExpanded = expandedNo === d.no;
         const firstContent = d.contents[0] || '';
-        const periodStr = d.periodFrom === d.periodTo ? d.periodFrom : `${d.periodFrom} ~ ${d.periodTo}`;
+        const periodStr = formatPeriod(d);
         return `
         <tr onclick="toggleAccordion(${d.no})" style="cursor:pointer;transition:background 0.15s;" onmouseenter="this.style.background='#FAFAFA'" onmouseleave="this.style.background=''">
           <td style="text-align:center;color:#757575;">${d.no}</td>
@@ -360,11 +571,17 @@
     /* ══════════════════════════ 필터 ══════════════════════════ */
 
     function applyFilter() {
-      const dateFrom = document.getElementById('f-date-from').value;
-      const dateTo = document.getElementById('f-date-to').value;
       const reportType = document.getElementById('f-report-type').value;
       const admin = document.getElementById('f-admin').value.trim().toLowerCase();
       const status = document.getElementById('f-status').value;
+
+      let dateFrom = '', dateTo = '';
+      if (periodInfo) {
+        if (periodInfo.type === 'daily') { dateFrom = periodInfo.date; dateTo = periodInfo.date; }
+        else if (periodInfo.type === 'weekly' || periodInfo.type === 'custom') { dateFrom = periodInfo.from || ''; dateTo = periodInfo.to || ''; }
+        else if (periodInfo.type === 'monthly') { dateFrom = `${periodInfo.year}-${String(periodInfo.month).padStart(2,'0')}-01`; dateTo = `${periodInfo.year}-${String(periodInfo.month).padStart(2,'0')}-31`; }
+        else if (periodInfo.type === 'yearly') { dateFrom = `${periodInfo.year}-01-01`; dateTo = `${periodInfo.year}-12-31`; }
+      }
 
       filtered = allData.filter(d => {
         if (dateFrom && d.periodFrom < dateFrom) return false;
@@ -380,11 +597,18 @@
     }
 
     function resetFilter() {
-      document.getElementById('f-date-from').value = '';
-      document.getElementById('f-date-to').value = '';
+      periodInfo = null;
       document.getElementById('f-report-type').value = 'all';
       document.getElementById('f-admin').value = '';
       document.getElementById('f-status').value = 'all';
+
+      const pickerEl = document.getElementById('f-period-picker');
+      pickerEl.innerHTML = '';
+      AICC_PeriodPicker.create('f-period-picker', {
+        defaultPeriod: 'monthly',
+        onChange: function(type, info) { periodInfo = info; }
+      });
+
       filtered = [...allData];
       currentPage = 1;
       renderTable();
@@ -395,6 +619,7 @@
     function openDetail(no) {
       const d = allData.find(x => x.no === no);
       if (!d) return;
+      initDtpState();
 
       const statusOptions = ['미이행','진행중','완료'].map(s =>
         `<option${d.status === s ? ' selected' : ''}>${s}</option>`
@@ -421,12 +646,12 @@
           <div style="flex:1;padding:20px;border-right:1px solid #EEEEEE;display:flex;flex-direction:column;max-height:520px;overflow-y:auto;">
             <div style="font-size:14px;font-weight:700;color:#212121;margin-bottom:16px;">개선 제안 정보</div>
             <div style="margin-bottom:12px;">
-              <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">리포트 유형</div>
+              <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">유형</div>
               <div style="font-size:13px;font-weight:500;">${d.reportType} 리포트</div>
             </div>
             <div style="margin-bottom:12px;">
-              <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">리포트 기간</div>
-              <div style="font-size:13px;font-weight:500;">${d.periodFrom} ~ ${d.periodTo}</div>
+              <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">기간</div>
+              <div style="font-size:13px;font-weight:500;">${formatPeriod(d)}</div>
             </div>
             <div style="flex:1;">
               <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">개선 제안 내용</div>
@@ -436,15 +661,26 @@
             </div>
           </div>
 
-          <div style="flex:1;padding:20px;display:flex;flex-direction:column;gap:16px;max-height:520px;overflow-y:auto;">
+          <div style="flex:1;padding:20px;display:flex;flex-direction:column;gap:16px;max-height:520px;overflow-y:auto;overflow-x:visible;">
             <div style="font-size:14px;font-weight:700;color:#212121;">처리 관리</div>
             <div>
+              <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">조치 날짜</div>
+              <div id="modal-action-date-trigger" class="form-input" style="width:203px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;" onclick="toggleDatetimePicker()">
+                <span id="modal-action-date-display">${getNow()}</span>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5" stroke="#9E9E9E" stroke-width="1.2"/><path d="M1.5 6h13" stroke="#9E9E9E" stroke-width="1.2"/><path d="M5 1v3M11 1v3" stroke="#9E9E9E" stroke-width="1.2" stroke-linecap="round"/></svg>
+              </div>
+              <input type="hidden" id="modal-action-date" value="${getNow()}">
+            </div>
+            <div>
               <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">담당자</div>
-              <div style="font-size:13px;font-weight:600;">${d.admin}</div>
+              <div style="display:flex;gap:6px;">
+                <input type="text" id="modal-admin" class="form-input" style="width:203px;" value="${AICC_Auth.getCurrentUser().name}" onfocus="this.select()">
+                <button class="btn btn-sm" onclick="openAdminSearch()" style="white-space:nowrap;border:1px solid #D8DAE5;background:#fff;color:#424242;">검색</button>
+              </div>
             </div>
             <div>
               <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">이행 상태</div>
-              <select id="modal-status" class="form-select" style="width:100%;">${statusOptions}</select>
+              <select id="modal-status" class="form-select" style="width:203px;">${statusOptions}</select>
             </div>
             <div style="flex:1;display:flex;flex-direction:column;">
               <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">처리 메모</div>
@@ -473,18 +709,23 @@
       const d = allData.find(x => x.no === no);
       if (!d) return;
 
+      const actionDate = document.getElementById('modal-action-date').value;
+      if (!actionDate) { AICC_Toast.show('조치 날짜를 선택해주세요.'); return; }
+      const adminName = document.getElementById('modal-admin').value.trim();
+      if (!adminName) { AICC_Toast.show('담당자를 입력해주세요.'); return; }
       const newStatus = document.getElementById('modal-status').value;
       const memo = document.getElementById('modal-memo').value.trim();
       if (!memo) { AICC_Toast.show('처리 메모를 입력해주세요.'); return; }
 
+      d.admin = adminName;
       d.status = newStatus;
       if (newStatus === '완료') {
-        d.completedDate = getNow().split(' ')[0];
+        d.completedDate = actionDate.split(' ')[0];
       }
 
       d.history.push({
-        date: getNow(),
-        author: d.admin,
+        date: actionDate,
+        author: adminName,
         status: newStatus,
         memo
       });
@@ -497,6 +738,10 @@
     /* ══════════════════════════ 초기화 ══════════════════════════ */
 
     document.addEventListener('DOMContentLoaded', () => {
+      AICC_PeriodPicker.create('f-period-picker', {
+        defaultPeriod: 'monthly',
+        onChange: function(type, info) { periodInfo = info; }
+      });
       renderTable();
     });
   </script>

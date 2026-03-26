@@ -66,7 +66,7 @@
       <div class="content-card">
         <div class="content-card-header">
           <span style="font-size:14px;font-weight:600;">관리자 확인 영역</span>
-          <span class="badge badge-pending" id="issue-count">0건</span>
+          <span class="badge badge-pending" id="issue-count" style="font-size:14px;padding:4px 12px;">0건</span>
         </div>
         <div class="content-card-body" id="issue-list" style="min-height:150px;">
         </div>
@@ -77,11 +77,11 @@
         <div class="content-card-header">
           <span style="font-size:14px;font-weight:600;">점수 분포</span>
         </div>
-        <div class="content-card-body" style="display:flex;align-items:center;gap:60px;">
-          <div style="width:170px;height:170px;flex-shrink:0;">
+        <div class="content-card-body" style="display:flex;align-items:center;gap:24px;">
+          <div style="width:160px;height:160px;flex-shrink:0;">
             <canvas id="distribution-chart"></canvas>
           </div>
-          <div id="distribution-legend" style="flex:1;min-width:0;font-size:11px;">
+          <div id="distribution-legend" style="flex:1;min-width:0;font-size:11px;white-space:nowrap;">
           </div>
         </div>
       </div>
@@ -266,24 +266,24 @@
         if (card.isCallBreakdown) {
           const pct = (done, total) => total > 0 ? Math.round(done / total * 100) : 0;
           const bd = [
-            { label: '자동/IB', total: card.autoIB, done: card.autoIB_done, totalPrev: card.autoIB_prev, donePrev: card.autoIB_done_prev },
-            { label: '자동/OB', total: card.autoOB, done: card.autoOB_done, totalPrev: card.autoOB_prev, donePrev: card.autoOB_done_prev },
-            { label: '수동',    total: card.manual,  done: card.manual_done, totalPrev: card.manual_prev, donePrev: card.manual_done_prev }
+            { label: '자동/IB', total: card.autoIB, done: card.autoIB_done, totalPrev: card.autoIB_prev, donePrev: card.autoIB_done_prev, url: 'integrated-evaluation.html?method=auto&type=IB' },
+            { label: '자동/OB', total: card.autoOB, done: card.autoOB_done, totalPrev: card.autoOB_prev, donePrev: card.autoOB_done_prev, url: 'integrated-evaluation.html?method=auto&type=OB' },
+            { label: '수동',    total: card.manual,  done: card.manual_done, totalPrev: card.manual_prev, donePrev: card.manual_done_prev, url: 'manual-evaluation-status.html' }
           ];
           const maxNum = Math.max(...bd.map(b => Math.max(b.total, b.done)));
           const curFs = maxNum >= 100000 ? 9 : maxNum >= 10000 ? 10 : 12;
           const prevMax = Math.max(...bd.map(b => Math.max(b.totalPrev, b.donePrev)));
           const prevFs = prevMax >= 100000 ? 8 : prevMax >= 10000 ? 9 : 10;
-          const colHeaders = bd.map(b => `<span style="text-align:center;font-size:11px;color:#9E9E9E;">${b.label}</span>`).join('');
-          const colCurrent = bd.map(b => {
+          const cols = bd.map(b => {
             const numPart = `<span style="white-space:nowrap;"><span style="color:#42A5F5;">${AICC_Fmt.number(b.total)}</span> <span style="color:#BDBDBD;">/</span> <span style="color:#424242;font-weight:600;">${AICC_Fmt.number(b.done)}건</span></span>`;
             const pctPart = `<span style="color:#424242;font-weight:600;">(${pct(b.done, b.total)}%)</span>`;
-            return `<span style="text-align:center;font-size:${curFs}px;">${numPart}<br>${pctPart}</span>`;
-          }).join('');
-          const colPrev = bd.map(b => {
-            const numPart = `<span style="white-space:nowrap;"><span style="color:#90CAF9;">${AICC_Fmt.number(b.totalPrev)}</span> <span style="color:#D5D5D5;">/</span> <span style="color:#BDBDBD;">${AICC_Fmt.number(b.donePrev)}건</span></span>`;
-            const pctPart = `<span style="color:#BDBDBD;">(${pct(b.donePrev, b.totalPrev)}%)</span>`;
-            return `<span style="text-align:center;font-size:${prevFs}px;">${numPart}<br>${pctPart}</span>`;
+            const prevNumPart = `<span style="white-space:nowrap;"><span style="color:#90CAF9;">${AICC_Fmt.number(b.totalPrev)}</span> <span style="color:#D5D5D5;">/</span> <span style="color:#BDBDBD;">${AICC_Fmt.number(b.donePrev)}건</span></span>`;
+            const prevPctPart = `<span style="color:#BDBDBD;">(${pct(b.donePrev, b.totalPrev)}%)</span>`;
+            return `<div onclick="window.location.href='${b.url}'" style="cursor:pointer;text-align:center;padding:4px 2px;border-radius:4px;transition:background 0.15s;" onmouseenter="this.style.background='#F5F5F5'" onmouseleave="this.style.background=''">
+              <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">${b.label}</div>
+              <div style="font-size:${curFs}px;">${numPart}<br>${pctPart}</div>
+              <div style="font-size:${prevFs}px;margin-top:4px;">${prevNumPart}<br>${prevPctPart}</div>
+            </div>`;
           }).join('');
           return `
           <div class="kpi-card">
@@ -296,10 +296,8 @@
                 </div>
                 <div style="font-size:11px;color:#9E9E9E;margin-top:8px;">${card.prevLabel}: ${AICC_Fmt.number(card.prev)}${card.unit}</div>
               </div>
-              <div style="flex:1;min-width:0;display:grid;grid-template-columns:repeat(3,1fr);row-gap:4px;margin-top:2px;">
-                ${colHeaders}
-                ${colCurrent}
-                ${colPrev}
+              <div style="flex:1;min-width:0;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:2px;">
+                ${cols}
               </div>
             </div>
           </div>
@@ -307,14 +305,17 @@
         }
 
         if (card.isScoreBreakdown) {
+          const scoreToRange = (s) => s >= 90 ? 'excellent' : s >= 80 ? 'good' : s >= 70 ? 'caution' : 'low';
           const sb = [
-            { label: '자동/IB', score: card.scoreIB, scorePrev: card.scoreIB_prev },
-            { label: '자동/OB', score: card.scoreOB, scorePrev: card.scoreOB_prev },
-            { label: '수동',    score: card.scoreManual, scorePrev: card.scoreManual_prev }
+            { label: '자동/IB', score: card.scoreIB, scorePrev: card.scoreIB_prev, url: `integrated-evaluation.html?method=auto&type=IB&score_range=${scoreToRange(card.scoreIB)}` },
+            { label: '자동/OB', score: card.scoreOB, scorePrev: card.scoreOB_prev, url: `integrated-evaluation.html?method=auto&type=OB&score_range=${scoreToRange(card.scoreOB)}` },
+            { label: '수동',    score: card.scoreManual, scorePrev: card.scoreManual_prev, url: `manual-evaluation-status.html?score_range=${scoreToRange(card.scoreManual)}` }
           ];
-          const sHeaders = sb.map(s => `<span style="text-align:center;font-size:11px;color:#9E9E9E;">${s.label}</span>`).join('');
-          const sScores = sb.map(s => `<span style="text-align:center;font-size:12px;font-weight:600;white-space:nowrap;color:#424242;">${AICC_Fmt.score(s.score)}점</span>`).join('');
-          const sPrev = sb.map(s => `<span style="text-align:center;font-size:10px;white-space:nowrap;color:#BDBDBD;">${AICC_Fmt.score(s.scorePrev)}점</span>`).join('');
+          const sCols = sb.map(s => `<div onclick="window.location.href='${s.url}'" style="cursor:pointer;text-align:center;padding:4px 2px;border-radius:4px;transition:background 0.15s;" onmouseenter="this.style.background='#F5F5F5'" onmouseleave="this.style.background=''">
+            <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">${s.label}</div>
+            <div style="font-size:12px;font-weight:600;white-space:nowrap;color:#424242;">${AICC_Fmt.score(s.score)}점</div>
+            <div style="font-size:10px;white-space:nowrap;color:#BDBDBD;margin-top:4px;">${AICC_Fmt.score(s.scorePrev)}점</div>
+          </div>`).join('');
           return `
           <div class="kpi-card">
             <div style="display:flex;align-items:flex-start;gap:12px;">
@@ -326,10 +327,8 @@
                 </div>
                 <div style="font-size:11px;color:#9E9E9E;margin-top:8px;">${card.prevLabel}: ${AICC_Fmt.number(card.prev)}${card.unit}</div>
               </div>
-              <div style="flex:1;min-width:0;display:grid;grid-template-columns:repeat(3,1fr);row-gap:4px;margin-top:2px;">
-                ${sHeaders}
-                ${sScores}
-                ${sPrev}
+              <div style="flex:1;min-width:0;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:2px;">
+                ${sCols}
               </div>
             </div>
           </div>
@@ -356,6 +355,26 @@
 
       const trendLabels = trendData.map(d => d.date);
       if (trendChart) trendChart.destroy();
+      const lineLabelPlugin = {
+        id: 'lineDataLabels',
+        afterDatasetsDraw(chart) {
+          const { ctx: c } = chart;
+          chart.data.datasets.forEach((ds, dsIdx) => {
+            const meta = chart.getDatasetMeta(dsIdx);
+            const total = meta.data.length;
+            meta.data.forEach((pt, i) => {
+              if (total >= 20 && i % 2 !== 0) return;
+              const val = ds.data[i];
+              c.save();
+              c.font = '600 10px sans-serif';
+              c.fillStyle = '#424242';
+              c.textAlign = 'center';
+              c.fillText(val.toFixed(1), pt.x, pt.y - 10);
+              c.restore();
+            });
+          });
+        }
+      };
       trendChart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -386,7 +405,8 @@
             evt.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
           },
           plugins: {
-            legend: { display: false }
+            legend: { display: false },
+            tooltip: { enabled: false }
           },
           scales: {
             y: {
@@ -405,7 +425,8 @@
               }
             }
           }
-        }
+        },
+        plugins: [lineLabelPlugin]
       });
     }
 
@@ -416,6 +437,24 @@
 
       if (teamChart) teamChart.destroy();
       const teamNames = teamScores.map(t => t.team);
+      const barLabelPlugin = {
+        id: 'barDataLabels',
+        afterDatasetsDraw(chart) {
+          const { ctx: c } = chart;
+          chart.data.datasets.forEach((ds, dsIdx) => {
+            const meta = chart.getDatasetMeta(dsIdx);
+            meta.data.forEach((bar, i) => {
+              const val = ds.data[i];
+              c.save();
+              c.font = '600 11px sans-serif';
+              c.fillStyle = '#424242';
+              c.textAlign = 'center';
+              c.fillText(val.toFixed(1), bar.x, bar.y - 8);
+              c.restore();
+            });
+          });
+        }
+      };
       teamChart = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -436,14 +475,18 @@
           onClick: (evt, elements) => {
             if (elements.length > 0) {
               const idx = elements[0].index;
-              window.location.href = `integrated-evaluation.html?team=${encodeURIComponent(teamNames[idx])}${getWsParam()}`;
+              const clickedTeam = teamNames[idx];
+              const teamInfo = dashboardData.teams.find(t => t.team === clickedTeam);
+              const centerName = teamInfo ? teamInfo.center : '';
+              window.location.href = `integrated-evaluation.html?tab=detail&ct=${encodeURIComponent(centerName)}&team=${encodeURIComponent(clickedTeam)}`;
             }
           },
           onHover: (evt, elements) => {
             evt.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
           },
           plugins: {
-            legend: { display: false }
+            legend: { display: false },
+            tooltip: { enabled: false }
           },
           scales: {
             y: {
@@ -457,7 +500,8 @@
               ticks: { font: { size: 11 }, color: '#757575' }
             }
           }
-        }
+        },
+        plugins: [barLabelPlugin]
       });
     }
 
@@ -545,8 +589,9 @@
         return `
         <div onclick="window.location.href='${linkUrl}'" style="display:flex;align-items:center;gap:10px;padding:3px 0;cursor:pointer;transition:background 0.15s;" onmouseenter="this.style.background='#FAFAFA'" onmouseleave="this.style.background=''">
           <span style="width:8px;height:8px;border-radius:2px;background:${s.color};flex-shrink:0;"></span>
-          <span style="font-size:11px;color:#424242;">${s.label}</span>
-          <span style="font-size:11px;font-weight:600;color:#424242;">${s.pct}%</span>
+          <span style="font-size:11px;color:#424242;flex:1;">${s.label}</span>
+          <span style="font-size:11px;font-weight:600;color:#424242;min-width:36px;text-align:right;">${s.value}건</span>
+          <span style="font-size:11px;font-weight:600;color:#424242;min-width:32px;text-align:right;">${s.pct}%</span>
         </div>`;
       }).join('');
 
@@ -563,14 +608,16 @@
     function renderDeductionItems(items) {
       const container = document.getElementById('deduction-items-list');
       if (!container || !items) return;
+      const totalCalls = (dashboardData && dashboardData.summary && dashboardData.summary.total_calls) || 1;
       container.innerHTML = items.slice(0, 5).map((item, i) => {
+        const pct = Math.round(item.calls / totalCalls * 100);
         const linkUrl = `integrated-evaluation.html?deduction=${encodeURIComponent(item.item_id)}&team=${encodeURIComponent(item.team_id)}${getWsParam()}`;
         return `
           <div onclick="window.location.href='${linkUrl}'" style="display:flex;align-items:center;gap:8px;padding:8px 0;cursor:pointer;transition:background 0.15s;${i < 4 ? 'border-bottom:1px solid #F0F0F0;' : ''}" onmouseenter="this.style.background='#FAFAFA'" onmouseleave="this.style.background=''">
             <span style="width:18px;height:18px;border-radius:4px;background:${item.status === 'danger' ? '#FFEBEE' : '#FFF8E1'};color:${item.status === 'danger' ? '#C62828' : '#F57F17'};font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${i + 1}</span>
             <div style="flex:1;min-width:0;display:flex;justify-content:space-between;align-items:center;">
               <span style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><span style="font-weight:500;">${item.item}</span> <span style="color:#9E9E9E;font-size:11px;margin-left:6px;">(${item.category})</span></span>
-              <span style="font-size:13px;font-weight:600;color:#757575;flex-shrink:0;margin-left:8px;">${item.calls}건</span>
+              <span style="font-size:13px;font-weight:500;color:#424242;flex-shrink:0;margin-left:8px;white-space:nowrap;">${item.calls}건&nbsp;&nbsp;&nbsp;${pct}%</span>
             </div>
           </div>
         `;
@@ -583,7 +630,7 @@
       const sorted = [...agents].sort((a, b) => a.score - b.score).slice(0, 5);
       container.innerHTML = sorted.map((agent, i) => {
         const scoreColor = AICC_Fmt.scoreColor(agent.score);
-        const linkUrl = `integrated-evaluation.html?agent=${encodeURIComponent(agent.name)}${getWsParam()}`;
+        const linkUrl = `integrated-evaluation.html?tab=detail&ct=${encodeURIComponent(agent.center || '')}&team=${encodeURIComponent(agent.team)}&agent=${encodeURIComponent(agent.name)}`;
         return `
           <div onclick="window.location.href='${linkUrl}'" style="display:flex;align-items:center;gap:8px;padding:8px 0;cursor:pointer;transition:background 0.15s;${i < sorted.length - 1 ? 'border-bottom:1px solid #F0F0F0;' : ''}" onmouseenter="this.style.background='#FAFAFA'" onmouseleave="this.style.background=''">
             <span style="width:18px;height:18px;border-radius:4px;background:${agent.score < 60 ? '#FFEBEE' : '#FFF8E1'};color:${agent.score < 60 ? '#C62828' : '#F57F17'};font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${i + 1}</span>
@@ -606,7 +653,7 @@
           ? team.issues.map(i => `<span class="badge ${i.type.includes('FAIL') || i.type.includes('기준 미달') ? 'badge-rejected' : 'badge-pending'}" style="font-size:11px;">${i.type} ${i.count}건</span>`).join(' ')
           : '<span style="color:#9E9E9E;font-size:12px;">-</span>';
 
-        const detailUrl = `integrated-evaluation.html?ws=${encodeURIComponent(team.center_id || '')}&team=${encodeURIComponent(team.team)}`;
+        const detailUrl = `integrated-evaluation.html?tab=detail&ct=${encodeURIComponent(team.center)}&team=${encodeURIComponent(team.team)}`;
         return `
           <tr style="cursor:pointer;" onclick="window.location.href='${detailUrl}'">
             <td style="font-size:12px;">${team.center}</td>
