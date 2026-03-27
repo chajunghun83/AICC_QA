@@ -943,16 +943,20 @@
       }
     }
 
+    let _iframeRO = null;
+    let _iframeModalActive = false;
+
     function adjustIframeHeight(iframe) {
       try {
         const h = iframe.contentDocument.body.scrollHeight;
         iframe.style.height = Math.max(h, 600) + 'px';
       } catch(e) {}
-      // 내부 콘텐츠 변경(드릴다운 등)에 의한 높이 변화 감지
       if (window.ResizeObserver && iframe.contentDocument) {
-        new ResizeObserver(() => {
+        _iframeRO = new ResizeObserver(() => {
+          if (_iframeModalActive) return;
           try { iframe.style.height = iframe.contentDocument.body.scrollHeight + 'px'; } catch(e) {}
-        }).observe(iframe.contentDocument.body);
+        });
+        _iframeRO.observe(iframe.contentDocument.body);
       }
     }
 
@@ -1437,6 +1441,7 @@
 
       if (e.data.type === 'da-modal-expand') {
         if (document.getElementById('da-parent-backdrop')) return;
+        _iframeModalActive = true;
         const backdrop = document.createElement('div');
         backdrop.id = 'da-parent-backdrop';
         backdrop.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9998;';
@@ -1447,6 +1452,7 @@
 
       if (e.data.type === 'da-modal-restore') {
         setTimeout(function() {
+          _iframeModalActive = false;
           var bd = document.getElementById('da-parent-backdrop');
           if (bd) bd.remove();
           if (_iframeOrigStyle !== null) {

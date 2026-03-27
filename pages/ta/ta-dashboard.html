@@ -33,6 +33,7 @@
         <select class="form-select" id="variant-select" onchange="switchVariant()" style="min-width:90px;">
           <option value="v1">시안 1</option>
           <option value="v2">시안 2</option>
+          <option value="v3">시안 3</option>
         </select>
       </div>
     </div>
@@ -96,6 +97,27 @@
         <div class="content-card" style="flex:1;min-height:0;overflow:hidden;">
           <div class="content-card-header"><span style="font-size:14px;font-weight:600;">미처리 리스트</span></div>
           <div class="content-card-body" style="padding:8px;" id="pending-list-v2"></div>
+        </div>
+      </div>
+
+      <!-- ===== 시안3: 깔때기 차트 + 도넛 차트 ===== -->
+      <div class="content-card" id="variant-v3-left" style="display:none;flex-direction:column;">
+        <div class="content-card-header">
+          <span style="font-size:14px;font-weight:600;">문의 분류별 순위</span>
+          <span style="font-size:12px;color:#757575;">대분류 Top-10</span>
+        </div>
+        <div class="content-card-body" style="height:520px;position:relative;">
+          <canvas id="v3-funnel-canvas"></canvas>
+        </div>
+      </div>
+      <div class="content-card" id="variant-v3-right" style="display:none;flex-direction:column;">
+        <div class="content-card-header" style="min-height:62px;">
+          <span style="font-size:14px;font-weight:600;">소분류 Top-8</span>
+          <span style="font-size:12px;color:#757575;" id="v3-donut-label">전체</span>
+        </div>
+        <div class="content-card-body" style="display:flex;flex-direction:column;gap:0;padding:12px;">
+          <div style="position:relative;height:300px;"><canvas id="v3-donut-canvas"></canvas></div>
+          <div id="v3-sub-rank" style="margin-top:8px;"></div>
         </div>
       </div>
 
@@ -847,37 +869,267 @@
 
     const V2_KEYWORD_HEIGHT = 620; // 시안2 키워드 카드 고정 높이(px)
 
+    let v3Rendered = false;
+
     function switchVariant() {
       const v = document.getElementById('variant-select').value;
-      const isV1 = v === 'v1';
       const gridContainer = document.getElementById('variant-v1-left').parentElement;
       const kwCard = document.getElementById('keyword-card');
 
-      gridContainer.style.gridTemplateColumns = isV1 ? '1fr 2fr 2fr' : '1fr 2fr 1fr';
-      gridContainer.style.gridTemplateRows = isV1 ? 'auto auto' : `${V2_KEYWORD_HEIGHT}px`;
+      // v1, v3: 3컬럼 동일 그리드 / v2: 좁은 우측
+      const useWideGrid = (v === 'v1' || v === 'v3');
+      gridContainer.style.gridTemplateColumns = useWideGrid ? '1fr 2fr 2fr' : '1fr 2fr 1fr';
+      gridContainer.style.gridTemplateRows = useWideGrid ? 'auto auto' : `${V2_KEYWORD_HEIGHT}px`;
 
-      // 키워드 카드: v1=2행 스팬 auto, v2=고정 높이(stretch 방지)
-      kwCard.style.gridRow = isV1 ? 'span 2' : '';
-      kwCard.style.height = isV1 ? '' : V2_KEYWORD_HEIGHT + 'px';
-      kwCard.style.maxHeight = isV1 ? '' : V2_KEYWORD_HEIGHT + 'px';
-      kwCard.style.alignSelf = isV1 ? '' : 'start';
+      kwCard.style.gridRow = useWideGrid ? 'span 2' : '';
+      kwCard.style.height = useWideGrid ? '' : V2_KEYWORD_HEIGHT + 'px';
+      kwCard.style.maxHeight = useWideGrid ? '' : V2_KEYWORD_HEIGHT + 'px';
+      kwCard.style.alignSelf = useWideGrid ? '' : 'start';
 
-      document.getElementById('variant-v1-left').style.display = isV1 ? 'flex' : 'none';
-      document.getElementById('variant-v1-right').style.display = isV1 ? 'flex' : 'none';
-      document.getElementById('variant-v1-bottom').style.display = isV1 ? 'grid' : 'none';
-
-      document.getElementById('variant-v2-chart').style.display = isV1 ? 'none' : 'flex';
-      document.getElementById('variant-v2-right-stack').style.display = isV1 ? 'none' : 'flex';
+      // 시안1 전용
+      document.getElementById('variant-v1-left').style.display = v === 'v1' ? 'flex' : 'none';
+      document.getElementById('variant-v1-right').style.display = v === 'v1' ? 'flex' : 'none';
+      // 시안2 전용
+      document.getElementById('variant-v2-chart').style.display = v === 'v2' ? 'flex' : 'none';
+      document.getElementById('variant-v2-right-stack').style.display = v === 'v2' ? 'flex' : 'none';
+      // 시안3 전용
+      document.getElementById('variant-v3-left').style.display = v === 'v3' ? 'flex' : 'none';
+      document.getElementById('variant-v3-right').style.display = v === 'v3' ? 'flex' : 'none';
+      // 하단 4카드: v1, v3 공유
+      document.getElementById('variant-v1-bottom').style.display = (v === 'v1' || v === 'v3') ? 'grid' : 'none';
 
       renderMainKeywords();
 
-      if (!isV1) {
-        if (!v2Rendered) {
-          renderConsultTypeChart();
-          v2Rendered = true;
-        }
+      if (v === 'v2') {
+        if (!v2Rendered) { renderConsultTypeChart(); v2Rendered = true; }
         renderV2BottomCards();
       }
+      if (v === 'v3') {
+        if (!v3Rendered) { renderV3FunnelChart(); renderV3DonutChart(null); v3Rendered = true; }
+      }
+    }
+
+    /* ══════════════════════════ 시안3: 깔때기 + 도넛 ══════════════════════════ */
+
+    const V3_COLORS = ['#4285F4','#34A853','#FBBC04','#EA4335','#FF6D01','#46BDC6','#7B68EE','#E91E90','#00ACC1','#8D6E63'];
+
+    // 전월 대비 증감 더미 생성 (항목명 기반 고정 seed)
+    const _v3PrevMap = {};
+    function _v3GetPrev(name, count) {
+      if (!(name in _v3PrevMap)) {
+        let h = 0; for (let i = 0; i < name.length; i++) h = ((h << 5) - h + name.charCodeAt(i)) | 0;
+        const r = ((Math.abs(h) % 200) - 50) / 1000;
+        _v3PrevMap[name] = { ratio: r, pDiff: +(r * 100).toFixed(1) };
+      }
+      const p = _v3PrevMap[name];
+      const prevCount = Math.round(count / (1 + p.ratio));
+      const diff = +(((count - prevCount) / (prevCount || 1)) * 100).toFixed(1);
+      return { prevCount, diff, pDiff: p.pDiff };
+    }
+
+    let _v3FunnelCanvas = null;
+    let _v3SelectedCat = null;
+
+    function renderV3FunnelChart() {
+      const canvas = document.getElementById('v3-funnel-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const container = canvas.parentElement;
+      canvas.width = container.clientWidth;
+      canvas.height = container.clientHeight;
+      const W = canvas.width, H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
+
+      const sorted = [...categoryTree].sort((a, b) => b.count - a.count).slice(0, 10);
+      const total = sorted.reduce((s, c) => s + c.count, 0);
+      const maxCount = sorted[0].count;
+      const rowH = Math.min(42, (H - 20) / sorted.length);
+      const gapY = 4;
+      const maxBarW = W * 0.50;
+      const labelX = W * 0.02;
+      const startY = 10;
+
+      // 호버 영역 저장
+      const _hitBoxes = [];
+
+      sorted.forEach((cat, i) => {
+        const y = startY + i * (rowH + gapY);
+        const barW = (cat.count / maxCount) * maxBarW;
+        const barX = (W * 0.52 - barW) / 2 + W * 0.01;
+        const barH = rowH - 2;
+        const color = V3_COLORS[i % V3_COLORS.length];
+        const isSelected = _v3SelectedCat === cat.name;
+
+        // 막대
+        ctx.fillStyle = isSelected ? color : color + 'CC';
+        ctx.beginPath();
+        const r = 4;
+        ctx.moveTo(barX + r, y);
+        ctx.lineTo(barX + barW - r, y);
+        ctx.quadraticCurveTo(barX + barW, y, barX + barW, y + r);
+        ctx.lineTo(barX + barW, y + barH - r);
+        ctx.quadraticCurveTo(barX + barW, y + barH, barX + barW - r, y + barH);
+        ctx.lineTo(barX + r, y + barH);
+        ctx.quadraticCurveTo(barX, y + barH, barX, y + barH - r);
+        ctx.lineTo(barX, y + r);
+        ctx.quadraticCurveTo(barX, y, barX + r, y);
+        ctx.fill();
+
+        if (isSelected) {
+          ctx.strokeStyle = '#212121';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+
+        // 막대 내부 텍스트 (분류명)
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 11px -apple-system, sans-serif';
+        ctx.textBaseline = 'middle';
+        ctx.textAlign = 'left';
+        if (barW > 60) ctx.fillText(cat.name, barX + 8, y + barH / 2);
+
+        // 우측 정보 텍스트
+        const pct = ((cat.count / total) * 100).toFixed(1);
+        const prev = _v3GetPrev(cat.name, cat.count);
+        const arrow = prev.diff >= 0 ? '▲' : '▼';
+        const diffColor = prev.diff >= 0 ? '#F44336' : '#2196F3';
+        const infoText = `${cat.name}:${cat.count.toLocaleString()}건 ${pct}%`;
+        const diffText = `(${Math.abs(prev.diff).toFixed(1)}%${prev.diff >= 0 ? '상승' : '하락'} ∥ ${Math.abs(prev.pDiff)}%p${prev.pDiff >= 0 ? '상승' : '하락'})`;
+
+        const infoX = W * 0.54;
+        ctx.fillStyle = '#212121';
+        ctx.font = '600 12px -apple-system, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(infoText, infoX, y + barH / 2 - 7);
+
+        ctx.fillStyle = '#757575';
+        ctx.font = '11px -apple-system, sans-serif';
+        ctx.fillText(diffText, infoX, y + barH / 2 + 9);
+
+        _hitBoxes.push({ x: barX, y, w: barW, h: barH, name: cat.name });
+      });
+
+      // 클릭/호버 이벤트
+      canvas.onmousemove = function(e) {
+        const rect = canvas.getBoundingClientRect();
+        const mx = (e.clientX - rect.left) * (W / rect.width);
+        const my = (e.clientY - rect.top) * (H / rect.height);
+        const hit = _hitBoxes.find(b => mx >= b.x && mx <= b.x + b.w && my >= b.y && my <= b.y + b.h);
+        canvas.style.cursor = hit ? 'pointer' : 'default';
+      };
+      canvas.onclick = function(e) {
+        const rect = canvas.getBoundingClientRect();
+        const mx = (e.clientX - rect.left) * (W / rect.width);
+        const my = (e.clientY - rect.top) * (H / rect.height);
+        const hit = _hitBoxes.find(b => mx >= b.x && mx <= b.x + b.w && my >= b.y && my <= b.y + b.h);
+        if (hit) {
+          _v3SelectedCat = _v3SelectedCat === hit.name ? null : hit.name;
+          renderV3FunnelChart();
+          renderV3DonutChart(_v3SelectedCat);
+        }
+      };
+    }
+
+    let _v3DonutChart = null;
+
+    function renderV3DonutChart(catName) {
+      const label = document.getElementById('v3-donut-label');
+      let items = [];
+      if (catName) {
+        const cat = categoryTree.find(c => c.name === catName);
+        if (cat && cat.children) items = cat.children;
+        if (label) label.textContent = catName;
+      } else {
+        categoryTree.forEach(c => { if (c.children) c.children.forEach(sub => items.push(sub)); });
+        if (label) label.textContent = '전체';
+      }
+
+      items = [...items].sort((a, b) => b.count - a.count).slice(0, 8);
+      const total = items.reduce((s, c) => s + c.count, 0);
+
+      const canvas = document.getElementById('v3-donut-canvas');
+      if (!canvas) return;
+      if (_v3DonutChart) _v3DonutChart.destroy();
+
+      const colors = ['#4285F4','#FBBC04','#34A853','#EA4335','#FF6D01','#46BDC6','#7B68EE','#8D6E63'];
+
+      _v3DonutChart = new Chart(canvas, {
+        type: 'doughnut',
+        data: {
+          labels: items.map(i => i.name),
+          datasets: [{ data: items.map(i => i.count), backgroundColor: colors.slice(0, items.length), borderWidth: 2, borderColor: '#fff' }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '55%',
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  const it = items[ctx.dataIndex];
+                  const pct = ((it.count / total) * 100).toFixed(2);
+                  const prev = _v3GetPrev(it.name, it.count);
+                  return `${it.name}: ${it.count.toLocaleString()}건 ${pct}% (${Math.abs(prev.diff).toFixed(1)}%${prev.diff >= 0 ? '상승' : '하락'} ∥ ${Math.abs(prev.pDiff)}%p${prev.pDiff >= 0 ? '상승' : '하락'})`;
+                }
+              }
+            }
+          }
+        },
+        plugins: [{
+          id: 'v3DonutCenter',
+          afterDraw(chart) {
+            const { ctx: c, chartArea: { left, right, top, bottom } } = chart;
+            const cx = (left + right) / 2, cy = (top + bottom) / 2;
+            c.save();
+            c.textAlign = 'center'; c.textBaseline = 'middle';
+            c.font = 'bold 16px -apple-system, sans-serif'; c.fillStyle = '#212121';
+            c.fillText(total.toLocaleString() + '건', cx, cy - 8);
+            c.font = '11px -apple-system, sans-serif'; c.fillStyle = '#757575';
+            c.fillText(catName || '전체', cx, cy + 10);
+            c.restore();
+          }
+        }]
+      });
+
+      // 외부 라벨 그리기 (afterDraw 플러그인으로)
+      // 하단 순위 테이블 렌더링
+      _renderV3SubRank(catName, items);
+    }
+
+    function _renderV3SubRank(catName, donutItems) {
+      const el = document.getElementById('v3-sub-rank');
+      if (!el) return;
+
+      // 도넛에 표시된 소분류의 하위 항목(3depth) 수집
+      let children = [];
+      donutItems.forEach(sub => {
+        if (sub.children) sub.children.forEach(c => children.push(c));
+      });
+      children = children.sort((a, b) => b.count - a.count).slice(0, 6);
+
+      if (children.length === 0) {
+        el.innerHTML = '<div style="text-align:center;color:#9E9E9E;font-size:12px;padding:12px;">하위 항목이 없습니다</div>';
+        return;
+      }
+
+      const half = Math.ceil(children.length / 2);
+      const left = children.slice(0, half);
+      const right = children.slice(half);
+
+      const rowHtml = (item, idx) => `
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #F0F0F0;">
+          <span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:4px;background:${idx < 3 ? '#424242' : '#BDBDBD'};color:#fff;font-size:11px;font-weight:700;">${idx + 1}</span>
+          <span style="flex:1;font-size:12px;color:#424242;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.name}</span>
+          <span style="font-size:12px;font-weight:600;color:#212121;white-space:nowrap;">${item.count.toLocaleString()}건</span>
+        </div>`;
+
+      el.innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 20px;">
+          <div>${left.map((c, i) => rowHtml(c, i)).join('')}</div>
+          <div>${right.map((c, i) => rowHtml(c, i + half)).join('')}</div>
+        </div>`;
     }
 
     /* ══════════════════════════ 시간대별 콜량 차트 ══════════════════════════ */
@@ -988,6 +1240,7 @@
       renderHourlyChart();
       const variant = document.getElementById('variant-select').value;
       if (variant === 'v2') { renderConsultTypeChart(); renderV2BottomCards(); }
+      if (variant === 'v3') { renderV3FunnelChart(); renderV3DonutChart(_v3SelectedCat); }
     }
 
     /** 실시간 모드 토글 */

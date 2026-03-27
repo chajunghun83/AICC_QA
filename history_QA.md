@@ -206,6 +206,10 @@
   - 부모 페이지(integrated-evaluation.html)에 message 이벤트 리스너 추가하여 iframe 전체화면 확장/복원 처리
   - 모달 열림 시 iframe 내부 콘텐츠(#page-content) 숨김 처리로 배경 콘텐츠가 깨져 보이는 현상 해결
   - 모달 닫힘 시 220ms 딜레이 후 iframe 원래 크기/스타일 복원
+- GitHub Pages 환경 iframe 모달 깨짐 수정 : 동일 origin(https) 환경에서 ResizeObserver가 iframe 확장 스타일을 덮어쓰는 문제 해결
+  - 원인 : 로컬(file://)에서는 cross-origin으로 ResizeObserver가 비활성, GitHub Pages에서는 same-origin으로 활성화되어 모달 확장 시 iframe 높이를 지속적으로 재설정
+  - adjustIframeHeight()에 _iframeModalActive 플래그 추가, 모달 활성 상태에서 ResizeObserver 높이 갱신 차단
+  - postMessage 핸들러에서 da-modal-expand 시 플래그 활성화, da-modal-restore 시 플래그 해제
 
 
 
