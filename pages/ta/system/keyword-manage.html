@@ -31,39 +31,76 @@
 
     .action-btn { background:none; border:none; cursor:pointer; padding:4px; border-radius:4px; color:#757575; transition:all .15s; }
     .action-btn:hover { background:#F5F5F5; color:#212121; }
+
+    /* 트리 스타일 */
+    .tree-node { user-select:none; }
+    .tree-label { display:flex; align-items:center; gap:4px; padding:5px 8px; border-radius:4px; cursor:pointer; font-size:12px; color:#555; transition:background .1s; }
+    .tree-label:hover { background:#F5F5F5; }
+    .tree-label.selected { background:#E3F2FD; color:#1976D2; }
+    /* 깊이별 스타일 */
+    .tree-label.depth-0 { font-size:13px; font-weight:600; color:#212121; background:#F5F7FA; border-left:3px solid #00A3FF; border-radius:0 4px 4px 0; padding:7px 10px; margin-bottom:2px; }
+    .tree-label.depth-0:hover { background:#EBF0F5; }
+    .tree-label.depth-0.selected { background:#DBEAFE; color:#1565C0; border-left-color:#1565C0; }
+    .tree-label.depth-1 { font-size:12.5px; font-weight:500; color:#424242; }
+    .tree-label.depth-1.selected { background:#E3F2FD; color:#1976D2; font-weight:600; }
+    .tree-toggle { width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px; color:#9E9E9E; flex-shrink:0; }
+    .tree-add-btn { opacity:0; margin-left:auto; background:none; border:none; cursor:pointer; font-size:14px; color:#BDBDBD; padding:0 4px; transition:opacity .15s, color .15s; }
+    .tree-label:hover .tree-add-btn { opacity:1; }
+    .tree-add-btn:hover { color:#00A3FF; }
+    .tree-children { padding-left:18px; }
+    .tree-inline-input { border:1px solid #90CAF9; border-radius:4px; padding:3px 8px; font-size:12px; outline:none; width:120px; margin:2px 0 2px 20px; }
   </style>
 </head>
 <body class="bg-[#F5F5F5] text-[#212121]">
   <div id="page-content">
     <div style="margin-bottom:20px;">
       <h1 style="font-size:20px;font-weight:700;margin:0;">키워드 관리</h1>
-      <p style="font-size:12px;color:#757575;margin:4px 0 0;">모니터링·제외·이슈 키워드 등록 및 관리</p>
+      <p style="font-size:12px;color:#757575;margin:4px 0 0;">상품명·제외·이슈 키워드 등록 및 관리</p>
     </div>
 
     <div class="content-card">
       <div class="content-card-header" style="padding-bottom:0;">
         <div class="kw-tabs">
-          <button class="kw-tab active" data-tab="monitor" onclick="switchTab('monitor')">모니터링 키워드<span class="tab-count" id="monitor-tab-count"></span></button>
+          <button class="kw-tab active" data-tab="monitor" onclick="switchTab('monitor')">상품명 키워드<span class="tab-count" id="monitor-tab-count"></span></button>
           <button class="kw-tab" data-tab="exclude" onclick="switchTab('exclude')">제외 키워드<span class="tab-count" id="exclude-tab-count"></span></button>
           <button class="kw-tab" data-tab="issue" onclick="switchTab('issue')">이슈 키워드<span class="tab-count" id="issue-tab-count"></span></button>
         </div>
       </div>
 
       <div class="content-card-body" style="padding:0;">
-        <!-- 모니터링 키워드 -->
+        <!-- 상품명 키워드 -->
         <div class="tab-panel active" id="panel-monitor">
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px;">
-            <span style="font-size:12px;color:#757575;" id="monitor-count"></span>
-            <button class="btn btn-primary btn-sm" onclick="openModal('monitor')">+ 추가</button>
+          <div style="display:flex;gap:16px;padding:16px;min-height:480px;">
+            <!-- 왼쪽: 상품 분류 트리 (3) -->
+            <div style="flex:3;min-width:0;border:1px solid #E0E0E0;border-radius:8px;display:flex;flex-direction:column;overflow:hidden;">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid #F0F0F0;background:#FAFAFA;">
+                <span style="font-size:13px;font-weight:600;color:#424242;">상품 분류</span>
+                <div style="display:flex;gap:6px;">
+                  <input type="file" id="excel-upload" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleExcelUpload(event)">
+                  <button class="btn btn-secondary btn-sm" onclick="addRootCategory()" style="font-size:11px;padding:4px 10px;">+ 분류 추가</button>
+                  <button class="btn btn-secondary btn-sm" onclick="document.getElementById('excel-upload').click()" style="font-size:11px;padding:4px 10px;">엑셀 업로드</button>
+                </div>
+              </div>
+              <div id="product-tree" style="flex:1;overflow-y:auto;padding:8px 6px;"></div>
+            </div>
+            <!-- 오른쪽: 상품 테이블 (7) -->
+            <div style="flex:7;min-width:0;border:1px solid #E0E0E0;border-radius:8px;display:flex;flex-direction:column;overflow:hidden;">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid #F0F0F0;background:#FAFAFA;">
+                <span style="font-size:12px;color:#757575;" id="monitor-count">분류를 선택하세요</span>
+                <button class="btn btn-primary btn-sm" onclick="openModal('monitor')" id="btn-add-product">+ 상품 추가</button>
+              </div>
+              <div style="flex:1;overflow-y:auto;">
+                <table class="data-table">
+                  <colgroup>
+                    <col style="width:6%;"><col style="width:14%;"><col style="width:22%;">
+                    <col style="width:32%;"><col style="width:10%;"><col style="width:14%;">
+                  </colgroup>
+                  <thead><tr><th>No</th><th>상품코드</th><th>상품</th><th>상품 설명</th><th>상태</th><th>관리</th></tr></thead>
+                  <tbody id="monitor-tbody"></tbody>
+                </table>
+              </div>
+            </div>
           </div>
-          <table class="data-table">
-            <colgroup>
-              <col style="width:7%;"><col style="width:18%;"><col style="width:28%;">
-              <col style="width:15%;"><col style="width:10%;"><col style="width:14%;">
-            </colgroup>
-            <thead><tr><th>No</th><th>키워드</th><th>키워드 설명</th><th>상담 유형</th><th>상태</th><th>관리</th></tr></thead>
-            <tbody id="monitor-tbody"></tbody>
-          </table>
         </div>
 
         <!-- 제외 키워드 -->
@@ -110,28 +147,111 @@
   <script src="../../../js/components/modal.js"></script>
   <script src="../../../js/components/toast.js"></script>
   <script>
-    /* ========== 더미 데이터 ========== */
-    const kwData = {
-      monitor: [
-        { no:1,  keyword:'해지',           description:'해지 의사 표현',               callType:'전체', active:true },
-        { no:2,  keyword:'위약금',          description:'위약금 관련 문의',              callType:'전체', active:true },
-        { no:3,  keyword:'환불',           description:'환불 요청/문의',               callType:'전체', active:true },
-        { no:4,  keyword:'보상',           description:'보상 요구/문의',               callType:'전체', active:true },
-        { no:5,  keyword:'불만',           description:'서비스 불만 표현',              callType:'전체', active:true },
-        { no:6,  keyword:'상담사 연결',      description:'상위 상담사 연결 요청',          callType:'전체', active:true },
-        { no:7,  keyword:'약정',           description:'약정 기간/조건 문의',            callType:'전체', active:true },
-        { no:8,  keyword:'요금제 변경',      description:'요금제 변경 요청',              callType:'I/B',  active:true },
-        { no:9,  keyword:'배송 지연',       description:'배송 지연 클레임',              callType:'I/B',  active:true },
-        { no:10, keyword:'교환',           description:'상품 교환 요청',               callType:'전체', active:true },
-        { no:11, keyword:'반품',           description:'상품 반품 요청',               callType:'전체', active:true },
-        { no:12, keyword:'A/S',           description:'제품 수리/A/S 접수',           callType:'I/B',  active:true },
-        { no:13, keyword:'장애',           description:'서비스 장애 신고',              callType:'I/B',  active:true },
-        { no:14, keyword:'미납',           description:'미납 요금 관련',               callType:'전체', active:true },
-        { no:15, keyword:'포인트',          description:'포인트 적립/사용 문의',          callType:'전체', active:true },
-        { no:16, keyword:'업그레이드',       description:'서비스/상품 업그레이드 문의',      callType:'O/B',  active:true },
-        { no:17, keyword:'프로모션',         description:'프로모션/이벤트 안내',           callType:'O/B',  active:false },
-        { no:18, keyword:'재가입',          description:'재가입/복원 문의',              callType:'전체', active:false }
+    /* ========== 상품 분류 트리 데이터 ========== */
+    let _treeIdSeq = 100;
+    const productTree = [
+      { id:1, name:'의류', open:true, children:[
+        { id:2, name:'여성의류', open:true, children:[
+          { id:3, name:'원피스', children:[] },
+          { id:4, name:'블라우스', children:[] },
+          { id:5, name:'니트/스웨터', children:[] }
+        ]},
+        { id:6, name:'남성의류', open:true, children:[
+          { id:7, name:'셔츠', children:[] },
+          { id:8, name:'자켓', children:[] },
+          { id:9, name:'바지', children:[] }
+        ]},
+        { id:10, name:'아우터', open:false, children:[
+          { id:11, name:'코트', children:[] },
+          { id:12, name:'패딩', children:[] },
+          { id:13, name:'점퍼', children:[] }
+        ]}
+      ]},
+      { id:14, name:'잡화', open:true, children:[
+        { id:15, name:'가방', open:true, children:[
+          { id:16, name:'토트백', children:[] },
+          { id:17, name:'크로스백', children:[] }
+        ]},
+        { id:18, name:'신발', open:false, children:[
+          { id:19, name:'스니커즈', children:[] },
+          { id:20, name:'부츠', children:[] }
+        ]},
+        { id:21, name:'액세서리', open:false, children:[
+          { id:22, name:'스카프', children:[] },
+          { id:23, name:'벨트', children:[] }
+        ]}
+      ]}
+    ];
+
+    /* ========== 상품 더미 데이터 (분류 id → 상품 배열) ========== */
+    const productData = {
+      3: [
+        { no:1, sku:'WD-001', name:'플로럴 쉬폰 원피스', desc:'꽃무늬 쉬폰 소재 미디 원피스', active:true },
+        { no:2, sku:'WD-002', name:'린넨 A라인 원피스', desc:'린넨 혼방 A라인 실루엣 원피스', active:true },
+        { no:3, sku:'WD-003', name:'니트 롱 원피스', desc:'울 블렌드 슬림핏 롱 원피스', active:true }
       ],
+      4: [
+        { no:1, sku:'WB-001', name:'실크 리본 블라우스', desc:'100% 실크 리본 디테일 블라우스', active:true },
+        { no:2, sku:'WB-002', name:'코튼 퍼프 블라우스', desc:'코튼 소재 퍼프 소매 블라우스', active:true }
+      ],
+      5: [
+        { no:1, sku:'WK-001', name:'캐시미어 라운드 니트', desc:'캐시미어 100% 라운드넥 니트', active:true },
+        { no:2, sku:'WK-002', name:'울 케이블 스웨터', desc:'울 혼방 케이블 패턴 스웨터', active:true },
+        { no:3, sku:'WK-003', name:'앙고라 터틀넥 니트', desc:'앙고라 혼방 터틀넥 니트', active:false }
+      ],
+      7: [
+        { no:1, sku:'MS-001', name:'옥스포드 드레스 셔츠', desc:'코튼 옥스포드 레귤러핏 셔츠', active:true },
+        { no:2, sku:'MS-002', name:'린넨 캐주얼 셔츠', desc:'린넨 100% 캐주얼 오버핏 셔츠', active:true }
+      ],
+      8: [
+        { no:1, sku:'MJ-001', name:'울 싱글 자켓', desc:'울 블렌드 싱글 브레스트 자켓', active:true },
+        { no:2, sku:'MJ-002', name:'트위드 블레이저', desc:'트위드 소재 클래식 블레이저', active:true }
+      ],
+      9: [
+        { no:1, sku:'MP-001', name:'슬림핏 치노 팬츠', desc:'코튼 스판 슬림핏 치노 팬츠', active:true },
+        { no:2, sku:'MP-002', name:'와이드 울 슬랙스', desc:'울 혼방 와이드 슬랙스', active:true }
+      ],
+      11: [
+        { no:1, sku:'OC-001', name:'캐시미어 더블 코트', desc:'캐시미어 혼방 더블 버튼 롱 코트', active:true },
+        { no:2, sku:'OC-002', name:'울 체스터 코트', desc:'프리미엄 울 체스터필드 코트', active:true },
+        { no:3, sku:'OC-003', name:'트렌치 코트', desc:'코튼 개버딘 클래식 트렌치 코트', active:true }
+      ],
+      12: [
+        { no:1, sku:'OP-001', name:'구스다운 롱 패딩', desc:'구스다운 충전 롱 패딩 점퍼', active:true },
+        { no:2, sku:'OP-002', name:'경량 숏 패딩', desc:'경량 덕다운 숏 패딩', active:true }
+      ],
+      13: [
+        { no:1, sku:'OJ-001', name:'나일론 윈드브레이커', desc:'나일론 방풍 윈드브레이커 점퍼', active:true },
+        { no:2, sku:'OJ-002', name:'플리스 집업 점퍼', desc:'폴라 플리스 하프 집업 점퍼', active:false }
+      ],
+      16: [
+        { no:1, sku:'BT-001', name:'레더 미니 토트백', desc:'소가죽 미니 토트백', active:true },
+        { no:2, sku:'BT-002', name:'캔버스 빅 토트백', desc:'두꺼운 캔버스 대용량 토트백', active:true }
+      ],
+      17: [
+        { no:1, sku:'BC-001', name:'체인 크로스백', desc:'소가죽 골드 체인 크로스백', active:true },
+        { no:2, sku:'BC-002', name:'나일론 미니 크로스백', desc:'나일론 소재 미니 크로스백', active:true }
+      ],
+      19: [
+        { no:1, sku:'SS-001', name:'레더 로우탑 스니커즈', desc:'소가죽 화이트 로우탑 스니커즈', active:true },
+        { no:2, sku:'SS-002', name:'캔버스 하이탑 스니커즈', desc:'캔버스 클래식 하이탑 스니커즈', active:true }
+      ],
+      20: [
+        { no:1, sku:'SB-001', name:'첼시 앵클 부츠', desc:'소가죽 첼시 앵클 부츠', active:true },
+        { no:2, sku:'SB-002', name:'스웨이드 롱 부츠', desc:'스웨이드 니하이 롱 부츠', active:true }
+      ],
+      22: [
+        { no:1, sku:'AS-001', name:'캐시미어 머플러', desc:'캐시미어 100% 프린지 머플러', active:true }
+      ],
+      23: [
+        { no:1, sku:'AB-001', name:'이탈리안 레더 벨트', desc:'이탈리아산 소가죽 클래식 벨트', active:true }
+      ]
+    };
+
+    let selectedCategoryId = null;
+
+    /* ========== 제외/이슈 키워드 데이터 (기존 유지) ========== */
+    const kwData = {
       exclude: [
         { no:1,  keyword:'네',            description:'응답 추임새',                  callType:'전체', active:true },
         { no:2,  keyword:'예',            description:'응답 추임새',                  callType:'전체', active:true },
@@ -175,7 +295,7 @@
       ]
     };
 
-    const tabLabels = { monitor:'모니터링 키워드', exclude:'제외 키워드', issue:'이슈 키워드' };
+    const tabLabels = { monitor:'상품명 키워드', exclude:'제외 키워드', issue:'이슈 키워드' };
     let currentTab = 'monitor';
 
     /* ========== 탭 전환 ========== */
@@ -185,7 +305,216 @@
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `panel-${type}`));
     }
 
-    /* ========== 테이블 렌더링 ========== */
+    /* ========== 트리 렌더링 ========== */
+    let _addingTo = null; // 인라인 입력 활성 대상 ('root' 또는 부모 id)
+
+    function renderTree() {
+      const el = document.getElementById('product-tree');
+      el.innerHTML = _buildTreeHtml(productTree, 0);
+      if (_addingTo === 'root') el.insertAdjacentHTML('beforeend', _inlineInputHtml('root'));
+      _updateMonitorTabCount();
+      const inp = document.getElementById('tree-inline-input');
+      if (inp) inp.focus();
+    }
+
+    function _buildTreeHtml(nodes, depth) {
+      return nodes.map(n => {
+        const hasChildren = n.children && n.children.length > 0;
+        const isOpen = n.open !== false;
+        const sel = selectedCategoryId === n.id ? ' selected' : '';
+        const toggleIcon = hasChildren ? (isOpen ? '▼' : '▶') : '<span style="width:10px;display:inline-block;"></span>';
+        let childrenHtml = '';
+        if (hasChildren && isOpen) childrenHtml = `<div class="tree-children">${_buildTreeHtml(n.children, depth + 1)}</div>`;
+        else if (!hasChildren && isOpen) childrenHtml = '<div class="tree-children"></div>';
+        // 인라인 입력 삽입
+        if (_addingTo === n.id && isOpen) {
+          const chDiv = childrenHtml || '<div class="tree-children"></div>';
+          childrenHtml = chDiv.replace('</div>',  _inlineInputHtml(n.id) + '</div>');
+        }
+        const depthCls = depth <= 1 ? ` depth-${depth}` : '';
+        return `<div class="tree-node">
+          <div class="tree-label${depthCls}${sel}" onclick="selectCategory(${n.id}, event)">
+            <span class="tree-toggle">${toggleIcon}</span>
+            <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${n.name}</span>
+            <button class="tree-add-btn" onclick="startAddChild(${n.id}, event)" title="하위 분류 추가">+</button>
+          </div>
+          ${childrenHtml}
+        </div>`;
+      }).join('');
+    }
+
+    function _inlineInputHtml(parentId) {
+      const pl = parentId === 'root' ? '6px' : '20px';
+      return `<div style="display:flex;align-items:center;gap:4px;padding:3px 0 3px ${pl};">
+        <input type="text" id="tree-inline-input" class="tree-inline-input" placeholder="분류명 입력" onkeydown="if(event.key==='Enter')confirmAddCategory('${parentId}');if(event.key==='Escape')cancelAddCategory();">
+        <button style="background:#00A3FF;color:#fff;border:none;border-radius:4px;padding:3px 10px;font-size:11px;cursor:pointer;white-space:nowrap;" onclick="confirmAddCategory('${parentId}')">확인</button>
+        <button style="background:none;border:1px solid #E0E0E0;border-radius:4px;padding:3px 8px;font-size:11px;cursor:pointer;color:#757575;white-space:nowrap;" onclick="cancelAddCategory()">취소</button>
+      </div>`;
+    }
+
+    function _findNode(nodes, id) {
+      for (const n of nodes) {
+        if (n.id === id) return n;
+        if (n.children) { const f = _findNode(n.children, id); if (f) return f; }
+      }
+      return null;
+    }
+
+    // 노드 자신과 모든 하위 카테고리 id 수집
+    function _collectCategoryIds(node) {
+      if (!node) return [];
+      const ids = [node.id];
+      if (node.children) node.children.forEach(c => ids.push(..._collectCategoryIds(c)));
+      return ids;
+    }
+
+    function selectCategory(id, e) {
+      if (e.target.closest('.tree-add-btn')) return;
+      const node = _findNode(productTree, id);
+      if (!node) return;
+      // 하위가 있으면 토글, 동시에 선택도 변경
+      if (node.children && node.children.length > 0) {
+        if (selectedCategoryId === id) { node.open = !node.open; }
+        else { node.open = true; }
+      }
+      selectedCategoryId = id;
+      renderTree();
+      renderProductTable();
+    }
+
+    function addRootCategory() {
+      _addingTo = 'root';
+      renderTree();
+    }
+
+    function startAddChild(parentId, e) {
+      e.stopPropagation();
+      const parent = _findNode(productTree, parentId);
+      if (parent) parent.open = true;
+      _addingTo = parentId;
+      renderTree();
+    }
+
+    function confirmAddCategory(parentId) {
+      const inp = document.getElementById('tree-inline-input');
+      const name = inp ? inp.value.trim() : '';
+      if (!name) { AICC_Toast.show('분류명을 입력해 주세요.'); return; }
+      if (parentId === 'root') {
+        productTree.push({ id: ++_treeIdSeq, name, open: true, children: [] });
+      } else {
+        const parent = _findNode(productTree, parseInt(parentId));
+        if (parent) {
+          if (!parent.children) parent.children = [];
+          parent.children.push({ id: ++_treeIdSeq, name, children: [] });
+          parent.open = true;
+        }
+      }
+      _addingTo = null;
+      renderTree();
+      AICC_Toast.show(`"${name}" 분류가 추가되었습니다.`);
+    }
+
+    function cancelAddCategory() {
+      _addingTo = null;
+      renderTree();
+    }
+
+    /* ========== 상품 테이블 렌더링 ========== */
+    function renderProductTable() {
+      const tbody = document.getElementById('monitor-tbody');
+      const countEl = document.getElementById('monitor-count');
+
+      if (!selectedCategoryId) {
+        countEl.textContent = '분류를 선택하세요';
+        tbody.innerHTML = '<tr><td colspan="6" style="padding:40px;color:#9E9E9E;">왼쪽 트리에서 분류를 선택하세요</td></tr>';
+        return;
+      }
+
+      const node = _findNode(productTree, selectedCategoryId);
+      // 선택된 카테고리 + 모든 하위 카테고리의 상품을 수집
+      const allCatIds = _collectCategoryIds(node);
+      const data = [];
+      allCatIds.forEach(cid => { if (productData[cid]) data.push(...productData[cid].map(d => ({...d, _catId: cid}))); });
+      const activeCount = data.filter(d => d.active).length;
+      countEl.innerHTML = `<strong>${node ? node.name : ''}</strong> — ${activeCount} / ${data.length}건 활성`;
+
+      if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="padding:40px;color:#9E9E9E;">등록된 상품이 없습니다</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = data.map((d, i) => `
+        <tr>
+          <td>${i + 1}</td>
+          <td style="font-family:monospace;font-size:11px;">${d.sku}</td>
+          <td style="font-weight:500;text-align:left;padding-left:12px;">${d.name}</td>
+          <td style="text-align:left;padding-left:12px;">${d.desc}</td>
+          <td>
+            <label class="toggle-switch">
+              <input type="checkbox" ${d.active ? 'checked' : ''} onchange="toggleProduct(${d._catId},${d.no})">
+              <span class="toggle-slider"></span>
+            </label>
+          </td>
+          <td>
+            <div style="display:flex;gap:8px;justify-content:center;">
+              <button class="action-btn" onclick="openEditModal('monitor',${d.no},${d._catId})" title="수정">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+              </button>
+              <button class="action-btn" onclick="deleteProduct(${d._catId},${d.no})" title="삭제">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function toggleProduct(catId, no) {
+      const data = productData[catId];
+      if (!data) return;
+      const item = data.find(d => d.no === no);
+      if (item) { item.active = !item.active; renderProductTable(); _updateMonitorTabCount();
+        AICC_Toast.show(`"${item.name}" ${item.active ? '활성화' : '비활성화'}되었습니다.`);
+      }
+    }
+
+    function deleteProduct(catId, no) {
+      const data = productData[catId];
+      if (!data) return;
+      const idx = data.findIndex(d => d.no === no);
+      if (idx === -1) return;
+      const name = data[idx].name;
+      data.splice(idx, 1);
+      renderProductTable(); _updateMonitorTabCount();
+      AICC_Toast.show(`"${name}" 상품이 삭제되었습니다.`);
+    }
+
+    function _updateMonitorTabCount() {
+      let total = 0;
+      Object.values(productData).forEach(arr => { total += arr.length; });
+      document.getElementById('monitor-tab-count').textContent = `(${total})`;
+    }
+
+    /* ========== 엑셀 업로드 (더미) ========== */
+    function handleExcelUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (!selectedCategoryId) { AICC_Toast.show('먼저 분류를 선택해 주세요.'); e.target.value = ''; return; }
+      const data = productData[selectedCategoryId] || [];
+      const maxNo = data.length > 0 ? Math.max(...data.map(d => d.no)) : 0;
+      const dummyProducts = [
+        { no: maxNo + 1, sku: 'UP-001', name: '업로드 상품 A', desc: '엑셀 업로드 상품 A', active: true },
+        { no: maxNo + 2, sku: 'UP-002', name: '업로드 상품 B', desc: '엑셀 업로드 상품 B', active: true },
+        { no: maxNo + 3, sku: 'UP-003', name: '업로드 상품 C', desc: '엑셀 업로드 상품 C', active: true }
+      ];
+      if (!productData[selectedCategoryId]) productData[selectedCategoryId] = [];
+      productData[selectedCategoryId].push(...dummyProducts);
+      renderProductTable(); _updateMonitorTabCount();
+      AICC_Toast.show(`"${file.name}" 파일에서 ${dummyProducts.length}개 상품이 등록되었습니다.`);
+      e.target.value = '';
+    }
+
+    /* ========== 제외/이슈 테이블 렌더링 ========== */
     function renderTable(type) {
       const data = [...kwData[type]].sort((a, b) => b.no - a.no);
       const tbody = document.getElementById(`${type}-tbody`);
@@ -222,17 +551,13 @@
       `).join('');
     }
 
-    /* ========== 상태 토글 ========== */
     function toggleActive(type, no) {
       const item = kwData[type].find(d => d.no === no);
-      if (item) {
-        item.active = !item.active;
-        renderTable(type);
+      if (item) { item.active = !item.active; renderTable(type);
         AICC_Toast.show(`"${item.keyword}" ${item.active ? '활성화' : '비활성화'}되었습니다.`);
       }
     }
 
-    /* ========== 삭제 ========== */
     function deleteRule(type, no) {
       const data = kwData[type];
       const idx = data.findIndex(d => d.no === no);
@@ -245,6 +570,10 @@
 
     /* ========== 추가/수정 모달 ========== */
     function openModal(type) {
+      if (type === 'monitor' && !selectedCategoryId) {
+        AICC_Toast.show('먼저 분류를 선택해 주세요.');
+        return;
+      }
       AICC_Modal.open({
         title: `${tabLabels[type]} 추가`,
         content: buildModalContent(type, null),
@@ -256,8 +585,15 @@
       });
     }
 
-    function openEditModal(type, no) {
-      const item = kwData[type].find(d => d.no === no);
+    function openEditModal(type, no, catId) {
+      let item;
+      if (type === 'monitor') {
+        const cid = catId || selectedCategoryId;
+        const data = productData[cid] || [];
+        item = data.find(d => d.no === no);
+      } else {
+        item = kwData[type].find(d => d.no === no);
+      }
       if (!item) return;
       AICC_Modal.open({
         title: `${tabLabels[type]} 수정`,
@@ -271,17 +607,37 @@
     }
 
     function buildModalContent(type, item) {
+      if (type === 'monitor') {
+        const nameVal = item ? item.name : '';
+        const skuVal = item ? item.sku : '';
+        const descVal = item ? item.desc : '';
+        return `
+          <div style="display:flex;flex-direction:column;gap:20px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+              <div>
+                <label class="form-label">상품명</label>
+                <input type="text" class="form-input" id="modal-keyword" value="${nameVal}" placeholder="예: 캐시미어 라운드 니트" style="width:100%;box-sizing:border-box;">
+              </div>
+              <div>
+                <label class="form-label">상품코드</label>
+                <input type="text" class="form-input" id="modal-sku" value="${skuVal}" placeholder="예: WK-001" style="width:100%;box-sizing:border-box;">
+              </div>
+            </div>
+            <div>
+              <label class="form-label">상품 설명</label>
+              <input type="text" class="form-input" id="modal-desc" value="${descVal}" placeholder="예: 캐시미어 100% 라운드넥 니트" style="width:100%;box-sizing:border-box;">
+            </div>
+          </div>`;
+      }
+
       const kwVal = item ? item.keyword : '';
       const descVal = item ? item.description : '';
       const callTypeVal = item ? item.callType : '전체';
-
       const placeholders = {
-        monitor: { kw:'예: 해지, 위약금, 환불', desc:'예: 해지 의사 표현, 환불 요청' },
         exclude: { kw:'예: 네, 감사합니다, 여보세요', desc:'예: 응답 추임새, 일반 인사말' },
         issue:   { kw:'예: 고소, 소비자원, 상급자', desc:'예: 법적 조치 언급, 에스컬레이션 요청' }
       };
       const ph = placeholders[type];
-
       return `
         <div style="display:flex;flex-direction:column;gap:20px;">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
@@ -302,43 +658,54 @@
             <label class="form-label">키워드 설명</label>
             <input type="text" class="form-input" id="modal-desc" value="${descVal}" placeholder="${ph.desc}" style="width:100%;box-sizing:border-box;">
           </div>
-        </div>
-      `;
+        </div>`;
     }
 
     function saveRule(type, editNo) {
-      const keyword = document.getElementById('modal-keyword').value.trim();
-      const description = document.getElementById('modal-desc').value.trim();
-      const callType = document.getElementById('modal-calltype').value;
-
-      if (!keyword) {
-        AICC_Toast.show('키워드를 입력해 주세요.');
+      if (type === 'monitor') {
+        const name = document.getElementById('modal-keyword').value.trim();
+        const sku = document.getElementById('modal-sku').value.trim();
+        const desc = document.getElementById('modal-desc').value.trim();
+        if (!name) { AICC_Toast.show('상품명을 입력해 주세요.'); return; }
+        if (!productData[selectedCategoryId]) productData[selectedCategoryId] = [];
+        const data = productData[selectedCategoryId];
+        if (editNo) {
+          const item = data.find(d => d.no === editNo);
+          if (item) { item.name = name; item.sku = sku; item.desc = desc; }
+          AICC_Toast.show(`"${name}" 상품이 수정되었습니다.`);
+        } else {
+          const maxNo = data.length > 0 ? Math.max(...data.map(d => d.no)) : 0;
+          data.push({ no: maxNo + 1, sku, name, desc, active: true });
+          AICC_Toast.show(`"${name}" 상품이 추가되었습니다.`);
+        }
+        AICC_Modal.close();
+        renderProductTable(); _updateMonitorTabCount();
         return;
       }
 
+      const keyword = document.getElementById('modal-keyword').value.trim();
+      const description = document.getElementById('modal-desc').value.trim();
+      const callType = document.getElementById('modal-calltype').value;
+      if (!keyword) { AICC_Toast.show('키워드를 입력해 주세요.'); return; }
       const data = kwData[type];
-
       if (editNo) {
         const item = data.find(d => d.no === editNo);
-        if (item) {
-          item.keyword = keyword;
-          item.description = description;
-          item.callType = callType;
-        }
+        if (item) { item.keyword = keyword; item.description = description; item.callType = callType; }
         AICC_Toast.show(`"${keyword}" 키워드가 수정되었습니다.`);
       } else {
         const maxNo = data.length > 0 ? Math.max(...data.map(d => d.no)) : 0;
         data.push({ no: maxNo + 1, keyword, description, callType, active: true });
         AICC_Toast.show(`"${keyword}" 키워드가 추가되었습니다.`);
       }
-
       AICC_Modal.close();
       renderTable(type);
     }
 
     /* ========== 초기화 ========== */
     document.addEventListener('DOMContentLoaded', () => {
-      ['monitor','exclude','issue'].forEach(t => renderTable(t));
+      renderTree();
+      renderProductTable();
+      ['exclude','issue'].forEach(t => renderTable(t));
     });
   </script>
 </body>

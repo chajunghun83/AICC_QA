@@ -775,9 +775,18 @@
     document.addEventListener('DOMContentLoaded', () => {
       /* URL 파라미터 기반 자동 필터링 (대시보드 미처리 리스트 연동) */
       const params = new URLSearchParams(window.location.search);
+      const urlKeyword = params.get('keyword');
       const urlStatus = params.get('status');
+      let hasUrlFilter = false;
+      if (urlKeyword) {
+        document.getElementById('f-keyword').value = decodeURIComponent(urlKeyword);
+        hasUrlFilter = true;
+      }
       if (urlStatus) {
         document.getElementById('f-status').value = urlStatus;
+        hasUrlFilter = true;
+      }
+      if (hasUrlFilter) {
         applyFilter();
       } else {
         renderTable();

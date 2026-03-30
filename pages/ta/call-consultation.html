@@ -40,7 +40,6 @@
         <span style="font-size:14px;font-weight:600;">전체 콜 건수</span>
         <div style="display:flex;align-items:center;gap:16px;font-size:11px;">
           <span style="display:flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;background:rgba(0,163,255,0.7);border-radius:2px;"></span><span id="legend-current">현재 기간</span></span>
-          <span style="display:flex;align-items:center;gap:4px;"><span style="width:12px;height:0;border-top:2px dashed #BDBDBD;"></span><span id="legend-prev">전월 기간</span></span>
         </div>
       </div>
       <div class="content-card-body" style="padding:8px;"><div style="height:260px;"><canvas id="chart-total"></canvas></div></div>
@@ -54,7 +53,6 @@
           <span style="font-size:14px;font-weight:600;">재인입 콜 건수</span>
           <div style="display:flex;align-items:center;gap:12px;font-size:10px;">
             <span style="display:flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;background:rgba(0,163,255,0.7);border-radius:2px;"></span>현재 기간</span>
-            <span style="display:flex;align-items:center;gap:3px;"><span style="width:10px;height:0;border-top:2px dashed #BDBDBD;"></span>전월 기간</span>
           </div>
         </div>
         <div class="content-card-body" style="padding:8px;"><div style="height:240px;"><canvas id="chart-reentry"></canvas></div></div>
@@ -78,7 +76,6 @@
           <span style="font-size:14px;font-weight:600;">이슈 콜 건수</span>
           <div style="display:flex;align-items:center;gap:12px;font-size:10px;">
             <span style="display:flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;background:rgba(0,163,255,0.7);border-radius:2px;"></span>현재 기간</span>
-            <span style="display:flex;align-items:center;gap:3px;"><span style="width:10px;height:0;border-top:2px dashed #BDBDBD;"></span>전월 기간</span>
           </div>
         </div>
         <div class="content-card-body" style="padding:8px;"><div style="height:240px;"><canvas id="chart-issue"></canvas></div></div>
@@ -128,9 +125,10 @@
 
     /* ══════════════════════════ 차트 더미데이터 ══════════════════════════ */
 
+    const _ccRng = (() => { let s = 77; return () => { s = (s * 16807 + 0) % 2147483647; return s / 2147483647; }; })();
     function generateMonthlyData(base, variance) {
       return Array.from({length: 31}, () => {
-        const v = base + (Math.random() - 0.5) * variance * 2;
+        const v = base + (_ccRng() - 0.5) * variance * 2;
         return base < 50 ? Math.round(v * 10) / 10 : Math.round(v);
       });
     }
@@ -183,7 +181,7 @@
     function renderKPICards(cfg) {
       const prevLabel = cfg ? cfg.prevLabel : '전월';
       const cards = [
-        { label:'총 콜수', key:'totalCalls', color:'', filter:'all' },
+        { label:'총 콜수', key:'totalCalls', color:'', filter:'total' },
         { label:'이슈 콜', key:'issueCalls', color:'', filter:'issue' },
         { label:'초과 콜', key:'overCalls', color:'', filter:'over' },
         { label:'재인입 콜', key:'reEntryCalls', color:'', filter:'reentry' }
@@ -213,8 +211,37 @@
 
     /* ══════════════════════════ 차트 렌더 ══════════════════════════ */
 
-    /** 바 + dashed 라인 비교 차트 */
-    function renderComparisonChart(canvasId, currentData, prevData, prevLabel, filterType) {
+    /* 데이터 레이블 커스텀 플러그인 */
+    function makeChartPlugins(opts = {}) {
+      const { showAllLabels = false, isSilence = false } = opts;
+      return [
+        {
+          id: 'barLabels',
+          afterDatasetsDraw(chart) {
+            const { ctx } = chart;
+            const meta = chart.getDatasetMeta(0);
+            const dataLen = chart.data.datasets[0].data.length;
+            const skipEveryOther = !showAllLabels && dataLen >= 20;
+            meta.data.forEach((bar, i) => {
+              if (skipEveryOther && i % 2 !== 0) return;
+              const val = chart.data.datasets[0].data[i];
+              if (val == null) return;
+              ctx.save();
+              ctx.fillStyle = '#424242';
+              ctx.font = '10px "Pretendard",sans-serif';
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'bottom';
+              const label = isSilence ? val.toFixed(1) : val.toLocaleString();
+              ctx.fillText(label, bar.x, bar.y - 3);
+              ctx.restore();
+            });
+          }
+        }
+      ];
+    }
+
+    /** 현재 기간 막대 + 평균선 차트 */
+    function renderTrendChart(canvasId, currentData, filterType, showAllLabels) {
       const canvas = document.getElementById(canvasId);
       if (!canvas) return null;
 
@@ -222,36 +249,19 @@
         type: 'bar',
         data: {
           labels: getLabels(currentPeriod),
-          datasets: [
-            {
-              label: '현재 기간',
-              data: currentData,
-              backgroundColor: 'rgba(0,163,255,0.7)',
-              borderRadius: 4,
-              order: 1
-            },
-            {
-              label: prevLabel + ' 기간',
-              data: prevData,
-              type: 'line',
-              borderColor: '#BDBDBD',
-              borderDash: [4,4],
-              pointRadius: 2,
-              pointBackgroundColor: '#BDBDBD',
-              tension: 0.3,
-              borderWidth: 2,
-              order: 0
-            }
-          ]
+          datasets: [{
+            label: '현재 기간',
+            data: currentData,
+            backgroundColor: 'rgba(0,163,255,0.7)',
+            borderRadius: 4
+          }]
         },
+        plugins: makeChartPlugins({ showAllLabels }),
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          interaction: { mode: 'index', intersect: false },
-          plugins: {
-            legend: { display: false },
-            tooltip: { boxPadding: 6, itemSort: (a, b) => a.datasetIndex - b.datasetIndex }
-          },
+          layout: { padding: { top: 18 } },
+          plugins: { legend: { display: false }, tooltip: { enabled: false } },
           scales: {
             y: { beginAtZero: true, grid: { color: '#F0F0F0' }, ticks: { font: { size: 10 }, color: '#757575' } },
             x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#757575', maxRotation: 0 } }
@@ -292,33 +302,22 @@
             }
           ]
         },
+        plugins: makeChartPlugins({ showAllLabels: false, isSilence: true }),
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          interaction: { mode: 'index', intersect: false },
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              boxPadding: 6, itemSort: (a, b) => a.datasetIndex - b.datasetIndex,
-              callbacks: {
-                label: function(ctx) { return ctx.dataset.label + ': ' + ctx.parsed.y + '분'; }
-              }
-            }
-          },
+          layout: { padding: { top: 18 } },
+          plugins: { legend: { display: false }, tooltip: { enabled: false } },
           scales: {
             y: {
               beginAtZero: true,
               grid: { color: '#F0F0F0' },
-              ticks: {
-                font: { size: 10 },
-                color: '#757575',
-                callback: function(v) { return v + '분'; }
-              }
+              ticks: { font: { size: 10 }, color: '#757575', callback: v => v + '분' }
             },
             x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#757575', maxRotation: 0 } }
           },
           onHover: (e, elements) => { e.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default'; },
-          onClick: () => { goCallStatus('over'); }
+          onClick: () => { goCallStatus('silence'); }
         }
       });
     }
@@ -331,12 +330,11 @@
       if (chartIssue)    chartIssue.destroy();
 
       const data = getChartData(currentPeriod);
-      const cfg = periodConfig[currentPeriod] || periodConfig.monthly;
 
-      chartTotal   = renderComparisonChart('chart-total',   data.total.current,   data.total.prev,   cfg.prevLabel, 'all');
-      chartReentry = renderComparisonChart('chart-reentry', data.reentry.current, data.reentry.prev, cfg.prevLabel, 'reentry');
+      chartTotal   = renderTrendChart('chart-total',   data.total.current,   'total',   true);
+      chartIssue   = renderTrendChart('chart-issue',   data.issue.current,   'issue',   false);
+      chartReentry = renderTrendChart('chart-reentry', data.reentry.current, 'reentry', false);
       chartSilence = renderSilenceChart(data.silence.talkTime, data.silence.silenceTime);
-      chartIssue   = renderComparisonChart('chart-issue',   data.issue.current,   data.issue.prev,   cfg.prevLabel, 'issue');
     }
 
     /* ══════════════════════════ 필터 핸들러 ══════════════════════════ */
@@ -350,7 +348,8 @@
       const f = factor[period] || 30;
       const baseF = 30;
       const ratio = f / baseF;
-      const scale = (val) => Math.round(val * ratio * (0.9 + Math.random() * 0.2));
+      const _scaleRng = (() => { let s = 123; return () => { s = (s * 16807 + 0) % 2147483647; return s / 2147483647; }; })();
+      const scale = (val) => Math.round(val * ratio * (0.9 + _scaleRng() * 0.2));
 
       Object.keys(kpiBase).forEach(key => {
         Object.keys(kpiBase[key]).forEach(prop => {
@@ -360,9 +359,7 @@
 
       /* 범례 텍스트 갱신 */
       const legendCurrent = document.getElementById('legend-current');
-      const legendPrev = document.getElementById('legend-prev');
       if (legendCurrent) legendCurrent.textContent = '현재 기간';
-      if (legendPrev) legendPrev.textContent = cfg.prevLabel + ' 기간';
 
       renderKPICards(cfg);
       renderAllCharts();

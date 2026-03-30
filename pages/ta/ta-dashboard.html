@@ -16,7 +16,7 @@
 <body class="bg-[#F5F5F5] text-[#212121]">
   <div id="page-content">
     <!-- 페이지 헤더 + 필터 -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+    <div id="page-header-bar" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
       <div>
         <h1 style="font-size:20px;font-weight:700;margin:0;">대시보드</h1>
         <p style="font-size:12px;color:#757575;margin:4px 0 0;">텍스트 분석 현황 종합 대시보드</p>
@@ -35,6 +35,9 @@
           <option value="v2">시안 2</option>
           <option value="v3">시안 3</option>
         </select>
+        <button class="btn btn-sm btn-secondary" id="btn-dashboard-mode" onclick="enterDashboardMode()" style="padding:6px 12px;font-weight:600;white-space:nowrap;flex-shrink:0;display:none;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>대시보드 모드
+        </button>
       </div>
     </div>
 
@@ -45,7 +48,7 @@
     <div style="display:grid;grid-template-columns:1fr 2fr 2fr;grid-template-rows:auto auto;gap:16px;margin-bottom:20px;">
       <!-- 주요 키워드 (시안1: 2행 스팬 / 시안2: 고정 높이) -->
       <div class="content-card" id="keyword-card" style="grid-row:span 2;">
-        <div class="content-card-header"><span style="font-size:14px;font-weight:600;">주요 키워드 TOP 20</span></div>
+        <div class="content-card-header"><span style="font-size:14px;font-weight:600;">주요 키워드</span></div>
         <div class="content-card-body" style="padding:0;overflow-y:auto;" id="rising-list"></div>
       </div>
 
@@ -87,15 +90,15 @@
       <!-- ===== 시안2: 우측 세로 스택 (이슈/신규/미처리) ===== -->
       <div id="variant-v2-right-stack" style="display:none;flex-direction:column;gap:8px;">
         <div class="content-card" style="flex:1;min-height:0;overflow:hidden;">
-          <div class="content-card-header"><span style="font-size:14px;font-weight:600;">이슈 키워드 TOP 5</span></div>
+          <div class="content-card-header"><span style="font-size:14px;font-weight:600;">이슈 키워드</span></div>
           <div class="content-card-body" style="padding:8px;" id="issue-list-v2"></div>
         </div>
         <div class="content-card" style="flex:1;min-height:0;overflow:hidden;">
-          <div class="content-card-header"><span style="font-size:14px;font-weight:600;">신규 키워드 TOP 5</span><span id="new-kw-info-v2" style="display:none;cursor:help;margin-left:6px;font-size:13px;color:#90CAF9;" title="실시간 모드에서는 어제 대비 오늘 새로 등장한 키워드를 표시합니다.">ⓘ</span></div>
+          <div class="content-card-header"><span style="font-size:14px;font-weight:600;">신규 키워드</span><span id="new-kw-info-v2" style="display:none;cursor:help;margin-left:6px;font-size:13px;color:#90CAF9;" title="실시간 모드에서는 어제 대비 오늘 새로 등장한 키워드를 표시합니다.">ⓘ</span></div>
           <div class="content-card-body" style="padding:8px;" id="freq-list-v2"></div>
         </div>
         <div class="content-card" style="flex:1;min-height:0;overflow:hidden;">
-          <div class="content-card-header"><span style="font-size:14px;font-weight:600;">미처리 리스트</span></div>
+          <div class="content-card-header"><span style="font-size:14px;font-weight:600;">이슈 처리 현황</span></div>
           <div class="content-card-body" style="padding:8px;" id="pending-list-v2"></div>
         </div>
       </div>
@@ -103,41 +106,41 @@
       <!-- ===== 시안3: 깔때기 차트 + 도넛 차트 ===== -->
       <div class="content-card" id="variant-v3-left" style="display:none;flex-direction:column;">
         <div class="content-card-header">
-          <span style="font-size:14px;font-weight:600;">문의 분류별 순위</span>
-          <span style="font-size:12px;color:#757575;">대분류 Top-10</span>
+          <span style="font-size:14px;font-weight:600;">상담 유형 순위</span>
+          <span style="font-size:12px;color:#757575;">대분류</span>
         </div>
         <div class="content-card-body" style="height:520px;position:relative;">
           <canvas id="v3-funnel-canvas"></canvas>
         </div>
       </div>
       <div class="content-card" id="variant-v3-right" style="display:none;flex-direction:column;">
-        <div class="content-card-header" style="min-height:62px;">
-          <span style="font-size:14px;font-weight:600;">소분류 Top-8</span>
-          <span style="font-size:12px;color:#757575;" id="v3-donut-label">전체</span>
+        <div class="content-card-header">
+          <span style="font-size:14px;font-weight:600;">소분류</span>
+          <span style="font-size:12px;color:#757575;cursor:pointer;" id="v3-donut-label" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'" onclick="window.location.href='consultation-type.html'">전체</span>
         </div>
         <div class="content-card-body" style="display:flex;flex-direction:column;gap:0;padding:12px;">
-          <div style="position:relative;height:300px;"><canvas id="v3-donut-canvas"></canvas></div>
-          <div id="v3-sub-rank" style="margin-top:8px;"></div>
+          <div style="position:relative;height:340px;"><canvas id="v3-donut-canvas"></canvas></div>
+          <div id="v3-sub-rank" style="margin-top:30px;"></div>
         </div>
       </div>
 
       <!-- 시안1 하단 4카드 -->
       <div id="variant-v1-bottom" style="grid-column:2/4;display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
         <div class="content-card">
-          <div class="content-card-header"><span style="font-size:14px;font-weight:600;">상담유형 Top 5</span></div>
+          <div class="content-card-header"><span style="font-size:14px;font-weight:600;">상품 랭킹</span></div>
           <div class="content-card-body" style="padding:0;" id="trend-list"></div>
         </div>
         <div class="content-card">
-          <div class="content-card-header"><span style="font-size:14px;font-weight:600;">이슈 키워드 TOP 5</span></div>
+          <div class="content-card-header"><span style="font-size:14px;font-weight:600;">이슈 키워드</span></div>
           <div class="content-card-body" style="padding:0;" id="issue-list"></div>
         </div>
         <div class="content-card">
-          <div class="content-card-header"><span style="font-size:14px;font-weight:600;">신규 키워드 TOP 5</span><span id="new-kw-info" style="display:none;cursor:help;margin-left:6px;font-size:13px;color:#90CAF9;" title="실시간 모드에서는 어제 대비 오늘 새로 등장한 키워드를 표시합니다.">ⓘ</span></div>
+          <div class="content-card-header"><span style="font-size:14px;font-weight:600;">신규 키워드</span><span id="new-kw-info" style="display:none;cursor:help;margin-left:6px;font-size:13px;color:#90CAF9;" title="실시간 모드에서는 어제 대비 오늘 새로 등장한 키워드를 표시합니다.">ⓘ</span></div>
           <div class="content-card-body" style="padding:0;" id="freq-list"></div>
         </div>
         <div class="content-card">
-          <div class="content-card-header"><span style="font-size:14px;font-weight:600;">미처리 리스트</span></div>
-          <div class="content-card-body" style="padding:12px;" id="pending-list"></div>
+          <div class="content-card-header"><span style="font-size:14px;font-weight:600;">이슈 처리 현황</span></div>
+          <div class="content-card-body" style="padding:4px;" id="pending-list"></div>
         </div>
       </div>
     </div>
@@ -153,6 +156,11 @@
       </div>
       <div class="content-card-body"><div style="height:280px;"><canvas id="hourly-chart"></canvas></div></div>
     </div>
+
+    <!-- 대시보드 모드 닫기 버튼 (전체화면 시에만 표시) -->
+    <button id="dashboard-mode-exit" onclick="exitDashboardMode()" style="display:none;position:fixed;top:16px;right:16px;z-index:99999;background:#fff;border:1px solid #E0E0E0;border-radius:50%;width:36px;height:36px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.15);align-items:center;justify-content:center;" title="대시보드 모드 종료">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#424242" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
   </div>
 
   <script src="../../assets/dummy-data/all-data.js"></script>
@@ -184,92 +192,69 @@
 
     /* ── 4댑스 상담유형 트리 (쇼핑몰) ── */
     const categoryTree = [
-      { name:'주문', count:3222, children:[
-        { name:'주문조회', count:1205, children:[
-          { name:'주문상태', count:680, children:[{name:'배송현황확인',count:380},{name:'입금확인',count:300}] },
-          { name:'주문내역', count:525, children:[{name:'주문상세보기',count:320},{name:'영수증발급',count:205}] }
-        ]},
-        { name:'주문변경', count:987, children:[
-          {name:'수량변경',count:412},{name:'옵션변경',count:355},{name:'배송지변경',count:220}
-        ]},
-        { name:'주문취소', count:1030, children:[
-          { name:'단순변심', count:480, children:[{name:'전체취소',count:290},{name:'부분취소',count:190}] },
-          {name:'오류주문',count:320},{name:'품절취소',count:230}
-        ]}
-      ]},
-      { name:'결제', count:2105, children:[
-        { name:'카드결제', count:890, children:[
-          { name:'결제오류', count:520, children:[{name:'승인실패',count:310},{name:'한도초과',count:210}] },
-          {name:'할부변경',count:370}
-        ]},
-        { name:'간편결제', count:615, children:[
-          {name:'네이버페이',count:235},{name:'카카오페이',count:205},{name:'토스',count:175}
-        ]},
-        { name:'현금결제', count:350, children:[{name:'무통장입금',count:210},{name:'계좌이체',count:140}] },
-        { name:'결제취소', count:250, children:[{name:'부분취소',count:150},{name:'전액취소',count:100}] }
-      ]},
       { name:'배송', count:5019, children:[
-        { name:'배송현황', count:2100, children:[
-          { name:'일반배송', count:1200, children:[{name:'택배추적',count:720},{name:'배송예정일',count:480}] },
-          { name:'특수배송', count:900, children:[{name:'새벽배송',count:520},{name:'당일배송',count:380}] }
-        ]},
-        { name:'배송기간', count:1450, children:[
-          { name:'배송지연', count:890, children:[{name:'택배지연',count:540},{name:'물류지연',count:350}] },
-          {name:'배송소요일',count:560}
-        ]},
-        { name:'배송지', count:832, children:[{name:'주소변경',count:520},{name:'수령인변경',count:312}] },
-        { name:'해외배송', count:637, children:[{name:'관세문의',count:387},{name:'해외배송추적',count:250}] }
+        { name:'배송현황', count:1350, children:[{name:'택배추적',count:720},{name:'배송예정일',count:480},{name:'배송완료확인',count:150}] },
+        { name:'배송지연', count:890, children:[{name:'택배지연',count:540},{name:'물류지연',count:350}] },
+        { name:'배송지변경', count:832, children:[{name:'주소변경',count:520},{name:'수령인변경',count:312}] },
+        { name:'해외배송', count:637, children:[{name:'관세문의',count:387},{name:'해외배송추적',count:250}] },
+        { name:'특수배송', count:560, children:[{name:'새벽배송',count:320},{name:'당일배송',count:240}] },
+        { name:'배송비문의', count:420, children:[{name:'무료배송조건',count:250},{name:'추가배송비',count:170}] },
+        { name:'수령방법', count:180, children:[{name:'매장픽업',count:100},{name:'무인보관함',count:80}] },
+        { name:'포장상태', count:150, children:[{name:'포장불량',count:90},{name:'친환경포장',count:60}] }
       ]},
       { name:'교환/반품', count:4253, children:[
-        { name:'교환접수', count:1680, children:[
-          { name:'사이즈교환', count:890, children:[{name:'의류사이즈',count:540},{name:'신발사이즈',count:350}] },
-          {name:'색상교환',count:490},{name:'불량교환',count:300}
-        ]},
-        { name:'반품접수', count:1350, children:[
-          {name:'단순변심반품',count:780},
-          { name:'상품불량', count:570, children:[{name:'파손',count:340},{name:'오배송',count:230}] }
-        ]},
-        { name:'환불처리', count:823, children:[{name:'환불지연',count:450},{name:'환불방법',count:373}] },
-        { name:'수거문의', count:400, children:[{name:'수거일정',count:240},{name:'수거방법',count:160}] }
-      ]},
-      { name:'회원/계정', count:2890, children:[
-        { name:'회원가입', count:890, children:[{name:'가입방법',count:320},{name:'본인인증',count:370},{name:'인증오류',count:200}] },
-        { name:'로그인', count:760, children:[{name:'비밀번호찾기',count:480},{name:'아이디찾기',count:280}] },
-        { name:'회원정보', count:680, children:[{name:'정보변경',count:320},{name:'탈퇴문의',count:260},{name:'개인정보',count:100}] },
-        { name:'등급혜택', count:560, children:[{name:'등급조회',count:340},{name:'혜택안내',count:220}] }
+        { name:'사이즈교환', count:890, children:[{name:'의류사이즈',count:540},{name:'신발사이즈',count:350}] },
+        { name:'단순변심반품', count:780, children:[{name:'전체반품',count:480},{name:'부분반품',count:300}] },
+        { name:'상품불량', count:570, children:[{name:'파손',count:340},{name:'오배송',count:230}] },
+        { name:'환불처리', count:523, children:[{name:'환불지연',count:300},{name:'환불방법',count:223}] },
+        { name:'색상교환', count:490, children:[{name:'색상차이',count:290},{name:'색상변경',count:200}] },
+        { name:'수거문의', count:400, children:[{name:'수거일정',count:240},{name:'수거방법',count:160}] },
+        { name:'교환배송비', count:350, children:[{name:'왕복비용',count:200},{name:'무료교환',count:150}] },
+        { name:'반품기간', count:250, children:[{name:'기간확인',count:150},{name:'기간연장',count:100}] }
       ]},
       { name:'상품', count:3450, children:[
-        { name:'상품정보', count:1420, children:[
-          { name:'사이즈정보', count:680, children:[{name:'사이즈표',count:420},{name:'실측문의',count:260}] },
-          {name:'소재성분',count:440},{name:'색상확인',count:300}
-        ]},
-        { name:'재입고', count:890, children:[{name:'재입고알림',count:530},{name:'입고일정',count:360}] },
-        { name:'가격문의', count:640, children:[{name:'할인정보',count:390},{name:'가격변동',count:250}] },
-        { name:'리뷰후기', count:500, children:[{name:'리뷰작성',count:300},{name:'리뷰수정',count:200}] }
+        { name:'상품정보', count:820, children:[{name:'소재성분',count:440},{name:'색상확인',count:380}] },
+        { name:'사이즈정보', count:680, children:[{name:'사이즈표',count:420},{name:'실측문의',count:260}] },
+        { name:'재입고', count:530, children:[{name:'재입고알림',count:330},{name:'입고일정',count:200}] },
+        { name:'가격문의', count:440, children:[{name:'할인정보',count:260},{name:'가격변동',count:180}] },
+        { name:'리뷰후기', count:380, children:[{name:'리뷰작성',count:230},{name:'리뷰수정',count:150}] },
+        { name:'코디추천', count:320, children:[{name:'스타일링',count:190},{name:'세트추천',count:130}] },
+        { name:'세탁관리', count:280, children:[{name:'세탁방법',count:170},{name:'보관방법',count:110}] }
+      ]},
+      { name:'주문', count:3222, children:[
+        { name:'주문조회', count:720, children:[{name:'주문상태',count:420},{name:'주문내역',count:300}] },
+        { name:'주문변경', count:612, children:[{name:'수량변경',count:260},{name:'옵션변경',count:200},{name:'배송지변경',count:152}] },
+        { name:'주문취소', count:580, children:[{name:'단순변심',count:300},{name:'오류주문',count:180},{name:'품절취소',count:100}] },
+        { name:'장바구니', count:450, children:[{name:'담기오류',count:250},{name:'품절상품',count:200}] },
+        { name:'주문결제', count:410, children:[{name:'결제수단',count:230},{name:'결제오류',count:180}] },
+        { name:'선물주문', count:250, children:[{name:'선물포장',count:150},{name:'메시지카드',count:100}] },
+        { name:'대량주문', count:200, children:[{name:'견적요청',count:120},{name:'법인주문',count:80}] }
+      ]},
+      { name:'회원/계정', count:2890, children:[
+        { name:'회원가입', count:620, children:[{name:'가입방법',count:250},{name:'본인인증',count:220},{name:'인증오류',count:150}] },
+        { name:'로그인', count:560, children:[{name:'비밀번호찾기',count:330},{name:'아이디찾기',count:230}] },
+        { name:'회원정보', count:480, children:[{name:'정보변경',count:250},{name:'개인정보',count:230}] },
+        { name:'등급혜택', count:420, children:[{name:'등급조회',count:250},{name:'혜택안내',count:170}] },
+        { name:'탈퇴문의', count:410, children:[{name:'탈퇴절차',count:240},{name:'데이터삭제',count:170}] },
+        { name:'SNS연동', count:400, children:[{name:'카카오연동',count:220},{name:'네이버연동',count:180}] }
       ]},
       { name:'프로모션', count:2199, children:[
-        { name:'쿠폰', count:900, children:[{name:'쿠폰적용',count:420},{name:'쿠폰오류',count:300},{name:'쿠폰발급',count:180}] },
-        { name:'적립금', count:580, children:[{name:'적립금사용',count:350},{name:'적립금확인',count:230}] },
-        { name:'이벤트', count:369, children:[{name:'이벤트참여',count:169},{name:'당첨확인',count:200}] },
-        { name:'할인', count:350, children:[{name:'기간한정',count:200},{name:'회원할인',count:150}] }
+        { name:'쿠폰', count:600, children:[{name:'쿠폰적용',count:280},{name:'쿠폰오류',count:200},{name:'쿠폰발급',count:120}] },
+        { name:'적립금', count:480, children:[{name:'적립금사용',count:290},{name:'적립금확인',count:190}] },
+        { name:'이벤트', count:419, children:[{name:'이벤트참여',count:219},{name:'당첨확인',count:200}] },
+        { name:'할인', count:350, children:[{name:'기간한정',count:200},{name:'회원할인',count:150}] },
+        { name:'시즌세일', count:350, children:[{name:'세일기간',count:200},{name:'추가할인',count:150}] }
+      ]},
+      { name:'결제', count:2105, children:[
+        { name:'카드결제', count:690, children:[{name:'승인실패',count:310},{name:'한도초과',count:210},{name:'할부변경',count:170}] },
+        { name:'간편결제', count:615, children:[{name:'네이버페이',count:235},{name:'카카오페이',count:205},{name:'토스',count:175}] },
+        { name:'현금결제', count:450, children:[{name:'무통장입금',count:260},{name:'계좌이체',count:190}] },
+        { name:'결제취소', count:350, children:[{name:'부분취소',count:200},{name:'전액취소',count:150}] }
       ]},
       { name:'A/S', count:1456, children:[
-        { name:'A/S접수', count:680, children:[
-          { name:'수선요청', count:380, children:[{name:'의류수선',count:230},{name:'가방수선',count:150}] },
-          {name:'교체요청',count:180},{name:'부품교체',count:120}
-        ]},
+        { name:'A/S접수', count:580, children:[{name:'수선요청',count:280},{name:'교체요청',count:180},{name:'부품교체',count:120}] },
         { name:'A/S진행', count:476, children:[{name:'진행상태',count:150},{name:'소요기간',count:136},{name:'비용문의',count:190}] },
-        { name:'보증문의', count:300, children:[{name:'보증기간',count:100},{name:'보증범위',count:80},{name:'보증서분실',count:70},{name:'보증연장',count:50}] }
-      ]},
-      { name:'포인트/마일리지', count:987, children:[
-        { name:'포인트적립', count:420, children:[{name:'구매적립',count:250},{name:'리뷰적립',count:100},{name:'출석적립',count:70}] },
-        { name:'포인트사용', count:350, children:[{name:'사용방법',count:210},{name:'사용제한',count:140}] },
-        { name:'마일리지', count:217, children:[{name:'전환문의',count:120},{name:'소멸안내',count:97}] }
-      ]},
-      { name:'기타', count:654, children:[
-        { name:'매장문의', count:260, children:[{name:'영업시간',count:80},{name:'매장위치',count:60},{name:'주차안내',count:60},{name:'매장전화',count:60}] },
-        { name:'제휴문의', count:207, children:[{name:'제휴카드',count:120},{name:'기업제휴',count:87}] },
-        { name:'기타문의', count:187, children:[{name:'칭찬제안',count:50},{name:'불편사항',count:47},{name:'시스템오류',count:40},{name:'앱문의',count:30},{name:'기타',count:20}] }
+        { name:'보증문의', count:400, children:[{name:'보증기간',count:150},{name:'보증범위',count:130},{name:'보증서분실',count:70},{name:'보증연장',count:50}] }
       ]},
       { name:'고객불만', count:1180, children:[
         { name:'서비스불만', count:520, children:[{name:'응대불만',count:280},{name:'대기시간',count:240}] },
@@ -280,46 +265,6 @@
         { name:'앱오류', count:450, children:[{name:'로딩오류',count:200},{name:'결제오류',count:150},{name:'화면깨짐',count:100}] },
         { name:'기능문의', count:350, children:[{name:'검색기능',count:180},{name:'필터기능',count:170}] },
         { name:'계정연동', count:250, children:[{name:'SNS연동',count:150},{name:'기기변경',count:100}] }
-      ]},
-      { name:'멤버십', count:920, children:[
-        { name:'등급문의', count:380, children:[{name:'승급조건',count:220},{name:'등급유지',count:160}] },
-        { name:'혜택문의', count:310, children:[{name:'무료배송',count:180},{name:'전용쿠폰',count:130}] },
-        { name:'가입탈퇴', count:230, children:[{name:'가입방법',count:140},{name:'해지방법',count:90}] }
-      ]},
-      { name:'선물/기프트', count:780, children:[
-        { name:'기프트카드', count:350, children:[{name:'카드구매',count:200},{name:'카드사용',count:150}] },
-        { name:'선물포장', count:250, children:[{name:'포장옵션',count:150},{name:'메시지카드',count:100}] },
-        { name:'선물배송', count:180, children:[{name:'익명배송',count:100},{name:'예약배송',count:80}] }
-      ]},
-      { name:'구독서비스', count:650, children:[
-        { name:'정기배송', count:300, children:[{name:'주기변경',count:170},{name:'상품변경',count:130}] },
-        { name:'구독관리', count:220, children:[{name:'일시정지',count:130},{name:'해지문의',count:90}] },
-        { name:'구독혜택', count:130, children:[{name:'할인율',count:80},{name:'추가혜택',count:50}] }
-      ]},
-      { name:'매장안내', count:580, children:[
-        { name:'매장정보', count:280, children:[{name:'위치안내',count:150},{name:'영업시간',count:130}] },
-        { name:'픽업서비스', count:180, children:[{name:'매장픽업',count:110},{name:'드라이브스루',count:70}] },
-        { name:'매장재고', count:120, children:[{name:'재고확인',count:70},{name:'매장예약',count:50}] }
-      ]},
-      { name:'세금계산서', count:490, children:[
-        { name:'발급요청', count:250, children:[{name:'전자발급',count:160},{name:'수정발급',count:90}] },
-        { name:'현금영수증', count:150, children:[{name:'발급문의',count:90},{name:'취소문의',count:60}] },
-        { name:'영수증재발급', count:90, children:[{name:'이메일발송',count:50},{name:'팩스발송',count:40}] }
-      ]},
-      { name:'해외직구', count:430, children:[
-        { name:'통관문의', count:200, children:[{name:'관세계산',count:120},{name:'통관지연',count:80}] },
-        { name:'해외반품', count:130, children:[{name:'반품절차',count:80},{name:'반품비용',count:50}] },
-        { name:'사이즈문의', count:100, children:[{name:'해외사이즈',count:60},{name:'사이즈변환',count:40}] }
-      ]},
-      { name:'카탈로그', count:370, children:[
-        { name:'신상품', count:170, children:[{name:'신상알림',count:100},{name:'사전예약',count:70}] },
-        { name:'브랜드문의', count:120, children:[{name:'입점문의',count:70},{name:'브랜드정보',count:50}] },
-        { name:'품절상품', count:80, children:[{name:'재입고알림',count:50},{name:'대체상품',count:30}] }
-      ]},
-      { name:'챗봇/AI상담', count:320, children:[
-        { name:'챗봇오류', count:150, children:[{name:'응답오류',count:90},{name:'연결실패',count:60}] },
-        { name:'상담전환', count:100, children:[{name:'상담사연결',count:60},{name:'콜백요청',count:40}] },
-        { name:'AI추천', count:70, children:[{name:'추천오류',count:40},{name:'맞춤추천',count:30}] }
       ]}
     ];
 
@@ -364,7 +309,7 @@
       { name:'상품문의',   count:2190, rate:-1 }
     ];
 
-    /* ── 이슈 키워드 TOP 5 (이슈+리스크 통합) ── */
+    /* ── 이슈 키워드 (이슈+리스크 통합) ── */
     const issueData = [
       { name:'반품 지연',  count:1842, rate:12 },
       { name:'상품 불량',  count:1356, rate:8 },
@@ -373,7 +318,7 @@
       { name:'포장 파손',  count:512,  rate:9 }
     ];
 
-    /* ── 신규 키워드 TOP 5 ── */
+    /* ── 신규 키워드 ── */
     const newKeywordData = [
       { name:'사전예약',   count:892, rate:null },
       { name:'시즌오프',   count:645, rate:null },
@@ -382,17 +327,25 @@
       { name:'라이브방송',  count:287, rate:null }
     ];
 
-    /* ── 미처리 리스트 (필터 독립) ── */
-    const pendingData = {
-      total: 23,
-      items: [
-        { name:'배송 지연 클레임', count:8 },
-        { name:'환불 미완료',     count:5 },
-        { name:'교환 접수 대기',   count:4 },
-        { name:'불량 신고 확인',   count:3 },
-        { name:'고객 재문의 대기',  count:3 }
-      ]
-    };
+    /* ── 이슈 처리 현황 (이슈 처리 관리 데이터 기반 상태별 집계) ── */
+    const issueStatusData = (() => {
+      const _rng = (() => { let s = 42; return () => { s = (s * 16807 + 0) % 2147483647; return s / 2147483647; }; })();
+      const counts = { '미처리': 0, '검토 필요': 0, '처리완료': 0 };
+      for (let i = 0; i < 50; i++) {
+        const r = _rng();
+        const status = r < 0.30 ? '미처리' : r < 0.55 ? '검토 필요' : r < 0.90 ? '처리완료' : '이슈 없음';
+        if (counts[status] !== undefined) counts[status]++;
+      }
+      const total = counts['미처리'] + counts['검토 필요'] + counts['처리완료'];
+      return {
+        total,
+        items: [
+          { name: '미처리', count: counts['미처리'], color: '#E53935' },
+          { name: '검토 필요', count: counts['검토 필요'], color: '#FF9800' },
+          { name: '처리완료', count: counts['처리완료'], color: '#4CAF50' }
+        ]
+      };
+    })();
 
     /* ── 실시간용 축소 더미데이터 (금일 0시~16시 누적 기준) ── */
     const realtimeKpi = {
@@ -532,14 +485,14 @@
     function renderMainKeywords() {
       const el = document.getElementById('rising-list');
       const variant = document.getElementById('variant-select').value;
-      const limit = variant === 'v2' ? 10 : 20;
+      const limit = _dbMode ? 10 : (variant === 'v2' ? 10 : 20);
       const srcData = isRealtime ? realtimeMainKeywords : mainKeywords;
       const data = srcData.slice(0, limit);
 
       const headerEl = el.closest('.content-card').querySelector('.content-card-header span');
-      if (headerEl) headerEl.textContent = `주요 키워드 TOP ${limit}`;
+      if (headerEl) headerEl.textContent = '주요 키워드';
 
-      const rowPad = variant === 'v2' ? '15px 14px' : '10px 14px';
+      const rowPad = _dbMode ? '6px 14px' : (variant === 'v2' ? '15px 14px' : '10px 14px');
       el.innerHTML = data.map((k, i) => `
         <div style="display:flex;align-items:center;padding:${rowPad};cursor:pointer;${i < data.length - 1 ? 'border-bottom:1px solid #F5F5F5;' : ''}" onclick="goCallStatus('keyword','${k.name.replace(/'/g,"\\'")}')">
           <span style="font-size:13px;font-weight:700;color:${i < 3 ? '#00A3FF' : '#9E9E9E'};min-width:20px;margin-right:8px;">${i + 1}</span>
@@ -555,8 +508,10 @@
     function renderRankList(containerId, items, hideRate, compact) {
       const el = document.getElementById(containerId);
       const pad = compact ? '4px 10px' : '10px 14px';
+      // 이슈 키워드 카드는 issue_keyword 필터로 전달
+      const filterType = containerId.includes('issue') ? 'issue_keyword' : 'keyword';
       el.innerHTML = items.map((item, i) => `
-        <div style="display:flex;align-items:center;padding:${pad};cursor:pointer;${i < items.length - 1 ? 'border-bottom:1px solid #F5F5F5;' : ''}" onclick="goCallStatus('keyword','${item.name.replace(/'/g,"\\'")}')">
+        <div style="display:flex;align-items:center;padding:${pad};cursor:pointer;${i < items.length - 1 ? 'border-bottom:1px solid #F5F5F5;' : ''}" onclick="goCallStatus('${filterType}','${item.name.replace(/'/g,"\\'")}')">
           <span style="font-size:13px;font-weight:700;color:${i < 3 ? '#00A3FF' : '#9E9E9E'};min-width:16px;">${i + 1}</span>
           <span style="flex:1;font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:10px;">${item.name}</span>
           <span style="font-size:12px;font-weight:600;color:#424242;white-space:nowrap;">${AICC_Fmt.number(item.count)}건</span>
@@ -565,31 +520,73 @@
       `).join('');
     }
 
-    /* ══════════════════════════ 미처리 리스트 렌더 ══════════════════════════ */
+    /* ══════════════════════════ 이슈 처리 현황 렌더 ══════════════════════════ */
 
-    function renderPendingList() {
+    /* 파이 차트 세그먼트 위에 레이블을 직접 그리는 플러그인 */
+    const issuePieLabelPlugin = {
+      id: 'issuePieLabels',
+      afterDraw(chart) {
+        const { ctx } = chart;
+        const meta = chart.getDatasetMeta(0);
+        const total = chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+        if (!total) return;
+        meta.data.forEach((arc, i) => {
+          const d = chart.data.datasets[0].data[i];
+          if (!d) return;
+          const pct = Math.round(d / total * 100);
+          const label = chart.data.labels[i];
+          const midAngle = (arc.startAngle + arc.endAngle) / 2;
+          const r = (arc.innerRadius + arc.outerRadius) / 2;
+          const x = arc.x + Math.cos(midAngle) * r;
+          const y = arc.y + Math.sin(midAngle) * r;
+          ctx.save();
+          ctx.fillStyle = '#fff';
+          ctx.font = 'bold 11px "Pretendard",sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(label, x, y - 7);
+          ctx.font = '10px "Pretendard",sans-serif';
+          ctx.fillText(`${d}건 (${pct}%)`, x, y + 7);
+          ctx.restore();
+        });
+      }
+    };
+
+    let _issueChart = null;
+    function renderIssueStatusChart() {
       const el = document.getElementById('pending-list');
-      const keyword = (name) => encodeURIComponent(name.replace(/\s/g,''));
-      el.innerHTML = `
-        <div style="display:flex;align-items:stretch;gap:16px;height:100%;">
-          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:70px;">
-            <span style="font-size:36px;font-weight:700;color:#F44336;">${pendingData.total}</span>
-            <span style="font-size:11px;color:#9E9E9E;margin-top:2px;">건</span>
-          </div>
-          <div style="flex:1;border-left:1px solid #EEEEEE;padding-left:12px;display:flex;flex-direction:column;justify-content:space-around;">
-            ${pendingData.items.map(item => `
-              <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 6px;border-radius:4px;cursor:pointer;transition:background 0.15s;" onclick="location.href='call-status.html?filter=keyword&value=${keyword(item.name)}'" onmouseenter="this.style.background='#FFF3F3'" onmouseleave="this.style.background=''">
-                <span style="font-size:12px;color:#424242;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.name}</span>
-                <span style="font-size:12px;font-weight:600;color:#F44336;white-space:nowrap;margin-left:8px;">${item.count}건</span>
-              </div>
-            `).join('')}
-          </div>
-        </div>`;
+      el.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;"><canvas id="issue-status-pie" style="max-height:230px;"></canvas></div>`;
+
+      const canvas = document.getElementById('issue-status-pie');
+      if (!canvas) return;
+      if (_issueChart) { _issueChart.destroy(); _issueChart = null; }
+      _issueChart = new Chart(canvas, {
+        type: 'pie',
+        data: {
+          labels: issueStatusData.items.map(i => i.name),
+          datasets: [{ data: issueStatusData.items.map(i => i.count), backgroundColor: issueStatusData.items.map(i => i.color), borderWidth: 2, borderColor: '#fff' }]
+        },
+        plugins: [issuePieLabelPlugin],
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          layout: { padding: 0 },
+          plugins: { legend: { display: false }, tooltip: { enabled: false } },
+          onHover: (e, els) => { e.native.target.style.cursor = els.length > 0 ? 'pointer' : 'default'; },
+          onClick: (e, els) => {
+            if (els.length > 0) {
+              const idx = els[0].index;
+              const status = issueStatusData.items[idx].name;
+              location.href = 'issue-manage.html?status=' + encodeURIComponent(status);
+            }
+          }
+        }
+      });
     }
 
     function renderV2RankCard(containerId, items, color) {
       const el = document.getElementById(containerId);
       if (!el) return;
+      const filterType = containerId.includes('issue') ? 'issue_keyword' : 'keyword';
       const total = items.reduce((s, i) => s + i.count, 0);
       el.innerHTML = `
         <div style="display:flex;align-items:stretch;gap:8px;height:100%;">
@@ -599,7 +596,7 @@
           </div>
           <div style="flex:1;border-left:1px solid #EEEEEE;padding-left:8px;display:flex;flex-direction:column;justify-content:space-around;">
             ${items.map(item => `
-              <div style="display:flex;align-items:center;justify-content:space-between;padding:3px 4px;border-radius:4px;cursor:pointer;transition:background 0.15s;" onclick="goCallStatus('keyword','${item.name.replace(/'/g,"\\'")}')" onmouseenter="this.style.background='${color}11'" onmouseleave="this.style.background=''">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:3px 4px;border-radius:4px;cursor:pointer;transition:background 0.15s;" onclick="goCallStatus('${filterType}','${item.name.replace(/'/g,"\\'")}')" onmouseenter="this.style.background='${color}11'" onmouseleave="this.style.background=''">
                 <span style="font-size:11px;color:#424242;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.name}</span>
                 <span style="display:flex;align-items:center;gap:8px;white-space:nowrap;">
                   <span style="font-size:11px;font-weight:600;color:${color};">${AICC_Fmt.number(item.count)}건</span>
@@ -611,25 +608,36 @@
         </div>`;
     }
 
-    function renderPendingListV2() {
+    let _issueChartV2 = null;
+    function renderIssueStatusChartV2() {
       const el = document.getElementById('pending-list-v2');
       if (!el) return;
-      const keyword = (name) => encodeURIComponent(name.replace(/\s/g,''));
-      el.innerHTML = `
-        <div style="display:flex;align-items:stretch;gap:8px;height:100%;">
-          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:50px;">
-            <span style="font-size:26px;font-weight:700;color:#F44336;">${pendingData.total}</span>
-            <span style="font-size:10px;color:#9E9E9E;margin-top:1px;">건</span>
-          </div>
-          <div style="flex:1;border-left:1px solid #EEEEEE;padding-left:8px;display:flex;flex-direction:column;justify-content:space-around;">
-            ${pendingData.items.map(item => `
-              <div style="display:flex;align-items:center;justify-content:space-between;padding:3px 4px;border-radius:4px;cursor:pointer;transition:background 0.15s;" onclick="location.href='call-status.html?filter=keyword&value=${keyword(item.name)}'" onmouseenter="this.style.background='#FFF3F3'" onmouseleave="this.style.background=''">
-                <span style="font-size:11px;color:#424242;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.name}</span>
-                <span style="font-size:11px;font-weight:600;color:#F44336;white-space:nowrap;margin-left:6px;">${item.count}건</span>
-              </div>
-            `).join('')}
-          </div>
-        </div>`;
+      el.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;"><canvas id="issue-status-pie-v2" style="max-height:140px;"></canvas></div>`;
+
+      const canvas = document.getElementById('issue-status-pie-v2');
+      if (!canvas) return;
+      if (_issueChartV2) { _issueChartV2.destroy(); _issueChartV2 = null; }
+      _issueChartV2 = new Chart(canvas, {
+        type: 'pie',
+        data: {
+          labels: issueStatusData.items.map(i => i.name),
+          datasets: [{ data: issueStatusData.items.map(i => i.count), backgroundColor: issueStatusData.items.map(i => i.color), borderWidth: 2, borderColor: '#fff' }]
+        },
+        plugins: [issuePieLabelPlugin],
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          layout: { padding: 4 },
+          plugins: { legend: { display: false }, tooltip: { enabled: false } },
+          onHover: (e, els) => { e.native.target.style.cursor = els.length > 0 ? 'pointer' : 'default'; },
+          onClick: (e, els) => {
+            if (els.length > 0) {
+              const idx = els[0].index;
+              const status = issueStatusData.items[idx].name;
+              location.href = 'issue-manage.html?status=' + encodeURIComponent(status);
+            }
+          }
+        }
+      });
     }
 
     /* ══════════════════════════ 히트맵 렌더 ══════════════════════════ */
@@ -864,10 +872,296 @@
     function renderV2BottomCards() {
       renderV2RankCard('issue-list-v2', isRealtime ? realtimeIssueData : issueData, '#F44336');
       renderV2RankCard('freq-list-v2', isRealtime ? realtimeNewKeywordData : newKeywordData, '#00A3FF');
-      renderPendingListV2();
+      renderIssueStatusChartV2();
     }
 
     const V2_KEYWORD_HEIGHT = 620; // 시안2 키워드 카드 고정 높이(px)
+
+    /* ══════════════════════════ 대시보드 모드 (전체화면) ══════════════════════════ */
+
+    let _dbMode = false;
+    const _dbBackup = {};
+
+    function enterDashboardMode() {
+      if (_dbMode) return;
+      _dbMode = true;
+
+      const el = document.documentElement;
+      if (el.requestFullscreen) el.requestFullscreen();
+      else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+
+      const sidebar1 = document.getElementById('sidebar-1st');
+      const sidebar2 = document.getElementById('sidebar-2nd');
+      const topHeader = document.querySelector('.top-header');
+      const pageHeader = document.getElementById('page-header-bar');
+      const mainArea = document.getElementById('main-area');
+      const contentArea = document.getElementById('content-area');
+
+      if (sidebar1) { _dbBackup.s1Display = sidebar1.style.display; sidebar1.style.display = 'none'; }
+      if (sidebar2) { _dbBackup.s2Display = sidebar2.style.display; sidebar2.style.display = 'none'; }
+      if (topHeader) { _dbBackup.thDisplay = topHeader.style.display; topHeader.style.display = 'none'; }
+      if (pageHeader) { _dbBackup.phDisplay = pageHeader.style.display; pageHeader.style.display = 'none'; }
+      if (mainArea) { _dbBackup.maMarginLeft = mainArea.style.marginLeft; mainArea.style.marginLeft = '0'; }
+      if (contentArea) {
+        _dbBackup.caPadding = contentArea.style.padding;
+        _dbBackup.caOverflow = contentArea.style.overflow;
+        contentArea.style.padding = '12px 20px';
+        contentArea.style.overflow = 'hidden';
+      }
+
+      const exitBtn = document.getElementById('dashboard-mode-exit');
+      if (exitBtn) exitBtn.style.display = 'flex';
+
+      _applyDashboardLayout();
+      renderMainKeywords();
+
+      setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+        if (typeof renderV3FunnelChart === 'function') renderV3FunnelChart();
+        if (typeof renderV3DonutChart === 'function') renderV3DonutChart(null);
+        if (typeof renderHourlyChart === 'function') renderHourlyChart();
+      }, 300);
+    }
+
+    function exitDashboardMode() {
+      if (!_dbMode) return;
+      _dbMode = false;
+
+      if (document.fullscreenElement) document.exitFullscreen();
+      else if (document.webkitFullscreenElement) document.webkitExitFullscreen();
+
+      const sidebar1 = document.getElementById('sidebar-1st');
+      const sidebar2 = document.getElementById('sidebar-2nd');
+      const topHeader = document.querySelector('.top-header');
+      const pageHeader = document.getElementById('page-header-bar');
+      const mainArea = document.getElementById('main-area');
+      const contentArea = document.getElementById('content-area');
+
+      if (sidebar1) sidebar1.style.display = _dbBackup.s1Display || '';
+      if (sidebar2) sidebar2.style.display = _dbBackup.s2Display || '';
+      if (topHeader) topHeader.style.display = _dbBackup.thDisplay || '';
+      if (pageHeader) pageHeader.style.display = _dbBackup.phDisplay || '';
+      if (mainArea) mainArea.style.marginLeft = _dbBackup.maMarginLeft || '';
+      if (contentArea) {
+        contentArea.style.padding = _dbBackup.caPadding || '';
+        contentArea.style.overflow = _dbBackup.caOverflow || '';
+      }
+
+      const exitBtn = document.getElementById('dashboard-mode-exit');
+      if (exitBtn) exitBtn.style.display = 'none';
+
+      _restoreDashboardLayout();
+      renderMainKeywords();
+
+      setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+        if (typeof renderV3FunnelChart === 'function') renderV3FunnelChart();
+        if (typeof renderV3DonutChart === 'function') renderV3DonutChart(null);
+        if (typeof renderHourlyChart === 'function') renderHourlyChart();
+      }, 300);
+    }
+
+    function _applyDashboardLayout() {
+      const gridContainer = document.getElementById('variant-v3-left').parentElement;
+      const bottomCards = document.getElementById('variant-v1-bottom');
+      const hourlyCard = document.querySelector('#hourly-chart').closest('.content-card');
+      const kwCard = document.getElementById('keyword-card');
+      const kpiCards = document.getElementById('kpi-cards');
+      const v3Left = document.getElementById('variant-v3-left');
+      const v3Right = document.getElementById('variant-v3-right');
+
+      // KPI 카드를 상단에서 숨기고 그리드 내부에 2x2로 복제
+      _dbBackup.kpiDisplay = kpiCards.style.display;
+      kpiCards.style.display = 'none';
+
+      const dbKpi = document.createElement('div');
+      dbKpi.id = 'dashboard-kpi-grid';
+      dbKpi.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:8px;grid-column:2/4;grid-row:2/4;min-height:0;';
+      dbKpi.innerHTML = kpiCards.innerHTML;
+      dbKpi.querySelectorAll('.kpi-card').forEach(c => {
+        c.style.borderRadius = '8px';
+        c.style.border = '1px solid #E8E8E8';
+        c.style.minHeight = '0';
+      });
+      gridContainer.appendChild(dbKpi);
+
+      // 그리드: 5열 3행, 뷰포트 높이 기반
+      _dbBackup.gridCols = gridContainer.style.gridTemplateColumns;
+      _dbBackup.gridRows = gridContainer.style.gridTemplateRows;
+      _dbBackup.gridHeight = gridContainer.style.height;
+      _dbBackup.gridGap = gridContainer.style.gap;
+      _dbBackup.gridMb = gridContainer.style.marginBottom;
+      gridContainer.style.gridTemplateColumns = '1fr 1fr 1fr 1fr 1fr';
+      gridContainer.style.gridTemplateRows = '3fr 1fr 1fr';
+      gridContainer.style.height = 'calc(100vh - 200px)';
+      gridContainer.style.gap = '8px';
+      gridContainer.style.marginBottom = '8px';
+
+      // 주요 키워드: col 1, 3행 스팬
+      _dbBackup.kwGridRow = kwCard.style.gridRow;
+      _dbBackup.kwGridCol = kwCard.style.gridColumn;
+      _dbBackup.kwOverflow = kwCard.style.overflow;
+      kwCard.style.gridRow = '1 / 4';
+      kwCard.style.gridColumn = '1';
+      kwCard.style.overflow = 'hidden';
+
+      // 상담 유형 순위: cols 2-3, row 1
+      _dbBackup.v3LeftGridCol = v3Left.style.gridColumn;
+      _dbBackup.v3LeftGridRow = v3Left.style.gridRow;
+      _dbBackup.v3LeftOverflow = v3Left.style.overflow;
+      _dbBackup.v3LeftMinH = v3Left.style.minHeight;
+      v3Left.style.gridColumn = '2 / 4';
+      v3Left.style.gridRow = '1';
+      v3Left.style.overflow = 'hidden';
+      v3Left.style.minHeight = '0';
+
+      const v3LeftBody = document.querySelector('#variant-v3-left .content-card-body');
+      _dbBackup.v3LeftBodyH = v3LeftBody.style.height;
+      _dbBackup.v3LeftBodyFlex = v3LeftBody.style.flex;
+      _dbBackup.v3LeftBodyMinH = v3LeftBody.style.minHeight;
+      v3LeftBody.style.height = 'auto';
+      v3LeftBody.style.flex = '1';
+      v3LeftBody.style.minHeight = '0';
+
+      // 소분류: cols 4-5, row 1
+      _dbBackup.v3RightGridCol = v3Right.style.gridColumn;
+      _dbBackup.v3RightGridRow = v3Right.style.gridRow;
+      _dbBackup.v3RightOverflow = v3Right.style.overflow;
+      _dbBackup.v3RightMinH = v3Right.style.minHeight;
+      v3Right.style.gridColumn = '4 / 6';
+      v3Right.style.gridRow = '1';
+      v3Right.style.overflow = 'hidden';
+      v3Right.style.minHeight = '0';
+
+      const donutWrapper = document.querySelector('#v3-donut-canvas').parentElement;
+      _dbBackup.donutH = donutWrapper.style.height;
+      donutWrapper.style.height = '200px';
+
+      const v3RightBody = v3Right.querySelector('.content-card-body');
+      _dbBackup.v3RightBodyFlex = v3RightBody.style.flex;
+      _dbBackup.v3RightBodyMinH = v3RightBody.style.minHeight;
+      _dbBackup.v3RightBodyOverflow = v3RightBody.style.overflow;
+      v3RightBody.style.flex = '1';
+      v3RightBody.style.minHeight = '0';
+      v3RightBody.style.overflow = 'hidden';
+
+      const subRank = document.getElementById('v3-sub-rank');
+      _dbBackup.subRankMt = subRank.style.marginTop;
+      subRank.style.marginTop = '4px';
+
+      // 하단 4카드: cols 4-5, rows 2-3 (2x2)
+      _dbBackup.bottomGridCol = bottomCards.style.gridColumn;
+      _dbBackup.bottomGridRow = bottomCards.style.gridRow;
+      _dbBackup.bottomGridCols = bottomCards.style.gridTemplateColumns;
+      _dbBackup.bottomGridRows = bottomCards.style.gridTemplateRows;
+      _dbBackup.bottomGap = bottomCards.style.gap;
+      _dbBackup.bottomMinH = bottomCards.style.minHeight;
+      bottomCards.style.gridColumn = '4 / 6';
+      bottomCards.style.gridRow = '2 / 4';
+      bottomCards.style.gridTemplateColumns = 'repeat(2, 1fr)';
+      bottomCards.style.gridTemplateRows = '1fr 1fr';
+      bottomCards.style.gap = '8px';
+      bottomCards.style.minHeight = '0';
+
+      const btmCards = bottomCards.querySelectorAll('.content-card');
+      btmCards.forEach((c, i) => {
+        _dbBackup['btmCard' + i + 'Overflow'] = c.style.overflow;
+        _dbBackup['btmCard' + i + 'MinH'] = c.style.minHeight;
+        c.style.overflow = 'hidden';
+        c.style.minHeight = '0';
+      });
+
+      // 시간대별 콜량 높이 축소
+      const hourlyWrapper = document.querySelector('#hourly-chart').parentElement;
+      _dbBackup.hourlyWrapperH = hourlyWrapper.style.height;
+      hourlyWrapper.style.height = '120px';
+      if (hourlyCard) {
+        _dbBackup.hourlyMt = hourlyCard.style.marginTop;
+        hourlyCard.style.marginTop = '0';
+      }
+    }
+
+    function _restoreDashboardLayout() {
+      const gridContainer = document.getElementById('variant-v3-left').parentElement;
+      const bottomCards = document.getElementById('variant-v1-bottom');
+      const hourlyCard = document.querySelector('#hourly-chart').closest('.content-card');
+      const kwCard = document.getElementById('keyword-card');
+      const kpiCards = document.getElementById('kpi-cards');
+      const v3Left = document.getElementById('variant-v3-left');
+      const v3Right = document.getElementById('variant-v3-right');
+
+      // 대시보드 KPI 그리드 제거 + 원래 KPI 복원
+      const dbKpi = document.getElementById('dashboard-kpi-grid');
+      if (dbKpi) dbKpi.remove();
+      kpiCards.style.display = _dbBackup.kpiDisplay || '';
+
+      // 그리드 복원
+      gridContainer.style.gridTemplateColumns = _dbBackup.gridCols || '1fr 2fr 2fr';
+      gridContainer.style.gridTemplateRows = _dbBackup.gridRows || 'auto auto';
+      gridContainer.style.height = _dbBackup.gridHeight || '';
+      gridContainer.style.gap = _dbBackup.gridGap || '';
+      gridContainer.style.marginBottom = _dbBackup.gridMb || '20px';
+
+      // 키워드 복원
+      kwCard.style.gridRow = _dbBackup.kwGridRow || 'span 2';
+      kwCard.style.gridColumn = _dbBackup.kwGridCol || '';
+      kwCard.style.overflow = _dbBackup.kwOverflow || '';
+
+      // 상담 유형 순위 복원
+      v3Left.style.gridColumn = _dbBackup.v3LeftGridCol || '';
+      v3Left.style.gridRow = _dbBackup.v3LeftGridRow || '';
+      v3Left.style.overflow = _dbBackup.v3LeftOverflow || '';
+      v3Left.style.minHeight = _dbBackup.v3LeftMinH || '';
+
+      const v3LeftBody = document.querySelector('#variant-v3-left .content-card-body');
+      v3LeftBody.style.height = _dbBackup.v3LeftBodyH || '520px';
+      v3LeftBody.style.flex = _dbBackup.v3LeftBodyFlex || '';
+      v3LeftBody.style.minHeight = _dbBackup.v3LeftBodyMinH || '';
+
+      // 소분류 복원
+      v3Right.style.gridColumn = _dbBackup.v3RightGridCol || '';
+      v3Right.style.gridRow = _dbBackup.v3RightGridRow || '';
+      v3Right.style.overflow = _dbBackup.v3RightOverflow || '';
+      v3Right.style.minHeight = _dbBackup.v3RightMinH || '';
+
+      const donutWrapper = document.querySelector('#v3-donut-canvas').parentElement;
+      donutWrapper.style.height = _dbBackup.donutH || '340px';
+
+      const v3RightBody = v3Right.querySelector('.content-card-body');
+      v3RightBody.style.flex = _dbBackup.v3RightBodyFlex || '';
+      v3RightBody.style.minHeight = _dbBackup.v3RightBodyMinH || '';
+      v3RightBody.style.overflow = _dbBackup.v3RightBodyOverflow || '';
+
+      const subRank = document.getElementById('v3-sub-rank');
+      subRank.style.marginTop = _dbBackup.subRankMt || '30px';
+
+      // 하단 카드 복원
+      bottomCards.style.gridColumn = _dbBackup.bottomGridCol || '';
+      bottomCards.style.gridRow = _dbBackup.bottomGridRow || '';
+      bottomCards.style.gridTemplateColumns = _dbBackup.bottomGridCols || 'repeat(4, 1fr)';
+      bottomCards.style.gridTemplateRows = _dbBackup.bottomGridRows || '';
+      bottomCards.style.gap = _dbBackup.bottomGap || '';
+      bottomCards.style.minHeight = _dbBackup.bottomMinH || '';
+
+      const btmCards = bottomCards.querySelectorAll('.content-card');
+      btmCards.forEach((c, i) => {
+        c.style.overflow = _dbBackup['btmCard' + i + 'Overflow'] || '';
+        c.style.minHeight = _dbBackup['btmCard' + i + 'MinH'] || '';
+      });
+
+      // 시간대별 콜량 복원
+      const hourlyWrapper = document.querySelector('#hourly-chart').parentElement;
+      hourlyWrapper.style.height = _dbBackup.hourlyWrapperH || '280px';
+      if (hourlyCard) hourlyCard.style.marginTop = _dbBackup.hourlyMt || '';
+    }
+
+    // ESC 또는 브라우저 전체화면 해제 감지
+    document.addEventListener('fullscreenchange', () => {
+      if (!document.fullscreenElement && _dbMode) exitDashboardMode();
+    });
+    document.addEventListener('webkitfullscreenchange', () => {
+      if (!document.webkitFullscreenElement && _dbMode) exitDashboardMode();
+    });
 
     let v3Rendered = false;
 
@@ -898,7 +1192,11 @@
       // 하단 4카드: v1, v3 공유
       document.getElementById('variant-v1-bottom').style.display = (v === 'v1' || v === 'v3') ? 'grid' : 'none';
 
+      // 대시보드 모드 버튼 — 현재 비활성 (기능 보류)
+      // document.getElementById('btn-dashboard-mode').style.display = v === 'v3' ? '' : 'none';
+
       renderMainKeywords();
+      _applyV3BottomCards(v === 'v3');
 
       if (v === 'v2') {
         if (!v2Rendered) { renderConsultTypeChart(); v2Rendered = true; }
@@ -906,6 +1204,22 @@
       }
       if (v === 'v3') {
         if (!v3Rendered) { renderV3FunnelChart(); renderV3DonutChart(null); v3Rendered = true; }
+      }
+    }
+
+    // 시안3 상품 랭킹 더미 데이터
+    const v3ProductData = [
+      { name: '캐시미어 코트', count: 1842, rate: 12 },
+      { name: '오버핏 패딩', count: 1356, rate: -8 },
+      { name: '울 블렌드 자켓', count: 987, rate: 15 },
+      { name: '린넨 셔츠', count: 673, rate: -6 },
+      { name: '실크 블라우스', count: 512, rate: 9 }
+    ];
+
+    // 시안3 전환 시 하단 카드 제목/내용 변경
+    function _applyV3BottomCards(isV3) {
+      if (isV3) {
+        renderRankList('trend-list', v3ProductData, false);
       }
     }
 
@@ -985,8 +1299,8 @@
         ctx.fillStyle = '#fff';
         ctx.font = 'bold 11px -apple-system, sans-serif';
         ctx.textBaseline = 'middle';
-        ctx.textAlign = 'left';
-        if (barW > 60) ctx.fillText(cat.name, barX + 8, y + barH / 2);
+        ctx.textAlign = 'center';
+        if (barW > 60) ctx.fillText(cat.name, barX + barW / 2, y + barH / 2);
 
         // 우측 정보 텍스트
         const pct = ((cat.count / total) * 100).toFixed(1);
@@ -994,9 +1308,10 @@
         const arrow = prev.diff >= 0 ? '▲' : '▼';
         const diffColor = prev.diff >= 0 ? '#F44336' : '#2196F3';
         const infoText = `${cat.name}:${cat.count.toLocaleString()}건 ${pct}%`;
-        const diffText = `(${Math.abs(prev.diff).toFixed(1)}%${prev.diff >= 0 ? '상승' : '하락'} ∥ ${Math.abs(prev.pDiff)}%p${prev.pDiff >= 0 ? '상승' : '하락'})`;
+        const countDiff = cat.count - prev.prevCount;
+        const diffText = `(${Math.abs(prev.diff).toFixed(1)}%${prev.diff >= 0 ? '상승' : '하락'} ∥ ${countDiff >= 0 ? '+' : ''}${countDiff.toLocaleString()}건)`;
 
-        const infoX = W * 0.54;
+        const infoX = W * 0.62;
         ctx.fillStyle = '#212121';
         ctx.font = '600 12px -apple-system, sans-serif';
         ctx.textAlign = 'left';
@@ -1063,38 +1378,63 @@
           responsive: true,
           maintainAspectRatio: false,
           cutout: '55%',
+          layout: { padding: { top: 40, bottom: 40, left: 60, right: 60 } },
           plugins: {
             legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: function(ctx) {
-                  const it = items[ctx.dataIndex];
-                  const pct = ((it.count / total) * 100).toFixed(2);
-                  const prev = _v3GetPrev(it.name, it.count);
-                  return `${it.name}: ${it.count.toLocaleString()}건 ${pct}% (${Math.abs(prev.diff).toFixed(1)}%${prev.diff >= 0 ? '상승' : '하락'} ∥ ${Math.abs(prev.pDiff)}%p${prev.pDiff >= 0 ? '상승' : '하락'})`;
-                }
-              }
-            }
+            tooltip: { enabled: false }
           }
         },
         plugins: [{
-          id: 'v3DonutCenter',
+          id: 'v3DonutOuterLabels',
           afterDraw(chart) {
-            const { ctx: c, chartArea: { left, right, top, bottom } } = chart;
-            const cx = (left + right) / 2, cy = (top + bottom) / 2;
+            const { ctx: c, chartArea } = chart;
+            const meta = chart.getDatasetMeta(0);
+            const cx = (chartArea.left + chartArea.right) / 2;
+            const cy = (chartArea.top + chartArea.bottom) / 2;
             c.save();
-            c.textAlign = 'center'; c.textBaseline = 'middle';
-            c.font = 'bold 16px -apple-system, sans-serif'; c.fillStyle = '#212121';
-            c.fillText(total.toLocaleString() + '건', cx, cy - 8);
-            c.font = '11px -apple-system, sans-serif'; c.fillStyle = '#757575';
-            c.fillText(catName || '전체', cx, cy + 10);
+            meta.data.forEach((arc, i) => {
+              const pct = ((items[i].count / total) * 100);
+              if (pct < 3) return;
+              const midAngle = (arc.startAngle + arc.endAngle) / 2;
+              const outerR = arc.outerRadius;
+              const px = cx + Math.cos(midAngle) * (outerR + 6);
+              const py = cy + Math.sin(midAngle) * (outerR + 6);
+              const ex = cx + Math.cos(midAngle) * (outerR + 28);
+              const ey = cy + Math.sin(midAngle) * (outerR + 28);
+              const isRight = Math.cos(midAngle) >= 0;
+              const tx = isRight ? ex + 12 : ex - 12;
+              c.beginPath();
+              c.moveTo(px, py);
+              c.lineTo(ex, ey);
+              c.lineTo(tx, ey);
+              c.strokeStyle = '#BDBDBD';
+              c.lineWidth = 1;
+              c.stroke();
+              c.font = '600 11px -apple-system, sans-serif';
+              c.fillStyle = '#424242';
+              c.textBaseline = 'middle';
+              c.textAlign = isRight ? 'left' : 'right';
+              const lx = isRight ? tx + 4 : tx - 4;
+              c.fillText(`${items[i].name} ${items[i].count.toLocaleString()}건 ${pct.toFixed(1)}%`, lx, ey);
+            });
             c.restore();
           }
         }]
       });
 
-      // 외부 라벨 그리기 (afterDraw 플러그인으로)
-      // 하단 순위 테이블 렌더링
+      // 도넛 조각 클릭 시 전체콜 현황으로 이동
+      canvas.onclick = function(e) {
+        const points = _v3DonutChart.getElementsAtEventForMode(e, 'nearest', { intersect: true }, true);
+        if (points.length > 0) {
+          const idx = points[0].index;
+          goCallStatus('consult_type', items[idx].name);
+        }
+      };
+      canvas.onmousemove = function(e) {
+        const points = _v3DonutChart.getElementsAtEventForMode(e, 'nearest', { intersect: true }, true);
+        canvas.style.cursor = points.length > 0 ? 'pointer' : 'default';
+      };
+
       _renderV3SubRank(catName, items);
     }
 
@@ -1102,33 +1442,34 @@
       const el = document.getElementById('v3-sub-rank');
       if (!el) return;
 
-      // 도넛에 표시된 소분류의 하위 항목(3depth) 수집
       let children = [];
       donutItems.forEach(sub => {
         if (sub.children) sub.children.forEach(c => children.push(c));
       });
-      children = children.sort((a, b) => b.count - a.count).slice(0, 6);
+      const maxItems = Math.min(donutItems.length, 6);
+      children = children.sort((a, b) => b.count - a.count).slice(0, maxItems);
 
-      if (children.length === 0) {
-        el.innerHTML = '<div style="text-align:center;color:#9E9E9E;font-size:12px;padding:12px;">하위 항목이 없습니다</div>';
-        return;
-      }
+      // 6칸 고정 (데이터가 없는 슬롯은 빈칸)
+      const slots = Array.from({ length: 6 }, (_, i) => children[i] || null);
+      const leftSlots = slots.slice(0, 3);
+      const rightSlots = slots.slice(3);
 
-      const half = Math.ceil(children.length / 2);
-      const left = children.slice(0, half);
-      const right = children.slice(half);
-
-      const rowHtml = (item, idx) => `
-        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #F0F0F0;">
+      const rowHtml = (item, idx) => {
+        if (!item) return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #F0F0F0;min-height:34px;">
+          <span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:4px;background:#E0E0E0;color:#fff;font-size:11px;font-weight:700;">${idx + 1}</span>
+          <span style="flex:1;font-size:12px;color:#BDBDBD;">-</span>
+        </div>`;
+        return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #F0F0F0;cursor:pointer;min-height:34px;" onclick="goCallStatus('keyword','${item.name.replace(/'/g, "\\'")}')">
           <span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:4px;background:${idx < 3 ? '#424242' : '#BDBDBD'};color:#fff;font-size:11px;font-weight:700;">${idx + 1}</span>
           <span style="flex:1;font-size:12px;color:#424242;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.name}</span>
           <span style="font-size:12px;font-weight:600;color:#212121;white-space:nowrap;">${item.count.toLocaleString()}건</span>
         </div>`;
+      };
 
       el.innerHTML = `
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 20px;">
-          <div>${left.map((c, i) => rowHtml(c, i)).join('')}</div>
-          <div>${right.map((c, i) => rowHtml(c, i + half)).join('')}</div>
+          <div>${leftSlots.map((c, i) => rowHtml(c, i)).join('')}</div>
+          <div>${rightSlots.map((c, i) => rowHtml(c, i + 3)).join('')}</div>
         </div>`;
     }
 
@@ -1180,13 +1521,33 @@
             labels: Array.from({length:24}, (_, i) => `${String(i).padStart(2,'0')}시`),
           datasets: datasets
         },
+        plugins: [{
+          id: 'hourlyBarLabels',
+          afterDatasetsDraw(chart) {
+            const { ctx } = chart;
+            const dsCount = chart.data.datasets.length;
+            // 현재 기간 (막대 차트, dataset 0)
+            const barMeta = chart.getDatasetMeta(0);
+            barMeta.data.forEach((bar, i) => {
+              const val = chart.data.datasets[0].data[i];
+              if (val == null) return;
+              ctx.save();
+              ctx.fillStyle = '#1976D2';
+              ctx.font = '10px "Pretendard",sans-serif';
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'bottom';
+              ctx.fillText(val.toLocaleString(), bar.x, bar.y - 3);
+              ctx.restore();
+            });
+          }
+        }],
         options: {
           responsive: true,
           maintainAspectRatio: false,
           interaction: { mode: 'index', intersect: false },
           plugins: {
             legend: { display: false },
-            tooltip: { boxPadding: 6, itemSort: (a, b) => a.datasetIndex - b.datasetIndex }
+            tooltip: { enabled: false }
           },
           scales: {
             y: { beginAtZero:true, grid:{ color:'#F0F0F0' }, ticks:{ font:{size:11}, color:'#757575' } },
@@ -1234,7 +1595,7 @@
         : (periodConfig[currentPeriod] || periodConfig.monthly);
       renderKPICards(cfg);
       renderMainKeywords();
-      renderRankList('trend-list', isRealtime ? realtimeTrendData : trendData, isRealtime);
+      renderRankList('trend-list', v3ProductData, false);
       renderRankList('issue-list', isRealtime ? realtimeIssueData : issueData, isRealtime);
       renderRankList('freq-list', isRealtime ? realtimeNewKeywordData : newKeywordData, false);
       renderHourlyChart();
@@ -1410,10 +1771,10 @@
       const cfg = periodConfig.monthly;
       renderKPICards(cfg);
       renderMainKeywords();
-      renderRankList('trend-list', trendData, false);
+      renderRankList('trend-list', v3ProductData, false);
       renderRankList('issue-list', issueData, false);
       renderRankList('freq-list', newKeywordData, false);
-      renderPendingList();
+      renderIssueStatusChart();
 
       // 히트맵 초기 렌더 (대분류 첫 번째 항목 선택)
       selectedCatName = categoryTree[0].name;
