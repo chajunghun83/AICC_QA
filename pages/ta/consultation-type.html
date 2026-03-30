@@ -43,7 +43,7 @@
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
       <div>
         <h1 style="font-size:20px;font-weight:700;margin:0;">상담 유형</h1>
-        <p style="font-size:12px;color:#757575;margin:4px 0 0;">키워드별 상담 유형 분석</p>
+        <p style="font-size:12px;color:#757575;margin:4px 0 0;">세분류별 상담 유형 분석</p>
       </div>
       <div style="display:flex;align-items:center;gap:12px;">
         <div id="period-picker-container"></div>
@@ -59,13 +59,13 @@
     <!-- 메인 콘텐츠 — 한 페이지에 꽉 차게 -->
     <div id="main-area" style="display:flex;height:calc(100vh - 160px);gap:12px;">
 
-      <!-- 좌측 키워드 리스트 (화면 끝까지 세로 확장) -->
+      <!-- 좌측 세분류 리스트 (화면 끝까지 세로 확장) -->
       <div class="content-card" style="width:230px;flex-shrink:0;display:flex;flex-direction:column;">
         <div class="content-card-header" style="padding:10px 16px;">
-          <span style="font-size:14px;font-weight:600;">키워드</span>
+          <span style="font-size:14px;font-weight:600;">세분류</span>
         </div>
         <div style="padding:8px 10px;border-bottom:1px solid #EEEEEE;">
-          <input type="text" id="kw-search" placeholder="키워드 검색..."
+          <input type="text" id="kw-search" placeholder="세분류 검색..."
             oninput="onKeywordSearch(this.value)"
             style="width:100%;padding:6px 10px;border:1px solid #E0E0E0;border-radius:6px;font-size:12px;outline:none;">
         </div>
@@ -89,12 +89,12 @@
               </colgroup>
               <thead>
                 <tr>
-                  <th>대분류</th><th>중분류</th><th>소분류</th><th>세부분류</th>
+                  <th>대분류</th><th>중분류</th><th>소분류</th><th>세분류</th>
                   <th>건수</th><th>비율</th>
                 </tr>
               </thead>
               <tbody id="type-table-body">
-                <tr><td colspan="6" style="text-align:center;padding:60px 0;color:#BDBDBD;font-size:13px;">키워드를 선택해주세요</td></tr>
+                <tr><td colspan="6" style="text-align:center;padding:60px 0;color:#BDBDBD;font-size:13px;">세분류를 선택해주세요</td></tr>
               </tbody>
             </table>
           </div>
@@ -472,7 +472,7 @@
 
       if (!selectedKeyword || !keywordTypeMap[selectedKeyword]) {
         badge.style.display = 'none';
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:60px 0;color:#BDBDBD;font-size:13px;">키워드를 선택해주세요</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:60px 0;color:#BDBDBD;font-size:13px;">세분류를 선택해주세요</td></tr>';
         return;
       }
 
@@ -495,6 +495,27 @@
     }
 
     /* ══════════════════════════ 차트 렌더 ══════════════════════════ */
+
+    // 막대 위 데이터 레이블 표시 플러그인
+    const _ctBarLabelPlugin = {
+      id: 'ctBarLabels',
+      afterDatasetsDraw(chart) {
+        const { ctx } = chart;
+        const meta = chart.getDatasetMeta(0);
+        if (!meta || meta.hidden) return;
+        ctx.save();
+        ctx.font = 'bold 11px "Pretendard",sans-serif';
+        ctx.fillStyle = '#424242';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        meta.data.forEach((bar, i) => {
+          const v = chart.data.datasets[0].data[i];
+          if (v == null) return;
+          ctx.fillText(v.toLocaleString(), bar.x, bar.y - 4);
+        });
+        ctx.restore();
+      }
+    };
 
     function renderTrendChart() {
       if (trendChart) { trendChart.destroy(); trendChart = null; }
@@ -541,13 +562,15 @@
             }
           ]
         },
+        plugins: [_ctBarLabelPlugin],
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          layout: { padding: { top: 18 } },
           interaction: { mode: 'index', intersect: false },
           plugins: {
             legend: { display: false },
-            tooltip: { boxPadding: 6, itemSort: (a, b) => a.datasetIndex - b.datasetIndex }
+            tooltip: { enabled: false }
           },
           scales: {
             y: { beginAtZero: true, grid: { color: '#F0F0F0' }, ticks: { font: { size: 10 }, color: '#757575' } },
