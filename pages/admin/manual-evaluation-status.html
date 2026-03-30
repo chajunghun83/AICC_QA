@@ -108,24 +108,26 @@
           <colgroup>
             <col style="width:8%;"><!-- 평가 ID -->
             <col style="width:9%;"><!-- 일시 -->
+            <col style="width:5%;"><!-- 센터 -->
+            <col style="width:5%;"><!-- 팀 -->
             <col style="width:5%;"><!-- 사번 -->
-            <col style="width:9%;"><!-- 센터/팀 -->
-            <col style="width:6%;"><!-- 상담사 -->
-            <col style="width:13%;"><!-- 상담유형 -->
+            <col style="width:5%;"><!-- 상담사 -->
+            <col style="width:12%;"><!-- 상담유형 -->
             <col style="width:5%;"><!-- 통화 시간 -->
             <col style="width:4%;"><!-- 유형 -->
-            <col style="width:11%;"><!-- 평가표 -->
+            <col style="width:10%;"><!-- 평가표 -->
             <col style="width:5%;"><!-- 점수 -->
             <col style="width:6%;"><!-- 평가자 -->
             <col style="width:6%;"><!-- 평가 상태 -->
-            <col style="width:13%;"><!-- 이슈 -->
+            <col style="width:15%;"><!-- 이슈 -->
           </colgroup>
           <thead>
             <tr>
               <th style="cursor:pointer;user-select:none;" onclick="toggleSort('id')">평가 ID <span id="sort-icon-id" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
               <th style="cursor:pointer;user-select:none;" onclick="toggleSort('date')">일시 <span id="sort-icon-date" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="toggleSort('center')">센터 <span id="sort-icon-center" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="toggleSort('team')">팀 <span id="sort-icon-team" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
               <th style="cursor:pointer;user-select:none;" onclick="toggleSort('empid')">사번 <span id="sort-icon-empid" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
-              <th style="cursor:pointer;user-select:none;" onclick="toggleSort('center')">센터/팀 <span id="sort-icon-center" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
               <th style="cursor:pointer;user-select:none;" onclick="toggleSort('agent')">상담사 <span id="sort-icon-agent" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
               <th style="text-align:center;cursor:pointer;user-select:none;" onclick="toggleSort('consult')">상담유형 <span id="sort-icon-consult" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
               <th style="cursor:pointer;user-select:none;" onclick="toggleSort('duration')">통화 시간 <span id="sort-icon-duration" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
@@ -186,7 +188,7 @@
       return ev.employee_id || EMPLOYEE_ID_MAP[ev.agent_id] || EMPLOYEE_NAME_MAP[ev.agent_name] || '-';
     }
 
-    const SORT_KEYS = ['id','date','empid','center','agent','consult','duration','type','form','score','reviewer','status'];
+    const SORT_KEYS = ['id','date','center','team','empid','agent','consult','duration','type','form','score','reviewer','status'];
 
     function toggleSort(key) {
       if (sortKey === key) {
@@ -222,7 +224,8 @@
           case 'id': va = a.id; vb = b.id; break;
           case 'date': va = (a.date||'')+(a.call_time||''); vb = (b.date||'')+(b.call_time||''); break;
           case 'empid': va = getEmployeeId(a); vb = getEmployeeId(b); break;
-          case 'center': va = (a.center||'')+(a.team||''); vb = (b.center||'')+(b.team||''); break;
+          case 'center': va = a.center||''; vb = b.center||''; break;
+          case 'team': va = a.team||''; vb = b.team||''; break;
           case 'agent': va = a.agent_name||''; vb = b.agent_name||''; break;
           case 'consult': va = a.consultation_type||''; vb = b.consultation_type||''; break;
           case 'duration': va = a.duration||''; vb = b.duration||''; break;
@@ -303,8 +306,9 @@
           <tr onclick="showDetail('${ev.id}')">
             <td style="font-size:11px;">${ev.id}</td>
             <td style="font-size:11px;white-space:nowrap;">${ev.date} ${ev.call_time}</td>
+            <td style="font-size:11px;">${ev.center}</td>
+            <td style="font-size:11px;">${ev.team}</td>
             <td style="font-size:11px;">${getEmployeeId(ev)}</td>
-            <td style="font-size:11px;color:#757575;">${ev.center} &gt; ${ev.team}</td>
             <td style="font-size:12px;font-weight:500;">${ev.agent_name}</td>
             <td class="col-left" style="font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${ev.consultation_type || ''}">${ev.consultation_type || '-'}</td>
             <td style="font-size:11px;white-space:nowrap;">${ev.duration}</td>

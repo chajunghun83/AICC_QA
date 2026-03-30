@@ -78,10 +78,10 @@
           <span style="font-size:14px;font-weight:600;">점수 분포</span>
         </div>
         <div class="content-card-body" style="display:flex;align-items:center;gap:24px;">
-          <div style="width:160px;height:160px;flex-shrink:0;">
+          <div style="width:150px;height:150px;flex-shrink:0;">
             <canvas id="distribution-chart"></canvas>
           </div>
-          <div id="distribution-legend" style="flex:1;min-width:0;font-size:11px;white-space:nowrap;">
+          <div id="distribution-legend" style="flex:1;min-width:0;font-size:14px;white-space:nowrap;">
           </div>
         </div>
       </div>
@@ -535,8 +535,8 @@
           <div onclick="window.location.href='${pageUrl}'" style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #F0F0F0;cursor:pointer;transition:background 0.15s;" onmouseenter="this.style.background='#FAFAFA'" onmouseleave="this.style.background=''">
             <span style="width:8px;height:8px;border-radius:50%;background:${dotColor};flex-shrink:0;"></span>
             <div style="flex:1;">
-              <div style="font-size:13px;font-weight:500;color:${textColor};">${issue.type} ${issue.count || ''}건</div>
-              <div style="font-size:11px;color:#757575;">${detail}</div>
+              <div style="font-size:15px;font-weight:500;color:${textColor};">${issue.type} ${issue.count || ''}건</div>
+              <div style="font-size:13px;color:#757575;">${detail}</div>
             </div>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#BDBDBD" stroke-width="2" style="flex-shrink:0;"><path d="m9 18 6-6-6-6"/></svg>
           </div>
@@ -589,9 +589,9 @@
         return `
         <div onclick="window.location.href='${linkUrl}'" style="display:flex;align-items:center;gap:10px;padding:3px 0;cursor:pointer;transition:background 0.15s;" onmouseenter="this.style.background='#FAFAFA'" onmouseleave="this.style.background=''">
           <span style="width:8px;height:8px;border-radius:2px;background:${s.color};flex-shrink:0;"></span>
-          <span style="font-size:11px;color:#424242;flex:1;">${s.label}</span>
-          <span style="font-size:11px;font-weight:600;color:#424242;min-width:36px;text-align:right;">${s.value}건</span>
-          <span style="font-size:11px;font-weight:600;color:#424242;min-width:32px;text-align:right;">${s.pct}%</span>
+          <span style="font-size:14px;color:#424242;flex:1;">${s.label}</span>
+          <span style="font-size:14px;font-weight:600;color:#424242;min-width:36px;text-align:right;">${s.value}건</span>
+          <span style="font-size:14px;font-weight:600;color:#424242;min-width:32px;text-align:right;">${s.pct}%</span>
         </div>`;
       }).join('');
 

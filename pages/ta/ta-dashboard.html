@@ -31,7 +31,7 @@
           <option value="all">전체 팀</option>
         </select>
         <select class="form-select" id="variant-select" onchange="switchVariant()" style="min-width:90px;">
-          <option value="v1">시안 1</option>
+          <option value="v1" selected>시안 1</option>
           <option value="v2">시안 2</option>
           <option value="v3">시안 3</option>
         </select>
@@ -52,8 +52,8 @@
         <div class="content-card-body" style="padding:0;overflow-y:auto;" id="rising-list"></div>
       </div>
 
-      <!-- ===== 시안1: 히트맵 ===== -->
-      <div class="content-card" id="variant-v1-left" style="display:flex;flex-direction:column;">
+      <!-- ===== 기존 시안1 원본: 사용자 기준 시안3에서 사용 ===== -->
+      <div class="content-card" id="variant-v1-left" style="display:none;flex-direction:column;">
         <div class="content-card-header">
           <span style="font-size:14px;font-weight:600;">상담유형 히트맵</span>
           <div style="display:flex;gap:4px;">
@@ -65,7 +65,7 @@
           <canvas id="treemap-left-canvas"></canvas>
         </div>
       </div>
-      <div class="content-card" id="variant-v1-right" style="display:flex;flex-direction:column;">
+      <div class="content-card" id="variant-v1-right" style="display:none;flex-direction:column;">
         <div class="content-card-header" style="min-height:62px;">
           <span style="font-size:14px;font-weight:600;">소분류 히트맵</span>
           <span style="font-size:12px;color:#757575;" id="heatmap-right-label">전체</span>
@@ -103,8 +103,8 @@
         </div>
       </div>
 
-      <!-- ===== 시안3: 깔때기 차트 + 도넛 차트 ===== -->
-      <div class="content-card" id="variant-v3-left" style="display:none;flex-direction:column;">
+      <!-- ===== 기존 시안3 원본: 사용자 기준 시안1에서 사용 ===== -->
+      <div class="content-card" id="variant-v3-left" style="display:flex;flex-direction:column;">
         <div class="content-card-header">
           <span style="font-size:14px;font-weight:600;">상담 유형 순위</span>
           <span style="font-size:12px;color:#757575;">대분류</span>
@@ -113,7 +113,7 @@
           <canvas id="v3-funnel-canvas"></canvas>
         </div>
       </div>
-      <div class="content-card" id="variant-v3-right" style="display:none;flex-direction:column;">
+      <div class="content-card" id="variant-v3-right" style="display:flex;flex-direction:column;">
         <div class="content-card-header">
           <span style="font-size:14px;font-weight:600;">소분류</span>
           <span style="font-size:12px;color:#757575;cursor:pointer;" id="v3-donut-label" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'" onclick="window.location.href='consultation-type.html'">전체</span>
@@ -124,7 +124,7 @@
         </div>
       </div>
 
-      <!-- 시안1 하단 4카드 -->
+      <!-- 시안1/시안3 공용 하단 4카드 -->
       <div id="variant-v1-bottom" style="grid-column:2/4;display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
         <div class="content-card">
           <div class="content-card-header"><span style="font-size:14px;font-weight:600;">상품 랭킹</span></div>
@@ -1180,29 +1180,30 @@
       kwCard.style.maxHeight = useWideGrid ? '' : V2_KEYWORD_HEIGHT + 'px';
       kwCard.style.alignSelf = useWideGrid ? '' : 'start';
 
-      // 시안1 전용
-      document.getElementById('variant-v1-left').style.display = v === 'v1' ? 'flex' : 'none';
-      document.getElementById('variant-v1-right').style.display = v === 'v1' ? 'flex' : 'none';
+      // 사용자 기준 시안 번호를 유지하기 위해 v1/v3 렌더 대상을 교차 연결
+      // 시안3(기존 시안1)
+      document.getElementById('variant-v1-left').style.display = v === 'v3' ? 'flex' : 'none';
+      document.getElementById('variant-v1-right').style.display = v === 'v3' ? 'flex' : 'none';
       // 시안2 전용
       document.getElementById('variant-v2-chart').style.display = v === 'v2' ? 'flex' : 'none';
       document.getElementById('variant-v2-right-stack').style.display = v === 'v2' ? 'flex' : 'none';
-      // 시안3 전용
-      document.getElementById('variant-v3-left').style.display = v === 'v3' ? 'flex' : 'none';
-      document.getElementById('variant-v3-right').style.display = v === 'v3' ? 'flex' : 'none';
+      // 시안1(기존 시안3)
+      document.getElementById('variant-v3-left').style.display = v === 'v1' ? 'flex' : 'none';
+      document.getElementById('variant-v3-right').style.display = v === 'v1' ? 'flex' : 'none';
       // 하단 4카드: v1, v3 공유
       document.getElementById('variant-v1-bottom').style.display = (v === 'v1' || v === 'v3') ? 'grid' : 'none';
 
       // 대시보드 모드 버튼 — 현재 비활성 (기능 보류)
-      // document.getElementById('btn-dashboard-mode').style.display = v === 'v3' ? '' : 'none';
+      // document.getElementById('btn-dashboard-mode').style.display = v === 'v1' ? '' : 'none';
 
       renderMainKeywords();
-      _applyV3BottomCards(v === 'v3');
+      _applyV3BottomCards(v === 'v1');
 
       if (v === 'v2') {
         if (!v2Rendered) { renderConsultTypeChart(); v2Rendered = true; }
         renderV2BottomCards();
       }
-      if (v === 'v3') {
+      if (v === 'v1') {
         if (!v3Rendered) { renderV3FunnelChart(); renderV3DonutChart(null); v3Rendered = true; }
       }
     }
@@ -1601,7 +1602,7 @@
       renderHourlyChart();
       const variant = document.getElementById('variant-select').value;
       if (variant === 'v2') { renderConsultTypeChart(); renderV2BottomCards(); }
-      if (variant === 'v3') { renderV3FunnelChart(); renderV3DonutChart(_v3SelectedCat); }
+      if (variant === 'v1') { renderV3FunnelChart(); renderV3DonutChart(_v3SelectedCat); }
     }
 
     /** 실시간 모드 토글 */
@@ -1782,6 +1783,7 @@
       renderRightHeatmap(selectedCatName);
 
       renderHourlyChart();
+      switchVariant();
     });
   </script>
 </body>

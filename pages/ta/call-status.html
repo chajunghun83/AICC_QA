@@ -74,6 +74,7 @@
             <option value="lte3">3분 이하</option>
             <option value="lte5">5분 이하</option>
             <option value="lte10">10분 이하</option>
+            <option value="gte3">3분 이상</option>
             <option value="gte10">10분 이상</option>
           </select>
         </div>
@@ -92,7 +93,19 @@
     </div>
 
     <!-- KPI 카드 -->
-    <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:16px;" id="kpi-cards"></div>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-top:16px;" id="kpi-cards"></div>
+
+    <!-- 개선 제안 롤링 바 -->
+    <div id="suggestion-bar" style="display:none;margin-top:16px;padding:12px 20px;background:linear-gradient(135deg,#EDE7F6 0%,#E8EAF6 100%);border-radius:8px;border:1px solid #D1C4E9;align-items:center;gap:30px;">
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 2.38 1.19 4.47 3 5.74V17a1 1 0 001 1h6a1 1 0 001-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.87-3.13-7-7-7z" fill="#7C4DFF"/><rect x="9" y="19" width="6" height="2" rx="1" fill="#7C4DFF" opacity="0.6"/><circle cx="12" cy="9" r="2" fill="#fff" opacity="0.8"/></svg>
+        <span style="font-size:12px;font-weight:700;color:#5E35B1;white-space:nowrap;">AI 개선 제안</span>
+      </div>
+      <div id="suggestion-text-wrap" style="flex:1;overflow:hidden;height:20px;position:relative;">
+        <div id="suggestion-text" style="font-size:13px;color:#424242;line-height:20px;position:absolute;width:100%;transition:all 0.4s ease;"></div>
+      </div>
+      <button class="btn btn-sm" onclick="openActionModal()" style="flex-shrink:0;background:#5E35B1;color:#fff;border:none;padding:5px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">조치 등록</button>
+    </div>
 
     <!-- 테이블 -->
     <div class="content-card" style="margin-top:12px;">
@@ -103,28 +116,34 @@
       <div class="content-card-body" style="padding:0;">
         <table class="data-table">
           <colgroup>
-            <col style="width:9%">
+            <col style="width:8%">
             <col style="width:10%">
             <col style="width:6%">
-            <col style="width:10%">
             <col style="width:6%">
-            <col style="width:18%">
+            <col style="width:6%">
+            <col style="width:6%">
+            <col style="width:14%">
             <col style="width:6%">
             <col style="width:5%">
+            <col style="width:7%">
             <col style="width:6%">
-            <col style="width:24%">
+            <col style="width:10%">
+            <col style="width:10%">
           </colgroup>
           <thead>
             <tr>
               <th style="text-align:center;">콜 ID</th>
               <th style="text-align:center;">일시</th>
+              <th style="text-align:center;">센터</th>
+              <th style="text-align:center;">팀</th>
               <th style="text-align:center;">사번</th>
-              <th style="text-align:center;">센터/팀</th>
               <th style="text-align:center;">상담사</th>
               <th style="text-align:center;">상담 유형</th>
               <th style="text-align:center;">통화시간</th>
               <th style="text-align:center;">유형</th>
+              <th style="text-align:center;">묵음시간</th>
               <th style="text-align:center;">재인입</th>
+              <th style="text-align:center;">상품 키워드</th>
               <th style="text-align:center;">이슈 키워드</th>
             </tr>
           </thead>
@@ -282,7 +301,7 @@
     const extractedKeywordPool = {
       issue: ['배송지연','상품불량','환불지연','포장파손','오배송','결제오류','택배분실','교환지연','사이즈불일치','응대불만','대기시간','쿠폰오류','재고부족','품절안내','누락배송','이중결제','배송추적불가','상품파손','가격오류','수량불일치'],
       consult: ['주문번호','배송조회','교환접수','반품접수','환불방법','결제확인','주문취소','주소변경','사이즈변경','적립금','회원탈퇴','비밀번호변경','쿠폰적용','카드결제','무통장입금','배송비확인','선물포장','수령인변경','출고일정','재입고알림'],
-      product: ['스니커즈','패딩','원피스','가방','운동화','티셔츠','코트','청바지','모자','벨트','자켓','니트','슬랙스','후드티','맨투맨','샌들','부츠','스카프','지갑','시계']
+      product: ['슬림조거팬츠','오버핏후드집업','울블렌드코트','레더미니스커트','와이드데님팬츠','베이직크루넥니트','하프집업맨투맨','코튼카고팬츠','퀼팅숏패딩','플리츠롱원피스','세미와이드슬랙스','브이넥가디건','라운드넥반팔티','스웨이드앵클부츠','캔버스토트백','나일론백팩','기모조거팬츠','크롭데님자켓','오버사이즈셔츠','리본플랫슈즈']
     };
 
     /* 더미데이터 생성 */
@@ -383,6 +402,12 @@
     let filteredData = [...callData];
     let currentPage = 1;
     let pageSize = 20;
+    let periodFilterInfo = null;
+    let kpiFilter = null;
+    let activeSuggestions = [];
+    let suggestionIdx = 0;
+    let suggestionTimer = null;
+    let modalSuggestions = [];
 
     /* URL 파라미터 기반 필터 (대시보드 연동) */
     let urlFilter = null;
@@ -416,6 +441,326 @@
       return m + s / 60;
     }
 
+    function parseDurationSec(dur) {
+      const [m, s] = (dur || '0:00').split(':').map(Number);
+      return (m || 0) * 60 + (s || 0);
+    }
+
+    function formatSecondsMMSS(totalSec) {
+      const safe = Math.max(0, Math.round(totalSec || 0));
+      const min = Math.floor(safe / 60);
+      const sec = String(safe % 60).padStart(2, '0');
+      return `${min}:${sec}`;
+    }
+
+    function formatAverageReentry(value) {
+      if (!Number.isFinite(value)) return '-';
+      return `${value.toFixed(1)}회`;
+    }
+
+    function escapeAttr(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    function getPeriodRange(info) {
+      if (!info || !info.type) return null;
+      if (info.type === 'daily') return { from: info.date, to: info.date };
+      if (info.type === 'weekly' || info.type === 'custom') return { from: info.from || '', to: info.to || '' };
+      if (info.type === 'monthly') {
+        const year = info.year;
+        const month = String(info.month).padStart(2, '0');
+        return { from: `${year}-${month}-01`, to: `${year}-${month}-31` };
+      }
+      if (info.type === 'yearly') return { from: `${info.year}-01-01`, to: `${info.year}-12-31` };
+      return null;
+    }
+
+    function matchesSpecialFilter(call, filterObj) {
+      if (!filterObj) return true;
+      const filter = filterObj.filter;
+      const value = filterObj.value;
+      if (filter === 'total') return true;
+      if (filter === 'issue') return !!(call.issueKeywords && call.issueKeywords.length > 0);
+      if (filter === 'silence') return !!(call.totalSilence && call.totalSilence > 0);
+      if (filter === 'over') return parseDurationMin(call.duration) >= 3;
+      if (filter === 'reentry') return call.reentry >= 2;
+      if (filter === 'issue_keyword') {
+        const kw = (value || '').replace(/\s/g, '').toLowerCase();
+        return call.issueKeywords.some(k => k.replace(/\s/g, '').toLowerCase().includes(kw));
+      }
+      if (filter === 'keyword') {
+        const kw = (value || '').replace(/\s/g, '').toLowerCase();
+        const inIssue = call.issueKeywords.some(k => k.replace(/\s/g, '').toLowerCase().includes(kw));
+        const inExtracted = Object.values(call.extractedKeywords).some(arr => arr.some(item => item.name.replace(/\s/g, '').toLowerCase().includes(kw)));
+        return inIssue || inExtracted;
+      }
+      if (filter === 'product_keyword') {
+        const kw = (value || '').replace(/\s/g, '').toLowerCase();
+        return (call.extractedKeywords.product || []).some(item => item.name.replace(/\s/g, '').toLowerCase().includes(kw));
+      }
+      if (filter === 'consult_type') {
+        const parts = call.consultationType.split(' > ');
+        const lastDepth = parts[parts.length - 1];
+        return lastDepth === value;
+      }
+      if (filter === 'hour') {
+        const callHour = parseInt(call.time.split(':')[0], 10);
+        return callHour === parseInt(value, 10);
+      }
+      return true;
+    }
+
+    function getFilterLabel(filterObj, sourceLabel) {
+      if (!filterObj) return '';
+      const labels = {
+        total: '전체 콜',
+        issue: '이슈 콜',
+        silence: '묵음 콜',
+        over: '초과 콜 (3분 이상)',
+        reentry: '재인입 콜 (2회 이상)',
+        issue_keyword: `이슈 키워드: ${filterObj.value}`,
+        keyword: `키워드: ${filterObj.value}`,
+        product_keyword: `상품 키워드: ${filterObj.value}`,
+        consult_type: `상담유형: ${filterObj.value}`,
+        hour: `시간대: ${filterObj.value}시`
+      };
+      const base = labels[filterObj.filter] || filterObj.filter;
+      return sourceLabel ? `${sourceLabel}: ${base}` : base;
+    }
+
+    function renderActiveFilterBadge() {
+      const badge = document.getElementById('url-filter-badge');
+      const labels = [];
+      if (urlFilter) labels.push(getFilterLabel(urlFilter, '대시보드'));
+      if (kpiFilter) labels.push(getFilterLabel(kpiFilter, 'KPI'));
+      if (labels.length === 0) {
+        badge.style.display = 'none';
+        badge.innerHTML = '';
+        return;
+      }
+      badge.style.display = 'inline-flex';
+      badge.innerHTML = `<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:#E3F2FD;color:#1565C0;border-radius:16px;font-size:12px;font-weight:600;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        ${labels.join(' / ')}
+        <span style="cursor:pointer;margin-left:4px;" onclick="resetFilter()" title="필터 해제">✕</span>
+      </span>`;
+    }
+
+    function syncFilterControls() {
+      if (urlFilter?.filter === 'reentry' || kpiFilter?.filter === 'reentry') {
+        document.getElementById('reentry-filter').value = 'reentry';
+      }
+      if (urlFilter?.filter === 'over' || kpiFilter?.filter === 'over') {
+        document.getElementById('duration-filter').value = 'gte3';
+      }
+      if (urlFilter?.filter === 'issue_keyword') {
+        document.getElementById('issue-search').value = urlFilter.value || '';
+      }
+    }
+
+    function createPeriodPicker() {
+      const picker = document.getElementById('period-picker-container');
+      picker.innerHTML = '';
+      AICC_PeriodPicker.create('period-picker-container', {
+        defaultPeriod: 'monthly',
+        onChange: function(type, info) {
+          periodFilterInfo = info || null;
+          applyFilter();
+        }
+      });
+    }
+
+    const suggestionPool = [
+      '묵음 시간이 긴 콜이 반복되고 있어 응대 공백 구간 축소를 위한 스크립트 재정비가 필요합니다.',
+      '재인입 비중이 높은 상담유형이 확인되어 1차 해결률 개선 중심의 코칭을 권장합니다.',
+      '3분 이상 장기 통화가 누적되어 핵심 안내 문구 표준화 점검이 필요합니다.',
+      '이슈 키워드가 반복된 콜이 많아 FAQ 보강 및 후속 응대 시나리오 정리가 필요합니다.',
+      '상품 키워드 편중이 확인되어 주요 상품별 응대 가이드 업데이트를 권장합니다.',
+      '특정 센터의 묵음 구간 비중이 높아 상담 흐름 점검과 모니터링 강화를 권장합니다.',
+      '초과 콜 비율이 높아 도입 멘트와 확인 절차를 더 간결하게 정리할 필요가 있습니다.',
+      '재인입 콜이 누적된 구간은 상담 종결 멘트와 후속 안내 품질을 우선 점검해야 합니다.',
+      '이슈 콜 다발 유형에 대해 상담사 공통 코칭 포인트를 별도 배포하는 것이 좋습니다.',
+      '상품 키워드별 문의 집중도가 높아 관련 스크립트와 추천 답변 업데이트가 필요합니다.',
+      '상담사별 통화시간 편차가 커서 우수 응대 사례 공유와 표준 응대 시간 가이드가 필요합니다.',
+      '반복 이슈 키워드 구간은 원인 유형을 세분화해 선제 대응 룰을 추가하는 것이 좋습니다.',
+      '묵음시간과 장기 통화가 함께 높은 콜은 응대 흐름 재설계 우선 대상으로 보는 것이 좋습니다.',
+      '재인입 고객 비중이 높은 상품군은 첫 상담 단계의 안내 정확도 개선이 필요합니다.',
+      '검색된 조건 기준으로 공통 발생 패턴이 보여 조치 항목 등록 후 추적 관리가 필요합니다.'
+    ];
+
+    function pickSuggestions() {
+      const count = 3 + Math.floor(Math.random() * 3);
+      const shuffled = [...suggestionPool].sort(() => Math.random() - 0.5);
+      return shuffled.slice(0, count);
+    }
+
+    function showSuggestionBar() {
+      activeSuggestions = pickSuggestions();
+      suggestionIdx = 0;
+      const bar = document.getElementById('suggestion-bar');
+      const textEl = document.getElementById('suggestion-text');
+      if (!bar || !textEl || activeSuggestions.length === 0) return;
+      bar.style.display = 'flex';
+      textEl.style.opacity = '1';
+      textEl.style.transform = 'translateY(0)';
+      textEl.textContent = activeSuggestions[0];
+
+      if (suggestionTimer) clearInterval(suggestionTimer);
+      if (activeSuggestions.length > 1) {
+        suggestionTimer = setInterval(rollSuggestion, 4000);
+      }
+    }
+
+    function rollSuggestion() {
+      const textEl = document.getElementById('suggestion-text');
+      if (!textEl || activeSuggestions.length === 0) return;
+      textEl.style.opacity = '0';
+      textEl.style.transform = 'translateY(-10px)';
+      setTimeout(() => {
+        suggestionIdx = (suggestionIdx + 1) % activeSuggestions.length;
+        textEl.textContent = activeSuggestions[suggestionIdx];
+        textEl.style.transform = 'translateY(10px)';
+        requestAnimationFrame(() => {
+          textEl.style.opacity = '1';
+          textEl.style.transform = 'translateY(0)';
+        });
+      }, 350);
+    }
+
+    function hideSuggestionBar() {
+      const bar = document.getElementById('suggestion-bar');
+      if (bar) bar.style.display = 'none';
+      if (suggestionTimer) {
+        clearInterval(suggestionTimer);
+        suggestionTimer = null;
+      }
+    }
+
+    function hasActiveFilter() {
+      if (periodFilterInfo) return true;
+      if (urlFilter || kpiFilter) return true;
+      if (document.getElementById('ws-filter').value !== 'all') return true;
+      if (document.getElementById('team-filter').value !== 'all') return true;
+      if ((document.getElementById('empid-search').value || '').trim()) return true;
+      if ((document.getElementById('agent-search').value || '').trim()) return true;
+      if (document.getElementById('type-filter').value !== 'all') return true;
+      if (document.getElementById('reentry-filter').value !== 'all') return true;
+      if (document.getElementById('duration-filter').value !== 'all') return true;
+      if ((document.getElementById('issue-search').value || '').trim()) return true;
+      return false;
+    }
+
+    function getPeriodSummaryText() {
+      if (!periodFilterInfo) return '';
+      if (periodFilterInfo.type === 'daily') return periodFilterInfo.date;
+      if (periodFilterInfo.type === 'weekly') return `${periodFilterInfo.from} ~ ${periodFilterInfo.to}`;
+      if (periodFilterInfo.type === 'monthly') return `${periodFilterInfo.year}년 ${periodFilterInfo.month}월`;
+      if (periodFilterInfo.type === 'yearly') return `${periodFilterInfo.year}년`;
+      if (periodFilterInfo.type === 'custom') return `${periodFilterInfo.from || ''} ~ ${periodFilterInfo.to || ''}`;
+      return '';
+    }
+
+    function getFilterSummary() {
+      const lines = [];
+      const periodText = getPeriodSummaryText();
+      if (periodText) lines.push({ label: '기간', value: periodText });
+
+      const wsVal = document.getElementById('ws-filter').value;
+      if (wsVal !== 'all') {
+        lines.push({ label: '센터', value: document.getElementById('ws-filter').options[document.getElementById('ws-filter').selectedIndex].text });
+      }
+
+      const teamVal = document.getElementById('team-filter').value;
+      if (teamVal !== 'all') {
+        lines.push({ label: '팀', value: document.getElementById('team-filter').options[document.getElementById('team-filter').selectedIndex].text });
+      }
+
+      const empId = (document.getElementById('empid-search').value || '').trim();
+      if (empId) lines.push({ label: '사번', value: empId });
+
+      const agent = (document.getElementById('agent-search').value || '').trim();
+      if (agent) lines.push({ label: '상담사', value: agent });
+
+      const typeVal = document.getElementById('type-filter').value;
+      if (typeVal !== 'all') {
+        lines.push({ label: '유형', value: document.getElementById('type-filter').options[document.getElementById('type-filter').selectedIndex].text });
+      }
+
+      const reentryVal = document.getElementById('reentry-filter').value;
+      if (reentryVal !== 'all') {
+        lines.push({ label: '재인입', value: document.getElementById('reentry-filter').options[document.getElementById('reentry-filter').selectedIndex].text });
+      }
+
+      const durationVal = document.getElementById('duration-filter').value;
+      if (durationVal !== 'all') {
+        lines.push({ label: '통화시간', value: document.getElementById('duration-filter').options[document.getElementById('duration-filter').selectedIndex].text });
+      }
+
+      const issueQ = (document.getElementById('issue-search').value || '').trim();
+      if (issueQ) lines.push({ label: '이슈 키워드', value: issueQ });
+
+      if (urlFilter) lines.push({ label: '대시보드 조건', value: getFilterLabel(urlFilter) });
+      if (kpiFilter) lines.push({ label: 'KPI 조건', value: getFilterLabel(kpiFilter) });
+      return lines;
+    }
+
+    function getFilterSummaryText() {
+      const lines = getFilterSummary();
+      return lines.length > 0 ? lines.map(line => line.value).join(' / ') : '조건 검색';
+    }
+
+    function getActionReportType() {
+      if (!periodFilterInfo || !periodFilterInfo.type) return '조건 검색';
+      const map = {
+        daily: '일간',
+        weekly: '주간',
+        monthly: '월간',
+        yearly: '연간',
+        custom: '조건 검색'
+      };
+      return map[periodFilterInfo.type] || '조건 검색';
+    }
+
+    function aggregateProductKeywords(rows) {
+      const keywordMap = new Map();
+      rows.forEach(call => {
+        const items = (call.extractedKeywords && call.extractedKeywords.product) || [];
+        items.forEach(item => {
+          const prev = keywordMap.get(item.name) || 0;
+          keywordMap.set(item.name, prev + (item.count || 0));
+        });
+      });
+      return Array.from(keywordMap.entries())
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => (b.count - a.count) || a.name.localeCompare(b.name));
+    }
+
+    function renderCompactKeywordChips(items, bg, color, border, limit, options = {}) {
+      const topItems = (items || []).slice(0, limit);
+      const clickFilter = options.clickFilter || null;
+      const fixedWidth = options.fixedWidth || false;
+      return topItems.map((item, idx) =>
+        `<span ${clickFilter ? `onclick='applyKpiFilter("${clickFilter}", ${JSON.stringify(item.name)})'` : ''}
+          title="${escapeAttr(item.name)}"
+          style="display:inline-flex;align-items:center;gap:8px;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:600;background:${bg};color:${color};border:1px solid ${border};white-space:nowrap;min-width:0;${fixedWidth ? 'flex:0 0 calc(33.333% - 8px);max-width:calc(33.333% - 8px);' : ''}${clickFilter ? 'cursor:pointer;' : ''}">
+          <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${idx + 1}. ${item.name}</span>
+          <span style="font-size:10px;opacity:0.8;flex-shrink:0;">${item.count}</span>
+        </span>`
+      ).join('');
+    }
+
+    function applyKpiFilter(filter, value) {
+      kpiFilter = { filter, value: value || '' };
+      renderActiveFilterBadge();
+      syncFilterControls();
+      applyFilter();
+      AICC_Toast.show(`KPI 필터 적용: ${getFilterLabel(kpiFilter)}`);
+    }
+
     function applyFilter() {
       const ws = document.getElementById('ws-filter').value;
       const team = document.getElementById('team-filter').value;
@@ -425,8 +770,11 @@
       const reentryVal = document.getElementById('reentry-filter').value;
       const durVal = document.getElementById('duration-filter').value;
       const issueQ = document.getElementById('issue-search').value.trim().toLowerCase();
+      const periodRange = getPeriodRange(periodFilterInfo);
 
       filteredData = callData.filter(c => {
+        if (periodRange?.from && c.date < periodRange.from) return false;
+        if (periodRange?.to && c.date > periodRange.to) return false;
         if (ws !== 'all' && c.center !== ws) return false;
         if (team !== 'all' && c.team !== team) return false;
         if (empIdQ && !c.employeeId.toLowerCase().includes(empIdQ)) return false;
@@ -441,45 +789,20 @@
           if (durVal === 'lte3' && min > 3) return false;
           if (durVal === 'lte5' && min > 5) return false;
           if (durVal === 'lte10' && min > 10) return false;
+          if (durVal === 'gte3' && min < 3) return false;
           if (durVal === 'gte10' && min < 10) return false;
         }
         if (issueQ && !c.issueKeywords.some(k => k.toLowerCase().includes(issueQ))) return false;
-
-        /* 대시보드에서 넘어온 URL 파라미터 기반 필터 */
-        if (urlFilter) {
-          const f = urlFilter.filter;
-          const v = urlFilter.value;
-          if (f === 'issue') {
-            if (!c.issueKeywords || c.issueKeywords.length === 0) return false;
-          } else if (f === 'silence') {
-            if (!c.totalSilence || c.totalSilence === 0) return false;
-          } else if (f === 'over') {
-            if (parseDurationMin(c.duration) < 3) return false;
-          } else if (f === 'reentry') {
-            if (c.reentry < 2) return false;
-          } else if (f === 'issue_keyword') {
-            const kw = (v || '').replace(/\s/g, '').toLowerCase();
-            if (!c.issueKeywords.some(k => k.replace(/\s/g, '').toLowerCase().includes(kw))) return false;
-          } else if (f === 'keyword') {
-            const kw = (v || '').replace(/\s/g, '').toLowerCase();
-            const inIssue = c.issueKeywords.some(k => k.replace(/\s/g, '').toLowerCase().includes(kw));
-            const inExtracted = Object.values(c.extractedKeywords).some(arr => arr.some(ek => ek.name.replace(/\s/g, '').toLowerCase().includes(kw)));
-            if (!inIssue && !inExtracted) return false;
-          } else if (f === 'consult_type') {
-            const parts = c.consultationType.split(' > ');
-            const lastDepth = parts[parts.length - 1];
-            if (lastDepth !== v) return false;
-          } else if (f === 'hour') {
-            const callHour = parseInt(c.time.split(':')[0], 10);
-            if (callHour !== parseInt(v, 10)) return false;
-          }
-        }
+        if (!matchesSpecialFilter(c, urlFilter)) return false;
+        if (!matchesSpecialFilter(c, kpiFilter)) return false;
         return true;
       });
 
       currentPage = 1;
       renderKPICards();
       renderTable();
+      if (hasActiveFilter()) showSuggestionBar();
+      else hideSuggestionBar();
     }
 
     function resetFilter() {
@@ -492,16 +815,19 @@
       document.getElementById('reentry-filter').value = 'all';
       document.getElementById('duration-filter').value = 'all';
       document.getElementById('issue-search').value = '';
+      periodFilterInfo = null;
+      kpiFilter = null;
       urlFilter = null;
-      const badge = document.getElementById('url-filter-badge');
-      if (badge) { badge.style.display = 'none'; badge.innerHTML = ''; }
       if (window.history.replaceState) {
         window.history.replaceState({}, '', window.location.pathname);
       }
+      createPeriodPicker();
+      renderActiveFilterBadge();
       filteredData = [...callData];
       currentPage = 1;
       renderKPICards();
       renderTable();
+      hideSuggestionBar();
       AICC_Toast.show('필터가 초기화되었습니다.');
     }
 
@@ -509,19 +835,34 @@
 
     function renderKPICards() {
       const fmt = n => (n == null) ? '-' : n.toLocaleString();
+      const searchIcon = (title) => `
+        <span title="${title}" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:999px;background:#F5F5F5;color:#9E9E9E;flex-shrink:0;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+        </span>`;
       const total = filteredData.length;
       const issue = filteredData.filter(c => c.issueKeywords && c.issueKeywords.length > 0).length;
       const over = filteredData.filter(c => parseDurationMin(c.duration) >= 3).length;
       const reentry = filteredData.filter(c => c.reentry >= 2).length;
+      const avgDurationSec = total > 0
+        ? filteredData.reduce((sum, c) => sum + parseDurationSec(c.duration), 0) / total
+        : 0;
+      const avgSilenceSec = total > 0
+        ? filteredData.reduce((sum, c) => sum + (c.totalSilence || 0), 0) / total
+        : 0;
+      const avgReentry = total > 0
+        ? filteredData.reduce((sum, c) => sum + (c.reentry || 0), 0) / total
+        : 0;
+      const productKeywords = aggregateProductKeywords(filteredData);
+      const top6Products = productKeywords.slice(0, 6);
 
-      const cards = [
+      const primaryCards = [
         { label:'총 콜수', value:total, color:'#212121' },
-        { label:'이슈 콜', value:issue, color:'#212121' },
-        { label:'초과 콜', value:over, color:'#212121' },
-        { label:'재인입 콜', value:reentry, color:'#212121' }
+        { label:'이슈 콜', value:issue, color:'#212121', filter:'issue' },
+        { label:'초과 콜', value:over, color:'#212121', filter:'over' },
+        { label:'재인입 콜', value:reentry, color:'#212121', filter:'reentry' }
       ];
 
-      document.getElementById('kpi-cards').innerHTML = cards.map(card => {
+      const renderPrimaryCard = (card) => {
         const ibCount = filteredData.filter(c => {
           if (card.label === '총 콜수') return c.callType === 'I/B';
           if (card.label === '이슈 콜') return c.callType === 'I/B' && c.issueKeywords && c.issueKeywords.length > 0;
@@ -533,15 +874,77 @@
         const ibPct = card.value > 0 ? Math.round(ibCount / card.value * 100) : 0;
         const obPct = card.value > 0 ? 100 - ibPct : 0;
 
-        return `<div class="kpi-card" style="padding:14px 18px;">
-          <div style="font-size:12px;color:#757575;margin-bottom:6px;">${card.label}</div>
+        const clickableStyle = card.filter ? 'cursor:pointer;transition:box-shadow 0.15s, transform 0.15s;' : '';
+        return `<div class="kpi-card" ${card.filter ? `onclick="applyKpiFilter('${card.filter}')"` : ''} style="padding:12px 16px;height:112px;display:flex;flex-direction:column;justify-content:space-between;${clickableStyle}" ${card.filter ? `onmouseenter="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.08)';this.style.transform='translateY(-1px)'" onmouseleave="this.style.boxShadow='';this.style.transform=''"` : ''}>
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px;">
+            <div style="font-size:12px;color:#757575;">${card.label}</div>
+            ${card.filter ? searchIcon('클릭하여 검색') : ''}
+          </div>
           <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
             <span style="font-size:28px;font-weight:700;color:${card.color};">${fmt(card.value)}</span>
             <span style="font-size:12px;color:#9E9E9E;">건</span>
             <span style="margin-left:auto;font-size:11px;white-space:nowrap;color:#9E9E9E;">I/B <span style="color:#616161;font-weight:600;">${fmt(ibCount)}</span>건<span style="font-size:10px;">(${ibPct}%)</span>&ensp;O/B <span style="color:#616161;font-weight:600;">${fmt(obCount)}</span>건<span style="font-size:10px;">(${obPct}%)</span></span>
           </div>
         </div>`;
-      }).join('');
+      };
+
+      const secondaryCards = [
+        {
+          label: '평균 통화시간',
+          value: formatSecondsMMSS(avgDurationSec),
+          helper: `전체 ${fmt(total)}건 기준`,
+          accent: '#1565C0'
+        },
+        {
+          label: '평균 묵음시간',
+          value: formatSecondsMMSS(avgSilenceSec),
+          helper: total > 0 ? `평균 묵음 비중 ${Math.round((avgSilenceSec / Math.max(avgDurationSec, 1)) * 1000) / 10}%` : '데이터 없음',
+          accent: '#8E24AA'
+        },
+        {
+          label: '평균 재인입 건수',
+          value: formatAverageReentry(avgReentry),
+          helper: `2회 이상 ${fmt(reentry)}건`,
+          accent: '#EF6C00'
+        },
+        {
+          label: '상품 키워드 Top 6',
+          keywords: top6Products,
+          filter: 'product_keyword'
+        }
+      ];
+
+      const renderSecondaryCard = (card) => {
+        if (card.keywords) {
+          const chips = card.keywords.length > 0
+            ? renderCompactKeywordChips(card.keywords, '#F3E5F5', '#7B1FA2', '#E1BEE7', 6, { clickFilter: card.filter, fixedWidth: true })
+            : '<span style="font-size:12px;color:#9E9E9E;">데이터 없음</span>';
+          return `<div class="kpi-card" style="padding:12px 16px;height:112px;display:flex;flex-direction:column;justify-content:space-between;">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+              <div style="font-size:12px;color:#757575;">${card.label}</div>
+              ${searchIcon('배지 클릭으로 검색')}
+            </div>
+            <div style="display:flex;flex-wrap:wrap;column-gap:10px;row-gap:8px;align-content:flex-start;min-height:48px;margin-bottom:8px;">${chips}</div>
+            <div style="font-size:10px;color:#9E9E9E;margin-top:2px;">상품 키워드 배지 클릭 시 검색</div>
+          </div>`;
+        }
+        return `<div class="kpi-card" style="padding:12px 16px;height:112px;display:flex;flex-direction:column;justify-content:space-between;">
+          <div style="font-size:12px;color:#757575;">${card.label}</div>
+          <div style="display:flex;align-items:baseline;gap:8px;">
+            <span style="font-size:24px;font-weight:700;color:${card.accent};">${card.value}</span>
+          </div>
+          <div style="font-size:11px;color:#9E9E9E;">${card.helper}</div>
+        </div>`;
+      };
+
+      document.getElementById('kpi-cards').innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;">
+          ${primaryCards.map(renderPrimaryCard).join('')}
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;">
+          ${secondaryCards.map(renderSecondaryCard).join('')}
+        </div>
+      `;
     }
 
     /* ══════════════════════════ 테이블 렌더링 ══════════════════════════ */
@@ -556,23 +959,41 @@
         const typeBadge = c.callType === 'I/B'
           ? `<span style="display:inline-block;padding:2px 8px;background:#e8f5e9;color:#2e7d32;border-radius:4px;font-size:11px;font-weight:600;">${c.callType}</span>`
           : `<span style="display:inline-block;padding:2px 8px;background:#fff3e0;color:#e65100;border-radius:4px;font-size:11px;font-weight:600;">${c.callType}</span>`;
+        const silenceTime = formatSecondsMMSS(c.totalSilence || 0);
+        const productItems = ((c.extractedKeywords && c.extractedKeywords.product) || [])
+          .slice()
+          .sort((a, b) => (b.count - a.count) || a.name.localeCompare(b.name));
+        const visibleProductItems = productItems.slice(0, 1);
+        const hiddenProductCount = Math.max(0, productItems.length - visibleProductItems.length);
+        const productTooltip = productItems.map(k => k.name).join(', ');
+        const productChips = [
+          ...visibleProductItems.map(k =>
+            `<span style="display:inline-block;padding:2px 8px;margin:1px 2px;border-radius:10px;font-size:11px;background:#F3E5F5;color:#7B1FA2;border:1px solid #E1BEE7;">${k.name}</span>`
+          ),
+          ...(hiddenProductCount > 0
+            ? [`<span title="${productTooltip}" style="display:inline-block;padding:2px 8px;margin:1px 2px;border-radius:10px;font-size:11px;background:#F5F5F5;color:#757575;border:1px solid #E0E0E0;cursor:help;">...</span>`]
+            : [])
+        ].join('');
         const issueChips = c.issueKeywords.map(k =>
           `<span style="display:inline-block;padding:2px 8px;margin:1px 2px;border-radius:10px;font-size:11px;background:#FFF3F3;color:#E53935;border:1px solid #FFCDD2;">${k}</span>`
         ).join('');
         return `<tr onclick="showCallDetail('${c.id}')" style="cursor:pointer;">
           <td style="text-align:center;font-size:12px;">${c.id}</td>
           <td style="text-align:center;font-size:12px;white-space:nowrap;">${c.date} ${c.time}</td>
+          <td style="text-align:center;font-size:12px;white-space:nowrap;">${c.center}</td>
+          <td style="text-align:center;font-size:12px;white-space:nowrap;">${c.team}</td>
           <td style="text-align:center;font-size:12px;">${c.employeeId}</td>
-          <td style="text-align:center;font-size:12px;white-space:nowrap;">${c.center} &gt; ${c.team}</td>
           <td style="text-align:center;font-size:12px;">${c.agent}</td>
           <td style="font-size:11px;color:#424242;padding:6px 12px;">${c.consultationType}</td>
           <td style="text-align:center;font-size:12px;white-space:nowrap;">${c.duration}</td>
           <td style="text-align:center;">${typeBadge}</td>
+          <td style="text-align:center;font-size:12px;white-space:nowrap;">${silenceTime}</td>
           <td style="text-align:center;">${c.reentry >= 3
             ? `<span style="display:inline-block;padding:2px 8px;background:#ffebee;color:#c62828;border-radius:4px;font-size:11px;font-weight:600;">${c.reentry}회차</span>`
             : c.reentry === 2
               ? `<span style="display:inline-block;padding:2px 8px;background:#fff3e0;color:#e65100;border-radius:4px;font-size:11px;font-weight:600;">2회차</span>`
               : '-'}</td>
+          <td style="padding:6px 10px;">${productChips}</td>
           <td style="padding:6px 10px;">${issueChips}</td>
         </tr>`;
       }).join('');
@@ -773,6 +1194,328 @@
       }
     }
 
+    const _admins = ['김관리자','박매니저','이팀장','최수석','정차장'];
+    let _dtpState = { year: 0, month: 0, day: 0, hour: 0, minute: 0, open: false };
+
+    function _initDtp() {
+      const now = new Date();
+      _dtpState = {
+        year: now.getFullYear(),
+        month: now.getMonth(),
+        day: now.getDate(),
+        hour: now.getHours(),
+        minute: Math.floor(now.getMinutes() / 10) * 10,
+        open: false
+      };
+    }
+
+    function _dtpFmt() {
+      return `${_dtpState.year}-${String(_dtpState.month + 1).padStart(2, '0')}-${String(_dtpState.day).padStart(2, '0')} ${String(_dtpState.hour).padStart(2, '0')}:${String(_dtpState.minute).padStart(2, '0')}`;
+    }
+
+    function _getNow() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    }
+
+    function _toggleDtp() {
+      if (_dtpState.open) { _closeDtp(); return; }
+      _dtpState.open = true;
+      _renderDtp();
+    }
+
+    function _closeDtp() {
+      _dtpState.open = false;
+      const overlay = document.getElementById('act-dtp-overlay');
+      if (overlay) overlay.remove();
+    }
+
+    function _renderDtp() {
+      let overlay = document.getElementById('act-dtp-overlay');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'act-dtp-overlay';
+        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:10001;';
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) _closeDtp(); });
+        document.body.appendChild(overlay);
+      }
+
+      const trigger = document.getElementById('act-date-trigger');
+      const rect = trigger.getBoundingClientRect();
+      const pickerWidth = 300;
+      const pickerHeight = 420;
+      let top = rect.bottom + 4;
+      let left = rect.left;
+      if (top + pickerHeight > window.innerHeight) top = rect.top - pickerHeight - 4;
+      if (left + pickerWidth > window.innerWidth) left = window.innerWidth - pickerWidth - 8;
+
+      const year = _dtpState.year;
+      const month = _dtpState.month;
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const firstDay = new Date(year, month, 1).getDay();
+      const todayStr = _getNow().split(' ')[0];
+
+      let calCells = '';
+      ['일', '월', '화', '수', '목', '금', '토'].forEach((weekday) => { calCells += `<div class="pp-weekday">${weekday}</div>`; });
+      for (let i = 0; i < firstDay; i++) calCells += '<div class="pp-day empty"></div>';
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        let cls = 'pp-day';
+        if (dateStr === todayStr) cls += ' today';
+        if (day === _dtpState.day) cls += ' selected';
+        calCells += `<div class="${cls}" onclick="_dtpDay(${day})">${day}</div>`;
+      }
+
+      let hourOptions = '';
+      for (let hour = 0; hour < 24; hour++) {
+        hourOptions += `<option value="${hour}" ${hour === _dtpState.hour ? 'selected' : ''}>${String(hour).padStart(2, '0')}시</option>`;
+      }
+      let minuteOptions = '';
+      for (let minute = 0; minute < 60; minute += 10) {
+        minuteOptions += `<option value="${minute}" ${minute === _dtpState.minute ? 'selected' : ''}>${String(minute).padStart(2, '0')}분</option>`;
+      }
+
+      overlay.innerHTML = `
+        <div style="position:fixed;top:${top}px;left:${left}px;background:#fff;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.15);border:1px solid #E6E8F0;width:300px;">
+          <div class="pp-body" style="padding:12px;">
+            <div class="pp-nav">
+              <button type="button" class="pp-nav-btn" onclick="_dtpNav(-1)">‹</button>
+              <span class="pp-nav-title">${year}년 ${month + 1}월</span>
+              <button type="button" class="pp-nav-btn" onclick="_dtpNav(1)">›</button>
+            </div>
+            <div class="pp-cal-grid">${calCells}</div>
+            <div style="display:flex;gap:8px;margin-top:12px;align-items:center;">
+              <span style="font-size:12px;color:#616161;font-weight:500;white-space:nowrap;">시간</span>
+              <select class="form-select" style="flex:1;min-width:0;padding:4px 8px;font-size:13px;" onchange="_dtpState.hour=parseInt(this.value)">${hourOptions}</select>
+              <select class="form-select" style="flex:1;min-width:0;padding:4px 8px;font-size:13px;" onchange="_dtpState.minute=parseInt(this.value)">${minuteOptions}</select>
+            </div>
+          </div>
+          <div class="pp-footer">
+            <button type="button" class="pp-footer-btn" onclick="_closeDtp()">취소</button>
+            <button type="button" class="pp-footer-btn primary" onclick="_dtpApply()">확인</button>
+          </div>
+        </div>`;
+    }
+
+    function _dtpNav(dir) {
+      _dtpState.month += dir;
+      if (_dtpState.month < 0) { _dtpState.month = 11; _dtpState.year--; }
+      if (_dtpState.month > 11) { _dtpState.month = 0; _dtpState.year++; }
+      const maxDay = new Date(_dtpState.year, _dtpState.month + 1, 0).getDate();
+      if (_dtpState.day > maxDay) _dtpState.day = maxDay;
+      _renderDtp();
+    }
+
+    function _dtpDay(day) {
+      _dtpState.day = day;
+      _renderDtp();
+    }
+
+    function _dtpApply() {
+      const value = _dtpFmt();
+      document.getElementById('act-date-val').value = value;
+      document.getElementById('act-date-display').textContent = value;
+      _closeDtp();
+    }
+
+    function _openAdminSearch() {
+      if (document.getElementById('act-admin-overlay')) return;
+      const overlay = document.createElement('div');
+      overlay.id = 'act-admin-overlay';
+      overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.3);z-index:10000;display:flex;align-items:center;justify-content:center;';
+      overlay.innerHTML = `
+        <div style="background:#fff;border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,0.18);width:360px;max-height:420px;display:flex;flex-direction:column;overflow:hidden;">
+          <div style="padding:16px 20px;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:14px;font-weight:700;">담당자 검색</span>
+            <span style="cursor:pointer;font-size:18px;color:#9E9E9E;" onclick="_closeAdminSearch()">&times;</span>
+          </div>
+          <div style="padding:12px 20px;">
+            <input type="text" id="act-admin-search-input" class="form-input" style="width:100%;" placeholder="이름을 입력하세요" oninput="_filterAdminList()">
+          </div>
+          <div id="act-admin-search-list" style="flex:1;overflow-y:auto;padding:0 20px 16px;min-height:280px;"></div>
+        </div>`;
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) _closeAdminSearch(); });
+      document.body.appendChild(overlay);
+      _filterAdminList();
+      document.getElementById('act-admin-search-input').focus();
+    }
+
+    function _filterAdminList() {
+      const query = (document.getElementById('act-admin-search-input')?.value || '').trim().toLowerCase();
+      const filteredAdmins = _admins.filter((name) => name.toLowerCase().includes(query));
+      const listEl = document.getElementById('act-admin-search-list');
+      if (!listEl) return;
+      listEl.innerHTML = filteredAdmins.length === 0
+        ? '<div style="text-align:center;color:#9E9E9E;font-size:12px;padding:16px;">검색 결과가 없습니다</div>'
+        : filteredAdmins.map((name) => `
+          <div onclick="_selectAdmin('${name}')" style="padding:10px 12px;border-radius:6px;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:8px;transition:background 0.15s;" onmouseenter="this.style.background='#F5F5F5'" onmouseleave="this.style.background=''">
+            <span style="display:inline-block;width:28px;height:28px;border-radius:50%;background:#E3F2FD;color:#1976D2;font-size:12px;font-weight:600;text-align:center;line-height:28px;">${name.charAt(0)}</span>
+            <span>${name}</span>
+            <span style="font-size:11px;color:#9E9E9E;margin-left:auto;">관리자</span>
+          </div>`).join('');
+    }
+
+    function _selectAdmin(name) {
+      const input = document.getElementById('act-admin');
+      if (input) input.value = name;
+      _closeAdminSearch();
+    }
+
+    function _closeAdminSearch() {
+      const overlay = document.getElementById('act-admin-overlay');
+      if (overlay) overlay.remove();
+    }
+
+    function openActionModal() {
+      _initDtp();
+      modalSuggestions = activeSuggestions.length > 0 ? [...activeSuggestions] : pickSuggestions();
+      const filterLines = getFilterSummary();
+      const filterHtml = filterLines.length > 0
+        ? filterLines.map((line) => `<div style="font-size:13px;padding:2px 0;"><span style="color:#9E9E9E;font-weight:400;">${line.label}</span> <span style="margin:0 4px;color:#BDBDBD;">›</span> <span style="font-weight:500;color:#424242;">${line.value}</span></div>`).join('')
+        : '<div style="font-size:13px;color:#757575;">조건 없음</div>';
+      const userName = typeof AICC_Auth !== 'undefined' ? AICC_Auth.getCurrentUser().name : '관리자';
+      const statusOpts = ['미이행', '진행중', '완료'].map((status) => `<option${status === '미이행' ? ' selected' : ''}>${status}</option>`).join('');
+
+      const body = `
+        <div style="display:flex;gap:0;height:100%;">
+          <div style="flex:1;padding:20px;border-right:1px solid #EEEEEE;display:flex;flex-direction:column;max-height:520px;overflow-y:auto;">
+            <div style="font-size:14px;font-weight:700;color:#212121;margin-bottom:16px;">개선 제안 정보</div>
+            <div style="margin-bottom:12px;">
+              <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">조건</div>
+              <div>${filterHtml}</div>
+            </div>
+            <div style="margin-bottom:12px;">
+              <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">검색 결과</div>
+              <div style="font-size:13px;font-weight:500;">${filteredData.length}건</div>
+            </div>
+            <div style="flex:1;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+                <div style="font-size:11px;color:#9E9E9E;">개선 제안 내용</div>
+                <button class="btn btn-sm" onclick="_showAddInput()" style="border:1px solid #D1C4E9;background:#fff;color:#5E35B1;font-size:11px;padding:2px 10px;">+ 추가</button>
+              </div>
+              <div id="act-suggestions-box" style="font-size:13px;line-height:1.6;background:#F9F9F9;border-radius:6px;padding:12px;border:1px solid #EEEEEE;"></div>
+            </div>
+          </div>
+          <div style="flex:1;padding:20px;display:flex;flex-direction:column;gap:16px;max-height:520px;overflow-y:auto;overflow-x:visible;">
+            <div style="font-size:14px;font-weight:700;color:#212121;">처리 관리</div>
+            <div>
+              <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">조치 날짜</div>
+              <div id="act-date-trigger" class="form-input" style="width:203px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;" onclick="_toggleDtp()">
+                <span id="act-date-display">${_getNow()}</span>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5" stroke="#9E9E9E" stroke-width="1.2"/><path d="M1.5 6h13" stroke="#9E9E9E" stroke-width="1.2"/><path d="M5 1v3M11 1v3" stroke="#9E9E9E" stroke-width="1.2" stroke-linecap="round"/></svg>
+              </div>
+              <input type="hidden" id="act-date-val" value="${_getNow()}">
+            </div>
+            <div>
+              <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">담당자</div>
+              <div style="display:flex;gap:6px;">
+                <input type="text" id="act-admin" class="form-input" style="width:203px;" value="${userName}" onfocus="this.select()">
+                <button class="btn btn-sm" onclick="_openAdminSearch()" style="white-space:nowrap;border:1px solid #D8DAE5;background:#fff;color:#424242;">검색</button>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">이행 상태</div>
+              <select id="act-status" class="form-select" style="width:203px;">${statusOpts}</select>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;">
+              <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">처리 메모</div>
+              <textarea id="act-memo" class="form-input" style="flex:1;min-height:80px;resize:none;" placeholder="처리 내용을 입력하세요"></textarea>
+              <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+                <button class="btn btn-primary btn-sm" onclick="saveAction()">저장</button>
+              </div>
+            </div>
+          </div>
+        </div>`;
+
+      AICC_Modal.open({
+        title: '조치 등록 — 개선 제안',
+        content: body,
+        size: 'xl'
+      });
+      _renderSuggestionItems();
+    }
+
+    function _renderSuggestionItems() {
+      const box = document.getElementById('act-suggestions-box');
+      if (!box) return;
+      box.innerHTML = modalSuggestions.map((content, idx) => `
+        <div style="display:flex;align-items:flex-start;gap:6px;padding:3px 0;">
+          <span style="flex:1;color:#424242;">${idx + 1}. ${content}</span>
+          <span onclick="_removeSuggestionItem(${idx})" style="cursor:pointer;color:#BDBDBD;font-size:16px;line-height:1;flex-shrink:0;padding:0 2px;transition:color 0.15s;" onmouseenter="this.style.color='#F44336'" onmouseleave="this.style.color='#BDBDBD'">&times;</span>
+        </div>`).join('');
+    }
+
+    function _removeSuggestionItem(idx) {
+      if (modalSuggestions.length <= 1) {
+        AICC_Toast.show('최소 1개의 개선 제안이 필요합니다.');
+        return;
+      }
+      modalSuggestions.splice(idx, 1);
+      _renderSuggestionItems();
+    }
+
+    function _showAddInput() {
+      const box = document.getElementById('act-suggestions-box');
+      if (!box || document.getElementById('act-new-suggestion-row')) return;
+      const row = document.createElement('div');
+      row.id = 'act-new-suggestion-row';
+      row.style.cssText = 'display:flex;align-items:center;gap:6px;padding:6px 0 0;';
+      row.innerHTML = `
+        <input type="text" id="act-new-suggestion-input" class="form-input" style="flex:1;font-size:12px;padding:4px 8px;" placeholder="개선 제안 내용을 입력하세요">
+        <button class="btn btn-sm" onclick="_confirmAddItem()" style="white-space:nowrap;background:#5E35B1;color:#fff;border:none;font-size:11px;padding:4px 10px;">확인</button>`;
+      box.appendChild(row);
+      document.getElementById('act-new-suggestion-input').focus();
+    }
+
+    function _confirmAddItem() {
+      const input = document.getElementById('act-new-suggestion-input');
+      if (!input || !input.value.trim()) {
+        AICC_Toast.show('내용을 입력해주세요.');
+        return;
+      }
+      modalSuggestions.push(input.value.trim());
+      _renderSuggestionItems();
+    }
+
+    function saveAction() {
+      const actionDate = document.getElementById('act-date-val').value;
+      if (!actionDate) { AICC_Toast.show('조치 날짜를 선택해주세요.'); return; }
+
+      const adminName = document.getElementById('act-admin').value.trim();
+      if (!adminName) { AICC_Toast.show('담당자를 입력해주세요.'); return; }
+
+      const status = document.getElementById('act-status').value;
+      const memo = document.getElementById('act-memo').value.trim();
+      if (!memo) { AICC_Toast.show('처리 메모를 입력해주세요.'); return; }
+
+      const today = new Date();
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      const periodRange = getPeriodRange(periodFilterInfo);
+
+      const newItem = {
+        reportType: getActionReportType(),
+        periodFrom: periodRange?.from || todayStr,
+        periodTo: periodRange?.to || todayStr,
+        contents: [...modalSuggestions],
+        admin: adminName,
+        status,
+        completedDate: status === '완료' ? todayStr : '-',
+        history: [{
+          date: actionDate,
+          author: adminName,
+          status,
+          memo
+        }]
+      };
+
+      const stored = JSON.parse(localStorage.getItem('AICC_IMPROVEMENT_ITEMS') || '[]');
+      stored.push(newItem);
+      localStorage.setItem('AICC_IMPROVEMENT_ITEMS', JSON.stringify(stored));
+
+      AICC_Modal.close();
+      AICC_Toast.show('조치가 등록되었습니다. 개선 이행 관리에서 확인할 수 있습니다.');
+    }
+
     /* ══════════════════════════ 초기화 ══════════════════════════ */
 
     document.addEventListener('DOMContentLoaded', async () => {
@@ -785,43 +1528,13 @@
         }
       } catch(e) {}
 
-      AICC_PeriodPicker.create('period-picker-container', {
-        defaultPeriod: 'monthly',
-        onChange: function() { applyFilter(); }
-      });
+      createPeriodPicker();
 
       /* 대시보드에서 전달된 URL 파라미터 파싱 */
       urlFilter = parseUrlFilter();
-      if (urlFilter) {
-        const labels = {
-          total: '전체 콜',
-          issue: '이슈 콜',
-          silence: '묵음 콜',
-          over: '초과 콜 (3분 이상)',
-          reentry: '재인입 콜 (2회 이상)',
-          issue_keyword: `이슈 키워드: ${urlFilter.value}`,
-          keyword: `키워드: ${urlFilter.value}`,
-          consult_type: `상담유형: ${urlFilter.value}`,
-          hour: `시간대: ${urlFilter.value}시`
-        };
-        const filterLabel = labels[urlFilter.filter] || urlFilter.filter;
-
-        /* 관련 UI 필터 자동 세팅 */
-        if (urlFilter.filter === 'reentry') {
-          document.getElementById('reentry-filter').value = 'reentry';
-        } else if (urlFilter.filter === 'issue_keyword') {
-          document.getElementById('issue-search').value = urlFilter.value || '';
-        }
-
-        const badge = document.getElementById('url-filter-badge');
-        badge.style.display = 'inline-flex';
-        badge.innerHTML = `<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:#E3F2FD;color:#1565C0;border-radius:16px;font-size:12px;font-weight:600;">
-          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-          대시보드 필터: ${filterLabel}
-          <span style="cursor:pointer;margin-left:4px;" onclick="resetFilter()" title="필터 해제">✕</span>
-        </span>`;
-        setTimeout(() => AICC_Toast.show(`대시보드 필터 적용: ${filterLabel}`), 500);
-      }
+      syncFilterControls();
+      renderActiveFilterBadge();
+      if (urlFilter) setTimeout(() => AICC_Toast.show(`대시보드 필터 적용: ${getFilterLabel(urlFilter)}`), 500);
 
       applyFilter();
     });
