@@ -330,19 +330,20 @@
     /* ── 이슈 처리 현황 (이슈 처리 관리 데이터 기반 상태별 집계) ── */
     const issueStatusData = (() => {
       const _rng = (() => { let s = 42; return () => { s = (s * 16807 + 0) % 2147483647; return s / 2147483647; }; })();
-      const counts = { '미처리': 0, '검토 필요': 0, '처리완료': 0 };
+      const counts = { '미처리': 0, '검토 필요': 0, '처리완료': 0, '이슈없음': 0 };
       for (let i = 0; i < 50; i++) {
         const r = _rng();
-        const status = r < 0.30 ? '미처리' : r < 0.55 ? '검토 필요' : r < 0.90 ? '처리완료' : '이슈 없음';
-        if (counts[status] !== undefined) counts[status]++;
+        const status = r < 0.30 ? '미처리' : r < 0.55 ? '검토 필요' : r < 0.90 ? '처리완료' : '이슈없음';
+        counts[status]++;
       }
-      const total = counts['미처리'] + counts['검토 필요'] + counts['처리완료'];
+      const total = counts['미처리'] + counts['검토 필요'] + counts['처리완료'] + counts['이슈없음'];
       return {
         total,
         items: [
           { name: '미처리', count: counts['미처리'], color: '#E53935' },
           { name: '검토 필요', count: counts['검토 필요'], color: '#FF9800' },
-          { name: '처리완료', count: counts['처리완료'], color: '#4CAF50' }
+          { name: '처리완료', count: counts['처리완료'], color: '#4CAF50' },
+          { name: '이슈없음', count: counts['이슈없음'], color: '#BDBDBD' }
         ]
       };
     })();

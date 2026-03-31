@@ -7,6 +7,7 @@
   <title>리포트 생성기 - AICC Quality Hub</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
   <link rel="stylesheet" href="../../css/styles.css">
 </head>
 <body class="bg-[#F5F5F5] text-[#212121]">
@@ -599,20 +600,26 @@
         };
 
         html += `<div style="margin-bottom:24px;">${secTitle('요약 (KPI 현황)')}
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
             ${kpiCard('총 콜수', s.totalCalls, s.totalCalls_prev, s.ibCalls, s.obCalls, '#F5F5F5', '#757575', '')}
             ${kpiCard('이슈 콜', s.issueCalls, s.issueCalls_prev, s.issueCalls_ib, s.issueCalls_ob, '#FFF3F3', '#C62828', '#D32F2F')}
             ${kpiCard('초과 콜', s.overCalls, s.overCalls_prev, s.overCalls_ib, s.overCalls_ob, '#FFF8E1', '#F57F17', '#F57F17')}
-            ${kpiCard('재인입 콜', s.reentryCalls, s.reentryCalls_prev, s.reentryCalls_ib, s.reentryCalls_ob, '#E3F2FD', '#1565C0', '#1565C0')}
           </div>
-          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px;">
-            <div style="background:#F5F5F5;border-radius:6px;padding:12px;display:flex;justify-content:space-between;align-items:center;">
-              <div><div style="font-size:11px;color:#757575;">평균 통화시간</div><span style="font-size:18px;font-weight:700;">${s.avgDuration}</span></div>
-              <div style="font-size:10px;color:#BDBDBD;">전기: ${s.avgDuration_prev}</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;">
+            ${kpiCard('재인입 콜', s.reentryCalls, s.reentryCalls_prev, s.reentryCalls_ib, s.reentryCalls_ob, '#E3F2FD', '#1565C0', '#1565C0')}
+            <div style="background:#F5F5F5;border-radius:6px;padding:12px;">
+              <div style="font-size:11px;color:#757575;margin-bottom:6px;">평균 통화시간</div>
+              <div style="display:flex;align-items:baseline;gap:6px;">
+                <span style="font-size:22px;font-weight:700;">${s.avgDuration}</span>
+              </div>
+              <div style="font-size:10px;color:#BDBDBD;margin-top:4px;">전기: ${s.avgDuration_prev}</div>
             </div>
-            <div style="background:#F5F5F5;border-radius:6px;padding:12px;display:flex;justify-content:space-between;align-items:center;">
-              <div><div style="font-size:11px;color:#757575;">평균 묵음시간</div><span style="font-size:18px;font-weight:700;">${s.avgSilence}</span></div>
-              <div style="font-size:10px;color:#BDBDBD;">전기: ${s.avgSilence_prev}</div>
+            <div style="background:#F5F5F5;border-radius:6px;padding:12px;">
+              <div style="font-size:11px;color:#757575;margin-bottom:6px;">평균 묵음시간</div>
+              <div style="display:flex;align-items:baseline;gap:6px;">
+                <span style="font-size:22px;font-weight:700;">${s.avgSilence}</span>
+              </div>
+              <div style="font-size:10px;color:#BDBDBD;margin-top:4px;">전기: ${s.avgSilence_prev}</div>
             </div>
           </div>
         </div>`;
@@ -721,14 +728,14 @@
       /* 10. 상담유형 분포 */
       if (SEC.consultDist) {
         html += `<div style="margin-bottom:24px;">${secTitle('상담유형 분포')}
-          <div style="display:flex;align-items:center;gap:20px;">
-            <div style="width:200px;height:200px;"><canvas id="chart-consult-donut"></canvas></div>
-            <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+          <div style="display:flex;align-items:center;justify-content:center;gap:40px;">
+            <div style="width:200px;height:200px;flex-shrink:0;"><canvas id="chart-consult-donut"></canvas></div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
               ${D.consultTypeDist.map((c, i) => {
                 const colors = ['#00A3FF','#4CAF50','#F44336','#FF9800','#9C27B0','#607D8B'];
                 return `<div style="display:flex;align-items:center;gap:8px;font-size:12px;">
-                  <span style="width:10px;height:10px;border-radius:2px;background:${colors[i]};display:inline-block;"></span>
-                  ${c.category} <b style="margin-left:auto;">${num(c.count)}건 (${c.ratio}%)</b>
+                  <span style="width:10px;height:10px;border-radius:2px;background:${colors[i]};display:inline-block;flex-shrink:0;"></span>
+                  <span>${c.category}</span> <b style="margin-left:24px;white-space:nowrap;">${num(c.count)}건 (${c.ratio}%)</b>
                 </div>`;
               }).join('')}
             </div>
@@ -1014,12 +1021,12 @@
     function renderCallTrendChart(curLabel, prevLabel) {
       const ctx = document.getElementById('chart-call-trend'); if (!ctx) return;
       const labels = getTimeLabels();
-      new Chart(ctx, { type: 'bar', data: {
+      new Chart(ctx, { type: 'bar', plugins: [ChartDataLabels], data: {
         labels, datasets: [
-          { label: curLabel, data: randData(labels, 350, 200), backgroundColor: 'rgba(0,163,255,0.7)', borderRadius: 3, order: 2 },
-          { label: prevLabel, data: randData(labels, 320, 180), type: 'line', borderColor: '#BDBDBD', borderWidth: 1.5, borderDash: [4,4], pointRadius: 0, fill: false, order: 1 }
+          { label: curLabel, data: randData(labels, 350, 200), backgroundColor: 'rgba(0,163,255,0.7)', borderRadius: 3, order: 2, datalabels: { anchor: 'end', align: 'end', offset: 2, font: { size: 9, weight: '600' }, color: '#424242' } },
+          { label: prevLabel, data: randData(labels, 320, 180), type: 'line', borderColor: '#BDBDBD', borderWidth: 1.5, borderDash: [4,4], pointRadius: 0, fill: false, order: 1, datalabels: { display: false } }
         ]
-      }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { reverse: true, position: 'top', labels: { font: { size: 10 }, boxWidth: 12 } }, tooltip: { itemSort: (a, b) => a.datasetIndex - b.datasetIndex } },
+      }, options: { responsive: true, maintainAspectRatio: false, layout: { padding: { top: 18 } }, interaction: { mode: 'index', intersect: false }, plugins: { legend: { reverse: true, position: 'top', labels: { font: { size: 10 }, boxWidth: 12 } }, tooltip: { enabled: false }, datalabels: {} },
         scales: { y: { beginAtZero: true, grid: { color: '#EEEEEE' }, ticks: { font: { size: 10 }, color: '#9E9E9E' } }, x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#9E9E9E', maxTicksLimit: 10 } } }
       }});
     }
@@ -1030,12 +1037,12 @@
       const labels = []; for (let h = 0; h < 24; h++) labels.push(`${h}시`);
       const curData = labels.map((_, i) => i >= 9 && i <= 18 ? Math.round(300 + Math.random() * 400) : Math.round(20 + Math.random() * 80));
       const prevData = labels.map((_, i) => i >= 9 && i <= 18 ? Math.round(280 + Math.random() * 380) : Math.round(15 + Math.random() * 70));
-      new Chart(ctx, { type: 'bar', data: {
+      new Chart(ctx, { type: 'bar', plugins: [ChartDataLabels], data: {
         labels, datasets: [
-          { label: curLabel, data: curData, backgroundColor: 'rgba(0,163,255,0.6)', borderRadius: 2, order: 2 },
-          { label: prevLabel, data: prevData, type: 'line', borderColor: '#BDBDBD', borderWidth: 1.5, borderDash: [4,4], pointRadius: 0, fill: false, order: 1 }
+          { label: curLabel, data: curData, backgroundColor: 'rgba(0,163,255,0.6)', borderRadius: 2, order: 2, datalabels: { anchor: 'end', align: 'end', offset: 2, font: { size: 8, weight: '600' }, color: '#424242' } },
+          { label: prevLabel, data: prevData, type: 'line', borderColor: '#BDBDBD', borderWidth: 1.5, borderDash: [4,4], pointRadius: 0, fill: false, order: 1, datalabels: { display: false } }
         ]
-      }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { reverse: true, position: 'top', labels: { font: { size: 10 }, boxWidth: 12 } }, tooltip: { itemSort: (a, b) => a.datasetIndex - b.datasetIndex } },
+      }, options: { responsive: true, maintainAspectRatio: false, layout: { padding: { top: 18 } }, interaction: { mode: 'index', intersect: false }, plugins: { legend: { reverse: true, position: 'top', labels: { font: { size: 10 }, boxWidth: 12 } }, tooltip: { enabled: false }, datalabels: {} },
         scales: { y: { beginAtZero: true, grid: { color: '#EEEEEE' }, ticks: { font: { size: 9 }, color: '#9E9E9E' } }, x: { grid: { display: false }, ticks: { font: { size: 9 }, color: '#9E9E9E', maxTicksLimit: 10 } } }
       }});
     }
@@ -1044,12 +1051,12 @@
     function renderReentryChart(curLabel, prevLabel) {
       const ctx = document.getElementById('chart-reentry'); if (!ctx) return;
       const labels = getTimeLabels();
-      new Chart(ctx, { type: 'bar', data: {
+      new Chart(ctx, { type: 'bar', plugins: [ChartDataLabels], data: {
         labels, datasets: [
-          { label: curLabel, data: randData(labels, 15, 25), backgroundColor: 'rgba(21,101,192,0.7)', borderRadius: 3, order: 2 },
-          { label: prevLabel, data: randData(labels, 12, 22), type: 'line', borderColor: '#BDBDBD', borderWidth: 1.5, borderDash: [4,4], pointRadius: 0, fill: false, order: 1 }
+          { label: curLabel, data: randData(labels, 15, 25), backgroundColor: 'rgba(21,101,192,0.7)', borderRadius: 3, order: 2, datalabels: { anchor: 'end', align: 'end', offset: 2, font: { size: 9, weight: '600' }, color: '#424242' } },
+          { label: prevLabel, data: randData(labels, 12, 22), type: 'line', borderColor: '#BDBDBD', borderWidth: 1.5, borderDash: [4,4], pointRadius: 0, fill: false, order: 1, datalabels: { display: false } }
         ]
-      }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { reverse: true, position: 'top', labels: { font: { size: 10 }, boxWidth: 12 } }, tooltip: { itemSort: (a, b) => a.datasetIndex - b.datasetIndex } },
+      }, options: { responsive: true, maintainAspectRatio: false, layout: { padding: { top: 18 } }, interaction: { mode: 'index', intersect: false }, plugins: { legend: { reverse: true, position: 'top', labels: { font: { size: 10 }, boxWidth: 12 } }, tooltip: { enabled: false }, datalabels: {} },
         scales: { y: { beginAtZero: true, grid: { color: '#EEEEEE' }, ticks: { font: { size: 10 }, color: '#9E9E9E' } }, x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#9E9E9E', maxTicksLimit: 10 } } }
       }});
     }
@@ -1058,12 +1065,12 @@
     function renderIssueCallChart(curLabel, prevLabel) {
       const ctx = document.getElementById('chart-issue-call'); if (!ctx) return;
       const labels = getTimeLabels();
-      new Chart(ctx, { type: 'bar', data: {
+      new Chart(ctx, { type: 'bar', plugins: [ChartDataLabels], data: {
         labels, datasets: [
-          { label: curLabel, data: randData(labels, 8, 18), backgroundColor: 'rgba(211,47,47,0.7)', borderRadius: 3, order: 2 },
-          { label: prevLabel, data: randData(labels, 6, 15), type: 'line', borderColor: '#BDBDBD', borderWidth: 1.5, borderDash: [4,4], pointRadius: 0, fill: false, order: 1 }
+          { label: curLabel, data: randData(labels, 8, 18), backgroundColor: 'rgba(211,47,47,0.7)', borderRadius: 3, order: 2, datalabels: { anchor: 'end', align: 'end', offset: 2, font: { size: 9, weight: '600' }, color: '#424242' } },
+          { label: prevLabel, data: randData(labels, 6, 15), type: 'line', borderColor: '#BDBDBD', borderWidth: 1.5, borderDash: [4,4], pointRadius: 0, fill: false, order: 1, datalabels: { display: false } }
         ]
-      }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { reverse: true, position: 'top', labels: { font: { size: 10 }, boxWidth: 12 } }, tooltip: { itemSort: (a, b) => a.datasetIndex - b.datasetIndex } },
+      }, options: { responsive: true, maintainAspectRatio: false, layout: { padding: { top: 18 } }, interaction: { mode: 'index', intersect: false }, plugins: { legend: { reverse: true, position: 'top', labels: { font: { size: 10 }, boxWidth: 12 } }, tooltip: { enabled: false }, datalabels: {} },
         scales: { y: { beginAtZero: true, grid: { color: '#EEEEEE' }, ticks: { font: { size: 10 }, color: '#9E9E9E' } }, x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#9E9E9E', maxTicksLimit: 10 } } }
       }});
     }
@@ -1074,13 +1081,13 @@
       const labels = getTimeLabels();
       const curData = labels.map(() => +(3 + Math.random() * 7).toFixed(1));
       const prevData = labels.map(() => +(2.5 + Math.random() * 6.5).toFixed(1));
-      new Chart(ctx, { type: 'bar', data: {
+      new Chart(ctx, { type: 'bar', plugins: [ChartDataLabels], data: {
         labels, datasets: [
-          { label: curLabel, data: curData, backgroundColor: 'rgba(0,163,255,0.7)', borderRadius: 3, order: 2 },
-          { label: prevLabel, data: prevData, type: 'line', borderColor: '#BDBDBD', borderWidth: 1.5, borderDash: [4,4], pointRadius: 0, fill: false, order: 1 }
+          { label: curLabel, data: curData, backgroundColor: 'rgba(0,163,255,0.7)', borderRadius: 3, order: 2, datalabels: { anchor: 'end', align: 'end', offset: 2, font: { size: 9, weight: '600' }, color: '#424242', formatter: v => v + '%' } },
+          { label: prevLabel, data: prevData, type: 'line', borderColor: '#BDBDBD', borderWidth: 1.5, borderDash: [4,4], pointRadius: 0, fill: false, order: 1, datalabels: { display: false } }
         ]
-      }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
-        plugins: { legend: { reverse: true, position: 'top', labels: { font: { size: 10 }, boxWidth: 12 } }, tooltip: { itemSort: (a, b) => a.datasetIndex - b.datasetIndex, callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y}%` } } },
+      }, options: { responsive: true, maintainAspectRatio: false, layout: { padding: { top: 18 } }, interaction: { mode: 'index', intersect: false },
+        plugins: { legend: { reverse: true, position: 'top', labels: { font: { size: 10 }, boxWidth: 12 } }, tooltip: { enabled: false }, datalabels: {} },
         scales: {
           y: { beginAtZero: true, title: { display: true, text: '묵음 비율(%)', font: { size: 9 } }, grid: { color: '#EEEEEE' }, ticks: { font: { size: 9 }, color: '#9E9E9E', callback: v => v + '%' } },
           x: { grid: { display: false }, ticks: { font: { size: 9 }, color: '#9E9E9E', maxTicksLimit: 10 } }
