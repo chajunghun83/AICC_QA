@@ -7,6 +7,7 @@
   <title>리포트 생성기 - AICC Quality Hub</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
   <link rel="stylesheet" href="../../css/styles.css">
 </head>
 <body class="bg-[#F5F5F5] text-[#212121]">
@@ -689,13 +690,13 @@
         const dist = D.distribution;
         const total = dist.excellent + dist.good + dist.caution + dist.poor;
         html += `<div style="margin-bottom:24px;">${secTitle('점수 분포')}
-          <div style="display:flex;align-items:center;gap:20px;">
-            <div style="width:180px;height:180px;"><canvas id="preview-donut"></canvas></div>
-            <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
-              <div style="display:flex;align-items:center;gap:8px;font-size:12px;"><span style="width:10px;height:10px;border-radius:2px;background:#4CAF50;display:inline-block;"></span>우수 (90점 이상) <b style="margin-left:auto;">${AICC_Fmt.number(dist.excellent)}건 (${(dist.excellent/total*100).toFixed(1)}%)</b></div>
-              <div style="display:flex;align-items:center;gap:8px;font-size:12px;"><span style="width:10px;height:10px;border-radius:2px;background:#00A3FF;display:inline-block;"></span>양호 (80~89점) <b style="margin-left:auto;">${AICC_Fmt.number(dist.good)}건 (${(dist.good/total*100).toFixed(1)}%)</b></div>
-              <div style="display:flex;align-items:center;gap:8px;font-size:12px;"><span style="width:10px;height:10px;border-radius:2px;background:#FF9800;display:inline-block;"></span>주의 (70~79점) <b style="margin-left:auto;">${AICC_Fmt.number(dist.caution)}건 (${(dist.caution/total*100).toFixed(1)}%)</b></div>
-              <div style="display:flex;align-items:center;gap:8px;font-size:12px;"><span style="width:10px;height:10px;border-radius:2px;background:#F44336;display:inline-block;"></span>미달 (70점 미만) <b style="margin-left:auto;">${AICC_Fmt.number(dist.poor)}건 (${(dist.poor/total*100).toFixed(1)}%)</b></div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:40px;">
+            <div style="width:160px;height:160px;flex-shrink:0;"><canvas id="preview-donut"></canvas></div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <div style="display:flex;align-items:center;gap:8px;font-size:12px;"><span style="width:10px;height:10px;border-radius:2px;background:#4CAF50;display:inline-block;flex-shrink:0;"></span><span>우수 (90점 이상)</span><b style="margin-left:24px;white-space:nowrap;">${AICC_Fmt.number(dist.excellent)}건 (${(dist.excellent/total*100).toFixed(1)}%)</b></div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:12px;"><span style="width:10px;height:10px;border-radius:2px;background:#00A3FF;display:inline-block;flex-shrink:0;"></span><span>양호 (80~89점)</span><b style="margin-left:24px;white-space:nowrap;">${AICC_Fmt.number(dist.good)}건 (${(dist.good/total*100).toFixed(1)}%)</b></div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:12px;"><span style="width:10px;height:10px;border-radius:2px;background:#FF9800;display:inline-block;flex-shrink:0;"></span><span>주의 (70~79점)</span><b style="margin-left:24px;white-space:nowrap;">${AICC_Fmt.number(dist.caution)}건 (${(dist.caution/total*100).toFixed(1)}%)</b></div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:12px;"><span style="width:10px;height:10px;border-radius:2px;background:#F44336;display:inline-block;flex-shrink:0;"></span><span>미달 (70점 미만)</span><b style="margin-left:24px;white-space:nowrap;">${AICC_Fmt.number(dist.poor)}건 (${(dist.poor/total*100).toFixed(1)}%)</b></div>
             </div>
           </div>
         </div>`;
@@ -977,6 +978,7 @@
 
       new Chart(ctx, {
         type: 'line',
+        plugins: [ChartDataLabels],
         data: {
           labels: labels,
           datasets: [{
@@ -987,14 +989,23 @@
             borderWidth: 2,
             fill: true,
             tension: 0.3,
-            pointRadius: 2
+            pointRadius: 3
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
-            legend: { display: false }
+            legend: { display: false },
+            tooltip: { enabled: false },
+            datalabels: {
+              anchor: 'end',
+              align: 'top',
+              offset: 4,
+              font: { size: 10, weight: '600' },
+              color: '#424242',
+              formatter: (v) => Math.round(v)
+            }
           },
           scales: {
             y: {
@@ -1020,6 +1031,7 @@
       const colors = teams.map(t => t.score >= 80 ? '#4CAF50' : t.score >= 60 ? '#FF9800' : '#F44336');
       new Chart(ctx, {
         type: 'bar',
+        plugins: [ChartDataLabels],
         data: {
           labels: teams.map(t => t.name),
           datasets: [{ data: teams.map(t => t.score), backgroundColor: colors, borderRadius: 4, barThickness: 20, maxBarThickness: 24 }]
@@ -1027,7 +1039,18 @@
         options: {
           indexAxis: 'y',
           responsive: true, maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
+          plugins: {
+            legend: { display: false },
+            tooltip: { enabled: false },
+            datalabels: {
+              anchor: 'end',
+              align: 'end',
+              offset: 4,
+              font: { size: 10, weight: '600' },
+              color: '#424242',
+              formatter: (v) => v.toFixed(1)
+            }
+          },
           scales: {
             x: { min: 60, max: 100, grid: { color: '#EEEEEE' }, ticks: { font: { size: 10 }, color: '#9E9E9E' } },
             y: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#424242' } }
