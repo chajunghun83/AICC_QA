@@ -93,57 +93,76 @@
     </div>
 
     <!-- KPI 카드 -->
-    <div style="display:flex;flex-direction:column;gap:12px;margin-top:16px;" id="kpi-cards"></div>
+    <div style="margin-top:16px;" id="kpi-cards"></div>
 
-    <!-- 개선 제안 롤링 바 -->
-    <div id="suggestion-bar" style="display:none;margin-top:16px;padding:12px 20px;background:linear-gradient(135deg,#EDE7F6 0%,#E8EAF6 100%);border-radius:8px;border:1px solid #D1C4E9;align-items:center;gap:30px;">
-      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 2.38 1.19 4.47 3 5.74V17a1 1 0 001 1h6a1 1 0 001-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.87-3.13-7-7-7z" fill="#7C4DFF"/><rect x="9" y="19" width="6" height="2" rx="1" fill="#7C4DFF" opacity="0.6"/><circle cx="12" cy="9" r="2" fill="#fff" opacity="0.8"/></svg>
-        <span style="font-size:12px;font-weight:700;color:#5E35B1;white-space:nowrap;">AI 개선 제안</span>
+    <!-- AI 현황분석 카드 -->
+    <div id="ai-analysis-card" class="content-card" style="margin-top:12px;">
+      <div class="content-card-header" style="padding:12px 20px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 2.38 1.19 4.47 3 5.74V17a1 1 0 001 1h6a1 1 0 001-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.87-3.13-7-7-7z" fill="#1E88E5"/><rect x="9" y="19" width="6" height="2" rx="1" fill="#1E88E5" opacity="0.6"/><circle cx="12" cy="9" r="2" fill="#fff" opacity="0.8"/></svg>
+          <span style="font-size:15px;font-weight:700;color:#1565C0;">AI 현황분석</span>
+          <span id="ai-context-label" style="font-size:11px;color:#757575;padding:2px 8px;background:#F5F5F5;border-radius:10px;display:none;"></span>
+        </div>
+        <div id="ai-breadcrumb" style="display:flex;align-items:center;gap:4px;font-size:12px;color:#757575;"></div>
       </div>
-      <div id="suggestion-text-wrap" style="flex:1;overflow:hidden;height:20px;position:relative;">
-        <div id="suggestion-text" style="font-size:13px;color:#424242;line-height:20px;position:absolute;width:100%;transition:all 0.4s ease;"></div>
+      <div class="content-card-body" style="padding:0;min-height:120px;" id="ai-analysis-body">
+        <div class="ai-dp-wrap" style="display:flex !important;flex-direction:row !important;gap:0;min-height:320px;overflow:hidden;">
+          <div id="ai-panel-l1" style="width:100%;padding:14px 16px;overflow-y:auto;flex-shrink:0;transition:width .4s cubic-bezier(.4,0,.2,1), opacity .3s ease, padding .35s ease;">
+            <div class="ai-dp-panel-hdr" id="ai-panel-l1-hdr"></div>
+            <div id="ai-panel-l1-body"></div>
+          </div>
+          <div id="ai-panel-l2" style="width:0;padding:0;overflow:hidden;opacity:0;flex-shrink:0;transition:width .4s cubic-bezier(.4,0,.2,1), opacity .3s ease, padding .35s ease;">
+            <div class="ai-dp-panel-hdr" id="ai-panel-l2-hdr"></div>
+            <div id="ai-panel-l2-body"></div>
+          </div>
+          <div id="ai-panel-l3" style="width:0;padding:0;overflow:hidden;opacity:0;flex-shrink:0;transition:width .4s cubic-bezier(.4,0,.2,1), opacity .3s ease, padding .35s ease;">
+            <div class="ai-dp-panel-hdr" id="ai-panel-l3-hdr"></div>
+            <div id="ai-panel-l3-body"></div>
+          </div>
+        </div>
       </div>
-      <button class="btn btn-sm" onclick="openActionModal()" style="flex-shrink:0;background:#5E35B1;color:#fff;border:none;padding:5px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">조치 등록</button>
     </div>
 
     <!-- 테이블 -->
     <div class="content-card" style="margin-top:12px;">
       <div class="content-card-header">
         <span style="font-size:14px;font-weight:600;">콜 목록</span>
-        <span style="font-size:12px;color:#757575;" id="call-count">총 0건</span>
+        <span style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:12px;color:#757575;" id="call-count">총 0건</span>
+          <span id="l3-filter-badge" style="display:none;"></span>
+        </span>
       </div>
       <div class="content-card-body" style="padding:0;">
         <table class="data-table">
           <colgroup>
-            <col style="width:8%">
+            <col style="width:7%">
             <col style="width:10%">
             <col style="width:6%">
-            <col style="width:6%">
-            <col style="width:6%">
-            <col style="width:6%">
-            <col style="width:14%">
             <col style="width:6%">
             <col style="width:5%">
-            <col style="width:7%">
             <col style="width:6%">
-            <col style="width:10%">
-            <col style="width:10%">
+            <col style="width:13%">
+            <col style="width:6%">
+            <col style="width:5%">
+            <col style="width:6%">
+            <col style="width:5%">
+            <col style="width:12%">
+            <col style="width:13%">
           </colgroup>
           <thead>
             <tr>
-              <th style="text-align:center;">콜 ID</th>
-              <th style="text-align:center;">일시</th>
-              <th style="text-align:center;">센터</th>
-              <th style="text-align:center;">팀</th>
-              <th style="text-align:center;">사번</th>
-              <th style="text-align:center;">상담사</th>
-              <th style="text-align:center;">상담 유형</th>
-              <th style="text-align:center;">통화시간</th>
-              <th style="text-align:center;">유형</th>
-              <th style="text-align:center;">묵음시간</th>
-              <th style="text-align:center;">재인입</th>
-              <th style="text-align:center;">상품 키워드</th>
+              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="toggleSort('id')">콜 ID <span id="sort-icon-id" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="toggleSort('date')">일시 <span id="sort-icon-date" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="toggleSort('center')">센터 <span id="sort-icon-center" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="toggleSort('team')">팀 <span id="sort-icon-team" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="toggleSort('empid')">사번 <span id="sort-icon-empid" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="toggleSort('agent')">상담사 <span id="sort-icon-agent" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="toggleSort('consult')">상담 유형 <span id="sort-icon-consult" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="toggleSort('duration')">통화시간 <span id="sort-icon-duration" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="toggleSort('type')">유형 <span id="sort-icon-type" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="toggleSort('silence')">묵음시간 <span id="sort-icon-silence" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="toggleSort('reentry')">재인입 <span id="sort-icon-reentry" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+              <th style="text-align:center;">상담 키워드</th>
               <th style="text-align:center;">이슈 키워드</th>
             </tr>
           </thead>
@@ -171,11 +190,52 @@
   <script src="../../js/utils/formatters.js"></script>
   <script src="../../js/components/sidebar.js"></script>
   <script src="../../js/components/layout.js"></script>
+  <style>
+    /* ── 멀티패널 드릴다운 레이아웃 ── */
+    .ai-dp-wrap { display:flex; gap:0; min-height:280px; }
+    .ai-dp-panel { flex:1; min-width:0; border-right:1px solid #E0E0E0; padding:14px 16px; overflow-y:auto; transition:flex .3s ease, padding .3s ease, opacity .25s ease; opacity:1; }
+    .ai-dp-panel:last-child { border-right:none; }
+    .ai-dp-panel.collapsed { flex:0 0 0; min-width:0; width:0; padding:0; border-right:none; overflow:hidden; opacity:0; }
+    .ai-dp-panel-hdr { display:flex; align-items:center; gap:6px; margin-bottom:10px; }
+    .ai-dp-panel-label { font-size:11px; font-weight:700; color:#fff; padding:3px 10px; border-radius:4px; }
+    .ai-dp-panel-label.l1 { background:#1565C0; }
+    .ai-dp-panel-label.l2 { background:#00897B; }
+    .ai-dp-panel-label.l3 { background:#6A1B9A; }
+    .ai-dp-panel-ctx { font-size:12px; font-weight:600; color:#424242; }
+    .ai-dp-panel-cnt { font-size:11px; color:#9E9E9E; }
+    .ai-dp-reset { font-size:10px; color:#1565C0; cursor:pointer; margin-left:auto; padding:2px 8px; border-radius:3px; background:#E3F2FD; border:none; white-space:nowrap; }
+    .ai-dp-reset:hover { background:#BBDEFB; }
+    .ai-dp-item { display:flex; align-items:center; gap:8px; padding:5px 12px; background:#FAFAFA; border-radius:5px; margin-bottom:3px; border-left:3px solid transparent; transition:background .15s; }
+    .ai-dp-item.clickable { cursor:pointer !important; }
+    .ai-dp-item.clickable:hover { background:#E8EAF6 !important; }
+    .ai-dp-item.active { background:#E3F2FD !important; border-left-color:#1565C0 !important; font-weight:600; }
+    .ai-dp-item.l3-active { background:#E3F2FD !important; border-left-width:4px !important; }
+    /* 축소 패널 텍스트 말줄임 */
+    .narrow .ai-dp-item span:nth-child(2) { white-space:nowrap !important; overflow:hidden !important; text-overflow:ellipsis !important; }
+    .narrow div[style*="font-weight:700"] { white-space:nowrap !important; overflow:hidden !important; text-overflow:ellipsis !important; }
+  </style>
   <script src="../../js/components/modal.js"></script>
   <script src="../../js/components/toast.js"></script>
   <script src="../../js/components/period-picker.js"></script>
   <script>
-    /* ══════════════════════════ 더미데이터 ══════════════════════════ */
+    /* ══════════════════════════════════════════════════════════════════
+     *  더미데이터 정의
+     *  ──────────────────────────────────────────────────────────────
+     *  [정책] 전체 100건의 콜 데이터를 생성한다.
+     *   - 25건: "주문번호" 키워드 시나리오 (orderNumScenario 배열로 1:1 매핑)
+     *   - 75건: 일반 시나리오 (restScenarioPool 가중치 기반 랜덤 배분)
+     *
+     *  [시나리오 구분 목적]
+     *   - TA 대시보드 > 주요 키워드 > "주문번호" 클릭 시 call-status 페이지로
+     *     ?filter=keyword&value=주문번호 파라미터와 함께 진입한다.
+     *   - 이때 25건만 필터링되어 AI 현황분석이 해당 콜 기준으로 작동한다.
+     *   - 필터 없이 진입하면 전체 100건 기준 기본(default) 시나리오가 동작한다.
+     *
+     *  [상담사/센터]
+     *   - 상담사 10명, 센터 3곳(서울/부산/대구), 팀은 센터별 2~3개
+     *   - 콜 생성 시 시드 기반 난수(rng)로 배정 — 새로고침해도 동일 데이터 보장
+     *   - 주문번호 시나리오에서는 서울센터 편중
+     * ════════════════════════════════════════════════════════════════ */
 
     const agents = ['김민수','이영희','박신입','정하은','최지우','한동해','오세진','윤서연','강태양','송미래'];
     const AGENT_EMP_ID = {
@@ -188,213 +248,612 @@
       { name:'대구센터', teams:['일반상담팀','CS팀'] }
     ];
 
-    /* 3~4댑스 혼합 상담유형 - 대시보드 히트맵 소분류와 정합성 확보 */
+    /* ── 상담유형 목록 (3~4뎁스) ──────────────────────────────────
+     *  [정책] 상담유형은 대분류(D1) > 중분류(D2) > (소분류(D3) >) 세분류 구조.
+     *   - 최대 4뎁스이며, 자연스럽게 3뎁스로 끝나는 항목도 존재한다.
+     *   - 대시보드 소분류 도넛 차트 항목은 **마지막 뎁스**에 위치한다.
+     *     "소분류"는 소분류·세분류를 아울러 부르는 명칭이므로
+     *     3뎁스(D3)나 4뎁스(D4) 모두 해당된다.
+     *   - matchesSpecialFilter의 consult_type 분기는 마지막 뎁스를 체크한다.
+     *     예) value='카드결제' → '결제 > 결제오류 > 승인실패 > 카드결제' 매칭
+     *   - AI 현황분석 > 상담유형 Top5에서는 전체 뎁스를 그대로 표시한다.
+     *   - 주문번호 시나리오의 25건은 orderNumScenario에 직접 ct를 지정하며,
+     *     나머지 75건은 restScenarioPool의 ctPrefix(D1)를 기반으로 매칭한다.
+     * ─────────────────────────────────────────────────────────── */
     const consultationTypes = [
-      '주문 > 주문조회 > 주문상태 > 배송현황확인',
-      '주문 > 주문조회 > 주문상태 > 입금확인',
-      '주문 > 주문조회 > 주문내역 > 주문상세보기',
-      '주문 > 주문변경 > 수량변경',
-      '주문 > 주문변경 > 옵션변경',
-      '주문 > 주문변경 > 배송지변경',
-      '주문 > 주문취소 > 단순변심 > 전체취소',
-      '주문 > 주문취소 > 오류주문',
-      '주문 > 주문취소 > 품절취소',
-      '결제 > 카드결제 > 결제오류 > 승인실패',
-      '결제 > 카드결제 > 할부변경',
-      '결제 > 간편결제 > 네이버페이',
-      '결제 > 간편결제 > 카카오페이',
-      '결제 > 현금결제 > 무통장입금',
-      '결제 > 결제취소 > 부분취소',
-      '배송 > 배송현황 > 일반배송 > 택배추적',
-      '배송 > 배송현황 > 특수배송 > 새벽배송',
-      '배송 > 배송현황 > 특수배송 > 당일배송',
-      '배송 > 배송기간 > 배송지연 > 택배지연',
-      '배송 > 배송기간 > 배송지연 > 물류지연',
-      '배송 > 배송기간 > 배송소요일',
-      '배송 > 배송지 > 주소변경',
-      '배송 > 배송지 > 수령인변경',
-      '배송 > 해외배송 > 관세문의',
-      '교환/반품 > 교환접수 > 사이즈교환 > 의류사이즈',
-      '교환/반품 > 교환접수 > 사이즈교환 > 신발사이즈',
-      '교환/반품 > 교환접수 > 색상교환',
-      '교환/반품 > 교환접수 > 불량교환',
-      '교환/반품 > 반품접수 > 단순변심반품',
-      '교환/반품 > 반품접수 > 상품불량 > 파손',
-      '교환/반품 > 반품접수 > 상품불량 > 오배송',
-      '교환/반품 > 환불처리 > 환불지연',
-      '교환/반품 > 환불처리 > 환불방법',
-      '교환/반품 > 수거문의 > 수거일정',
-      '회원/계정 > 로그인 > 비밀번호찾기',
-      '회원/계정 > 회원정보 > 탈퇴문의',
-      '회원/계정 > 회원정보 > 정보변경',
-      '회원/계정 > 등급혜택 > 등급조회',
-      '상품 > 상품정보 > 사이즈정보 > 사이즈표',
-      '상품 > 상품정보 > 소재성분',
-      '상품 > 재입고 > 재입고알림',
-      '상품 > 가격문의 > 할인정보',
-      '프로모션 > 쿠폰 > 쿠폰오류',
-      '프로모션 > 쿠폰 > 쿠폰적용',
-      '프로모션 > 적립금 > 적립금사용',
-      'A/S > A/S접수 > 수선요청 > 의류수선',
-      'A/S > A/S진행 > 비용문의',
-      '고객불만 > 서비스불만 > 응대불만',
-      '고객불만 > 품질불만 > 제품하자',
-      '고객불만 > 보상요구 > 환불요구',
-      '앱/웹사이트 > 앱오류 > 결제오류',
-      '앱/웹사이트 > 기능문의 > 검색기능',
-      '카탈로그 > 신상품 > 사전예약'
+      /* 주문 ─ 마지막 뎁스: 주문조회 / 주문변경 / 주문취소 */
+      '주문 > 주문관리 > 배송현황확인 > 주문조회',
+      '주문 > 주문관리 > 입금확인 > 주문조회',
+      '주문 > 주문관리 > 주문상세보기 > 주문조회',
+      '주문 > 주문처리 > 수량변경 > 주문변경',
+      '주문 > 주문처리 > 옵션변경 > 주문변경',
+      '주문 > 주문처리 > 배송지변경 > 주문변경',
+      '주문 > 주문처리 > 전체취소 > 주문취소',
+      '주문 > 주문처리 > 오류주문 > 주문취소',
+      '주문 > 주문처리 > 품절취소 > 주문취소',
+      /* 결제 ─ 마지막 뎁스: 카드결제 / 간편결제 / 현금결제 / 결제취소 */
+      '결제 > 결제오류 > 승인실패 > 카드결제',
+      '결제 > 결제오류 > 한도초과 > 카드결제',
+      '결제 > 결제관리 > 할부변경 > 카드결제',
+      '결제 > 결제수단 > 네이버페이 > 간편결제',
+      '결제 > 결제수단 > 카카오페이 > 간편결제',
+      '결제 > 결제수단 > 무통장입금 > 현금결제',
+      '결제 > 결제관리 > 부분취소 > 결제취소',
+      /* 배송 ─ 마지막 뎁스: 배송현황 / 배송지연 / 배송지변경 / 해외배송 */
+      '배송 > 일반배송 > 택배추적 > 배송현황',
+      '배송 > 특수배송 > 새벽배송 > 배송현황',
+      '배송 > 특수배송 > 당일배송 > 배송현황',
+      '배송 > 배송추적 > 택배지연 > 배송지연',
+      '배송 > 배송추적 > 물류지연 > 배송지연',
+      '배송 > 배송추적 > 배송소요일',
+      '배송 > 배송정보 > 주소변경 > 배송지변경',
+      '배송 > 배송정보 > 수령인변경 > 배송지변경',
+      '배송 > 배송정보 > 관세문의 > 해외배송',
+      /* 교환/반품 ─ 마지막 뎁스: 사이즈교환 / 색상교환 / 불량교환 / 단순변심반품 / 상품불량 / 환불처리 / 수거문의 */
+      '교환/반품 > 교환처리 > 의류사이즈 > 사이즈교환',
+      '교환/반품 > 교환처리 > 신발사이즈 > 사이즈교환',
+      '교환/반품 > 교환처리 > 색상교환',
+      '교환/반품 > 교환처리 > 불량교환',
+      '교환/반품 > 반품처리 > 단순변심반품',
+      '교환/반품 > 반품처리 > 파손 > 상품불량',
+      '교환/반품 > 반품처리 > 오배송 > 상품불량',
+      '교환/반품 > 환불수거 > 환불지연 > 환불처리',
+      '교환/반품 > 환불수거 > 환불방법 > 환불처리',
+      '교환/반품 > 환불수거 > 수거일정 > 수거문의',
+      /* 회원/계정 ─ 마지막 뎁스: 로그인 / 회원정보 / 등급혜택 */
+      '회원/계정 > 계정관리 > 비밀번호찾기 > 로그인',
+      '회원/계정 > 회원관리 > 탈퇴문의 > 회원정보',
+      '회원/계정 > 회원관리 > 정보변경 > 회원정보',
+      '회원/계정 > 회원관리 > 등급조회 > 등급혜택',
+      /* 상품 ─ 마지막 뎁스: 상품정보 / 재입고 / 가격문의 */
+      '상품 > 상품조회 > 사이즈표 > 상품정보',
+      '상품 > 상품조회 > 소재성분 > 상품정보',
+      '상품 > 상품문의 > 재입고알림 > 재입고',
+      '상품 > 상품문의 > 할인정보 > 가격문의',
+      /* 프로모션 ─ 마지막 뎁스: 쿠폰 / 적립금 */
+      '프로모션 > 혜택관리 > 쿠폰오류 > 쿠폰',
+      '프로모션 > 혜택관리 > 쿠폰적용 > 쿠폰',
+      '프로모션 > 혜택관리 > 적립금사용 > 적립금',
+      /* A/S ─ 마지막 뎁스: A/S접수 / A/S진행 */
+      'A/S > A/S관리 > 의류수선 > A/S접수',
+      'A/S > A/S관리 > 비용문의 > A/S진행',
+      /* 고객불만 ─ 마지막 뎁스: 서비스불만 / 품질불만 / 보상요구 */
+      '고객불만 > 불만처리 > 응대불만 > 서비스불만',
+      '고객불만 > 불만처리 > 제품하자 > 품질불만',
+      '고객불만 > 불만처리 > 환불요구 > 보상요구',
+      /* 앱/웹사이트 ─ 대시보드 소분류에 없으므로 기존 구조 유지 */
+      '앱/웹사이트 > 시스템오류 > 앱오류 > 결제오류',
+      '앱/웹사이트 > 기능관리 > 기능문의 > 검색기능',
+      /* 카탈로그 ─ 대시보드 소분류에 없으므로 기존 구조 유지 */
+      '카탈로그 > 상품기획 > 신상품 > 사전예약'
     ];
 
-    const issuePool = [
-      ['배송지연','택배분실'],['상품불량','포장파손'],['환불지연','결제오류'],
-      ['사이즈불일치','교환지연'],['오배송','수량부족'],['응대불만','대기시간'],
-      ['쿠폰오류','적립금누락'],['로그인실패','개인정보'],['재입고지연','품절'],
-      ['반품거부','환불방법'],['배송지연','상품불량'],['결제오류','할부문제'],
-      ['포장불량','제품하자'],['택배지연','물류지연'],['사이즈교환','색상교환'],
-      ['반품지연','교환지연'],['배송','주문번호'],['사이즈','변경'],
-      ['제품','훼손'],['반품','환불'],['결제','적립금'],
-      ['배송지변경','주소'],['단순변심','교환'],['쿠폰','포인트'],
-      ['회원탈퇴','색상'],['재입고','상품명'],['사전예약','한정판'],
-      ['시즌오프','공동구매'],['라이브방송','사전예약']
-    ];
-
-    const transcriptTemplates = [
-      [
-        {speaker:'상담사',text:'안녕하세요, {team} {agent}입니다. 무엇을 도와드릴까요?'},
-        {speaker:'고객',text:'주문한 상품이 아직 안 왔어요. 주문번호 알려드릴게요.'},
-        {speaker:'상담사',text:'네, 주문번호 확인해보겠습니다.'},
-        {speaker:'고객',text:'배송이 너무 늦어서 불만이에요.'},
-        {speaker:'상담사',text:'확인해보니 택배사에서 지연이 발생한 것 같습니다.'},
-        {speaker:'고객',text:'그럼 언제쯤 받을 수 있나요?'},
-        {speaker:'상담사',text:'내일 중으로 배송 완료될 예정입니다.'},
-        {speaker:'고객',text:'빨리 보내주세요.'},
-        {speaker:'상담사',text:'네, 최대한 빠르게 처리하겠습니다. 더 도움 필요하신 게 있으실까요?'},
-        {speaker:'고객',text:'아니요, 감사합니다.'},
-        {speaker:'상담사',text:'감사합니다. 좋은 하루 되세요.'}
-      ],
-      [
-        {speaker:'상담사',text:'안녕하세요, {team} {agent}입니다.'},
-        {speaker:'고객',text:'받은 상품이 불량인데 교환하고 싶어요.'},
-        {speaker:'상담사',text:'불편을 드려 죄송합니다. 어떤 부분이 불량인가요?'},
-        {speaker:'고객',text:'지퍼 부분이 파손되어 있어요.'},
-        {speaker:'상담사',text:'사진을 보내주시면 빠르게 처리해드리겠습니다.'},
-        {speaker:'고객',text:'네, 지금 보내드릴게요.'},
-        {speaker:'상담사',text:'확인했습니다. 교환 접수 도와드리겠습니다.'},
-        {speaker:'고객',text:'수거는 언제 오나요?'},
-        {speaker:'상담사',text:'내일 오전 중 수거 예정입니다.'},
-        {speaker:'고객',text:'감사합니다.'}
-      ],
-      [
-        {speaker:'상담사',text:'안녕하세요, {team} {agent}입니다. 무엇을 도와드릴까요?'},
-        {speaker:'고객',text:'환불 신청했는데 아직 안 들어왔어요.'},
-        {speaker:'상담사',text:'주문번호 알려주시겠어요?'},
-        {speaker:'고객',text:'ORD-20250115-0042예요.'},
-        {speaker:'상담사',text:'확인해보겠습니다. 잠시만요.'},
-        {speaker:'고객',text:'결제 취소가 왜 이렇게 오래 걸리나요?'},
-        {speaker:'상담사',text:'카드사 처리에 영업일 기준 3~5일 소요됩니다.'},
-        {speaker:'고객',text:'알겠습니다.'},
-        {speaker:'상담사',text:'추가로 도움 필요하신 부분 있으신가요?'},
-        {speaker:'고객',text:'없습니다. 감사합니다.'}
-      ]
-    ];
-
-    const extractedKeywordPool = {
-      issue: ['배송지연','상품불량','환불지연','포장파손','오배송','결제오류','택배분실','교환지연','사이즈불일치','응대불만','대기시간','쿠폰오류','재고부족','품절안내','누락배송','이중결제','배송추적불가','상품파손','가격오류','수량불일치'],
-      consult: ['주문번호','배송조회','교환접수','반품접수','환불방법','결제확인','주문취소','주소변경','사이즈변경','적립금','회원탈퇴','비밀번호변경','쿠폰적용','카드결제','무통장입금','배송비확인','선물포장','수령인변경','출고일정','재입고알림'],
-      product: ['슬림조거팬츠','오버핏후드집업','울블렌드코트','레더미니스커트','와이드데님팬츠','베이직크루넥니트','하프집업맨투맨','코튼카고팬츠','퀼팅숏패딩','플리츠롱원피스','세미와이드슬랙스','브이넥가디건','라운드넥반팔티','스웨이드앵클부츠','캔버스토트백','나일론백팩','기모조거팬츠','크롭데님자켓','오버사이즈셔츠','리본플랫슈즈']
+    /* ── 스크립트 템플릿 (이슈/상담유형별 13종) ─────────────────────
+     *  [정책] 각 템플릿은 상담 스크립트(lines)와 AI 분석 결과(ai)를 포함한다.
+     *   - lines: 상담사-고객 대화 시나리오. 콜 상세 모달에서 스크립트로 표시된다.
+     *   - ai: LLM이 스크립트를 분석한 결과를 시뮬레이션한 객체.
+     *     · summary: 통화 요약 / actionNote: 처리 또는 후속 조치 내용
+     *     · rootCause: 근본 원인 / suggestedAction: 제안 조치
+     *     · category: 이슈 카테고리 / tags: 태그 배열
+     *     · flowPattern: 상담 흐름 패턴 ('즉시해결'|'콜백안내'|'에스컬레이션'|'정보안내')
+     *     · customerIntent: 고객 의도 (예: '배송확인','환불확인','결제처리')
+     *     · intentAchieved: 고객 의도 달성 여부 (boolean)
+     *     · keyUtterances: 핵심 발화 배열 [{text, reason}] — 모달 AI 분석에 인용
+     *     · riskFlags: 위험 신호 배열 (예: ['재인입위험','불만표현','이탈위험'])
+     *
+     *  [템플릿 종류] 13종
+     *   배송지연, 배송지연_미해결, 주문취소, 주문취소_미해결,
+     *   결제오류, 결제오류_시스템, 주문누락, 상품불량,
+     *   환불지연, 일반문의, 일반문의2, 재인입, 클레임
+     *
+     *  [정합성] orderNumScenario/restScenarioPool의 tpl 필드가 이 키와 매칭된다.
+     *   콜 생성 시 tpl로 템플릿을 선택하고, ai 객체를 콜의 aiAnalysis에 복사한다.
+     * ─────────────────────────────────────────────────────────── */
+    const scriptTemplates = {
+      배송지연: {
+        lines: [
+          {speaker:'상담사',text:'안녕하세요, {team} {agent}입니다. 무엇을 도와드릴까요?'},
+          {speaker:'고객',text:'주문한 상품이 아직 안 왔어요. 주문번호 알려드릴게요.'},
+          {speaker:'상담사',text:'네, 주문번호 확인해보겠습니다. 잠시만요.'},
+          {speaker:'고객',text:'배송 추적을 해봐도 업데이트가 안 되고 너무 늦어서요. 언제 오는 건가요?'},
+          {speaker:'상담사',text:'확인해보니 택배사에서 물류 지연이 발생한 것 같습니다.'},
+          {speaker:'고객',text:'그럼 언제쯤 받을 수 있나요?'},
+          {speaker:'상담사',text:'내일 중으로 배송 완료될 예정입니다. 불편을 드려 죄송합니다.'},
+          {speaker:'고객',text:'알겠습니다. 빨리 보내주세요.'},
+          {speaker:'상담사',text:'네, 최대한 빠르게 처리하겠습니다. 더 필요하신 게 있으실까요?'},
+          {speaker:'고객',text:'없습니다.'},
+          {speaker:'상담사',text:'감사합니다. 좋은 하루 되세요.'}
+        ],
+        ai: { summary:'고객이 주문번호를 제시하며 배송 지연을 문의. 물류사 지연 확인 후 내일 배송 예정 안내.', actionNote:'내일 배송 완료 예정 안내', rootCause:'물류사 배송 지연', suggestedAction:'물류사 SLA 점검 필요', category:'배송지연', tags:['배송지연','물류이슈'], flowPattern:'즉시해결', customerIntent:'배송확인', intentAchieved:true, keyUtterances:[{text:'주문한 상품이 아직 안 왔어요.',reason:'고객 핵심 불만 — 배송 지연 인지'},{text:'내일 중으로 배송 완료될 예정입니다.',reason:'상담사 즉시 해결 안내'}], riskFlags:[] }
+      },
+      배송지연_미해결: {
+        lines: [
+          {speaker:'상담사',text:'안녕하세요, {team} {agent}입니다. 무엇을 도와드릴까요?'},
+          {speaker:'고객',text:'주문번호 확인 좀 해주세요. 배송이 일주일째 안 와요.'},
+          {speaker:'상담사',text:'네, 주문번호 말씀해주시겠어요?'},
+          {speaker:'고객',text:'ORD-20250310-1234요.'},
+          {speaker:'상담사',text:'확인 중입니다. 잠시만 기다려주세요.'},
+          {speaker:'고객',text:'택배 추적이 안 되고 계속 배송중이라고만 나오는데 미배송 상태예요.'},
+          {speaker:'상담사',text:'택배사에 확인 요청을 넣어보겠습니다. 확인 후 연락드리겠습니다.'},
+          {speaker:'고객',text:'빨리 좀 해결해주세요.'},
+          {speaker:'상담사',text:'오늘 중으로 확인 후 연락드리겠습니다. 불편을 드려 죄송합니다.'},
+          {speaker:'고객',text:'네, 알겠습니다.'}
+        ],
+        ai: { summary:'고객이 일주일간 미배송 상태를 문의. 택배사 확인 요청 후 콜백 안내, 즉시 해결 불가.', actionNote:'택배사 확인 후 콜백 예정', rootCause:'물류사 배송 지연', suggestedAction:'물류사 SLA 점검 필요', category:'배송지연', tags:['배송지연','장기미배송'], flowPattern:'콜백안내', customerIntent:'배송확인', intentAchieved:false, keyUtterances:[{text:'택배 추적이 안 되고 계속 배송중이라고만 나오는데 미배송 상태예요.',reason:'고객 불만 심화 — 추적 불가 + 장기 미배송'},{text:'택배사에 확인 요청을 넣어보겠습니다.',reason:'즉시 해결 불가, 콜백 전환'}], riskFlags:['재인입위험'] }
+      },
+      주문취소: {
+        lines: [
+          {speaker:'상담사',text:'안녕하세요, {team} {agent}입니다.'},
+          {speaker:'고객',text:'주문 취소하고 싶어요. 주문번호 알려드릴게요.'},
+          {speaker:'상담사',text:'네, 주문번호 확인해보겠습니다.'},
+          {speaker:'고객',text:'아직 취소가 안 된 것 같은데 확인 좀 해주세요.'},
+          {speaker:'상담사',text:'확인해보니 현재 취소 처리 중입니다. 영업일 기준 1~2일 소요됩니다.'},
+          {speaker:'고객',text:'왜 이렇게 오래 걸리나요?'},
+          {speaker:'상담사',text:'결제 수단에 따라 처리 시간이 다를 수 있습니다. 빠르게 처리되도록 하겠습니다.'},
+          {speaker:'고객',text:'알겠습니다.'},
+          {speaker:'상담사',text:'취소 완료되면 안내 문자 발송해드리겠습니다. 더 필요하신 게 있으실까요?'},
+          {speaker:'고객',text:'없습니다. 감사합니다.'}
+        ],
+        ai: { summary:'고객이 주문 취소 후 미처리 상태를 문의. 처리 중 확인, 소요 기간 안내.', actionNote:'취소 처리 중 확인, 완료 시 문자 안내 예정', rootCause:'취소 처리 지연', suggestedAction:'취소 처리 자동화 검토', category:'주문취소지연', tags:['주문취소','처리지연'], flowPattern:'즉시해결', customerIntent:'주문취소확인', intentAchieved:true, keyUtterances:[{text:'아직 취소가 안 된 것 같은데 확인 좀 해주세요.',reason:'취소 처리 지연에 대한 고객 우려'},{text:'취소 완료되면 안내 문자 발송해드리겠습니다.',reason:'후속 안내 약속으로 불안 해소'}], riskFlags:[] }
+      },
+      주문취소_미해결: {
+        lines: [
+          {speaker:'상담사',text:'안녕하세요, {team} {agent}입니다.'},
+          {speaker:'고객',text:'주문번호 확인해주세요. 취소한 지 3일인데 아직 환불이 안 됐어요.'},
+          {speaker:'상담사',text:'확인해보겠습니다. 잠시만요.'},
+          {speaker:'고객',text:'취소는 바로 되는 거 아닌가요?'},
+          {speaker:'상담사',text:'시스템 확인 결과 취소 요청이 대기 중인 상태입니다. 담당 부서에 확인 요청 넣어보겠습니다.'},
+          {speaker:'고객',text:'빨리 처리해주세요.'},
+          {speaker:'상담사',text:'확인 후 오늘 중 연락드리겠습니다. 불편을 드려 죄송합니다.'},
+          {speaker:'고객',text:'네.'}
+        ],
+        ai: { summary:'고객이 취소 후 3일간 미환불 상태 문의. 시스템 대기 상태 확인, 담당부서 확인 요청.', actionNote:'담당 부서 확인 후 콜백 예정', rootCause:'취소 처리 시스템 지연', suggestedAction:'취소 처리 자동화 검토', category:'주문취소지연', tags:['주문취소','환불지연'], flowPattern:'콜백안내', customerIntent:'환불확인', intentAchieved:false, keyUtterances:[{text:'취소한 지 3일인데 아직 환불이 안 됐어요.',reason:'처리 기한 초과에 대한 고객 불만'},{text:'담당 부서에 확인 요청 넣어보겠습니다.',reason:'즉시 해결 불가, 에스컬레이션 전환'}], riskFlags:['불만표현'] }
+      },
+      결제오류: {
+        lines: [
+          {speaker:'상담사',text:'안녕하세요, {team} {agent}입니다. 무엇을 도와드릴까요?'},
+          {speaker:'고객',text:'결제가 계속 실패해요. 주문번호 확인해주세요.'},
+          {speaker:'상담사',text:'어떤 결제 수단을 사용하고 계신가요?'},
+          {speaker:'고객',text:'신용카드로 하고 있는데 승인이 안 돼요.'},
+          {speaker:'상담사',text:'카드 한도나 유효기간을 확인해보시겠어요? 혹시 다른 카드나 간편결제도 가능하십니다.'},
+          {speaker:'고객',text:'다른 카드로 해볼게요.'},
+          {speaker:'상담사',text:'네, 그래도 안 되시면 다시 연락 주세요. 도움 드리겠습니다.'},
+          {speaker:'고객',text:'네, 감사합니다.'}
+        ],
+        ai: { summary:'고객 결제 승인 실패 문의. 카드 한도 확인 안내 및 대체 결제 수단 제안.', actionNote:'대체 결제 수단 안내', rootCause:'카드 한도 초과', suggestedAction:'결제 오류 패턴 모니터링', category:'결제오류', tags:['결제오류','카드승인실패'], flowPattern:'즉시해결', customerIntent:'결제처리', intentAchieved:true, keyUtterances:[{text:'결제가 계속 실패해요.',reason:'결제 장애 신고'},{text:'다른 카드나 간편결제도 가능하십니다.',reason:'대안 제시로 즉시 해결 유도'}], riskFlags:[] }
+      },
+      결제오류_시스템: {
+        lines: [
+          {speaker:'상담사',text:'안녕하세요, {team} {agent}입니다.'},
+          {speaker:'고객',text:'결제 페이지에서 오류가 나요. 주문번호도 안 나와요.'},
+          {speaker:'상담사',text:'어떤 오류 메시지가 나오시나요?'},
+          {speaker:'고객',text:'결제 처리 중 오류가 발생했다고만 나와요.'},
+          {speaker:'상담사',text:'현재 결제 시스템 점검이 진행 중일 수 있습니다. 잠시 후 다시 시도해주시겠어요?'},
+          {speaker:'고객',text:'언제쯤 되나요?'},
+          {speaker:'상담사',text:'현재 기술팀에서 확인 중이며, 1시간 내 정상화 예정입니다.'},
+          {speaker:'고객',text:'알겠습니다.'},
+          {speaker:'상담사',text:'불편을 드려 죄송합니다. 정상화되면 안내 드리겠습니다.'}
+        ],
+        ai: { summary:'고객 결제 페이지 오류 문의. PG사 시스템 점검 중 확인, 1시간 내 정상화 예정 안내.', actionNote:'시스템 정상화 후 재시도 안내', rootCause:'PG사 일시 장애', suggestedAction:'PG사 연계 점검', category:'결제오류', tags:['결제오류','시스템장애'], flowPattern:'정보안내', customerIntent:'결제처리', intentAchieved:false, keyUtterances:[{text:'결제 페이지에서 오류가 나요.',reason:'시스템 장애 신고'},{text:'현재 기술팀에서 확인 중이며, 1시간 내 정상화 예정입니다.',reason:'시스템 장애 안내, 고객 대기 요청'}], riskFlags:[] }
+      },
+      주문누락: {
+        lines: [
+          {speaker:'상담사',text:'안녕하세요, {team} {agent}입니다. 무엇을 도와드릴까요?'},
+          {speaker:'고객',text:'입금했는데 주문이 안 잡혀있어요. 주문번호도 없어요.'},
+          {speaker:'상담사',text:'입금하신 계좌와 금액을 확인해볼게요.'},
+          {speaker:'고객',text:'무통장입금으로 했는데 확인이 안 되나 봐요.'},
+          {speaker:'상담사',text:'입금 내역은 확인됩니다. 시스템에 주문이 누락된 것 같습니다. 수동으로 등록해드리겠습니다.'},
+          {speaker:'고객',text:'네, 감사합니다. 배송은 언제쯤 될까요?'},
+          {speaker:'상담사',text:'주문 등록 후 1~2일 내 출고 예정입니다.'},
+          {speaker:'고객',text:'알겠습니다.'},
+          {speaker:'상담사',text:'처리 완료되면 안내 문자 드리겠습니다.'}
+        ],
+        ai: { summary:'고객 입금 완료 후 주문 미등록 상태. 시스템 누락 확인, 수동 등록 처리.', actionNote:'수동 주문 등록 처리 완료', rootCause:'입금 확인 시스템 연동 오류', suggestedAction:'입금-주문 연동 시스템 점검', category:'주문누락', tags:['주문누락','시스템오류'], flowPattern:'즉시해결', customerIntent:'주문확인', intentAchieved:true, keyUtterances:[{text:'입금했는데 주문이 안 잡혀있어요.',reason:'입금-주문 불일치 핵심 문제'},{text:'시스템에 주문이 누락된 것 같습니다. 수동으로 등록해드리겠습니다.',reason:'즉시 해결 조치'}], riskFlags:[] }
+      },
+      상품불량: {
+        lines: [
+          {speaker:'상담사',text:'안녕하세요, {team} {agent}입니다.'},
+          {speaker:'고객',text:'받은 상품이 불량인데 교환하고 싶어요.'},
+          {speaker:'상담사',text:'불편을 드려 죄송합니다. 어떤 부분이 불량인가요?'},
+          {speaker:'고객',text:'지퍼 부분이 파손되어 있어요.'},
+          {speaker:'상담사',text:'사진을 보내주시면 빠르게 처리해드리겠습니다.'},
+          {speaker:'고객',text:'네, 지금 보내드릴게요.'},
+          {speaker:'상담사',text:'확인했습니다. 교환 접수 도와드리겠습니다.'},
+          {speaker:'고객',text:'수거는 언제 오나요?'},
+          {speaker:'상담사',text:'내일 오전 중 수거 예정입니다.'},
+          {speaker:'고객',text:'감사합니다.'}
+        ],
+        ai: { summary:'고객이 상품 지퍼 파손 불량 신고. 사진 확인 후 교환 접수, 내일 수거 안내.', actionNote:'교환 접수 완료, 내일 수거', rootCause:'제조 품질 불량', suggestedAction:'입고 검수 프로세스 점검', category:'상품불량', tags:['상품불량','교환접수'], flowPattern:'즉시해결', customerIntent:'교환요청', intentAchieved:true, keyUtterances:[{text:'지퍼 부분이 파손되어 있어요.',reason:'불량 사유 특정'},{text:'교환 접수 도와드리겠습니다.',reason:'즉시 교환 처리'}], riskFlags:[] }
+      },
+      환불지연: {
+        lines: [
+          {speaker:'상담사',text:'안녕하세요, {team} {agent}입니다. 무엇을 도와드릴까요?'},
+          {speaker:'고객',text:'환불 신청했는데 아직 안 들어왔어요.'},
+          {speaker:'상담사',text:'주문번호 알려주시겠어요?'},
+          {speaker:'고객',text:'ORD-20250115-0042예요.'},
+          {speaker:'상담사',text:'확인해보겠습니다. 잠시만요.'},
+          {speaker:'고객',text:'결제 취소가 왜 이렇게 오래 걸리나요?'},
+          {speaker:'상담사',text:'카드사 처리에 영업일 기준 3~5일 소요됩니다. 현재 카드사에서 처리 중입니다.'},
+          {speaker:'고객',text:'알겠습니다.'},
+          {speaker:'상담사',text:'추가로 도움 필요하신 부분 있으신가요?'},
+          {speaker:'고객',text:'없습니다. 감사합니다.'}
+        ],
+        ai: { summary:'고객 환불 미입금 문의. 카드사 처리 중 확인, 영업일 3~5일 소요 안내.', actionNote:'카드사 처리 중 안내', rootCause:'카드사 환불 처리 기간', suggestedAction:'환불 처리 자동화 및 기한 단축', category:'환불지연', tags:['환불지연','카드사처리'], flowPattern:'정보안내', customerIntent:'환불확인', intentAchieved:true, keyUtterances:[{text:'환불 신청했는데 아직 안 들어왔어요.',reason:'환불 미입금 문의'},{text:'카드사 처리에 영업일 기준 3~5일 소요됩니다.',reason:'처리 기한 안내로 고객 불안 해소'}], riskFlags:[] }
+      },
+      일반문의: {
+        lines: [
+          {speaker:'상담사',text:'안녕하세요, {team} {agent}입니다. 무엇을 도와드릴까요?'},
+          {speaker:'고객',text:'주문번호 확인 좀 해주세요. 배송 어디까지 왔는지 궁금해서요.'},
+          {speaker:'상담사',text:'네, 주문번호 말씀해주시겠어요?'},
+          {speaker:'고객',text:'ORD-20250318-0088이요.'},
+          {speaker:'상담사',text:'확인해보겠습니다. 현재 배송 중이며 오늘 도착 예정입니다.'},
+          {speaker:'고객',text:'감사합니다. 시간대는 알 수 있나요?'},
+          {speaker:'상담사',text:'오후 2시에서 6시 사이 도착 예정입니다.'},
+          {speaker:'고객',text:'네, 감사합니다.'},
+          {speaker:'상담사',text:'좋은 하루 되세요.'}
+        ],
+        ai: { summary:'고객 주문번호 제시 후 배송 현황 조회. 정상 배송 중 확인, 오늘 도착 예정 안내.', actionNote:'배송 현황 정상 안내', rootCause:null, suggestedAction:null, category:null, tags:[], flowPattern:'정보안내', customerIntent:'배송확인', intentAchieved:true, keyUtterances:[{text:'배송 어디까지 왔는지 궁금해서요.',reason:'단순 배송 현황 조회'},{text:'현재 배송 중이며 오늘 도착 예정입니다.',reason:'정상 배송 상태 안내'}], riskFlags:[] }
+      },
+      일반문의2: {
+        lines: [
+          {speaker:'상담사',text:'안녕하세요, {team} {agent}입니다.'},
+          {speaker:'고객',text:'쿠폰이 적용이 안 되는데 확인해주세요.'},
+          {speaker:'상담사',text:'어떤 쿠폰을 사용하고 계신가요?'},
+          {speaker:'고객',text:'신규 가입 10% 할인 쿠폰이요.'},
+          {speaker:'상담사',text:'확인해보니 해당 쿠폰은 5만원 이상 구매 시 적용 가능합니다.'},
+          {speaker:'고객',text:'아, 그렇군요. 감사합니다.'},
+          {speaker:'상담사',text:'추가 문의 사항 있으시면 언제든 연락 주세요.'}
+        ],
+        ai: { summary:'고객 쿠폰 미적용 문의. 최소 구매 조건 미충족 확인, 조건 안내.', actionNote:'쿠폰 적용 조건 안내', rootCause:null, suggestedAction:null, category:null, tags:[], flowPattern:'정보안내', customerIntent:'쿠폰적용확인', intentAchieved:true, keyUtterances:[{text:'쿠폰이 적용이 안 되는데 확인해주세요.',reason:'쿠폰 미적용 문의'},{text:'해당 쿠폰은 5만원 이상 구매 시 적용 가능합니다.',reason:'적용 조건 안내'}], riskFlags:[] }
+      },
+      재인입: {
+        lines: [
+          {speaker:'상담사',text:'안녕하세요, {team} {agent}입니다.'},
+          {speaker:'고객',text:'지난번에도 전화드렸는데요. 아직 해결이 안 됐어요.'},
+          {speaker:'상담사',text:'죄송합니다. 어떤 건으로 문의하셨었나요?'},
+          {speaker:'고객',text:'배송 추적도 안 되고 미배송 상태인 건이요. 주문번호 알려드릴게요.'},
+          {speaker:'상담사',text:'확인해보겠습니다. 이전 상담 이력도 확인할게요.'},
+          {speaker:'고객',text:'저번에도 확인해본다고 했는데 연락이 없었어요. 추적이 계속 안 돼요.'},
+          {speaker:'상담사',text:'정말 죄송합니다. 이번에는 제가 직접 택배사에 확인하고 오늘 중 결과를 안내드리겠습니다.'},
+          {speaker:'고객',text:'꼭 연락 주세요.'},
+          {speaker:'상담사',text:'네, 반드시 오늘 중 연락드리겠습니다.'}
+        ],
+        ai: { summary:'재인입 고객. 이전 상담 후 미처리 상태로 재문의. 택배사 직접 확인 후 콜백 약속.', actionNote:'택배사 직접 확인 후 당일 콜백 약속', rootCause:'이전 상담 후속 조치 미이행', suggestedAction:'재인입 콜 후속 조치 이행 점검', category:'배송지연', tags:['재인입','후속조치미이행'], flowPattern:'콜백안내', customerIntent:'배송확인', intentAchieved:false, keyUtterances:[{text:'지난번에도 전화드렸는데요. 아직 해결이 안 됐어요.',reason:'재인입 — 이전 상담 미이행 불만'},{text:'저번에도 확인해본다고 했는데 연락이 없었어요.',reason:'후속 조치 미이행 직접 지적'}], riskFlags:['재인입위험','불만표현'] }
+      },
+      클레임: {
+        lines: [
+          {speaker:'상담사',text:'안녕하세요, {team} {agent}입니다.'},
+          {speaker:'고객',text:'상품이 파손돼서 왔는데 보상은 어떻게 되나요?'},
+          {speaker:'상담사',text:'불편을 드려 정말 죄송합니다. 상품 상태를 확인해볼게요.'},
+          {speaker:'고객',text:'사진 보냈어요. 박스도 찌그러져 있고 상품도 깨져 있어요.'},
+          {speaker:'상담사',text:'확인했습니다. 교환 또는 환불 처리 도와드리겠습니다. 추가로 보상 쿠폰도 발급해드리겠습니다.'},
+          {speaker:'고객',text:'쿠폰 말고 제대로 된 보상을 원합니다.'},
+          {speaker:'상담사',text:'고객님의 의견을 담당 부서에 전달하겠습니다. 확인 후 연락드리겠습니다.'},
+          {speaker:'고객',text:'빨리 처리해주세요.'},
+          {speaker:'상담사',text:'최대한 빠르게 처리하겠습니다.'}
+        ],
+        ai: { summary:'고객 상품 파손 보상 요구. 교환/환불 및 쿠폰 제안했으나 추가 보상 요구, 담당부서 에스컬레이션.', actionNote:'담당 부서 에스컬레이션', rootCause:'배송 중 파손', suggestedAction:'포장 강화 및 보상 정책 검토', category:'상품불량', tags:['클레임','보상요구','에스컬레이션'], flowPattern:'에스컬레이션', customerIntent:'보상요구', intentAchieved:false, keyUtterances:[{text:'쿠폰 말고 제대로 된 보상을 원합니다.',reason:'보상 수준 불만 — 에스컬레이션 트리거'},{text:'고객님의 의견을 담당 부서에 전달하겠습니다.',reason:'에스컬레이션 전환'}], riskFlags:['불만표현','이탈위험'] }
+      }
     };
 
-    /* 더미데이터 생성 */
+    /* [정책] 키워드 풀 — 대시보드(ta-dashboard.html)의 랭킹 데이터와 정합성 유지
+     *   - issue: 대시보드 이슈 키워드 5종(반품지연 등)을 앞쪽에 배치 + 기존 이슈 키워드
+     *   - product: 대시보드 상품 랭킹 5종 + 기존 자체 상품명
+     *   - consult: 대시보드 신규 키워드(사전예약 등) + 기존 상담 키워드 */
+    const extractedKeywordPool = {
+      issue: ['반품지연','상품불량','환불지연','오배송','포장파손','배송지연','결제오류','택배분실','교환지연','사이즈불일치','응대불만','대기시간','쿠폰오류','재고부족','품절안내','누락배송','이중결제','배송추적불가','상품파손','가격오류','수량불일치'],
+      consult: ['사전예약','시즌오프','한정판','공동구매','라이브방송','주문번호','배송조회','교환접수','반품접수','환불방법','결제확인','주문취소','주소변경','사이즈변경','적립금','회원탈퇴','비밀번호변경','쿠폰적용','카드결제','무통장입금','배송비확인','선물포장','수령인변경','출고일정','재입고알림'],
+      product: ['캐시미어코트','오버핏패딩','울블렌드자켓','린넨셔츠','실크블라우스','슬림조거팬츠','오버핏후드집업','울블렌드코트','레더미니스커트','와이드데님팬츠','베이직크루넥니트','하프집업맨투맨','코튼카고팬츠','퀼팅숏패딩','플리츠롱원피스','세미와이드슬랙스','브이넥가디건','라운드넥반팔티','스웨이드앵클부츠','캔버스토트백']
+    };
+
+    /* ── 주문번호 25건 시나리오 정의 ──────────────────────────────
+     *  [정책] 대시보드에서 "주문번호" 키워드 클릭 시 필터링되는 콜 25건.
+     *   - 각 콜은 tpl(스크립트템플릿), issues(이슈키워드), ct(상담유형 전체뎁스),
+     *     hour(시간대)를 1:1로 지정하여 분석 시나리오의 정합성을 보장한다.
+     *
+     *  [분포 설계]
+     *   - 배송지연: 15건 (7건 처리 완료, 8건 후속 조치 필요) → 최다 이슈로 부각
+     *   - 주문취소: 4건 (2건 처리 완료, 2건 후속 조치 필요)
+     *   - 결제오류: 3건 (2건 일반, 1건 시스템)
+     *   - 주문누락: 1건
+     *   - 일반문의(이슈없음): 10건 → 단순 주문번호 조회
+     *   - 시간대: 9~16시에 분포, 9~11시에 집중 → AI 분석에서 피크 시간대 검출
+     *
+     *  [연동] generateCallData() 에서 i=1~25일 때 이 배열의 [i-1]을 사용한다.
+     * ─────────────────────────────────────────────────────────── */
+    const orderNumScenario = [
+      /* 배송지연 7건: 마지막 뎁스=배송지연/배송현황 */
+      { tpl:'배송지연', issues:['배송지연'], ct:'배송 > 배송추적 > 택배지연 > 배송지연', hour:9 },
+      { tpl:'배송지연', issues:['배송지연','택배분실'], ct:'배송 > 배송추적 > 물류지연 > 배송지연', hour:9 },
+      { tpl:'배송지연_미해결', issues:['배송지연'], ct:'배송 > 배송추적 > 택배지연 > 배송지연', hour:10 },
+      { tpl:'배송지연', issues:['배송지연'], ct:'배송 > 일반배송 > 택배추적 > 배송현황', hour:10 },
+      { tpl:'배송지연_미해결', issues:['배송지연'], ct:'배송 > 배송추적 > 물류지연 > 배송지연', hour:11 },
+      { tpl:'배송지연', issues:['배송지연'], ct:'배송 > 일반배송 > 택배추적 > 배송현황', hour:9 },
+      { tpl:'배송지연_미해결', issues:['배송지연','배송추적불가'], ct:'배송 > 배송추적 > 택배지연 > 배송지연', hour:14 },
+      /* 주문취소 4건: 마지막 뎁스=주문취소 */
+      { tpl:'주문취소', issues:['주문취소지연'], ct:'주문 > 주문처리 > 전체취소 > 주문취소', hour:10 },
+      { tpl:'주문취소_미해결', issues:['주문취소지연','환불지연'], ct:'주문 > 주문처리 > 전체취소 > 주문취소', hour:11 },
+      { tpl:'주문취소', issues:['주문취소지연'], ct:'주문 > 주문처리 > 오류주문 > 주문취소', hour:9 },
+      { tpl:'주문취소_미해결', issues:['주문취소지연'], ct:'주문 > 주문처리 > 품절취소 > 주문취소', hour:14 },
+      /* 결제오류 3건: 마지막 뎁스=카드결제, 앱오류=기존 유지 */
+      { tpl:'결제오류', issues:['결제오류'], ct:'결제 > 결제오류 > 승인실패 > 카드결제', hour:10 },
+      { tpl:'결제오류_시스템', issues:['결제오류'], ct:'앱/웹사이트 > 시스템오류 > 앱오류 > 결제오류', hour:11 },
+      { tpl:'결제오류', issues:['결제오류'], ct:'결제 > 결제오류 > 승인실패 > 카드결제', hour:15 },
+      /* 주문누락 1건: 마지막 뎁스=주문조회 */
+      { tpl:'주문누락', issues:['주문누락'], ct:'주문 > 주문관리 > 입금확인 > 주문조회', hour:9 },
+      /* 일반문의 10건: 마지막 뎁스=주문조회/주문변경/배송현황/배송지변경/배송소요일 */
+      { tpl:'일반문의', issues:[], ct:'주문 > 주문관리 > 배송현황확인 > 주문조회', hour:9 },
+      { tpl:'일반문의', issues:[], ct:'주문 > 주문관리 > 배송현황확인 > 주문조회', hour:10 },
+      { tpl:'일반문의', issues:[], ct:'주문 > 주문관리 > 주문상세보기 > 주문조회', hour:11 },
+      { tpl:'일반문의', issues:[], ct:'배송 > 일반배송 > 택배추적 > 배송현황', hour:14 },
+      { tpl:'일반문의', issues:[], ct:'주문 > 주문관리 > 배송현황확인 > 주문조회', hour:15 },
+      { tpl:'일반문의', issues:[], ct:'주문 > 주문처리 > 배송지변경 > 주문변경', hour:12 },
+      { tpl:'일반문의', issues:[], ct:'배송 > 배송정보 > 주소변경 > 배송지변경', hour:13 },
+      { tpl:'일반문의', issues:[], ct:'주문 > 주문관리 > 배송현황확인 > 주문조회', hour:16 },
+      { tpl:'일반문의', issues:[], ct:'주문 > 주문처리 > 수량변경 > 주문변경', hour:11 },
+      { tpl:'일반문의', issues:[], ct:'배송 > 배송추적 > 배송소요일', hour:10 }
+    ];
+
+    /* ── 나머지 75건용 가중치 풀 ──────────────────────────────────
+     *  [정책] 주문번호 25건을 제외한 나머지 75건을 생성할 때 사용.
+     *   - weight 값에 비례하여 가중 랜덤으로 시나리오를 선택한다.
+     *   - ctPrefix로 상담유형 목록(consultationTypes)에서 해당 대분류로
+     *     시작하는 항목 중 랜덤으로 상담유형을 배정한다.
+     *   - 이슈 키워드가 빈 배열이면 이슈 없는 일반 상담이 된다.
+     *   - 이 75건은 기본(default) 시나리오 AI 분석에 반영된다.
+     * ─────────────────────────────────────────────────────────── */
+    /* [정책] 대시보드 이슈 키워드 5종(반품지연/상품불량/환불지연/오배송/포장파손)을
+     *  높은 weight로 배치하여 75건 중 충분히 생성되도록 보장 */
+    const restScenarioPool = [
+      { tpl:'배송지연', issues:['배송지연'], ctPrefix:'배송', weight:8 },
+      { tpl:'배송지연_미해결', issues:['배송지연','택배분실'], ctPrefix:'배송', weight:4 },
+      { tpl:'상품불량', issues:['상품불량','포장파손'], ctPrefix:'교환/반품', weight:6 },
+      { tpl:'클레임', issues:['상품불량','포장파손'], ctPrefix:'고객불만', weight:2 },
+      { tpl:'환불지연', issues:['환불지연'], ctPrefix:'교환/반품', weight:5 },
+      { tpl:'환불지연', issues:['반품지연'], ctPrefix:'교환/반품', weight:6 },
+      { tpl:'상품불량', issues:['오배송'], ctPrefix:'교환/반품', weight:5 },
+      { tpl:'환불지연', issues:['반품지연','환불지연'], ctPrefix:'교환/반품', weight:4 },
+      { tpl:'상품불량', issues:['오배송','포장파손'], ctPrefix:'교환/반품', weight:3 },
+      { tpl:'결제오류', issues:['결제오류'], ctPrefix:'결제', weight:4 },
+      { tpl:'결제오류_시스템', issues:['결제오류'], ctPrefix:'앱/웹사이트', weight:2 },
+      { tpl:'주문취소', issues:['주문취소지연'], ctPrefix:'주문', weight:3 },
+      { tpl:'재인입', issues:['배송지연'], ctPrefix:'배송', weight:3 },
+      { tpl:'일반문의', issues:[], ctPrefix:'주문', weight:6 },
+      { tpl:'일반문의', issues:[], ctPrefix:'상품', weight:3 },
+      { tpl:'일반문의2', issues:[], ctPrefix:'프로모션', weight:2 },
+      { tpl:'일반문의', issues:[], ctPrefix:'회원/계정', weight:2 },
+      { tpl:'일반문의2', issues:[], ctPrefix:'배송', weight:4 },
+      { tpl:'상품불량', issues:['사이즈불일치','교환지연'], ctPrefix:'교환/반품', weight:3 },
+      { tpl:'환불지연', issues:['환불지연','결제오류'], ctPrefix:'교환/반품', weight:2 },
+      { tpl:'클레임', issues:['응대불만','대기시간'], ctPrefix:'고객불만', weight:2 }
+    ];
+
+    /* ── 스크립트 기반 상태 판정 ──────────────────────────────────
+     *  [정책] 실제 운영에서는 LLM이 스크립트 전문을 분석하여 처리 상태를 판단한다.
+     *   프로토타입에서는 상담사 발화의 키워드 매칭으로 시뮬레이션한다.
+     *   에스컬레이션 구조는 납품 업체별로 상이할 수 있어 범용 키워드 기준을 적용한다.
+     *
+     *  [판정 기준]
+     *   - 상담사 발화를 역순으로 탐색하여 "후속 조치 필요" 키워드가 먼저 발견되면
+     *     status='followup', 그렇지 않으면 status='completed'로 판정한다.
+     *
+     *  [후속 조치 필요 키워드]
+     *   "확인 후 연락", "확인 후 결과", "확인하고", "콜백",
+     *   "담당 부서", "담당부서", "에스컬레이션", "전달하겠",
+     *   "확인 요청", "정상화 예정", "오늘 중 연락", "오늘 중 결과",
+     *   "정상화되면", "재시도"
+     *
+     *  [처리 완료 키워드] (후속 조치 키워드가 없을 때 적용)
+     *   "처리 완료", "접수 완료", "등록 처리", "교환 접수",
+     *   "더 필요하신", "좋은 하루", "도움 드리겠"
+     *
+     *  [반환값] 'completed' | 'followup'
+     * ─────────────────────────────────────────────────────────── */
+    function analyzeTranscript(lines) {
+      const followupPatterns = [
+        '확인 후 연락', '확인 후 결과', '확인하고', '콜백',
+        '담당 부서', '담당부서', '에스컬레이션', '전달하겠',
+        '확인 요청', '정상화 예정', '오늘 중 연락', '오늘 중 결과',
+        '정상화되면', '재시도'
+      ];
+      const agentLines = lines
+        .filter(l => l.speaker === '상담사')
+        .map(l => l.text);
+      for (let i = agentLines.length - 1; i >= 0; i--) {
+        const text = agentLines[i];
+        if (followupPatterns.some(p => text.includes(p))) return 'followup';
+      }
+      return 'completed';
+    }
+
+    /* ── 더미데이터 생성 ─────────────────────────────────────────
+     *  [정책] 총 100건의 콜 데이터를 생성한다.
+     *   - i=1~25: 주문번호 시나리오 (orderNumScenario[i-1]로 확정 매핑)
+     *   - i=26~100: restScenarioPool에서 가중 랜덤 선택
+     *
+     *  [콜 데이터 구조] 각 콜 객체의 주요 필드:
+     *   callId        : "TA-20XX-XXXX" 형식의 고유 ID
+     *   dateTime      : 콜 발생 일시 (최근 30일 내 랜덤)
+     *   center/team   : 센터명/팀명 (주문번호 시나리오는 서울센터 편중)
+     *   agent/empId   : 상담사명/사번
+     *   consultationType : 상담유형 (3~4뎁스 전체 경로)
+     *   duration      : 통화시간 (MM:SS)
+     *   callType      : I/B 또는 O/B (주문번호 시나리오는 I/B 70%)
+     *   reentry       : 재인입 횟수 (1=최초, 2이상=재인입)
+     *   silenceTime   : 묵음시간 (MM:SS)
+     *   issueKeywords : 이슈 키워드 배열 (빈 배열이면 이슈 없음)
+     *   consultKeywords : 상담 키워드 배열
+     *   transcript    : 상담 스크립트 라인 배열 (speaker + text)
+     *   extractedKeywords : { consultation:[], issue:[] } 추출 키워드
+     *   aiAnalysis    : AI(LLM) 분석 시뮬레이션 객체
+     *     · summary, status('completed'|'followup'), actionNote, rootCause
+     *     · suggestedAction, category, tags, agentEval
+     *   hasKeyword('주문번호') : 주문번호 시나리오 콜만 true
+     * ─────────────────────────────────────────────────────────── */
     function generateCallData() {
+      /* 시드 기반 난수 생성기 — 새로고침해도 동일한 데이터를 보장한다 */
+      let _seed = 20250318;
+      function rng() {
+        _seed = (_seed * 16807 + 0) % 2147483647;
+        return (_seed - 1) / 2147483646;
+      }
+
       const data = [];
+      const pick = (arr, n) => [...arr].sort(() => 0.5 - rng()).slice(0, n);
+      const mkKw = (pool, n, tLen) => pick(pool, n).map(name => ({
+        name, count: Math.floor(rng() * 4) + 1,
+        transcriptIdx: Array.from({length: Math.floor(rng() * 3) + 1}, () => Math.floor(rng() * tLen))
+      }));
+
+      const weightedPick = (pool) => {
+        const total = pool.reduce((s, p) => s + p.weight, 0);
+        let r = rng() * total;
+        for (const p of pool) { r -= p.weight; if (r <= 0) return p; }
+        return pool[pool.length - 1];
+      };
+
+      const findCt = (prefix) => {
+        const matches = consultationTypes.filter(ct => ct.startsWith(prefix));
+        return matches.length > 0 ? matches[Math.floor(rng() * matches.length)] : consultationTypes[0];
+      };
+
+      const makeSilence = (durTotalSec, tLen) => {
+        const count = Math.floor(rng() * 3) + 2;
+        const segs = []; const used = new Set();
+        for (let s = 0; s < count; s++) {
+          const mx = Math.max(10, durTotalSec - 15);
+          let st, att = 0;
+          do { st = Math.floor(rng() * mx) + 5; att++; } while (used.has(Math.floor(st / 30)) && att < 20);
+          used.add(Math.floor(st / 30));
+          const d = Math.floor(rng() * 12) + 3;
+          const en = Math.min(st + d, durTotalSec);
+          segs.push({ startTime:`${Math.floor(st/60)}:${String(st%60).padStart(2,'0')}`, endTime:`${Math.floor(en/60)}:${String(en%60).padStart(2,'0')}`, duration:en-st, transcriptIdx:Math.max(0,Math.min(Math.floor(st/30),tLen-1)) });
+        }
+        segs.sort((a,b) => a.startTime.localeCompare(b.startTime));
+        return segs;
+      };
+
+      /* 시간대 분포 (나머지 75건) — 오전 피크 보장 */
+      const hourDist = [8,9,9,9,9,10,10,10,10,11,11,11,12,12,13,13,14,14,14,15,15,15,16,16,17];
+
       for (let i = 1; i <= 100; i++) {
-        const ci = Math.floor(Math.random() * centers.length);
-        const c = centers[ci];
-        const team = c.teams[Math.floor(Math.random() * c.teams.length)];
-        const agent = agents[Math.floor(Math.random() * agents.length)];
-        const ct = consultationTypes[Math.floor(Math.random() * consultationTypes.length)];
-        const issues = issuePool[Math.floor(Math.random() * issuePool.length)];
-        const tpl = transcriptTemplates[Math.floor(Math.random() * transcriptTemplates.length)];
-        const day = String(Math.floor(Math.random() * 28) + 1).padStart(2, '0');
-        const hour = String(Math.floor(Math.random() * 10) + 8).padStart(2, '0');
-        const min = String(Math.floor(Math.random() * 60)).padStart(2, '0');
-        /* 초과콜 확인용 다양한 통화시간 분포 */
-        const durRand = Math.random();
+        const isOrderNum = i <= 25;
+        let scenario, ct, hour, issues, center, team, agent, reentry, callType;
+
+        if (isOrderNum) {
+          const s = orderNumScenario[i - 1];
+          scenario = scriptTemplates[s.tpl];
+          ct = s.ct;
+          hour = s.hour;
+          issues = s.issues;
+          const ci = rng() < 0.52 ? 0 : (rng() < 0.6 ? 1 : 2);
+          const c = centers[ci];
+          center = c.name; team = c.teams[Math.floor(rng() * c.teams.length)];
+          agent = agents[Math.floor(rng() * agents.length)];
+          reentry = issues.length > 0 ? (rng() < 0.4 ? (rng() < 0.5 ? 2 : 3) : 1) : 1;
+          callType = rng() < 0.9 ? 'I/B' : 'O/B';
+        } else {
+          const s = weightedPick(restScenarioPool);
+          scenario = scriptTemplates[s.tpl];
+          ct = s.ctPrefix ? findCt(s.ctPrefix) : consultationTypes[Math.floor(rng() * consultationTypes.length)];
+          hour = hourDist[Math.floor(rng() * hourDist.length)];
+          issues = s.issues;
+          const ci = rng() < 0.5 ? 0 : (rng() < 0.6 ? 1 : 2);
+          const c = centers[ci];
+          center = c.name; team = c.teams[Math.floor(rng() * c.teams.length)];
+          agent = agents[Math.floor(rng() * agents.length)];
+          const rr = rng();
+          reentry = s.tpl === '재인입' ? (rng() < 0.5 ? 2 : 3) : (rr < 0.65 ? 1 : rr < 0.9 ? 2 : rr < 0.98 ? 3 : 4);
+          callType = rng() > 0.35 ? 'I/B' : 'O/B';
+        }
+
+        const day = String(Math.floor(rng() * 28) + 1).padStart(2, '0');
+        const min = String(Math.floor(rng() * 60)).padStart(2, '0');
+        const durRand = rng();
         let durTotalSec;
-        if (durRand < 0.1) durTotalSec = Math.floor(Math.random() * 60) + 10;           // ~1분 (10~69초)
-        else if (durRand < 0.25) durTotalSec = Math.floor(Math.random() * 120) + 60;     // 1~3분
-        else if (durRand < 0.45) durTotalSec = Math.floor(Math.random() * 120) + 180;    // 3~5분
-        else if (durRand < 0.70) durTotalSec = Math.floor(Math.random() * 300) + 300;    // 5~10분
-        else if (durRand < 0.88) durTotalSec = Math.floor(Math.random() * 600) + 600;    // 10~20분
-        else durTotalSec = Math.floor(Math.random() * 1200) + 1200;                      // 20~40분
+        if (isOrderNum && issues.length > 0) durTotalSec = Math.floor(rng() * 180) + 180;
+        else if (durRand < 0.15) durTotalSec = Math.floor(rng() * 60) + 30;
+        else if (durRand < 0.35) durTotalSec = Math.floor(rng() * 120) + 60;
+        else if (durRand < 0.6) durTotalSec = Math.floor(rng() * 120) + 180;
+        else if (durRand < 0.8) durTotalSec = Math.floor(rng() * 300) + 300;
+        else durTotalSec = Math.floor(rng() * 600) + 600;
+
         const durMin = String(Math.floor(durTotalSec / 60)).padStart(2, '0');
         const durSec = String(durTotalSec % 60).padStart(2, '0');
-
-        const transcript = tpl.map((line, idx) => ({
+        const transcript = scenario.lines.map((line, idx) => ({
           time: `${Math.floor(idx * 0.5)}:${String((idx * 30) % 60).padStart(2,'0')}`,
           speaker: line.speaker,
           text: line.text.replace('{team}', team).replace('{agent}', agent)
         }));
 
-        /* 추출 키워드에 transcriptIdx 매핑 */
-        const pick = (arr, n) => {
-          const shuffled = [...arr].sort(() => 0.5 - Math.random());
-          return shuffled.slice(0, n);
-        };
-        const mkKw = (pool, n) => pick(pool, n).map(name => ({
-          name,
-          count: Math.floor(Math.random() * 4) + 1,
-          transcriptIdx: Array.from({length: Math.floor(Math.random() * 3) + 1}, () => Math.floor(Math.random() * transcript.length))
-        }));
+        const silenceSegments = makeSilence(durTotalSec, transcript.length);
+        const totalSilenceSec = silenceSegments.reduce((s, seg) => s + seg.duration, 0);
 
-        /* 묵음 구간 더미 생성 (통화시간 기반 2~4개 구간) */
-        const silenceCount = Math.floor(Math.random() * 3) + 2;
-        const silenceSegments = [];
-        const usedStarts = new Set();
-        for (let s = 0; s < silenceCount; s++) {
-          const maxStart = Math.max(10, durTotalSec - 15);
-          let startSec;
-          let attempts = 0;
-          do { startSec = Math.floor(Math.random() * maxStart) + 5; attempts++; }
-          while (usedStarts.has(Math.floor(startSec / 30)) && attempts < 20);
-          usedStarts.add(Math.floor(startSec / 30));
-          const segDur = Math.floor(Math.random() * 12) + 3;
-          const endSec = Math.min(startSec + segDur, durTotalSec);
-          const tIdx = Math.min(Math.floor(startSec / 30), transcript.length - 1);
-          silenceSegments.push({
-            startTime: `${Math.floor(startSec / 60)}:${String(startSec % 60).padStart(2,'0')}`,
-            endTime: `${Math.floor(endSec / 60)}:${String(endSec % 60).padStart(2,'0')}`,
-            duration: endSec - startSec,
-            transcriptIdx: Math.max(0, tIdx)
-          });
-        }
-        silenceSegments.sort((a, b) => a.startTime.localeCompare(b.startTime));
-        const totalSilenceSec = silenceSegments.reduce((sum, seg) => sum + seg.duration, 0);
+        const consultKws = isOrderNum
+          ? [{name:'주문번호', count:Math.floor(rng()*3)+2, transcriptIdx:[1,2]}, ...mkKw(extractedKeywordPool.consult.filter(k=>k!=='주문번호'), 2, transcript.length)]
+          : mkKw(extractedKeywordPool.consult, 4, transcript.length);
+
+        const aiBase = JSON.parse(JSON.stringify(scenario.ai));
+        /* 스크립트 기반 상태 판정 — 하드코딩 대신 상담사 발화를 분석하여 'completed'|'followup' 결정 */
+        aiBase.status = analyzeTranscript(transcript);
+        aiBase.agentEval = { alternativeProvided: rng() > 0.3, closingProper: rng() > 0.2, score: Math.floor(rng() * 30) + 60 };
 
         data.push({
           id: `TA-2025-${String(i).padStart(5, '0')}`,
           date: `2025-03-${day}`,
-          time: `${hour}:${min}`,
-          center: c.name,
-          team,
-          agent,
+          time: `${String(hour).padStart(2,'0')}:${min}`,
+          center, team, agent,
           employeeId: AGENT_EMP_ID[agent] || '-',
           consultationType: ct,
-          callType: Math.random() > 0.35 ? 'I/B' : 'O/B',
-          reentry: (() => { const r = Math.random(); return r < 0.65 ? 1 : r < 0.90 ? 2 : r < 0.98 ? 3 : 4; })(),
+          callType, reentry,
           duration: `${durMin}:${durSec}`,
           totalSilence: totalSilenceSec,
           silenceRate: durTotalSec > 0 ? Math.round(totalSilenceSec / durTotalSec * 1000) / 10 : 0,
           silenceSegments,
           issueKeywords: issues,
           extractedKeywords: {
-            issue: mkKw(extractedKeywordPool.issue, 5),
-            consult: mkKw(extractedKeywordPool.consult, 4),
-            product: mkKw(extractedKeywordPool.product, 4)
+            issue: (issues.length > 0 ? issues.map(k => ({name:k, count:Math.floor(rng()*3)+1, transcriptIdx:[Math.floor(rng()*transcript.length)]})) : [])
+              .concat(mkKw(extractedKeywordPool.issue, 4, transcript.length)),
+            consult: consultKws,
+            product: mkKw(extractedKeywordPool.product, 3, transcript.length)
           },
-          transcript
+          transcript,
+          aiAnalysis: aiBase
         });
       }
+      /* [정합성 보장] 대시보드 이슈/상품/신규 키워드가 콜 데이터에 반드시 존재하도록
+       *  후처리로 강제 주입한다. 랜덤 선택에 의존하면 seeded RNG에 따라 0건이 될 수 있음. */
+      const dashboardIssueKws = ['반품지연','상품불량','환불지연','오배송','포장파손'];
+      const dashboardProductKws = ['캐시미어코트','오버핏패딩','울블렌드자켓','린넨셔츠','실크블라우스'];
+      const dashboardNewKws = ['사전예약','시즌오프','한정판','공동구매','라이브방송'];
+      dashboardIssueKws.forEach((kw, ki) => {
+        for (let j = 0; j < 5; j++) {
+          const idx = (ki * 5 + j) % data.length;
+          const ext = data[idx].extractedKeywords;
+          if (!ext.issue.some(item => item.name === kw)) {
+            ext.issue.push({ name:kw, count:Math.floor(rng()*3)+1, transcriptIdx:[0] });
+          }
+        }
+      });
+      dashboardProductKws.forEach((kw, ki) => {
+        for (let j = 0; j < 5; j++) {
+          const idx = (ki * 5 + j + 25) % data.length;
+          const ext = data[idx].extractedKeywords;
+          if (!ext.product.some(item => item.name === kw)) {
+            ext.product.push({ name:kw, count:Math.floor(rng()*3)+1, transcriptIdx:[0] });
+          }
+        }
+      });
+      dashboardNewKws.forEach((kw, ki) => {
+        for (let j = 0; j < 4; j++) {
+          const idx = (ki * 4 + j + 50) % data.length;
+          const ext = data[idx].extractedKeywords;
+          if (!ext.consult.some(item => item.name === kw)) {
+            ext.consult.push({ name:kw, count:Math.floor(rng()*3)+1, transcriptIdx:[0] });
+          }
+        }
+      });
+
       return data.sort((a, b) => (`${b.date} ${b.time}`).localeCompare(`${a.date} ${a.time}`));
     }
 
@@ -404,12 +863,26 @@
     let pageSize = 20;
     let periodFilterInfo = null;
     let kpiFilter = null;
-    let activeSuggestions = [];
-    let suggestionIdx = 0;
-    let suggestionTimer = null;
-    let modalSuggestions = [];
 
-    /* URL 파라미터 기반 필터 (대시보드 연동) */
+    /* ── URL 파라미터 기반 필터 (대시보드 연동) ──────────────────
+     *  [정책] TA 대시보드에서 전체 콜 현황으로 이동할 때 URL 파라미터로
+     *  필터 조건을 전달한다. 페이지 로드 시 parseUrlFilter()로 파싱한다.
+     *
+     *  [지원 파라미터] ?filter=<type>&value=<value>
+     *   - filter=keyword & value=주문번호  → "주문번호" 키워드 포함 콜만 필터링
+     *     + AI 현황분석이 keyword 시나리오로 동작 (상담유형 Top5 표시)
+     *   - filter=reentry                  → 재인입 콜만 필터링
+     *   - filter=over                     → 초과 콜(3분 이상)만 필터링
+     *   - filter=issue_keyword & value=X  → 이슈 키워드 X 포함 콜만 필터링
+     *
+     *  [AI 시나리오 분기]
+     *   - urlFilter에 keyword+주문 이 있으면 → _buildKeywordScenario() 사용
+     *   - 그 외 모든 경우 → _buildDefaultScenario() 사용
+     *   - 이 분기는 _getScenario()에서 처리한다.
+     *
+     *  [초기화] resetFilter() 호출 시 urlFilter = null로 초기화되며,
+     *   필터 뱃지(상단 "대시보드: 키워드: 주문번호 ×")도 제거된다.
+     * ─────────────────────────────────────────────────────────── */
     let urlFilter = null;
     function parseUrlFilter() {
       const params = new URLSearchParams(window.location.search);
@@ -419,7 +892,23 @@
       return { filter, value };
     }
 
-    /* ══════════════════════════ 필터 ══════════════════════════ */
+    /* ══════════════════════════════════════════════════════════════════
+     *  필터 / 검색 시스템
+     *  ──────────────────────────────────────────────────────────────
+     *  [필터 우선순위] urlFilter → kpiFilter → 검색조건(센터/팀/기간/사번 등)
+     *   이 필터들은 AND 조건으로 결합된다.
+     *
+     *  [applyFilter()] 모든 필터 조건을 적용하여 filteredData를 갱신한다.
+     *   → renderKPICards() → renderTable() → initAiAnalysis() 순으로 호출.
+     *   → initAiAnalysis()가 호출되면 AI 드릴다운이 Level 1로 초기화된다.
+     *
+     *  [resetFilter()] 모든 필터를 초기화하고 전체 데이터를 표시한다.
+     *   → urlFilter, kpiFilter 모두 null로 초기화.
+     *   → AI 현황분석도 default 시나리오 Level 1로 복귀.
+     *
+     *  [applyKpiFilter()] KPI 카드 클릭 시 호출. 이슈/초과/재인입 필터 적용.
+     *   → 기존 urlFilter는 유지하면서 kpiFilter만 설정.
+     * ════════════════════════════════════════════════════════════════ */
 
     function onWsChange() {
       const wsVal = document.getElementById('ws-filter').value;
@@ -488,9 +977,12 @@
       if (filter === 'silence') return !!(call.totalSilence && call.totalSilence > 0);
       if (filter === 'over') return parseDurationMin(call.duration) >= 3;
       if (filter === 'reentry') return call.reentry >= 2;
+      /* issue_keyword: issueKeywords 배열 + extractedKeywords.issue 모두 검색 */
       if (filter === 'issue_keyword') {
         const kw = (value || '').replace(/\s/g, '').toLowerCase();
-        return call.issueKeywords.some(k => k.replace(/\s/g, '').toLowerCase().includes(kw));
+        const inIssueKw = call.issueKeywords.some(k => k.replace(/\s/g, '').toLowerCase().includes(kw));
+        const inExtIssue = (call.extractedKeywords.issue || []).some(item => item.name.replace(/\s/g, '').toLowerCase().includes(kw));
+        return inIssueKw || inExtIssue;
       }
       if (filter === 'keyword') {
         const kw = (value || '').replace(/\s/g, '').toLowerCase();
@@ -502,10 +994,19 @@
         const kw = (value || '').replace(/\s/g, '').toLowerCase();
         return (call.extractedKeywords.product || []).some(item => item.name.replace(/\s/g, '').toLowerCase().includes(kw));
       }
+      /* new_keyword: 대시보드 신규 키워드 클릭 시 전체 키워드에서 매칭 */
+      if (filter === 'new_keyword') {
+        const kw = (value || '').replace(/\s/g, '').toLowerCase();
+        return Object.values(call.extractedKeywords || {}).some(arr =>
+          (arr || []).some(item => item.name.replace(/\s/g, '').toLowerCase().includes(kw))
+        );
+      }
+      /* consult_type: 소분류 도넛 클릭 시 마지막 뎁스에서 매칭
+       * "소분류"는 소분류·세분류를 아울러 부르는 명칭으로 3뎁스(D3) 또는 4뎁스(D4)
+       * 예) value='카드결제' → '결제 > 결제오류 > 승인실패 > 카드결제' 매칭 (마지막 뎁스) */
       if (filter === 'consult_type') {
-        const parts = call.consultationType.split(' > ');
-        const lastDepth = parts[parts.length - 1];
-        return lastDepth === value;
+        const parts = call.consultationType.split(' > ').map(p => p.trim());
+        return parts[parts.length - 1] === value;
       }
       if (filter === 'hour') {
         const callHour = parseInt(call.time.split(':')[0], 10);
@@ -525,6 +1026,7 @@
         issue_keyword: `이슈 키워드: ${filterObj.value}`,
         keyword: `키워드: ${filterObj.value}`,
         product_keyword: `상품 키워드: ${filterObj.value}`,
+        new_keyword: `신규 키워드: ${filterObj.value}`,
         consult_type: `상담유형: ${filterObj.value}`,
         hour: `시간대: ${filterObj.value}시`
       };
@@ -574,70 +1076,1371 @@
       });
     }
 
-    const suggestionPool = [
-      '묵음 시간이 긴 콜이 반복되고 있어 응대 공백 구간 축소를 위한 스크립트 재정비가 필요합니다.',
-      '재인입 비중이 높은 상담유형이 확인되어 1차 해결률 개선 중심의 코칭을 권장합니다.',
-      '3분 이상 장기 통화가 누적되어 핵심 안내 문구 표준화 점검이 필요합니다.',
-      '이슈 키워드가 반복된 콜이 많아 FAQ 보강 및 후속 응대 시나리오 정리가 필요합니다.',
-      '상품 키워드 편중이 확인되어 주요 상품별 응대 가이드 업데이트를 권장합니다.',
-      '특정 센터의 묵음 구간 비중이 높아 상담 흐름 점검과 모니터링 강화를 권장합니다.',
-      '초과 콜 비율이 높아 도입 멘트와 확인 절차를 더 간결하게 정리할 필요가 있습니다.',
-      '재인입 콜이 누적된 구간은 상담 종결 멘트와 후속 안내 품질을 우선 점검해야 합니다.',
-      '이슈 콜 다발 유형에 대해 상담사 공통 코칭 포인트를 별도 배포하는 것이 좋습니다.',
-      '상품 키워드별 문의 집중도가 높아 관련 스크립트와 추천 답변 업데이트가 필요합니다.',
-      '상담사별 통화시간 편차가 커서 우수 응대 사례 공유와 표준 응대 시간 가이드가 필요합니다.',
-      '반복 이슈 키워드 구간은 원인 유형을 세분화해 선제 대응 룰을 추가하는 것이 좋습니다.',
-      '묵음시간과 장기 통화가 함께 높은 콜은 응대 흐름 재설계 우선 대상으로 보는 것이 좋습니다.',
-      '재인입 고객 비중이 높은 상품군은 첫 상담 단계의 안내 정확도 개선이 필요합니다.',
-      '검색된 조건 기준으로 공통 발생 패턴이 보여 조치 항목 등록 후 추적 관리가 필요합니다.'
-    ];
+    /* ══════════════════════════════════════════════════════════════════
+     *  AI 드릴다운 엔진
+     *  ──────────────────────────────────────────────────────────────
+     *  [개요] AI 현황분석 카드의 3레벨 드릴다운 시스템을 관리한다.
+     *   KPI 카드와 콜 목록 테이블 사이에 위치하며 항상 노출된다.
+     *
+     *  [2가지 시나리오]
+     *   1. default: 필터 없이 진입 → 전체 100건 기준 분석
+     *   2. keyword: ?filter=keyword&value=주문번호 → 주문번호 콜만 분석
+     *   → _getScenario()에서 URL 파라미터를 보고 자동 분기한다.
+     *
+     *  [인사이트 항목별 드릴다운 구조]
+     *   Level 1 — 시나리오 기반 인사이트
+     *     · insights: 각 item이 {text, keyword, filterFn, filterLabel} 객체
+     *     · keyword가 있는 항목에 ">" 아이콘 표시 + 클릭 시 해당 filterFn으로 드릴다운
+     *     · consultTypeTop5: (keyword 시나리오 전용) 상담유형 Top 5 + 클릭 드릴다운
+     *
+     *   Level 2+ — 동적 인사이트
+     *     · 필터링된 콜을 _buildInsightLevel()로 재분석하여 인사이트 자동 생성
+     *     · 콜 수 3건 이상이면 추가 드릴다운 가능 (재귀적 구조)
+     *     · 콜 목록 테이블이 해당 조건으로 필터링됨
+     *
+     *  [상태 변수] — 아래 선언부 주석 참조
+     *
+     *  [드릴다운 정책]
+     *   - 최대 3레벨 (Level 1 → Level 2 → Level 3)
+     *   - _aiHistory 배열이 필터 체인 역할을 한다.
+     *     Level 1: _aiHistory = [] (필터 없음)
+     *     Level 2: _aiHistory = [{ label, filterFn }] (1단계 필터)
+     *     Level 3: _aiHistory = [{ label, filterFn }, { label, filterFn }] (2단계 누적 필터)
+     *   - 테이블 필터링 시 _aiHistory의 filterFn을 순서대로 누적 적용한다.
+     *   - Level 2는 Level 1의 데이터를, Level 3은 Level 1+2의 데이터를 포함하여 분석한다.
+     *   - Level 3에서는 추가 드릴다운이 불가하다 (모든 인사이트 항목의 ">" 비활성화).
+     *   - breadcrumb으로 상위 레벨 복귀 시 해당 depth까지의 _aiHistory만 유지한다.
+     * ════════════════════════════════════════════════════════════════ */
 
-    function pickSuggestions() {
-      const count = 3 + Math.floor(Math.random() * 3);
-      const shuffled = [...suggestionPool].sort(() => Math.random() - 0.5);
-      return shuffled.slice(0, count);
+    /* [상태 변수]
+     *  _aiLevel        : 현재 레벨 (1~3, 최대 3)
+     *  _aiCache        : 시나리오별 Level 1 분석 캐시
+     *  _aiHistory      : 드릴다운 경로 배열 [{ label, filterFn }]
+     *                     — 최대 길이 2 (Level 2 = 1개, Level 3 = 2개)
+     *                     — 필터는 누적 적용: _aiFilteredCalls에 [0] → [1] 순서로 체이닝
+     *  _aiFilteredCalls: AI 분석 기준 원본 콜 (검색 필터 적용 후)
+     *  _drillDataL2    : Level 2 동적 생성 인사이트 캐시
+     *  _drillDataL3    : Level 3 동적 생성 인사이트 캐시 */
+    let _aiLevel = 1;
+    let _aiCache = {};
+    let _aiHistory = [];
+    let _aiFilteredCalls = [];
+    let _drillDataL2 = null;   // Level 2 인사이트 캐시
+    let _drillDataL3 = null;   // Level 3 인사이트 캐시
+
+    /* ── 데이터 집계 헬퍼 ── */
+    function _aggIssueDistribution(calls) {
+      const m = {};
+      calls.forEach(c => { (c.issueKeywords || []).forEach(k => { m[k] = (m[k] || 0) + 1; }); });
+      return Object.entries(m).sort((a,b) => b[1] - a[1]).map(([k,v]) => ({name:k, count:v}));
+    }
+    function _aggCenterDist(calls) {
+      const m = {};
+      calls.forEach(c => { m[c.center] = (m[c.center] || 0) + 1; });
+      return Object.entries(m).sort((a,b) => b[1] - a[1]).map(([k,v]) => ({name:k, count:v}));
+    }
+    function _aggHourDist(calls) {
+      const m = {};
+      calls.forEach(c => { const h = parseInt(c.time.split(':')[0], 10); m[h] = (m[h] || 0) + 1; });
+      return Object.entries(m).sort((a,b) => a[0] - b[0]).map(([k,v]) => ({hour:+k, count:v}));
+    }
+    /* [정책] 1차 처리 완료율 — analyzeTranscript()가 판정한 status 기반으로 산출.
+     *  status='completed' 건수 / 전체 aiAnalysis 보유 건수 × 100 */
+    function _completedRate(calls) {
+      const withAi = calls.filter(c => c.aiAnalysis);
+      if (withAi.length === 0) return 0;
+      return Math.round(withAi.filter(c => c.aiAnalysis.status === 'completed').length / withAi.length * 100);
     }
 
-    function showSuggestionBar() {
-      activeSuggestions = pickSuggestions();
-      suggestionIdx = 0;
-      const bar = document.getElementById('suggestion-bar');
-      const textEl = document.getElementById('suggestion-text');
-      if (!bar || !textEl || activeSuggestions.length === 0) return;
-      bar.style.display = 'flex';
-      textEl.style.opacity = '1';
-      textEl.style.transform = 'translateY(0)';
-      textEl.textContent = activeSuggestions[0];
+    /* ── 시나리오 생성 ─────────────────────────────────────────────
+     *  _buildDefaultScenario: 필터 없이 진입 시(전체 100건 기준)
+     *  _buildKeywordScenario: ?filter=keyword&value=주문번호 시(25건 기준)
+     *
+     *  [반환 구조] { level1:{...} }
+     *   - level1.insights  : 인사이트 그룹 배열, 각 item은 {text, keyword, filterFn, filterLabel}
+     *   - level1.consultTypeTop5: (keyword만) 상담유형 Top5 배열
+     *   - Level 2+ 데이터는 _buildInsightLevel()로 동적 생성
+     *
+     *  [인사이트 type별 SVG 아이콘]
+     *   cause → 트렌드상승(teal) / finding → 돋보기(파랑) / warning → 경고삼각형(주황)
+     *   trend → 차트라인(초록) / action → 체크박스(보라)
+     * ─────────────────────────────────────────────────────────── */
+    function _buildDefaultScenario(calls) {
+      const total = calls.length;
+      const issueCalls = calls.filter(c => c.issueKeywords && c.issueKeywords.length > 0);
+      const reentCalls = calls.filter(c => c.reentry >= 2);
+      const overCalls = calls.filter(c => parseDurationMin(c.duration) >= 3);
+      const issueRate = total > 0 ? Math.round(issueCalls.length / total * 100) : 0;
+      const reentRate = total > 0 ? Math.round(reentCalls.length / total * 100) : 0;
+      const avgDur = total > 0 ? Math.round(calls.reduce((s,c) => s + parseDurationSec(c.duration), 0) / total) : 0;
+      const resolved = _completedRate(calls);
+      const topIssues = _aggIssueDistribution(calls);
+      const topIssue = topIssues.length > 0 ? topIssues[0].name : '-';
 
-      if (suggestionTimer) clearInterval(suggestionTimer);
-      if (activeSuggestions.length > 1) {
-        suggestionTimer = setInterval(rollSuggestion, 4000);
+      const hd = _aggHourDist(calls);
+      const peak = hd.length > 0 ? hd.reduce((a,b) => b.count > a.count ? b : a) : {hour:0, count:0};
+      const centerDist = _aggCenterDist(issueCalls);
+      const topCenter = centerDist.length > 0 ? centerDist[0] : {name:'-', count:0};
+      const followupDefault = calls.filter(c => c.aiAnalysis && c.aiAnalysis.status === 'followup');
+      const top3Issues = topIssues.slice(0, 3);
+
+      /* [Phase 2] 상담흐름/의도달성률/위험신호 집계 */
+      const defFlowPatterns = _aggFlowPattern(calls);
+      const defIntentRate = _aggIntentRate(calls);
+      const defRiskFlags = _aggRiskFlags(calls);
+      const defFlowDetail = defFlowPatterns.slice(0,3).map(f => `${f.name} ${f.count}건`).join(' / ');
+      const defFailCause = (() => {
+        const fc = _aggByField(defIntentRate.notAchievedCalls.filter(c => c.aiAnalysis), c => c.aiAnalysis.rootCause);
+        return fc.length > 0 ? fc[0].name : '-';
+      })();
+      const defRiskCallCount = calls.filter(c => c.aiAnalysis && (c.aiAnalysis.riskFlags||[]).length > 0).length;
+      const defRiskRate = total > 0 ? Math.round(defRiskCallCount / total * 100) : 0;
+
+      return {
+        level1: {
+          insights: [
+            { type:'finding', label:'핵심 발견', color:'#1565C0', items:[
+              { text:`"${topIssue}" 이슈가 ${topIssues.length > 0 ? topIssues[0].count : 0}건으로 가장 빈번 — 전체 이슈의 ${topIssues.length > 0 && issueCalls.length > 0 ? Math.round(topIssues[0].count / issueCalls.length * 100) : 0}% 차지`, keyword:topIssue !== '-' ? topIssue : null, filterFn: topIssue !== '-' ? (c => (c.issueKeywords||[]).includes(topIssue)) : null, filterLabel:topIssue },
+              { text:`1차 처리 완료율 ${resolved}% — 후속 조치 필요 ${followupDefault.length}건에 대한 이행 확인 필요`, keyword:'후속 조치 필요', filterFn: c => c.aiAnalysis && c.aiAnalysis.status === 'followup', filterLabel:'후속 조치 필요' },
+              { text:`이슈 상위 3종: ${top3Issues.map(d => `${d.name}(${d.count}건)`).join(', ')}`, keyword:'이슈', filterFn: c => c.issueKeywords && c.issueKeywords.length > 0, filterLabel:'이슈 콜' },
+              { text:`상담 흐름: ${defFlowDetail}`, keyword: defFlowPatterns.length > 0 && defFlowPatterns[0].count >= 2 ? defFlowPatterns[0].name : null, filterFn: defFlowPatterns.length > 0 ? (c => c.aiAnalysis && c.aiAnalysis.flowPattern === defFlowPatterns[0].name) : null, filterLabel: defFlowPatterns.length > 0 ? defFlowPatterns[0].name : null },
+              { text:`고객 의도 달성률 ${defIntentRate.rate}% — 미달성 ${defIntentRate.notAchieved}건 주요 원인: ${defFailCause}`, keyword: defIntentRate.notAchieved >= 2 ? '의도 미달성' : null, filterFn: c => c.aiAnalysis && c.aiAnalysis.intentAchieved === false, filterLabel:'의도 미달성' }
+            ]},
+            { type:'warning', label:'위험 신호', color:'#E65100', items:[
+              { text:`재인입 비율 ${reentRate}%(${reentCalls.length}건) — 이전 상담 완결 품질 점검 필요`, keyword:'재인입', filterFn: c => c.reentry >= 2, filterLabel:'재인입 콜' },
+              { text:`초과 콜 ${overCalls.length}건 감지 — 평균 통화시간 ${formatSecondsMMSS(avgDur)} 대비 장기 통화 관리 권장`, keyword:'초과 콜', filterFn: c => parseDurationMin(c.duration) >= 3, filterLabel:'초과 콜' },
+              { text:`${topCenter.name}에 이슈 ${topCenter.count}건 집중 — 센터별 편차 모니터링 권장`, keyword:topCenter.name !== '-' ? topCenter.name : null, filterFn: topCenter.name !== '-' ? (c => c.center === topCenter.name && c.issueKeywords && c.issueKeywords.length > 0) : null, filterLabel:topCenter.name }
+            ]},
+            { type:'trend', label:'운영 트렌드', color:'#2E7D32', items:[
+              { text:`콜 집중 시간대: ${peak.hour}시(${peak.count}건) — 피크 타임 인력 배치 점검`, keyword:`${peak.hour}시`, filterFn: c => parseInt(c.time.split(':')[0],10) === peak.hour, filterLabel:`${peak.hour}시 콜` },
+              { text:`I/B 비중 ${total > 0 ? Math.round(calls.filter(c=>c.callType==='I/B').length / total * 100) : 0}% — 인바운드 이슈 선제 대응 체계 필요`, keyword:null, filterFn:null, filterLabel:null },
+              ...(defRiskCallCount > 0 ? [{ text:`위험 신호 감지 콜 ${defRiskCallCount}건(${defRiskRate}%) — 선제 모니터링 권장`, keyword: defRiskFlags.length > 0 && defRiskFlags[0].count >= 2 ? defRiskFlags[0].name : null, filterFn: defRiskFlags.length > 0 ? (c => c.aiAnalysis && (c.aiAnalysis.riskFlags||[]).includes(defRiskFlags[0].name)) : null, filterLabel: defRiskFlags.length > 0 ? defRiskFlags[0].name : null }] : [])
+            ]}
+          ]
+        }
+      };
+    }
+
+    /* ── keyword(주문번호) 시나리오 ─────────────────────────────────
+     *  [차이점] default와 달리 다음이 추가된다:
+     *   - consultTypeTop5: 상담유형 전체뎁스로 집계한 Top 5 배열
+     *     · Level 1에서 오른쪽 컬럼에 표시, 클릭 시 Level 2 진입
+     *   - 인사이트 3번째 그룹이 "조치 필요"(action/보라)로 변경
+     *   - 배송지연/주문취소/결제오류 등 주문번호 특화 분석 항목
+     *
+     *  [상담유형 Top5 집계 정책]
+     *   - consultationType 전체 경로(3~4뎁스)를 key로 사용한다.
+     *   - 건수 내림차순 정렬 후 상위 5개를 추출한다.
+     *   - 클릭 시 _onConsultTypeClick()으로 해당 유형 드릴다운 진입.
+     * ─────────────────────────────────────────────────────────── */
+    function _buildKeywordScenario(calls) {
+      const total = calls.length;
+      const issueCalls = calls.filter(c => c.issueKeywords && c.issueKeywords.length > 0);
+      const reentCalls = calls.filter(c => c.reentry >= 2);
+      const issueRate = total > 0 ? Math.round(issueCalls.length / total * 100) : 0;
+      const reentRate = total > 0 ? Math.round(reentCalls.length / total * 100) : 0;
+      const resolved = _completedRate(calls);
+      const topIssues = _aggIssueDistribution(calls);
+      const topIssue = topIssues.length > 0 ? topIssues[0].name : '-';
+      const followupCalls = calls.filter(c => c.aiAnalysis && c.aiAnalysis.status === 'followup');
+
+      const deliveryCalls = calls.filter(c => (c.issueKeywords||[]).includes('배송지연'));
+      const cancelCalls = calls.filter(c => (c.issueKeywords||[]).includes('주문취소지연'));
+      const payCalls = calls.filter(c => (c.issueKeywords||[]).includes('결제오류'));
+      const deliveryFollowup = deliveryCalls.filter(c => c.aiAnalysis && c.aiAnalysis.status === 'followup');
+      const kwHourDist = _aggHourDist(calls);
+      const kwPeak = kwHourDist.length > 0 ? kwHourDist.reduce((a,b) => b.count > a.count ? b : a) : {hour:0, count:0};
+
+      /* 상담유형 Top5 집계 */
+      const ctMap = {};
+      calls.forEach(c => {
+        const key = c.consultationType;
+        if (!ctMap[key]) ctMap[key] = { name:key, count:0 };
+        ctMap[key].count++;
+      });
+      const consultTypeTop5 = Object.values(ctMap).sort((a,b) => b.count - a.count).slice(0, 5);
+      const maxCtCount = consultTypeTop5.length > 0 ? consultTypeTop5[0].count : 1;
+
+      /* [정책] 1위 원인 분석용 비교 기준 데이터
+       *  - prevMonthAvg: 전월 "주문번호" 키워드 월 평균 콜수 (프로토타입 고정값)
+       *    → 대시보드가 월 단위 필터링이므로 비교 기준도 전월 기준
+       *    → 실제 운영 시 기간 필터 API에서 산출
+       *  - triggerEvent: 외부 트리거 이벤트 시뮬레이션 (프로토타입 하드코딩)
+       *    → 실제 운영 시 물류사 API, 장애 로그 등 외부 시스템 연동으로 자동 감지
+       *  - LLM이 콜 패턴 + 외부 이벤트를 종합하여 원인 문장을 생성하는 구조 */
+      const prevMonthAvg = 22;
+      const ratio = total > 0 ? (total / prevMonthAvg).toFixed(1) : '1.0';
+      const deliveryIssuePct = issueCalls.length > 0 ? Math.round(deliveryCalls.length / issueCalls.length * 100) : 0;
+      const triggerEvent = '물류사 A 배송 지연(12시간 이상) 발생';
+
+      /* [Phase 2] 상담흐름/의도달성률/위험신호 집계 */
+      const kwFlowPatterns = _aggFlowPattern(calls);
+      const kwIntentRate = _aggIntentRate(calls);
+      const kwRiskFlags = _aggRiskFlags(calls);
+      const kwFlowDetail = kwFlowPatterns.slice(0,3).map(f => `${f.name} ${f.count}건`).join(' / ');
+      const kwTopFailCause = (() => {
+        const fc = _aggByField(kwIntentRate.notAchievedCalls.filter(c => c.aiAnalysis), c => c.aiAnalysis.rootCause);
+        return fc.length > 0 ? fc[0].name : '-';
+      })();
+
+      return {
+        level1: {
+          consultTypeTop5,
+          maxCtCount,
+          insights: [
+            { type:'cause', label:'<span style="background:#E0F2F1;color:#00695C;padding:1px 6px;border-radius:3px;font-weight:700;">주문번호</span> 가 주요 키워드 <span style="background:#E0F2F1;color:#00695C;padding:1px 6px;border-radius:3px;font-weight:700;">1위</span> 인 원인 분석', color:'#00695C', items:[
+              { text:`주문번호 관련 콜 ${total}건 — 전월 대비 ${ratio}배 증가 (전월 평균 ${prevMonthAvg}건)`, keyword:null, filterFn:null, filterLabel:null },
+              { text:`배송지연 이슈 ${deliveryCalls.length}건 급증이 주 원인 — 전체 이슈의 ${deliveryIssuePct}%를 차지하며 주문번호 조회 콜을 견인`, keyword:'배송지연', filterFn: c => (c.issueKeywords||[]).includes('배송지연'), filterLabel:'배송지연' },
+              { text:`${triggerEvent} → 택배 추적 불가/장기 미배송 문의 집중`, keyword:'택배 추적 불가', filterFn: c => c.transcript && c.transcript.some(l => l.text.includes('추적') || l.text.includes('미배송')), filterLabel:'택배 추적 불가' }
+            ]},
+            { type:'finding', label:'핵심 발견', color:'#1565C0', items:[
+              { text:`"주문번호" 관련 콜 ${total}건 중 이슈 콜 ${issueCalls.length}건(${issueRate}%) — 배송지연 ${deliveryCalls.length}건, 주문취소 ${cancelCalls.length}건, 결제오류 ${payCalls.length}건`, keyword:'이슈 콜', filterFn: c => c.issueKeywords && c.issueKeywords.length > 0, filterLabel:'이슈 콜' },
+              { text:`1차 처리 완료율 ${resolved}% — 후속 조치 필요 ${followupCalls.length}건 중 콜백/에스컬레이션 대기 건 즉시 확인 필요`, keyword:'후속 조치 필요', filterFn: c => c.aiAnalysis && c.aiAnalysis.status === 'followup', filterLabel:'후속 조치 필요' },
+              { text:`배송지연이 전체 이슈의 ${deliveryIssuePct}%로 최다 — 물류 지연 집중 모니터링 권장`, keyword:'배송지연', filterFn: c => (c.issueKeywords||[]).includes('배송지연'), filterLabel:'배송지연' },
+              { text:`상담 흐름: ${kwFlowDetail}`, keyword: kwFlowPatterns.length > 0 && kwFlowPatterns[0].count >= 2 ? kwFlowPatterns[0].name : null, filterFn: kwFlowPatterns.length > 0 ? (c => c.aiAnalysis && c.aiAnalysis.flowPattern === kwFlowPatterns[0].name) : null, filterLabel: kwFlowPatterns.length > 0 ? kwFlowPatterns[0].name : null },
+              { text:`고객 의도 달성률 ${kwIntentRate.rate}% — 미달성 ${kwIntentRate.notAchieved}건 주 원인: ${kwTopFailCause}`, keyword: kwIntentRate.notAchieved >= 2 ? '의도 미달성' : null, filterFn: c => c.aiAnalysis && c.aiAnalysis.intentAchieved === false, filterLabel:'의도 미달성' }
+            ]},
+            { type:'warning', label:'위험 신호', color:'#E65100', items:[
+              { text:`배송지연 후속 조치 필요 ${deliveryFollowup.length}건 — 장기 미배송 고객 이탈 위험`, keyword:'후속 조치 필요', filterFn: c => (c.issueKeywords||[]).includes('배송지연') && c.aiAnalysis && c.aiAnalysis.status === 'followup', filterLabel:'배송지연 후속 조치' },
+              { text:`재인입 비율 ${reentRate}%(${reentCalls.length}건) — 이전 상담 후속 조치 미이행 가능성`, keyword:'재인입', filterFn: c => c.reentry >= 2, filterLabel:'재인입 콜' },
+              { text:`콜 집중 시간대 ${kwPeak.hour}시(${kwPeak.count}건) — 주문번호 관련 문의 피크`, keyword:`${kwPeak.hour}시`, filterFn: c => parseInt(c.time.split(':')[0],10) === kwPeak.hour, filterLabel:`${kwPeak.hour}시 콜` },
+              ...(kwRiskFlags.length > 0 ? [{ text:`위험 신호 감지: ${kwRiskFlags.slice(0,3).map(r => `${r.name} ${r.count}건`).join(', ')}`, keyword: kwRiskFlags[0].count >= 2 ? kwRiskFlags[0].name : null, filterFn: c => c.aiAnalysis && (c.aiAnalysis.riskFlags||[]).includes(kwRiskFlags[0].name), filterLabel: kwRiskFlags[0].name }] : [])
+            ]},
+            { type:'action', label:'조치 필요', color:'#6A1B9A', items:[
+              { text:`물류사 SLA 점검 요청 — 배송지연 ${deliveryCalls.length}건의 주원인이 물류사 지연으로, 배송 기한 준수율 확인 및 시정 요구 필요`, keyword:'배송지연', filterFn: c => (c.issueKeywords||[]).includes('배송지연'), filterLabel:'배송지연' },
+              { text:`배송지연 고객 선제 안내 — 후속 조치 필요 ${followupCalls.length}건 대상 지연 사유 및 예상 배송일 사전 알림 발송으로 재인입 콜 감소 유도`, keyword:'후속 조치 필요', filterFn: c => c.aiAnalysis && c.aiAnalysis.status === 'followup', filterLabel:'후속 조치 필요' },
+              { text:`피크 시간 인력 재배치 — ${kwPeak.hour}시에 콜 ${kwPeak.count}건 집중, 해당 시간대 상담 인력 보강 또는 IVR 자동 안내 확대 검토`, keyword:`${kwPeak.hour}시`, filterFn: c => parseInt(c.time.split(':')[0],10) === kwPeak.hour, filterLabel:`${kwPeak.hour}시 콜` },
+              { text:`재인입 방지 체크리스트 적용 — 재인입 ${reentRate}%(${reentCalls.length}건) 발생 중, 1차 상담 시 처리 완결 확인 프로세스 도입 필요`, keyword:'재인입', filterFn: c => c.reentry >= 2, filterLabel:'재인입 콜' },
+              ...(kwIntentRate.notAchieved >= 2 ? [{ text:`의도 미달성 원인 해소 — 미달성 ${kwIntentRate.notAchieved}건의 주 원인(${kwTopFailCause}) 개선 방안 검토 필요`, keyword:'의도 미달성', filterFn: c => c.aiAnalysis && c.aiAnalysis.intentAchieved === false, filterLabel:'의도 미달성' }] : [])
+            ]}
+          ]
+        }
+      };
+    }
+
+    /* ── 드릴다운 네비게이션 ─────────────────────────────────────
+     *  [정책] 인사이트 항목별 드릴다운 방식.
+     *   - 각 인사이트 항목에 keyword/filterFn이 있으면 ">" 아이콘 표시
+     *   - 클릭 시 filterFn으로 콜 테이블 필터링 + 필터된 콜 기반 인사이트 재생성
+     *   - _aiHistory: [{ label, filterFn }] 배열로 경로 관리
+     *   - 콜 수가 3건 미만이면 더 이상 드릴다운 불가 (keyword 미부여)
+     * ─────────────────────────────────────────────────────────── */
+
+    /* 브레드크럼: 멀티패널에서는 패널 헤더가 경로 역할을 하므로 미사용 */
+    function _renderBreadcrumb() {}
+
+    /* 레벨 복귀: 멀티패널에서는 _closeL2/_closeL3로 대체되지만 호환성 유지 */
+    function _goAiLevel(idx) {
+      if (idx === 0) _closeL2();
+      else if (idx === 1) _closeL3();
+    }
+
+    /* ── 드릴다운 인사이트 동적 재생성 ─────────────────────────
+     *  [동작] _aiHistory의 filterFn을 순서대로 누적 적용하여
+     *   현재 레벨의 콜과 상위 레벨의 콜(parentCalls)을 산출한다.
+     *
+     *  [누적 필터 체이닝]
+     *   _aiFilteredCalls → [history[0].filterFn] → parentCalls
+     *                    → [history[1].filterFn] → currentCalls
+     *   이렇게 하면 Level 3이 Level 1+2의 필터를 모두 포함하게 된다.
+     *
+     *  [parentCalls 활용]
+     *   _buildInsightLevel에 전달하여 상위 레벨 대비 비율을
+     *   인사이트 텍스트에 표시할 수 있게 한다.
+     *   예: "배송지연 10건 중 물류사 배송 지연 8건(80%)" */
+    /* 레벨별 인사이트 빌드: L2와 L3를 독립 캐시 */
+    function _rebuildDrillForLevel(level) {
+      if (level === 2 && _aiHistory.length >= 1) {
+        const parentCalls = [..._aiFilteredCalls];
+        const currentCalls = parentCalls.filter(_aiHistory[0].filterFn);
+        _drillDataL2 = _buildInsightLevel(currentCalls, _aiHistory[0].label, parentCalls);
+      }
+      if (level === 3 && _aiHistory.length >= 2) {
+        const parentCalls = [..._aiFilteredCalls].filter(_aiHistory[0].filterFn);
+        const currentCalls = parentCalls.filter(_aiHistory[1].filterFn);
+        _drillDataL3 = _buildInsightLevel(currentCalls, _aiHistory[1].label, parentCalls);
       }
     }
 
-    function rollSuggestion() {
-      const textEl = document.getElementById('suggestion-text');
-      if (!textEl || activeSuggestions.length === 0) return;
-      textEl.style.opacity = '0';
-      textEl.style.transform = 'translateY(-10px)';
-      setTimeout(() => {
-        suggestionIdx = (suggestionIdx + 1) % activeSuggestions.length;
-        textEl.textContent = activeSuggestions[suggestionIdx];
-        textEl.style.transform = 'translateY(10px)';
-        requestAnimationFrame(() => {
-          textEl.style.opacity = '1';
-          textEl.style.transform = 'translateY(0)';
+    /* ── 스크립트 분석 데이터 집계 헬퍼 ─────────────────────────
+     *  [프로토타입] 더미 데이터의 aiAnalysis 필드를 집계하여 패턴을 도출한다.
+     *  [실제 개발] LLM 프롬프트에 필터 컨텍스트(드릴다운 경로, 이미 분석된 항목)를
+     *   전달하고 LLM이 동어반복 없이 의미 있는 분석을 직접 생성해야 한다.
+     *   프롬프트에 "이미 상위 레벨에서 분석된 차원은 반복하지 말고
+     *   새로운 관점(원인, 상담 품질, 구체적 조치)으로 분석"이라는
+     *   명시적 제약 조건을 포함시켜야 한다.
+     * ─────────────────────────────────────────────────────────── */
+    function _aggByField(calls, getter) {
+      const m = {};
+      calls.forEach(c => { const v = getter(c); if (v) m[v] = (m[v]||0) + 1; });
+      return Object.entries(m).sort((a,b) => b[1]-a[1]).map(([k,v]) => ({name:k, count:v}));
+    }
+    function _aggByTags(calls) {
+      const m = {};
+      calls.forEach(c => { ((c.aiAnalysis && c.aiAnalysis.tags) || []).forEach(t => { m[t] = (m[t]||0) + 1; }); });
+      return Object.entries(m).sort((a,b) => b[1]-a[1]).map(([k,v]) => ({name:k, count:v}));
+    }
+
+    /* ── Phase 2 신규 집계 헬퍼 ──────────────────────────────────
+     *  [프로토타입] aiAnalysis의 Phase 1 신규 필드를 단순 카운트/집계한다.
+     *  [실제 운영] LLM이 다수 콜의 스크립트를 교차 분석하여
+     *   패턴, 의도 달성률, 위험 신호를 도출한다. 이 함수들은 프롬프트 입력용
+     *   사전 집계 역할로 전환되거나, LLM 응답으로 대체될 수 있다.
+     * ─────────────────────────────────────────────────────────── */
+    function _aggFlowPattern(calls) {
+      return _aggByField(calls.filter(c => c.aiAnalysis), c => c.aiAnalysis.flowPattern);
+    }
+    function _aggCustomerIntent(calls) {
+      return _aggByField(calls.filter(c => c.aiAnalysis), c => c.aiAnalysis.customerIntent);
+    }
+    /** @returns {{ achieved:number, notAchieved:number, rate:number, notAchievedCalls:Array }} */
+    function _aggIntentRate(calls) {
+      const withAi = calls.filter(c => c.aiAnalysis);
+      const achieved = withAi.filter(c => c.aiAnalysis.intentAchieved === true).length;
+      const notAchieved = withAi.filter(c => c.aiAnalysis.intentAchieved === false).length;
+      const total = achieved + notAchieved;
+      return {
+        achieved, notAchieved,
+        rate: total > 0 ? Math.round(achieved / total * 100) : 0,
+        notAchievedCalls: withAi.filter(c => c.aiAnalysis.intentAchieved === false)
+      };
+    }
+    function _aggRiskFlags(calls) {
+      const m = {};
+      calls.forEach(c => { ((c.aiAnalysis && c.aiAnalysis.riskFlags) || []).forEach(f => { m[f] = (m[f]||0) + 1; }); });
+      return Object.entries(m).sort((a,b) => b[1]-a[1]).map(([k,v]) => ({name:k, count:v}));
+    }
+    /** 빈출 발화 패턴: 동일 reason 기준 그룹핑 후 상위 topN 추출 */
+    function _aggKeyUtterances(calls, topN) {
+      const m = {};
+      calls.forEach(c => {
+        ((c.aiAnalysis && c.aiAnalysis.keyUtterances) || []).forEach(u => {
+          const key = u.reason || u.text;
+          if (!m[key]) m[key] = { reason:u.reason, text:u.text, count:0 };
+          m[key].count++;
         });
-      }, 350);
+      });
+      return Object.values(m).sort((a,b) => b.count - a.count).slice(0, topN || 3);
     }
 
-    function hideSuggestionBar() {
-      const bar = document.getElementById('suggestion-bar');
-      if (bar) bar.style.display = 'none';
-      if (suggestionTimer) {
-        clearInterval(suggestionTimer);
-        suggestionTimer = null;
+    /* ── 동적 인사이트 생성 (컨텍스트 인식) ────────────────────────
+     *  [정책] Level 2+ 드릴다운 시 호출. 필터된 콜의 aiAnalysis
+     *   (스크립트 분석 결과)를 집계하여 의미 있는 인사이트를 생성한다.
+     *
+     *  [컨텍스트 인식 원칙]
+     *   - 이미 필터된 차원은 반복 분석하지 않는다.
+     *     예: "배송지연"으로 필터 → "이슈 콜 100%" 표시 안 함
+     *   - 대신 rootCause(원인), actionNote(상담사 조치), tags(위험 패턴),
+     *     agentEval(상담 품질), suggestedAction(개선 제안) 등
+     *     새로운 차원을 분석한다.
+     *
+     *  [프로토타입 vs 실제 개발]
+     *   프로토타입: 더미 데이터의 aiAnalysis 필드를 집계/패턴화
+     *   실제 개발: LLM에 현재 필터 경로와 콜 데이터를 전달하여
+     *     컨텍스트에 맞는 분석을 직접 생성해야 한다.
+     *     효율적인 프롬프트 설계가 핵심이며, 프롬프트에는
+     *     드릴다운 경로(예: "주문번호 > 배송지연 > 후속 조치 필요")와
+     *     상위 레벨에서 이미 보여준 분석 항목을 포함하여
+     *     동어반복을 방지해야 한다.
+     *
+     *  [판단 기준]
+     *   - 콜 수 3건 미만: 드릴다운 불가 (keyword=null)
+     *   - 콜 수 5건 이하: 개별 콜의 AI 분석 요약도 함께 표시
+     *   - 집계 결과가 1종뿐이면 '단일 원인/패턴' 표현 (100% 반복 방지)
+     *   - Level 3(_aiHistory.length >= 2): 최대 depth이므로 드릴다운 불가
+     *
+     *  @param {Array} calls - 현재 필터된 콜 배열 (누적 필터 적용 후)
+     *  @param {string} contextLabel - 현재 드릴다운 라벨 (예: "배송지연")
+     *  @param {Array} [parentCalls] - 상위 레벨의 콜 배열 (비율 계산용)
+     *  @returns {Array} insights 배열 (Level 1과 동일 구조)
+     * ─────────────────────────────────────────────────────────── */
+    function _buildInsightLevel(calls, contextLabel, parentCalls) {
+      const total = calls.length;
+      if (total === 0) return [];
+      /* Level 1-2: 드릴다운 + 테이블 필터 / Level 3: 테이블 필터만 (드릴다운 불가)
+       * canInteract는 인사이트 항목에 keyword를 부여할지 결정하는 플래그.
+       * Level 3에서도 true이므로 항목 클릭 시 콜 목록이 필터링된다. */
+      const canInteract = total >= 2;
+      const withAi = calls.filter(c => c.aiAnalysis);
+
+      /* ── 컨텍스트 감지 ──
+       *  _aiHistory 경로 라벨과 실제 데이터를 교차 검증하여
+       *  이미 분석/필터된 차원을 식별한다.
+       *  해당 차원의 통계는 생략하고 새로운 관점으로 분석한다. */
+      const histLabels = _aiHistory.map(h => h.label);
+      const callIssueSet = new Set(calls.flatMap(c => c.issueKeywords || []));
+      const isSpecificIssueFiltered = histLabels.some(l => callIssueSet.has(l));
+      const isGeneralIssueFiltered = histLabels.includes('이슈 콜');
+      const isStatusFiltered = histLabels.some(l => l.includes('후속 조치') || l === '처리 완료');
+      const isReentryFiltered = histLabels.includes('재인입 콜');
+      const isTimeFiltered = histLabels.some(l => /^\d+시\s*콜$/.test(l));
+      const isRootCauseFiltered = histLabels.some(l =>
+        withAi.some(c => c.aiAnalysis.rootCause === l));
+      const isTagFiltered = histLabels.some(l =>
+        withAi.some(c => (c.aiAnalysis.tags||[]).includes(l)));
+      /* Phase 2 컨텍스트 감지: 상담흐름/고객의도/위험신호 */
+      const isFlowFiltered = histLabels.some(l =>
+        ['즉시해결','콜백안내','에스컬레이션','정보안내'].includes(l));
+      const isIntentFiltered = histLabels.some(l =>
+        withAi.some(c => c.aiAnalysis.customerIntent === l));
+      const isRiskFlagFiltered = histLabels.some(l =>
+        withAi.some(c => (c.aiAnalysis.riskFlags||[]).includes(l)));
+
+      /* ── aiAnalysis 필드 집계 ── */
+      const rootCauses = _aggByField(withAi, c => c.aiAnalysis.rootCause);
+      const actionNotes = _aggByField(withAi, c => c.aiAnalysis.actionNote);
+      const suggestedActions = _aggByField(withAi, c => c.aiAnalysis.suggestedAction);
+      const allTags = _aggByTags(withAi);
+      /* Phase 2 집계: 상담흐름/의도달성률/위험신호 */
+      const flowPatterns = _aggFlowPattern(calls);
+      const intentRate = _aggIntentRate(calls);
+      const riskFlagAgg = _aggRiskFlags(calls);
+
+      const issueCalls = calls.filter(c => c.issueKeywords && c.issueKeywords.length > 0);
+      const reentCalls = calls.filter(c => c.reentry >= 2);
+      const followupCalls = withAi.filter(c => c.aiAnalysis.status === 'followup');
+      const completedCalls = withAi.filter(c => c.aiAnalysis.status === 'completed');
+
+      /* 상담 품질 집계 */
+      const noAltCount = withAi.filter(c => c.aiAnalysis.agentEval && !c.aiAnalysis.agentEval.alternativeProvided).length;
+      const badClosingCount = withAi.filter(c => c.aiAnalysis.agentEval && !c.aiAnalysis.agentEval.closingProper).length;
+      const avgScore = withAi.length > 0
+        ? Math.round(withAi.reduce((s,c) => s + (c.aiAnalysis.agentEval ? c.aiAnalysis.agentEval.score : 0), 0) / withAi.length)
+        : 0;
+      const globalWithEval = callData.filter(c => c.aiAnalysis && c.aiAnalysis.agentEval);
+      const globalAvg = globalWithEval.length > 0
+        ? Math.round(globalWithEval.reduce((s,c) => s + c.aiAnalysis.agentEval.score, 0) / globalWithEval.length)
+        : 75;
+
+      const insights = [];
+
+      /* ─── 핵심 발견: rootCause + 처리 상태 + 상담사 조치 ─── */
+      const findingItems = [];
+
+      /* 0) 상위 레벨 대비 컨텍스트 — parentCalls가 있으면 비율 표시
+       *    예: "배송지연 10건 중 물류사 배송 지연 8건(80%) 추출" */
+      if (parentCalls && parentCalls.length > 0 && parentCalls.length !== total) {
+        const parentLabel = _aiHistory.length >= 2
+          ? _aiHistory[_aiHistory.length - 2].label
+          : '상위 필터';
+        const fromPct = Math.round(total / parentCalls.length * 100);
+        findingItems.push({
+          text:`"${parentLabel}" ${parentCalls.length}건 중 "${contextLabel}" ${total}건(${fromPct}%) 추출`,
+          keyword: null, filterFn: null, filterLabel: null
+        });
       }
+
+      /* 1) rootCause 분석 — 이미 rootCause 필터 적용 시 생략 */
+      if (!isRootCauseFiltered && rootCauses.length > 1) {
+        const rcDetail = rootCauses.slice(0,3).map(r => {
+          const pct = withAi.length > 0 ? Math.round(r.count / withAi.length * 100) : 0;
+          return `${r.name} ${r.count}건(${pct}%)`;
+        }).join(', ');
+        findingItems.push({
+          text:`원인 분석: ${rcDetail}`,
+          keyword: canInteract ? rootCauses[0].name : null,
+          filterFn: c => c.aiAnalysis && c.aiAnalysis.rootCause === rootCauses[0].name,
+          filterLabel: rootCauses[0].name
+        });
+      } else if (!isRootCauseFiltered && rootCauses.length === 1) {
+        findingItems.push({
+          text:`공통 원인: "${rootCauses[0].name}" — 전체 ${rootCauses[0].count}건 동일`,
+          keyword: null, filterFn: null, filterLabel: null
+        });
+      }
+
+      /* 2) 처리 상태 상세 — 이미 상태 필터 적용 시 actionNote 상세로 대체 */
+      if (!isStatusFiltered && followupCalls.length > 0 && completedCalls.length > 0) {
+        const fActions = _aggByField(followupCalls, c => c.aiAnalysis.actionNote);
+        const actionDetail = fActions.slice(0,2).map(a => `${a.name} ${a.count}건`).join(', ');
+        findingItems.push({
+          text:`처리 완료 ${completedCalls.length}건 / 후속 조치 필요 ${followupCalls.length}건 — ${actionDetail}`,
+          keyword: canInteract && followupCalls.length >= 2 ? '후속 조치 필요' : null,
+          filterFn: c => c.aiAnalysis && c.aiAnalysis.status === 'followup',
+          filterLabel: '후속 조치 필요'
+        });
+      } else if (isStatusFiltered && actionNotes.length > 0) {
+        if (actionNotes.length > 1) {
+          actionNotes.slice(0,3).forEach(an => {
+            findingItems.push({
+              text:`상담사 조치: "${an.name}" — ${an.count}건`,
+              keyword: canInteract && an.count >= 2 ? an.name : null,
+              filterFn: c => c.aiAnalysis && c.aiAnalysis.actionNote === an.name,
+              filterLabel: an.name
+            });
+          });
+        } else {
+          findingItems.push({
+            text:`상담사 조치: "${actionNotes[0].name}" — 전체 ${actionNotes[0].count}건 동일 패턴`,
+            keyword: null, filterFn: null, filterLabel: null
+          });
+        }
+      }
+
+      /* 3) 이슈 분포 — 특정 이슈로 이미 필터 적용 시 생략, 일반 이슈 필터 시 분포 표시 */
+      if (!isSpecificIssueFiltered) {
+        const topIssues = _aggIssueDistribution(calls);
+        if (topIssues.length > 1) {
+          const issueDetail = topIssues.slice(0,3).map(d => `${d.name} ${d.count}건`).join(', ');
+          findingItems.push({
+            text:`이슈 분포: ${issueDetail}`,
+            keyword: canInteract ? topIssues[0].name : null,
+            filterFn: c => (c.issueKeywords||[]).includes(topIssues[0].name),
+            filterLabel: topIssues[0].name
+          });
+        }
+      }
+
+      /* [Phase 2] 3-a) 상담 흐름 패턴 분석
+       *  [프로토타입] flowPattern 필드를 카운트하여 패턴 분포를 산출한다.
+       *  [실제 운영] LLM이 다수 콜의 스크립트 흐름을 교차 분석하여
+       *   공통 패턴과 이탈 패턴을 도출하고, 패턴별 해결률 차이를 분석한다. */
+      if (!isFlowFiltered && flowPatterns.length > 0) {
+        const topFlow = flowPatterns[0];
+        const flowDetail = flowPatterns.slice(0,3).map(f => `${f.name} ${f.count}건`).join(' / ');
+        const immediateCount = flowPatterns.find(f => f.name === '즉시해결');
+        const immediateRate = immediateCount && withAi.length > 0
+          ? Math.round(immediateCount.count / withAi.length * 100) : 0;
+        const suffix = immediateRate < 50 ? ' — 즉시 해결 비율 낮음' : '';
+        findingItems.push({
+          text:`상담 흐름: ${flowDetail}${suffix}`,
+          keyword: canInteract && topFlow.count >= 2 ? topFlow.name : null,
+          filterFn: c => c.aiAnalysis && c.aiAnalysis.flowPattern === topFlow.name,
+          filterLabel: topFlow.name
+        });
+      }
+
+      /* [Phase 2] 3-b) 고객 의도 달성률
+       *  [프로토타입] intentAchieved boolean을 집계하여 달성률 산출.
+       *   미달성 건의 rootCause를 추가 집계하여 주요 원인 제시.
+       *  [실제 운영] LLM이 스크립트를 분석하여 고객 의도 달성 여부를
+       *   판단하고, 미달성 원인을 교차 분석한다. */
+      if (!isIntentFiltered && intentRate.notAchieved > 0) {
+        const failCauses = _aggByField(intentRate.notAchievedCalls.filter(c => c.aiAnalysis), c => c.aiAnalysis.rootCause);
+        const topFailCause = failCauses.length > 0 ? failCauses[0].name : '-';
+        findingItems.push({
+          text:`고객 의도 달성률 ${intentRate.rate}%(${intentRate.achieved}/${intentRate.achieved + intentRate.notAchieved}) — 미달성 ${intentRate.notAchieved}건 주 원인: ${topFailCause}`,
+          keyword: canInteract && intentRate.notAchieved >= 2 ? '의도 미달성' : null,
+          filterFn: c => c.aiAnalysis && c.aiAnalysis.intentAchieved === false,
+          filterLabel: '의도 미달성'
+        });
+      }
+
+      /* [Phase 2] 3-c) 빈출 발화 패턴 (정보성 인사이트, 드릴다운 불가)
+       *  [프로토타입] keyUtterances의 reason을 기준으로 그룹핑하여 빈출 패턴 추출.
+       *  [실제 운영] LLM이 다수 콜의 핵심 발화를 교차 분석하여
+       *   반복되는 고객 불만/요구 패턴을 도출한다.
+       *   프롬프트: "다음 N건의 핵심 발화에서 반복되는 패턴을 찾아주세요." */
+      if (total >= 5) {
+        const topUtterances = _aggKeyUtterances(calls, 2);
+        topUtterances.forEach(u => {
+          if (u.count >= 3) {
+            findingItems.push({
+              text:`"${u.text.length > 25 ? u.text.substring(0,25) + '...' : u.text}" 유사 발화 ${u.count}건 — ${u.reason}`,
+              keyword: null, filterFn: null, filterLabel: null
+            });
+          }
+        });
+      }
+
+      /* 4) 소수 콜(5건 이하)일 때 개별 AI 분석 요약 제공 */
+      if (total <= 5 && withAi.length > 0) {
+        withAi.slice(0, 3).forEach(c => {
+          findingItems.push({
+            text:`[${c.id}] ${c.aiAnalysis.summary}`,
+            keyword: null, filterFn: null, filterLabel: null
+          });
+        });
+      }
+
+      if (findingItems.length > 0) {
+        insights.push({ type:'finding', label:'핵심 발견', color:'#1565C0', items: findingItems });
+      }
+
+      /* ─── 위험 신호: tags 위험 패턴 + 상담 품질 ─── */
+      const warningItems = [];
+
+      /* tags 기반 위험 패턴 — 이미 해당 tag로 필터 적용 시 생략 */
+      if (!isTagFiltered) {
+        const riskMap = {
+          '장기미배송':'고객 이탈 위험 높음',
+          '후속조치미이행':'재인입 유발 위험',
+          '시스템장애':'시스템 점검 필요',
+          '처리지연':'처리 프로세스 점검 필요',
+          '환불지연':'고객 불만 확대 위험'
+        };
+        const riskTagNames = Object.keys(riskMap);
+        allTags.filter(t => riskTagNames.includes(t.name)).forEach(t => {
+          warningItems.push({
+            text:`"${t.name}" 패턴 ${t.count}건 — ${riskMap[t.name]}`,
+            keyword: canInteract && t.count >= 2 ? t.name : null,
+            filterFn: c => c.aiAnalysis && (c.aiAnalysis.tags||[]).includes(t.name),
+            filterLabel: t.name
+          });
+        });
+      }
+
+      /* [Phase 2] riskFlags 기반 위험 집계 — tags와 별도로 직접적인 위험 신호 표시
+       *  [프로토타입] riskFlags 배열을 단순 집계한다.
+       *  [실제 운영] LLM이 스크립트에서 불만/이탈/재인입 위험 신호를 감지하여
+       *   riskFlags를 생성한다. 여기서는 그 결과를 집계만 한다. */
+      if (!isRiskFlagFiltered && riskFlagAgg.length > 0) {
+        const rfDetail = riskFlagAgg.slice(0,3).map(r => `${r.name} ${r.count}건`).join(', ');
+        const topRf = riskFlagAgg[0];
+        warningItems.push({
+          text:`위험 신호 감지: ${rfDetail}`,
+          keyword: canInteract && topRf.count >= 2 ? topRf.name : null,
+          filterFn: c => c.aiAnalysis && (c.aiAnalysis.riskFlags||[]).includes(topRf.name),
+          filterLabel: topRf.name
+        });
+      }
+
+      /* [Phase 2] 복합 위험: 의도 미달성 + 후속 조치 필요 — 재인입 가능성 최고 수준 */
+      if (!isIntentFiltered && !isStatusFiltered) {
+        const compoundRisk = withAi.filter(c =>
+          c.aiAnalysis.intentAchieved === false && c.aiAnalysis.status === 'followup');
+        if (compoundRisk.length >= 2) {
+          warningItems.push({
+            text:`의도 미달성 + 후속 조치 필요 ${compoundRisk.length}건 — 재인입 가능성 매우 높음`,
+            keyword: canInteract ? '복합 위험' : null,
+            filterFn: c => c.aiAnalysis && c.aiAnalysis.intentAchieved === false && c.aiAnalysis.status === 'followup',
+            filterLabel: '복합 위험'
+          });
+        }
+      }
+
+      /* 상담 품질: 대안 미제시 */
+      if (noAltCount > 0 && withAi.length > 0 && noAltCount >= Math.ceil(withAi.length * 0.2)) {
+        warningItems.push({
+          text:`대안 미제시 상담 ${noAltCount}건(${Math.round(noAltCount/withAi.length*100)}%) — 1차 해결 기회 손실`,
+          keyword: canInteract && noAltCount >= 2 ? '대안 미제시' : null,
+          filterFn: c => c.aiAnalysis && c.aiAnalysis.agentEval && !c.aiAnalysis.agentEval.alternativeProvided,
+          filterLabel: '대안 미제시'
+        });
+      }
+
+      /* 상담 품질: 부적절한 마무리 */
+      if (badClosingCount >= 2) {
+        warningItems.push({
+          text:`부적절한 마무리 ${badClosingCount}건 — 재인입 유발 가능`,
+          keyword: canInteract ? '부적절한 마무리' : null,
+          filterFn: c => c.aiAnalysis && c.aiAnalysis.agentEval && !c.aiAnalysis.agentEval.closingProper,
+          filterLabel: '부적절한 마무리'
+        });
+      }
+
+      /* 상담 품질 점수 — 전체 평균 대비 낮을 때 */
+      if (withAi.length > 0 && avgScore < globalAvg - 3) {
+        warningItems.push({
+          text:`평균 상담 품질 점수 ${avgScore}점 — 전체 평균(${globalAvg}점) 대비 ${globalAvg - avgScore}점 낮음`,
+          keyword: null, filterFn: null, filterLabel: null
+        });
+      }
+
+      /* 재인입 — 이미 재인입으로 필터 적용 시 생략 */
+      if (!isReentryFiltered && reentCalls.length > 0) {
+        const reentRate = Math.round(reentCalls.length / total * 100);
+        warningItems.push({
+          text:`재인입 ${reentCalls.length}건(${reentRate}%) — 이전 상담 완결 품질 점검 필요`,
+          keyword: canInteract && reentCalls.length >= 2 ? '재인입' : null,
+          filterFn: c => c.reentry >= 2,
+          filterLabel: '재인입 콜'
+        });
+      }
+
+      /* 피크 시간 — 이미 시간대 필터 적용 시 생략 */
+      if (!isTimeFiltered) {
+        const hd = _aggHourDist(calls);
+        const peak = hd.length > 0 ? hd.reduce((a,b) => b.count > a.count ? b : a) : null;
+        if (peak && peak.count >= 3) {
+          warningItems.push({
+            text:`콜 집중 시간대: ${peak.hour}시(${peak.count}건) — 피크 타임 대응 점검`,
+            keyword: canInteract ? `${peak.hour}시` : null,
+            filterFn: c => parseInt(c.time.split(':')[0],10) === peak.hour,
+            filterLabel: `${peak.hour}시 콜`
+          });
+        }
+      }
+
+      if (warningItems.length > 0) {
+        insights.push({ type:'warning', label:'위험 신호', color:'#E65100', items: warningItems });
+      }
+
+      /* ─── 조치 필요: suggestedAction 기반 구체적 제안 ─── */
+      const actionItems = [];
+      suggestedActions.filter(sa => sa.name).forEach(sa => {
+        actionItems.push({
+          text:`${sa.name} — 관련 콜 ${sa.count}건`,
+          keyword: canInteract && sa.count >= 2 ? sa.name : null,
+          filterFn: c => c.aiAnalysis && c.aiAnalysis.suggestedAction === sa.name,
+          filterLabel: sa.name
+        });
+      });
+      if (actionItems.length > 0) {
+        insights.push({ type:'action', label:'조치 필요', color:'#6A1B9A', items: actionItems });
+      }
+
+      /* ─── 운영 정보: 이슈 없는 일반 콜만 있을 때 ─── */
+      if (issueCalls.length === 0 && total > 0) {
+        const avgDurSec = Math.round(calls.reduce((s,c) => s + parseDurationSec(c.duration), 0) / total);
+        insights.push({ type:'trend', label:'운영 정보', color:'#2E7D32', items:[
+          { text:`전체 ${total}건 모두 이슈 없음 — 정상 처리 현황`, keyword:null, filterFn:null, filterLabel:null },
+          { text:`평균 통화시간 ${formatSecondsMMSS(avgDurSec)}`, keyword:null, filterFn:null, filterLabel:null }
+        ]});
+      }
+
+      return insights;
+    }
+
+    /* ── 패널별 클릭 핸들러 ──────────────────────────────────────
+     *  L1 클릭 → Top5 숨기고 L2 패널 열기
+     *  L2 클릭 → L3 패널 열기
+     *  L3 클릭 → 테이블만 필터 (드릴다운 없음, 토글)
+     * ─────────────────────────────────────────────────────────── */
+    function _onL1Click(fnIdx) {
+      const entry = _regL1[fnIdx];
+      if (!entry) return;
+      _aiHistory = [{ label: entry.filterLabel, filterFn: entry.filterFn }];
+      _aiLevel = 2;
+      _drillDataL2 = null; _drillDataL3 = null;
+      _l3FilterLabel = null; _renderL3FilterBadge();
+      _applyAiTableFilter();
+      _renderAiCard();
+    }
+
+    function _onL2Click(fnIdx) {
+      const entry = _regL2[fnIdx];
+      if (!entry) return;
+      if (_aiHistory.length < 1) return;
+      _aiHistory = [_aiHistory[0], { label: entry.filterLabel, filterFn: entry.filterFn }];
+      _aiLevel = 3;
+      _drillDataL3 = null;
+      _l3FilterLabel = null; _renderL3FilterBadge();
+      _applyAiTableFilter();
+      _renderAiCard();
+    }
+
+    function _onL3Click(fnIdx) {
+      const entry = _regL3[fnIdx];
+      if (!entry) return;
+      /* 동일 항목 재클릭 → 토글 해제 */
+      if (_l3FilterLabel === entry.filterLabel) { _resetL3Filter(); return; }
+      /* 테이블만 필터 */
+      let data = [..._aiFilteredCalls];
+      _aiHistory.forEach(h => { data = data.filter(h.filterFn); });
+      filteredData = data.filter(entry.filterFn);
+      _l3FilterLabel = entry.filterLabel;
+      currentPage = 1;
+      renderTable();
+      _renderL3FilterBadge();
+      /* L3 항목 하이라이트: 인라인 스타일로 직접 제어 */
+      document.querySelectorAll('#ai-panel-l3-body .ai-dp-item').forEach(e => {
+        e.classList.remove('l3-active');
+        e.style.background = '#FAFAFA';
+        e.style.borderLeftWidth = '3px';
+      });
+      const clicked = document.getElementById(`_onL3Click-${fnIdx}`);
+      if (clicked) {
+        clicked.classList.add('l3-active');
+        clicked.style.background = '#E3F2FD';
+        clicked.style.borderLeftWidth = '4px';
+      }
+    }
+
+    /* 패널 닫기: L2 닫으면 L1로, L3 닫으면 L2로 */
+    function _closeL2() {
+      _aiHistory = [];
+      _aiLevel = 1;
+      _drillDataL2 = null; _drillDataL3 = null;
+      _l3FilterLabel = null; _renderL3FilterBadge();
+      _applyAiTableFilter();
+      _renderAiCard();
+    }
+    function _closeL3() {
+      _aiHistory = [_aiHistory[0]];
+      _aiLevel = 2;
+      _drillDataL3 = null;
+      _l3FilterLabel = null; _renderL3FilterBadge();
+      _applyAiTableFilter();
+      _renderAiCard();
+    }
+    let _regL1 = [], _regL2 = [], _regL3 = [];
+    let _l3FilterLabel = null;
+
+    /** Level 3 필터 뱃지: 적용된 필터 라벨 + 초기화 버튼 표시 */
+    function _renderL3FilterBadge() {
+      const badge = document.getElementById('l3-filter-badge');
+      if (!badge) return;
+      if (!_l3FilterLabel) {
+        badge.style.display = 'none';
+        badge.innerHTML = '';
+        return;
+      }
+      badge.style.display = 'inline-flex';
+      badge.innerHTML = `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 10px;background:#E3F2FD;color:#1565C0;border-radius:12px;font-size:11px;font-weight:600;border:1px solid #BBDEFB;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1565C0" stroke-width="2"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+        ${_l3FilterLabel}
+        <span onclick="_resetL3Filter()" style="cursor:pointer;margin-left:2px;display:inline-flex;align-items:center;" title="필터 초기화">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1565C0" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </span>
+      </span>`;
+    }
+
+    /** Level 3 필터 초기화 */
+    function _resetL3Filter() {
+      _l3FilterLabel = null;
+      _applyAiTableFilter();
+      _renderL3FilterBadge();
+      document.querySelectorAll('#ai-panel-l3-body .ai-dp-item').forEach(e => {
+        e.classList.remove('l3-active');
+        e.style.background = '#FAFAFA';
+        e.style.borderLeftWidth = '3px';
+      });
+    }
+
+    /* 상담유형 Top5 클릭 → L2 진입 (Top5에서 직접 드릴다운) */
+    function _onConsultTypeClick(ctName) {
+      _aiHistory = [{ label: ctName, filterFn: c => c.consultationType === ctName }];
+      _aiLevel = 2;
+      _drillDataL2 = null; _drillDataL3 = null;
+      _l3FilterLabel = null; _renderL3FilterBadge();
+      _applyAiTableFilter();
+      _renderAiCard();
+    }
+
+    /* 키워드 Top5 클릭 시 해당 키워드로 드릴다운 진입 */
+    function _onKeywordTop5Click(kwName) {
+      _aiHistory = [{ label: kwName, filterFn: c => {
+        const allKws = Object.values(c.extractedKeywords || {}).reduce((acc, arr) => acc.concat(arr || []), []);
+        return allKws.some(item => item.name === kwName);
+      }}];
+      _aiLevel = 2;
+      _drillDataL2 = null; _drillDataL3 = null;
+      _l3FilterLabel = null; _renderL3FilterBadge();
+      _applyAiTableFilter();
+      _renderAiCard();
+    }
+
+    /* ── 콜 목록 테이블 누적 필터 적용 ─────────────────────────
+     *  [정책] _aiHistory의 모든 filterFn을 순서대로 적용하여
+     *   콜 목록 테이블에 표시할 데이터를 산출한다.
+     *   Level 1: _aiHistory 비어 있으므로 _aiFilteredCalls 전체
+     *   Level 2: history[0].filterFn 적용
+     *   Level 3: history[0].filterFn → history[1].filterFn 순서 적용
+     *  이전에는 마지막 필터만 적용하여 상위 필터가 유실되는
+     *  버그가 있었으나, 누적 체이닝으로 수정함. */
+    function _applyAiTableFilter() {
+      let data = [..._aiFilteredCalls];
+      _aiHistory.forEach(h => { data = data.filter(h.filterFn); });
+      filteredData = data;
+      currentPage = 1;
+      renderTable();
+    }
+
+    /* ── consult_type 시나리오 (소분류 진입용) ──────────────────────
+     *  [정책] 대시보드 소분류 도넛에서 클릭하여 진입한 경우.
+     *   - 키워드 Top5를 집계하여 오른쪽 패널에 표시한다.
+     *   - extractedKeywords 전 카테고리에서 빈도순 Top5를 추출한다.
+     *   - 인사이트는 해당 소분류 콜에 대한 이슈/트렌드 분석을 제공한다.
+     * ─────────────────────────────────────────────────────────── */
+    function _buildConsultTypeScenario(calls) {
+      const total = calls.length;
+      const issueCalls = calls.filter(c => c.issueKeywords && c.issueKeywords.length > 0);
+      const reentCalls = calls.filter(c => c.reentry >= 2);
+      const reentRate = total > 0 ? Math.round(reentCalls.length / total * 100) : 0;
+      const resolved = _completedRate(calls);
+      const topIssues = _aggIssueDistribution(calls);
+      const topIssue = topIssues.length > 0 ? topIssues[0].name : '-';
+      const followupCalls = calls.filter(c => c.aiAnalysis && c.aiAnalysis.status === 'followup');
+      const hd = _aggHourDist(calls);
+      const peak = hd.length > 0 ? hd.reduce((a,b) => b.count > a.count ? b : a) : {hour:0, count:0};
+
+      const curFilter = urlFilter ? urlFilter.filter : null;
+      /* [정책] Top5 표시 분기
+       *   - consult_type(소분류) → 키워드 Top5 (이미 상담유형으로 진입했으므로 키워드를 보여준다)
+       *   - keyword(주요 키워드) / product_keyword / issue_keyword / new_keyword
+       *     → 상담유형 Top5 (키워드로 진입했으므로 상담유형을 보여준다) */
+      const showCtTop5 = ['keyword','product_keyword','issue_keyword','new_keyword'].includes(curFilter);
+
+      /* 키워드 Top5 집계 (consult_type 전용) */
+      let keywordTop5 = [], maxKwCount = 1;
+      if (!showCtTop5) {
+        const kwMap = {};
+        calls.forEach(c => {
+          Object.values(c.extractedKeywords || {}).forEach(arr => {
+            (arr || []).forEach(item => {
+              const name = item.name;
+              if (!kwMap[name]) kwMap[name] = { name, count:0 };
+              kwMap[name].count += item.count || 1;
+            });
+          });
+        });
+        keywordTop5 = Object.values(kwMap).sort((a,b) => b.count - a.count).slice(0, 5);
+        maxKwCount = keywordTop5.length > 0 ? keywordTop5[0].count : 1;
+      }
+
+      /* 상담유형 Top5 집계 (product_keyword / issue_keyword / new_keyword 전용) */
+      let consultTypeTop5 = [], maxCtCount = 1;
+      if (showCtTop5) {
+        const ctMap = {};
+        calls.forEach(c => {
+          const key = c.consultationType;
+          if (!ctMap[key]) ctMap[key] = { name:key, count:0 };
+          ctMap[key].count++;
+        });
+        consultTypeTop5 = Object.values(ctMap).sort((a,b) => b.count - a.count).slice(0, 5);
+        maxCtCount = consultTypeTop5.length > 0 ? consultTypeTop5[0].count : 1;
+      }
+
+      const ctFlowPatterns = _aggFlowPattern(calls);
+      const ctIntentRate = _aggIntentRate(calls);
+      const ctFlowDetail = ctFlowPatterns.slice(0,3).map(f => `${f.name} ${f.count}건`).join(' / ');
+      const ctTopFailCause = (() => {
+        const fc = _aggByField(ctIntentRate.notAchievedCalls.filter(c => c.aiAnalysis), c => c.aiAnalysis.rootCause);
+        return fc.length > 0 ? fc[0].name : '-';
+      })();
+
+      const filterValue = urlFilter ? urlFilter.value : '';
+
+      return {
+        level1: {
+          keywordTop5: showCtTop5 ? undefined : keywordTop5,
+          maxKwCount: showCtTop5 ? undefined : maxKwCount,
+          consultTypeTop5: showCtTop5 ? consultTypeTop5 : undefined,
+          maxCtCount: showCtTop5 ? maxCtCount : undefined,
+          insights: [
+            { type:'finding', label:`<b>${filterValue}</b> 핵심 발견`, color:'#1565C0', items:[
+              { text:`${filterValue} 관련 콜 ${total}건 중 이슈 콜 ${issueCalls.length}건(${total > 0 ? Math.round(issueCalls.length/total*100) : 0}%)`, keyword: issueCalls.length > 0 ? '이슈 콜' : null, filterFn: issueCalls.length > 0 ? (c => c.issueKeywords && c.issueKeywords.length > 0) : null, filterLabel:'이슈 콜' },
+              { text:`1차 처리 완료율 ${resolved}% — 후속 조치 필요 ${followupCalls.length}건`, keyword: followupCalls.length > 0 ? '후속 조치 필요' : null, filterFn: followupCalls.length > 0 ? (c => c.aiAnalysis && c.aiAnalysis.status === 'followup') : null, filterLabel:'후속 조치 필요' },
+              ...(topIssues.length > 0 ? [{ text:`최다 이슈: ${topIssue} ${topIssues[0].count}건 — 전체 이슈의 ${issueCalls.length > 0 ? Math.round(topIssues[0].count/issueCalls.length*100) : 0}%`, keyword:topIssue !== '-' ? topIssue : null, filterFn: topIssue !== '-' ? (c => (c.issueKeywords||[]).includes(topIssue)) : null, filterLabel:topIssue }] : []),
+              { text:`상담 흐름: ${ctFlowDetail}`, keyword: ctFlowPatterns.length > 0 && ctFlowPatterns[0].count >= 2 ? ctFlowPatterns[0].name : null, filterFn: ctFlowPatterns.length > 0 ? (c => c.aiAnalysis && c.aiAnalysis.flowPattern === ctFlowPatterns[0].name) : null, filterLabel: ctFlowPatterns.length > 0 ? ctFlowPatterns[0].name : null }
+            ]},
+            { type:'warning', label:'위험 신호', color:'#E65100', items:[
+              { text:`재인입 비율 ${reentRate}%(${reentCalls.length}건) — 이전 상담 완결 품질 점검 필요`, keyword: reentCalls.length > 0 ? '재인입' : null, filterFn: reentCalls.length > 0 ? (c => c.reentry >= 2) : null, filterLabel:'재인입 콜' },
+              { text:`콜 집중 시간대: ${peak.hour}시(${peak.count}건)`, keyword:`${peak.hour}시`, filterFn: c => parseInt(c.time.split(':')[0],10) === peak.hour, filterLabel:`${peak.hour}시 콜` },
+              { text:`고객 의도 달성률 ${ctIntentRate.rate}% — 미달성 ${ctIntentRate.notAchieved}건 주요 원인: ${ctTopFailCause}`, keyword: ctIntentRate.notAchieved >= 2 ? '의도 미달성' : null, filterFn: c => c.aiAnalysis && c.aiAnalysis.intentAchieved === false, filterLabel:'의도 미달성' }
+            ]}
+          ]
+        }
+      };
+    }
+
+    /* ── hour 시나리오 (시간대별 콜량 진입용) ─────────────────────────
+     *  [정책] 대시보드 시간대별 콜량 차트에서 클릭하여 진입한 경우.
+     *   - 키워드 Top5 + 상담유형 Top5를 동시에 상하 배치로 표시한다.
+     *   - 인사이트는 해당 시간대의 콜 패턴 분석을 제공한다.
+     * ─────────────────────────────────────────────────────────── */
+    function _buildHourScenario(calls) {
+      const total = calls.length;
+      const issueCalls = calls.filter(c => c.issueKeywords && c.issueKeywords.length > 0);
+      const resolved = _completedRate(calls);
+      const topIssues = _aggIssueDistribution(calls);
+      const topIssue = topIssues.length > 0 ? topIssues[0].name : '-';
+      const followupCalls = calls.filter(c => c.aiAnalysis && c.aiAnalysis.status === 'followup');
+      const reentCalls = calls.filter(c => c.reentry >= 2);
+      const reentRate = total > 0 ? Math.round(reentCalls.length / total * 100) : 0;
+
+      /* 키워드 Top5 */
+      const kwMap = {};
+      calls.forEach(c => {
+        Object.values(c.extractedKeywords || {}).forEach(arr => {
+          (arr || []).forEach(item => {
+            const name = item.name;
+            if (!kwMap[name]) kwMap[name] = { name, count:0 };
+            kwMap[name].count += item.count || 1;
+          });
+        });
+      });
+      const keywordTop5 = Object.values(kwMap).sort((a,b) => b.count - a.count).slice(0, 5);
+      const maxKwCount = keywordTop5.length > 0 ? keywordTop5[0].count : 1;
+
+      /* 상담유형 Top5 */
+      const ctMap = {};
+      calls.forEach(c => {
+        const key = c.consultationType;
+        if (!ctMap[key]) ctMap[key] = { name:key, count:0 };
+        ctMap[key].count++;
+      });
+      const consultTypeTop5 = Object.values(ctMap).sort((a,b) => b.count - a.count).slice(0, 5);
+      const maxCtCount = consultTypeTop5.length > 0 ? consultTypeTop5[0].count : 1;
+
+      const hourValue = urlFilter ? urlFilter.value : '?';
+
+      return {
+        level1: {
+          keywordTop5, maxKwCount,
+          consultTypeTop5, maxCtCount,
+          insights: [
+            { type:'finding', label:`<b>${hourValue}시</b> 시간대 핵심 발견`, color:'#1565C0', items:[
+              { text:`${hourValue}시 콜 ${total}건 — 이슈 콜 ${issueCalls.length}건(${total > 0 ? Math.round(issueCalls.length/total*100) : 0}%)`, keyword: issueCalls.length > 0 ? '이슈 콜' : null, filterFn: issueCalls.length > 0 ? (c => c.issueKeywords && c.issueKeywords.length > 0) : null, filterLabel:'이슈 콜' },
+              { text:`1차 처리 완료율 ${resolved}% — 후속 조치 필요 ${followupCalls.length}건`, keyword: followupCalls.length > 0 ? '후속 조치 필요' : null, filterFn: followupCalls.length > 0 ? (c => c.aiAnalysis && c.aiAnalysis.status === 'followup') : null, filterLabel:'후속 조치 필요' },
+              ...(topIssues.length > 0 ? [{ text:`최다 이슈: ${topIssue} ${topIssues[0].count}건`, keyword:topIssue !== '-' ? topIssue : null, filterFn: topIssue !== '-' ? (c => (c.issueKeywords||[]).includes(topIssue)) : null, filterLabel:topIssue }] : [])
+            ]},
+            { type:'warning', label:'위험 신호', color:'#E65100', items:[
+              { text:`재인입 비율 ${reentRate}%(${reentCalls.length}건)`, keyword: reentCalls.length > 0 ? '재인입' : null, filterFn: reentCalls.length > 0 ? (c => c.reentry >= 2) : null, filterLabel:'재인입 콜' }
+            ]}
+          ]
+        }
+      };
+    }
+
+    /* ── 시나리오 분기 + 캐싱 ──────────────────────────────────────
+     *  [정책] URL 파라미터(urlFilter)에 따라 시나리오를 자동 분기한다.
+     *   - keyword (주문번호 포함) → _buildKeywordScenario (상담유형 Top5)
+     *   - consult_type(소분류) → _buildConsultTypeScenario (키워드 Top5)
+     *   - product_keyword / issue_keyword / new_keyword
+     *     → _buildConsultTypeScenario (상담유형 Top5)
+     *   - hour → _buildHourScenario (키워드 Top5 + 상담유형 Top5 상하 배치)
+     *   - 그 외 → _buildDefaultScenario (Top5 없음)
+     * ─────────────────────────────────────────────────────────── */
+    function _getScenario() {
+      const f = urlFilter ? urlFilter.filter : null;
+      const v = urlFilter ? urlFilter.value : '';
+      let key;
+      /* [정책] 시나리오 분기
+       *   - keyword + "주문" 포함 → keyword 시나리오 (주문번호 특화 인사이트 + 상담유형 Top5)
+       *   - keyword + 그 외 값  → consult_type 시나리오 (범용 인사이트 + 상담유형 Top5)
+       *   - product_keyword / issue_keyword / new_keyword → consult_type 시나리오 (상담유형 Top5)
+       *   - consult_type → consult_type 시나리오 (키워드 Top5) */
+      if (f === 'keyword' && v.includes('주문')) key = 'keyword';
+      else if (f === 'keyword') key = 'kw_general';
+      else if (['consult_type','product_keyword','issue_keyword','new_keyword'].includes(f)) key = 'consult_type';
+      else if (f === 'hour') key = 'hour';
+      else key = 'default';
+
+      if (!_aiCache[key]) {
+        const base = (key === 'keyword' || key === 'kw_general' || key === 'consult_type' || key === 'hour') ? _aiFilteredCalls : callData;
+        if (key === 'keyword') _aiCache[key] = _buildKeywordScenario(base);
+        else if (key === 'kw_general') _aiCache[key] = _buildConsultTypeScenario(base);
+        else if (key === 'consult_type') _aiCache[key] = _buildConsultTypeScenario(base);
+        else if (key === 'hour') _aiCache[key] = _buildHourScenario(base);
+        else _aiCache[key] = _buildDefaultScenario(base);
+      }
+      return _aiCache[key];
+    }
+
+    /* ── AI 현황분석 멀티패널 렌더링 ─────────────────────────────
+     *  [정책] 멀티패널 드릴다운 방식으로 인사이트를 렌더링한다.
+     *   - L1 패널: 항상 표시, 시나리오 기반 인사이트
+     *   - Top5 패널: 키워드 시나리오일 때 L1 옆에 표시, L2 진입 시 숨김
+     *   - L2 패널: L1 항목 클릭 시 오른쪽에 열림
+     *   - L3 패널: L2 항목 클릭 시 오른쪽에 열림
+     *   - 이전 레벨 콘텐츠는 유지되며, 클릭한 항목이 활성 표시됨
+     * ─────────────────────────────────────────────────────────── */
+
+    const _insightSvg = {
+      finding: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
+      warning: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+      trend: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+      action: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>',
+      cause: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 6l-9.5 9.5-5-5L1 18"/><polyline points="17 6 23 6 23 12"/></svg>'
+    };
+
+    /* 인사이트 그룹 → HTML, 지정한 registry 배열에 핸들러 등록 */
+    function _renderInsightsToHtml(insights, registry, clickFn, isL3) {
+      return insights.map(group => {
+        const itemsHtml = group.items.map(item => {
+          const hasFilter = item.keyword && item.filterFn;
+          let displayText = item.text;
+          if (hasFilter) {
+            displayText = item.text.replace(new RegExp(`(${item.keyword.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'g'),
+              `<span style="color:${group.color};font-weight:700;">$1</span>`);
+          }
+          let idAttr = '', evtAttr = '', arrowSvg = '';
+          const baseStyle = `display:flex !important;align-items:center;gap:8px;padding:5px 10px;background:#FAFAFA;border-radius:6px;margin-bottom:2px;border-left:3px solid ${group.color};transition:background .15s;overflow:hidden;`;
+          if (hasFilter) {
+            const fnIdx = registry.length;
+            registry.push({ filterFn: item.filterFn, filterLabel: item.filterLabel });
+            idAttr = `id="${clickFn}-${fnIdx}"`;
+            evtAttr = `onclick="${clickFn}(${fnIdx})" onmouseenter="this.style.background='#E8EAF6'" onmouseleave="if(this.classList.contains('drill-active'))this.style.background='#DCEEFB';else if(this.classList.contains('l3-active'))this.style.background='#E3F2FD';else this.style.background='#FAFAFA'"`;
+            arrowSvg = isL3
+              ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${group.color}" stroke-width="2" style="flex-shrink:0;margin-left:auto;opacity:0.5;"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>`
+              : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${group.color}" stroke-width="2" style="flex-shrink:0;margin-left:auto;opacity:0.5;"><path d="m9 18 6-6-6-6"/></svg>`;
+          }
+          const cursorStyle = hasFilter ? 'cursor:pointer;' : '';
+          return `<div class="ai-dp-item${hasFilter ? ' clickable' : ''}" ${idAttr} ${evtAttr} style="${baseStyle}${cursorStyle}">
+            <span style="color:${group.color};font-size:10px;flex-shrink:0;line-height:1;">■</span>
+            <span style="font-size:13px;color:#424242;line-height:1.45;flex:1;min-width:0;">${displayText}</span>
+            ${arrowSvg}
+          </div>`;
+        }).join('');
+        return `<div style="margin-bottom:8px;">
+          <div style="font-size:13px;font-weight:700;color:${group.color};margin-bottom:4px;display:flex;align-items:center;gap:6px;">
+            ${_insightSvg[group.type] || ''} ${group.label}
+          </div>
+          <div style="display:flex;flex-direction:column;gap:2px;">${itemsHtml}</div>
+        </div>`;
+      }).join('');
+    }
+
+    /* 패널 열기/닫기: width(%) 기반 슬라이딩 제어 */
+    const _panelTransition = 'width .4s cubic-bezier(.4,0,.2,1), opacity .3s ease, padding .35s ease';
+    function _openPanel(el, widthPct, narrow) {
+      if (!el) return;
+      el.style.transition = _panelTransition;
+      el.style.width = widthPct;
+      el.style.padding = '14px 16px';
+      el.style.opacity = '1';
+      el.style.overflowY = 'auto'; el.style.overflowX = 'hidden';
+      el.style.borderLeft = el.id !== 'ai-panel-l1' ? '1px solid #E0E0E0' : '';
+      if (narrow) el.classList.add('narrow'); else el.classList.remove('narrow');
+    }
+    function _closePanel(el) {
+      if (!el) return;
+      el.style.transition = _panelTransition;
+      el.style.width = '0'; el.style.padding = '0';
+      el.style.opacity = '0'; el.style.overflow = 'hidden';
+      el.style.borderLeft = 'none';
+      el.classList.remove('narrow');
+      /* 닫힌 패널의 콘텐츠를 비워 높이 잔류 방지 */
+      const body = el.querySelector('[id$="-body"]');
+      if (body) body.innerHTML = '';
+      const hdr = el.querySelector('[id$="-hdr"]');
+      if (hdr) hdr.innerHTML = '';
+    }
+    /* 레벨에 따른 패널 비율 일괄 설정 — L2: 35/65, L3: 25/25/50 */
+    function _setPanelLayout(level) {
+      const l1 = document.getElementById('ai-panel-l1');
+      const l2 = document.getElementById('ai-panel-l2');
+      const l3 = document.getElementById('ai-panel-l3');
+      if (level === 1) {
+        _openPanel(l1, '100%', false);
+        _closePanel(l2); _closePanel(l3);
+      } else if (level === 2) {
+        _openPanel(l1, '35%', true);
+        _openPanel(l2, '65%', false);
+        _closePanel(l3);
+      } else if (level >= 3) {
+        _openPanel(l1, '25%', true);
+        _openPanel(l2, '25%', true);
+        _openPanel(l3, '50%', false);
+      }
+      _applyNarrowEllipsis();
+    }
+    /* 축소 패널 텍스트 말줄임: 인라인 스타일로 직접 제어 */
+    function _applyNarrowEllipsis() {
+      ['ai-panel-l1','ai-panel-l2','ai-panel-l3'].forEach(panelId => {
+        const panel = document.getElementById(panelId);
+        if (!panel) return;
+        const isNarrow = panel.classList.contains('narrow');
+        panel.querySelectorAll('.ai-dp-item').forEach(item => {
+          const textSpan = item.children[1];
+          if (!textSpan) return;
+          if (isNarrow) {
+            textSpan.style.whiteSpace = 'nowrap';
+            textSpan.style.overflow = 'hidden';
+            textSpan.style.textOverflow = 'ellipsis';
+          } else {
+            textSpan.style.whiteSpace = '';
+            textSpan.style.overflow = '';
+            textSpan.style.textOverflow = '';
+          }
+        });
+      });
+    }
+
+    /* 패널 헤더 렌더: 컨텍스트 레이블 + 건수 + 닫기 버튼 */
+    function _renderPanelHeader(panelHdrId, levelClass, ctxText, count, resetFn) {
+      const el = document.getElementById(panelHdrId);
+      if (!el) return;
+      const bgMap = { l1: '#1565C0', l2: '#00897B', l3: '#6A1B9A' };
+      const bg = bgMap[levelClass] || '#1565C0';
+      el.style.cssText = 'display:flex !important;align-items:center;gap:8px;margin-bottom:12px;';
+      el.innerHTML = `
+        <span style="font-size:13px;font-weight:700;color:#fff;padding:3px 12px;border-radius:5px;background:${bg};white-space:nowrap;">${ctxText}</span>
+        <span style="font-size:12px;color:#9E9E9E;white-space:nowrap;">${count}건</span>
+        ${resetFn ? `<button onclick="${resetFn}" style="margin-left:auto;display:inline-flex;align-items:center;gap:3px;font-size:12px;color:#1565C0;cursor:pointer;padding:3px 10px;border-radius:4px;background:#E3F2FD;border:none;white-space:nowrap;" onmouseenter="this.style.background='#BBDEFB'" onmouseleave="this.style.background='#E3F2FD'">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#1565C0" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>닫기</button>` : ''}
+      `;
+    }
+
+    /* 상담유형 Top5 HTML 생성 (keyword/hour 시나리오 공용) */
+    function _renderCtTop5Html(list, maxCount) {
+      const colors = ['#1565C0','#1976D2','#1E88E5','#42A5F5','#64B5F6'];
+      return `
+        <div style="font-size:13px;font-weight:700;color:#424242;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#424242" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          상담유형 Top 5
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          ${list.map((ct, idx) => {
+            const pct = Math.round(ct.count / maxCount * 100);
+            return `<div onclick="_onConsultTypeClick('${ct.name.replace(/'/g, "\\'")}')" style="cursor:pointer;transition:all 0.15s;border-radius:6px;padding:8px 12px;background:#fff;border:1px solid #E8EAF6;" onmouseenter="this.style.background='#E3F2FD';this.style.borderColor='#BBDEFB'" onmouseleave="this.style.background='#fff';this.style.borderColor='#E8EAF6'">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+                <span style="font-size:13px;color:#424242;font-weight:600;display:flex;align-items:center;gap:5px;">
+                  <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:3px;background:${colors[idx]};color:#fff;font-size:10px;font-weight:700;">${idx+1}</span>
+                  ${ct.name}
+                </span>
+                <span style="font-size:13px;font-weight:700;color:${colors[idx]};">${ct.count}건</span>
+              </div>
+              <div style="width:100%;height:5px;background:#E8EAF6;border-radius:2px;overflow:hidden;">
+                <div style="width:${pct}%;height:100%;background:${colors[idx]};border-radius:2px;"></div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>`;
+    }
+
+    /* 키워드 Top5 HTML 생성 (consult_type/hour 시나리오 공용) */
+    function _renderKwTop5Html(list, maxCount) {
+      const colors = ['#00897B','#26A69A','#4DB6AC','#80CBC4','#B2DFDB'];
+      return `
+        <div style="font-size:13px;font-weight:700;color:#424242;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#424242" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+          키워드 Top 5
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          ${list.map((kw, idx) => {
+            const pct = Math.round(kw.count / maxCount * 100);
+            return `<div onclick="_onKeywordTop5Click('${kw.name.replace(/'/g, "\\'")}')" style="cursor:pointer;transition:all 0.15s;border-radius:6px;padding:8px 12px;background:#fff;border:1px solid #E0F2F1;" onmouseenter="this.style.background='#E0F2F1';this.style.borderColor='#B2DFDB'" onmouseleave="this.style.background='#fff';this.style.borderColor='#E0F2F1'">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+                <span style="font-size:13px;color:#424242;font-weight:600;display:flex;align-items:center;gap:5px;">
+                  <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:3px;background:${colors[idx]};color:#fff;font-size:10px;font-weight:700;">${idx+1}</span>
+                  ${kw.name}
+                </span>
+                <span style="font-size:13px;font-weight:700;color:${colors[idx]};">${kw.count}건</span>
+              </div>
+              <div style="width:100%;height:5px;background:#E0F2F1;border-radius:2px;overflow:hidden;">
+                <div style="width:${pct}%;height:100%;background:${colors[idx]};border-radius:2px;"></div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>`;
+    }
+
+    function _renderAiCard() {
+      const ctxLabel = document.getElementById('ai-context-label');
+      const f = urlFilter ? urlFilter.filter : null;
+      const v = urlFilter ? urlFilter.value : '';
+      const isKw = f === 'keyword';
+      const isCt = ['consult_type','product_keyword','issue_keyword','new_keyword'].includes(f);
+      const isHour = f === 'hour';
+
+      /* 컨텍스트 라벨: 시나리오별 표시 */
+      if (ctxLabel) {
+        if (isKw) { ctxLabel.textContent = `필터: ${v}`; ctxLabel.style.display = 'inline-block'; }
+        else if (isCt) { ctxLabel.textContent = `필터: ${v}`; ctxLabel.style.display = 'inline-block'; }
+        else if (isHour) { ctxLabel.textContent = `필터: ${v}시`; ctxLabel.style.display = 'inline-block'; }
+        else { ctxLabel.style.display = 'none'; }
+      }
+
+      /* ── L1 패널 (인사이트 + Top5를 한 패널 안에 표시) ── */
+      _regL1 = [];
+      const s = _getScenario().level1;
+      const l1Count = (isKw || isCt || isHour) ? _aiFilteredCalls.length : callData.length;
+      const l1Label = isKw ? `${v} 분석` : isCt ? `${v} 분석` : isHour ? `${v}시 분석` : '전체 분석';
+      _renderPanelHeader('ai-panel-l1-hdr', 'l1', l1Label, l1Count, null);
+
+      let l1BodyHtml = '';
+      const hasCtTop5 = s.consultTypeTop5 && s.consultTypeTop5.length > 0;
+      const hasKwTop5 = s.keywordTop5 && s.keywordTop5.length > 0;
+      const hasAnyTop5 = (hasCtTop5 || hasKwTop5) && _aiLevel === 1;
+
+      if (hasAnyTop5) {
+        const insightsHtml = _renderInsightsToHtml(s.insights, _regL1, '_onL1Click', false);
+
+        let top5Html = '';
+        if (hasCtTop5 && hasKwTop5) {
+          /* hour 시나리오: 키워드 Top5 위 + 상담유형 Top5 아래 상하 배치 */
+          top5Html = _renderKwTop5Html(s.keywordTop5, s.maxKwCount)
+            + '<div style="margin:16px 0;border-top:1px solid #E0E0E0;"></div>'
+            + _renderCtTop5Html(s.consultTypeTop5, s.maxCtCount);
+        } else if (hasKwTop5) {
+          /* consult_type(소분류) 시나리오: 키워드 Top5만 */
+          top5Html = _renderKwTop5Html(s.keywordTop5, s.maxKwCount);
+        } else {
+          /* keyword / product_keyword / issue_keyword / new_keyword 시나리오: 상담유형 Top5만 */
+          top5Html = _renderCtTop5Html(s.consultTypeTop5, s.maxCtCount);
+        }
+
+        l1BodyHtml = `<div style="display:flex;gap:0;">
+          <div style="flex:1;min-width:0;padding-right:16px;">${insightsHtml}</div>
+          <div style="flex:0 0 360px;border-left:1px solid #E0E0E0;padding-left:16px;">${top5Html}</div>
+        </div>`;
+      } else {
+        l1BodyHtml = _renderInsightsToHtml(s.insights, _regL1, '_onL1Click', false);
+      }
+      document.getElementById('ai-panel-l1-body').innerHTML = l1BodyHtml;
+
+      /* ── L2 패널 콘텐츠 렌더 ── */
+      if (_aiLevel >= 2 && _aiHistory.length >= 1) {
+        _regL2 = [];
+        if (!_drillDataL2) _rebuildDrillForLevel(2);
+        const l2Calls = [..._aiFilteredCalls].filter(_aiHistory[0].filterFn);
+        _renderPanelHeader('ai-panel-l2-hdr', 'l2', _aiHistory[0].label + ' 상세', l2Calls.length, '_closeL2()');
+        const l2Html = _drillDataL2 && _drillDataL2.length > 0
+          ? _renderInsightsToHtml(_drillDataL2, _regL2, '_onL2Click', false)
+          : '<div style="padding:16px;text-align:center;color:#9E9E9E;font-size:14px;">해당 조건의 콜이 없습니다.</div>';
+        document.getElementById('ai-panel-l2-body').innerHTML = l2Html;
+      }
+
+      /* ── L3 패널 콘텐츠 렌더 ── */
+      if (_aiLevel >= 3 && _aiHistory.length >= 2) {
+        _regL3 = [];
+        if (!_drillDataL3) _rebuildDrillForLevel(3);
+        let l3Calls = [..._aiFilteredCalls];
+        _aiHistory.forEach(h => { l3Calls = l3Calls.filter(h.filterFn); });
+        _renderPanelHeader('ai-panel-l3-hdr', 'l3', _aiHistory[1].label + ' 상세', l3Calls.length, '_closeL3()');
+        const l3Html = _drillDataL3 && _drillDataL3.length > 0
+          ? _renderInsightsToHtml(_drillDataL3, _regL3, '_onL3Click', true)
+          : '<div style="padding:16px;text-align:center;color:#9E9E9E;font-size:14px;">해당 조건의 콜이 없습니다.</div>';
+        document.getElementById('ai-panel-l3-body').innerHTML = l3Html;
+      }
+
+      /* ── 패널 비율 일괄 적용: 콘텐츠 렌더 후 레이아웃 전환 ── */
+      _setPanelLayout(_aiLevel);
+
+      const bc = document.getElementById('ai-breadcrumb');
+      if (bc) bc.innerHTML = '';
+
+      /* ── 선택 항목 하이라이트: 드릴다운 경로를 시각적으로 표시 ── */
+      _applyDrillHighlight();
+    }
+
+    /* 드릴다운 경로 상의 선택 항목에 'drill-active' 클래스 + 인라인 스타일 적용 */
+    function _applyDrillHighlight() {
+      const highlightStyle = (el, color) => {
+        el.classList.add('drill-active');
+        el.style.background = '#DCEEFB';
+        el.style.borderLeftColor = color;
+        el.style.borderLeftWidth = '4px';
+        el.style.fontWeight = '600';
+      };
+      if (_aiLevel >= 2 && _aiHistory.length >= 1) {
+        for (let i = 0; i < _regL1.length; i++) {
+          if (_regL1[i].filterLabel === _aiHistory[0].label) {
+            const el = document.getElementById(`_onL1Click-${i}`);
+            if (el) highlightStyle(el, '#1565C0');
+            break;
+          }
+        }
+      }
+      if (_aiLevel >= 3 && _aiHistory.length >= 2) {
+        for (let i = 0; i < _regL2.length; i++) {
+          if (_regL2[i].filterLabel === _aiHistory[1].label) {
+            const el = document.getElementById(`_onL2Click-${i}`);
+            if (el) highlightStyle(el, '#00897B');
+            break;
+          }
+        }
+      }
+    }
+
+    /* ── AI 분석 초기화 ──────────────────────────────────────────
+     *  필터 적용/초기화 시 호출되어 Level 1로 리셋한다.
+     *  _aiFilteredCalls에 현재 filteredData를 복사하여
+     *  드릴다운 기준 원본 데이터로 사용한다.
+     *  _aiHistory를 비우면 _applyAiTableFilter에서 필터 없이 전체 복원. */
+    function initAiAnalysis() {
+      _aiCache = {};
+      _aiLevel = 1;
+      _aiHistory = [];
+      _drillDataL2 = null;
+      _drillDataL3 = null;
+      _l3FilterLabel = null;
+      _renderL3FilterBadge();
+      _aiFilteredCalls = [...filteredData];
+      _renderAiCard();
     }
 
     function hasActiveFilter() {
@@ -792,7 +2595,12 @@
           if (durVal === 'gte3' && min < 3) return false;
           if (durVal === 'gte10' && min < 10) return false;
         }
-        if (issueQ && !c.issueKeywords.some(k => k.toLowerCase().includes(issueQ))) return false;
+        if (issueQ) {
+          const iq = issueQ.replace(/\s/g, '');
+          const inIK = c.issueKeywords.some(k => k.replace(/\s/g, '').toLowerCase().includes(iq));
+          const inExt = (c.extractedKeywords.issue || []).some(item => item.name.replace(/\s/g, '').toLowerCase().includes(iq));
+          if (!inIK && !inExt) return false;
+        }
         if (!matchesSpecialFilter(c, urlFilter)) return false;
         if (!matchesSpecialFilter(c, kpiFilter)) return false;
         return true;
@@ -801,8 +2609,7 @@
       currentPage = 1;
       renderKPICards();
       renderTable();
-      if (hasActiveFilter()) showSuggestionBar();
-      else hideSuggestionBar();
+      initAiAnalysis();
     }
 
     function resetFilter() {
@@ -827,11 +2634,33 @@
       currentPage = 1;
       renderKPICards();
       renderTable();
-      hideSuggestionBar();
+      initAiAnalysis();
       AICC_Toast.show('필터가 초기화되었습니다.');
     }
 
-    /* ══════════════════════════ KPI 카드 렌더링 ══════════════════════════ */
+    /* ══════════════════════════════════════════════════════════════════
+     *  KPI 카드 렌더링
+     *  ──────────────────────────────────────────────────────────────
+     *  [정책] 6개 카드를 1행(6컬럼 그리드)으로 배치한다.
+     *   1. 총 콜수     — filteredData 전체 건수
+     *   2. 이슈 콜     — issueKeywords가 1개 이상인 콜
+     *   3. 초과 콜     — 통화시간 3분(180초) 이상인 콜
+     *   4. 재인입 콜   — reentry >= 2 인 콜
+     *   5. 평균 통화시간 — 전체 콜의 duration 평균 (MM:SS)
+     *   6. 평균 묵음시간 — 전체 콜의 totalSilence 평균 (MM:SS)
+     *
+     *  [카드 유형]
+     *   - primary: 건수 표시 + I/B·O/B 비율 + 클릭 시 테이블 필터 연동
+     *   - info: 시간 표시 + 보조 설명 (클릭 불가)
+     *
+     *  [I/B·O/B 비율] 각 primary 카드별로 해당 조건에 맞는 콜 중
+     *   I/B·O/B 건수와 비율을 하단에 표시한다. (폰트 13px/12px)
+     *
+     *  [KPI 카드와 AI 현황분석의 관계]
+     *   - KPI 카드는 filteredData 기준 요약 지표이다.
+     *   - AI 현황분석의 Level 1에서는 KPI와 중복되는 지표 카드를 표시하지 않는다.
+     *   - KPI 카드 클릭(이슈/초과/재인입)은 테이블만 필터링하며, AI 분석 상태는 유지된다.
+     * ════════════════════════════════════════════════════════════════ */
 
     function renderKPICards() {
       const fmt = n => (n == null) ? '-' : n.toLocaleString();
@@ -849,17 +2678,14 @@
       const avgSilenceSec = total > 0
         ? filteredData.reduce((sum, c) => sum + (c.totalSilence || 0), 0) / total
         : 0;
-      const avgReentry = total > 0
-        ? filteredData.reduce((sum, c) => sum + (c.reentry || 0), 0) / total
-        : 0;
-      const productKeywords = aggregateProductKeywords(filteredData);
-      const top6Products = productKeywords.slice(0, 6);
 
-      const primaryCards = [
-        { label:'총 콜수', value:total, color:'#212121' },
-        { label:'이슈 콜', value:issue, color:'#212121', filter:'issue' },
-        { label:'초과 콜', value:over, color:'#212121', filter:'over' },
-        { label:'재인입 콜', value:reentry, color:'#212121', filter:'reentry' }
+      const kpiCards = [
+        { label:'총 콜수', value:total, color:'#212121', type:'primary' },
+        { label:'이슈 콜', value:issue, color:'#212121', filter:'issue', type:'primary' },
+        { label:'초과 콜', value:over, color:'#212121', filter:'over', type:'primary' },
+        { label:'재인입 콜', value:reentry, color:'#212121', filter:'reentry', type:'primary' },
+        { label:'평균 통화시간', value:formatSecondsMMSS(avgDurationSec), helper:`전체 ${fmt(total)}건 기준`, accent:'#1565C0', type:'info' },
+        { label:'평균 묵음시간', value:formatSecondsMMSS(avgSilenceSec), helper:total > 0 ? `평균 묵음 비중 ${Math.round((avgSilenceSec / Math.max(avgDurationSec, 1)) * 1000) / 10}%` : '데이터 없음', accent:'#8E24AA', type:'info' }
       ];
 
       const renderPrimaryCard = (card) => {
@@ -875,82 +2701,102 @@
         const obPct = card.value > 0 ? 100 - ibPct : 0;
 
         const clickableStyle = card.filter ? 'cursor:pointer;transition:box-shadow 0.15s, transform 0.15s;' : '';
-        return `<div class="kpi-card" ${card.filter ? `onclick="applyKpiFilter('${card.filter}')"` : ''} style="padding:12px 16px;height:112px;display:flex;flex-direction:column;justify-content:space-between;${clickableStyle}" ${card.filter ? `onmouseenter="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.08)';this.style.transform='translateY(-1px)'" onmouseleave="this.style.boxShadow='';this.style.transform=''"` : ''}>
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px;">
-            <div style="font-size:12px;color:#757575;">${card.label}</div>
+        return `<div class="kpi-card" ${card.filter ? `onclick="applyKpiFilter('${card.filter}')"` : ''} style="padding:10px 14px;height:90px;display:flex;flex-direction:column;justify-content:space-between;${clickableStyle}" ${card.filter ? `onmouseenter="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.08)';this.style.transform='translateY(-1px)'" onmouseleave="this.style.boxShadow='';this.style.transform=''"` : ''}>
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:4px;">
+            <div style="font-size:11px;color:#757575;">${card.label}</div>
             ${card.filter ? searchIcon('클릭하여 검색') : ''}
           </div>
-          <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
-            <span style="font-size:28px;font-weight:700;color:${card.color};">${fmt(card.value)}</span>
-            <span style="font-size:12px;color:#9E9E9E;">건</span>
-            <span style="margin-left:auto;font-size:11px;white-space:nowrap;color:#9E9E9E;">I/B <span style="color:#616161;font-weight:600;">${fmt(ibCount)}</span>건<span style="font-size:10px;">(${ibPct}%)</span>&ensp;O/B <span style="color:#616161;font-weight:600;">${fmt(obCount)}</span>건<span style="font-size:10px;">(${obPct}%)</span></span>
+          <div style="display:flex;align-items:baseline;gap:4px;">
+            <span style="font-size:22px;font-weight:700;color:${card.color};">${fmt(card.value)}</span>
+            <span style="font-size:11px;color:#9E9E9E;">건</span>
           </div>
+          <div style="font-size:11px;white-space:nowrap;color:#9E9E9E;">I/B <span style="color:#616161;font-weight:600;">${fmt(ibCount)}</span><span style="font-size:10px;">(${ibPct}%)</span> O/B <span style="color:#616161;font-weight:600;">${fmt(obCount)}</span><span style="font-size:10px;">(${obPct}%)</span></div>
         </div>`;
       };
 
-      const secondaryCards = [
-        {
-          label: '평균 통화시간',
-          value: formatSecondsMMSS(avgDurationSec),
-          helper: `전체 ${fmt(total)}건 기준`,
-          accent: '#1565C0'
-        },
-        {
-          label: '평균 묵음시간',
-          value: formatSecondsMMSS(avgSilenceSec),
-          helper: total > 0 ? `평균 묵음 비중 ${Math.round((avgSilenceSec / Math.max(avgDurationSec, 1)) * 1000) / 10}%` : '데이터 없음',
-          accent: '#8E24AA'
-        },
-        {
-          label: '평균 재인입 건수',
-          value: formatAverageReentry(avgReentry),
-          helper: `2회 이상 ${fmt(reentry)}건`,
-          accent: '#EF6C00'
-        },
-        {
-          label: '상품 키워드 Top 6',
-          keywords: top6Products,
-          filter: 'product_keyword'
-        }
-      ];
-
-      const renderSecondaryCard = (card) => {
-        if (card.keywords) {
-          const chips = card.keywords.length > 0
-            ? renderCompactKeywordChips(card.keywords, '#F3E5F5', '#7B1FA2', '#E1BEE7', 6, { clickFilter: card.filter, fixedWidth: true })
-            : '<span style="font-size:12px;color:#9E9E9E;">데이터 없음</span>';
-          return `<div class="kpi-card" style="padding:12px 16px;height:112px;display:flex;flex-direction:column;justify-content:space-between;">
-            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
-              <div style="font-size:12px;color:#757575;">${card.label}</div>
-              ${searchIcon('배지 클릭으로 검색')}
-            </div>
-            <div style="display:flex;flex-wrap:wrap;column-gap:10px;row-gap:8px;align-content:flex-start;min-height:48px;margin-bottom:8px;">${chips}</div>
-            <div style="font-size:10px;color:#9E9E9E;margin-top:2px;">상품 키워드 배지 클릭 시 검색</div>
-          </div>`;
-        }
-        return `<div class="kpi-card" style="padding:12px 16px;height:112px;display:flex;flex-direction:column;justify-content:space-between;">
-          <div style="font-size:12px;color:#757575;">${card.label}</div>
-          <div style="display:flex;align-items:baseline;gap:8px;">
-            <span style="font-size:24px;font-weight:700;color:${card.accent};">${card.value}</span>
+      const renderInfoCard = (card) => {
+        return `<div class="kpi-card" style="padding:10px 14px;height:90px;display:flex;flex-direction:column;justify-content:space-between;">
+          <div style="font-size:11px;color:#757575;">${card.label}</div>
+          <div style="display:flex;align-items:baseline;gap:4px;">
+            <span style="font-size:22px;font-weight:700;color:${card.accent};">${card.value}</span>
           </div>
-          <div style="font-size:11px;color:#9E9E9E;">${card.helper}</div>
+          <div style="font-size:10px;color:#9E9E9E;">${card.helper}</div>
         </div>`;
       };
 
       document.getElementById('kpi-cards').innerHTML = `
-        <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;">
-          ${primaryCards.map(renderPrimaryCard).join('')}
-        </div>
-        <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;">
-          ${secondaryCards.map(renderSecondaryCard).join('')}
+        <div style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;">
+          ${kpiCards.map(c => c.type === 'primary' ? renderPrimaryCard(c) : renderInfoCard(c)).join('')}
         </div>
       `;
+    }
+
+    /* ══════════════════════════ 테이블 정렬 ══════════════════════════ */
+
+    let sortKey = null;
+    let sortDir = null;
+    const SORT_KEYS = ['id','date','center','team','empid','agent','consult','duration','type','silence','reentry'];
+
+    function toggleSort(key) {
+      if (sortKey === key) {
+        if (sortDir === 'asc') sortDir = 'desc';
+        else { sortKey = null; sortDir = null; }
+      } else {
+        sortKey = key;
+        sortDir = 'asc';
+      }
+      updateSortIcons();
+      currentPage = 1;
+      renderTable();
+    }
+
+    function updateSortIcons() {
+      SORT_KEYS.forEach(k => {
+        const icon = document.getElementById('sort-icon-' + k);
+        if (!icon) return;
+        if (k === sortKey) {
+          icon.textContent = sortDir === 'asc' ? '▲' : '▼';
+          icon.style.color = '#1976D2';
+        } else {
+          icon.textContent = '⇅';
+          icon.style.color = '#BDBDBD';
+        }
+      });
     }
 
     /* ══════════════════════════ 테이블 렌더링 ══════════════════════════ */
 
     function renderTable() {
       document.getElementById('call-count').textContent = `총 ${filteredData.length}건`;
+
+      if (sortKey && sortDir) {
+        filteredData.sort((a, b) => {
+          let va, vb;
+          switch (sortKey) {
+            case 'id': va = a.id; vb = b.id; break;
+            case 'date': va = `${a.date} ${a.time}`; vb = `${b.date} ${b.time}`; break;
+            case 'center': va = a.center || ''; vb = b.center || ''; break;
+            case 'team': va = a.team || ''; vb = b.team || ''; break;
+            case 'empid': va = a.employeeId || ''; vb = b.employeeId || ''; break;
+            case 'agent': va = a.agent || ''; vb = b.agent || ''; break;
+            case 'consult': va = a.consultationType || ''; vb = b.consultationType || ''; break;
+            case 'duration': return sortDir === 'asc'
+              ? parseDurationSec(a.duration) - parseDurationSec(b.duration)
+              : parseDurationSec(b.duration) - parseDurationSec(a.duration);
+            case 'type': va = a.callType || ''; vb = b.callType || ''; break;
+            case 'silence': return sortDir === 'asc'
+              ? (a.totalSilence || 0) - (b.totalSilence || 0)
+              : (b.totalSilence || 0) - (a.totalSilence || 0);
+            case 'reentry': return sortDir === 'asc'
+              ? (a.reentry || 0) - (b.reentry || 0)
+              : (b.reentry || 0) - (a.reentry || 0);
+            default: va = ''; vb = '';
+          }
+          const cmp = String(va).localeCompare(String(vb), 'ko');
+          return sortDir === 'asc' ? cmp : -cmp;
+        });
+      }
+
       const start = (currentPage - 1) * pageSize;
       const pageData = filteredData.slice(start, start + pageSize);
       const tbody = document.getElementById('call-tbody');
@@ -960,23 +2806,13 @@
           ? `<span style="display:inline-block;padding:2px 8px;background:#e8f5e9;color:#2e7d32;border-radius:4px;font-size:11px;font-weight:600;">${c.callType}</span>`
           : `<span style="display:inline-block;padding:2px 8px;background:#fff3e0;color:#e65100;border-radius:4px;font-size:11px;font-weight:600;">${c.callType}</span>`;
         const silenceTime = formatSecondsMMSS(c.totalSilence || 0);
-        const productItems = ((c.extractedKeywords && c.extractedKeywords.product) || [])
-          .slice()
-          .sort((a, b) => (b.count - a.count) || a.name.localeCompare(b.name));
-        const visibleProductItems = productItems.slice(0, 1);
-        const hiddenProductCount = Math.max(0, productItems.length - visibleProductItems.length);
-        const productTooltip = productItems.map(k => k.name).join(', ');
-        const productChips = [
-          ...visibleProductItems.map(k =>
-            `<span style="display:inline-block;padding:2px 8px;margin:1px 2px;border-radius:10px;font-size:11px;background:#F3E5F5;color:#7B1FA2;border:1px solid #E1BEE7;">${k.name}</span>`
-          ),
-          ...(hiddenProductCount > 0
-            ? [`<span title="${productTooltip}" style="display:inline-block;padding:2px 8px;margin:1px 2px;border-radius:10px;font-size:11px;background:#F5F5F5;color:#757575;border:1px solid #E0E0E0;cursor:help;">...</span>`]
-            : [])
-        ].join('');
-        const issueChips = c.issueKeywords.map(k =>
-          `<span style="display:inline-block;padding:2px 8px;margin:1px 2px;border-radius:10px;font-size:11px;background:#FFF3F3;color:#E53935;border:1px solid #FFCDD2;">${k}</span>`
-        ).join('');
+        const consultItems = (c.extractedKeywords && c.extractedKeywords.consult) || [];
+        const consultChip = consultItems.length > 0
+          ? consultItems.slice(0, 2).map(item => `<span style="display:inline-block;padding:2px 8px;margin:1px 2px;border-radius:10px;font-size:11px;background:#E3F2FD;color:#1565C0;border:1px solid #BBDEFB;">${item.name}</span>`).join('') + (consultItems.length > 2 ? `<span style="font-size:11px;color:#888;margin-left:2px;cursor:pointer;" title="${consultItems.map(item => item.name).join(', ')}">...</span>` : '')
+          : '-';
+        const issueChip = c.issueKeywords.length > 0
+          ? c.issueKeywords.slice(0, 2).map(k => `<span style="display:inline-block;padding:2px 8px;margin:1px 2px;border-radius:10px;font-size:11px;background:#FFF3F3;color:#E53935;border:1px solid #FFCDD2;">${k}</span>`).join('') + (c.issueKeywords.length > 2 ? `<span style="font-size:11px;color:#888;margin-left:2px;cursor:pointer;" title="${c.issueKeywords.join(', ')}">...</span>` : '')
+          : '-';
         return `<tr onclick="showCallDetail('${c.id}')" style="cursor:pointer;">
           <td style="text-align:center;font-size:12px;">${c.id}</td>
           <td style="text-align:center;font-size:12px;white-space:nowrap;">${c.date} ${c.time}</td>
@@ -993,8 +2829,8 @@
             : c.reentry === 2
               ? `<span style="display:inline-block;padding:2px 8px;background:#fff3e0;color:#e65100;border-radius:4px;font-size:11px;font-weight:600;">2회차</span>`
               : '-'}</td>
-          <td style="padding:6px 10px;">${productChips}</td>
-          <td style="padding:6px 10px;">${issueChips}</td>
+          <td style="padding:6px 10px;">${consultChip}</td>
+          <td style="padding:6px 10px;">${issueChip}</td>
         </tr>`;
       }).join('');
 
@@ -1028,6 +2864,46 @@
     }
 
     /* ══════════════════════════ 상세 모달 ══════════════════════════ */
+
+    /* ── 상담 흐름 분석 (모달 AI 패널용) ──────────────────────────
+     *  [정책] 스크립트(transcript)를 4단계로 분류하여 타임라인을 생성한다.
+     *   1) 문제 제기 — 고객이 처음 문제를 언급하는 발화
+     *   2) 확인/조회 — 상담사가 시스템을 확인하거나 조회하는 발화
+     *   3) 대응/안내 — 상담사가 해결 방안을 제시하는 발화
+     *   4) 마무리 — 상담 종료 발화
+     *
+     *  [프로토타입] 발화 위치와 키워드 패턴 매칭으로 단계를 분류한다.
+     *  [실제 운영] LLM이 스크립트 전문을 분석하여 단계별 요약을 생성한다.
+     * ─────────────────────────────────────────────────────────── */
+    function _analyzeCallFlow(transcript) {
+      if (!transcript || transcript.length === 0) return [];
+      const stages = [];
+      const len = transcript.length;
+      const firstCustomer = transcript.find(l => l.speaker === '고객');
+      if (firstCustomer) {
+        stages.push({ label:'문제 제기', time:firstCustomer.time, text:firstCustomer.text });
+      }
+      const checkLine = transcript.find((l, i) => i > 0 && l.speaker === '상담사' &&
+        (l.text.includes('확인') || l.text.includes('조회') || l.text.includes('잠시만')));
+      if (checkLine) {
+        stages.push({ label:'확인/조회', time:checkLine.time, text:checkLine.text });
+      }
+      const midStart = Math.floor(len * 0.3);
+      const responseLine = transcript.find((l, i) => i >= midStart && l.speaker === '상담사' &&
+        !l.text.includes('안녕') && !l.text.includes('확인해') && !l.text.includes('잠시만') &&
+        (l.text.includes('처리') || l.text.includes('안내') || l.text.includes('예정') ||
+         l.text.includes('도와') || l.text.includes('연락') || l.text.includes('접수') ||
+         l.text.includes('가능') || l.text.includes('적용') || l.text.includes('등록') ||
+         l.text.includes('발송') || l.text.includes('완료')));
+      if (responseLine) {
+        stages.push({ label:'대응/안내', time:responseLine.time, text:responseLine.text });
+      }
+      const lastAgent = [...transcript].reverse().find(l => l.speaker === '상담사');
+      if (lastAgent && lastAgent !== checkLine && lastAgent !== responseLine) {
+        stages.push({ label:'마무리', time:lastAgent.time, text:lastAgent.text });
+      }
+      return stages;
+    }
 
     function showCallDetail(callId) {
       const c = callData.find(x => x.id === callId);
@@ -1117,13 +2993,154 @@
         </div>`;
       })();
 
+      /* ── AI 스크립트 분석 섹션 (콜 상세 모달 독립 패널) ──────────
+       *  [정책] 각 콜의 aiAnalysis 객체를 모달 3번째 열(독립 패널)에 표시.
+       *  aiAnalysis는 LLM이 스크립트를 분석한 결과를 시뮬레이션한 것이다.
+       *
+       *  [표시 항목 — 4개 섹션]
+       *   1) 상담 흐름 타임라인: 문제제기→확인→대응→마무리 단계별 요약
+       *   2) 고객 의도/요구사항: customerIntent + intentAchieved 기반
+       *   3) 핵심 발화 발췌: keyUtterances 원문 인용 + 중요 이유
+       *   4) 위험 신호: riskFlags + status + tags + reentry 종합 판단
+       *
+       *  [제거] 상담사 평가(agentEval) — QA 영역에서 별도 진행
+       *
+       *  [Phase 2 연동] flowPattern, customerIntent, intentAchieved,
+       *   keyUtterances, riskFlags 필드를 드릴다운 인사이트 집계에 활용한다.
+       *
+       *  [프로토타입 vs 실제 운영]
+       *   프로토타입: scriptTemplates에 하드코딩된 ai 객체에서 데이터 표시
+       *   실제 운영: LLM이 콜 종료 후 스크립트 전문을 분석하여 각 필드를 생성
+       * ─────────────────────────────────────────────────────────── */
+      const aiHtml = (() => {
+        const ai = c.aiAnalysis;
+        if (!ai) return '<div style="color:#9E9E9E;font-size:12px;padding:20px;">AI 분석 데이터 없음</div>';
+
+        const statusBadge = ai.status === 'completed'
+          ? '<span style="display:inline-block;padding:2px 8px;background:#E8F5E9;color:#2E7D32;border-radius:4px;font-size:11px;font-weight:600;">처리 완료</span>'
+          : '<span style="display:inline-block;padding:2px 8px;background:#FFEBEE;color:#C62828;border-radius:4px;font-size:11px;font-weight:600;">후속 조치 필요</span>';
+
+        const flowPatternMap = { '즉시해결':'#2E7D32', '콜백안내':'#F57F17', '에스컬레이션':'#C62828', '정보안내':'#1565C0' };
+        const fpColor = flowPatternMap[ai.flowPattern] || '#757575';
+        const fpBadge = ai.flowPattern
+          ? `<span style="display:inline-block;padding:2px 8px;background:${fpColor}15;color:${fpColor};border:1px solid ${fpColor}40;border-radius:4px;font-size:10px;font-weight:600;">${ai.flowPattern}</span>` : '';
+
+        /* 1) 상담 흐름 타임라인 */
+        const flowStages = _analyzeCallFlow(c.transcript);
+        const stageIcons = { '문제 제기':'#E53935', '확인/조회':'#F57F17', '대응/안내':'#1565C0', '마무리':'#2E7D32' };
+        const flowTimelineHtml = flowStages.length > 0
+          ? `<div style="margin-bottom:16px;">
+              <div style="font-size:11px;font-weight:700;color:#424242;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 3" stroke="#424242" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="9" stroke="#424242" stroke-width="2" fill="none"/></svg>
+                상담 흐름
+              </div>
+              <div style="padding-left:6px;border-left:2px solid #E0E0E0;">
+                ${flowStages.map((s, idx) => {
+                  const color = stageIcons[s.label] || '#757575';
+                  const truncText = s.text.length > 45 ? s.text.substring(0, 45) + '...' : s.text;
+                  return `<div style="padding:4px 0 4px 12px;position:relative;">
+                    <div style="position:absolute;left:-7px;top:8px;width:10px;height:10px;border-radius:50%;background:${color};border:2px solid #fff;"></div>
+                    <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">
+                      <span style="font-size:10px;font-weight:700;color:${color};">${s.label}</span>
+                      <span style="font-size:9px;color:#9E9E9E;">${s.time}</span>
+                    </div>
+                    <div style="font-size:11px;color:#616161;line-height:1.4;">${truncText}</div>
+                  </div>`;
+                }).join('')}
+              </div>
+            </div>` : '';
+
+        /* 2) 고객 의도/요구사항 */
+        const intentLabel = ai.customerIntent || '-';
+        const intentBadge = ai.intentAchieved
+          ? '<span style="font-size:10px;padding:1px 6px;background:#E8F5E9;color:#2E7D32;border-radius:3px;font-weight:600;">달성</span>'
+          : '<span style="font-size:10px;padding:1px 6px;background:#FFEBEE;color:#C62828;border-radius:3px;font-weight:600;">미달성</span>';
+        const intentDetail = ai.intentAchieved
+          ? (ai.actionNote ? `처리: ${ai.actionNote}` : '')
+          : (ai.rootCause ? `원인: ${ai.rootCause}` : '');
+        const intentHtml = `<div style="margin-bottom:16px;">
+          <div style="font-size:11px;font-weight:700;color:#424242;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#424242" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            고객 의도/요구사항
+          </div>
+          <div style="background:#F5F5F5;border-radius:6px;padding:10px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+              <span style="font-size:12px;font-weight:600;color:#212121;">${intentLabel}</span>
+              ${intentBadge}
+            </div>
+            ${intentDetail ? `<div style="font-size:11px;color:#757575;line-height:1.5;">${intentDetail}</div>` : ''}
+          </div>
+        </div>`;
+
+        /* 3) 핵심 발화 발췌 */
+        const keyUtt = ai.keyUtterances || [];
+        const utteranceHtml = keyUtt.length > 0
+          ? `<div style="margin-bottom:16px;">
+              <div style="font-size:11px;font-weight:700;color:#424242;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="#424242" stroke-width="2" fill="none"/></svg>
+                핵심 발화
+              </div>
+              ${keyUtt.map(u => `<div style="margin-bottom:8px;padding:8px 10px;background:#F8F9FE;border-left:3px solid #1565C0;border-radius:0 6px 6px 0;">
+                <div style="font-size:11px;color:#212121;line-height:1.5;font-style:italic;">"${u.text}"</div>
+                <div style="font-size:10px;color:#1565C0;margin-top:3px;">${u.reason}</div>
+              </div>`).join('')}
+            </div>` : '';
+
+        /* 4) 위험 신호 / 주의 사항 */
+        const risks = [];
+        const rFlags = ai.riskFlags || [];
+        const riskLabelMap = { '재인입위험':'재인입 발생 위험이 높습니다.', '불만표현':'고객 불만 표현이 감지되었습니다.', '이탈위험':'고객 이탈 가능성이 있습니다.' };
+        rFlags.forEach(f => {
+          risks.push({ flag:f, desc:riskLabelMap[f] || f });
+        });
+        if (ai.status === 'followup') {
+          risks.push({ flag:'후속조치', desc:'후속 조치가 필요한 상담입니다. 이행 여부를 확인하세요.' });
+        }
+        if (c.reentry >= 2) {
+          risks.push({ flag:'재인입', desc:`재인입 ${c.reentry}회 — 이전 상담 완결 품질을 점검하세요.` });
+        }
+        const riskHtml = risks.length > 0
+          ? `<div>
+              <div style="font-size:11px;font-weight:700;color:#424242;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="#E65100" stroke-width="2" fill="none"/></svg>
+                위험 신호
+              </div>
+              ${risks.map(r => `<div style="display:flex;align-items:start;gap:6px;padding:6px 8px;margin-bottom:4px;background:#FFF8E1;border-radius:4px;border-left:3px solid #E65100;">
+                <span style="font-size:10px;font-weight:700;color:#E65100;white-space:nowrap;margin-top:1px;">${r.flag}</span>
+                <span style="font-size:11px;color:#424242;line-height:1.4;">${r.desc}</span>
+              </div>`).join('')}
+            </div>` : '';
+
+        /* 통화 요약 + 태그 */
+        const tagsHtml = (ai.tags || []).length > 0
+          ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;">${ai.tags.map(t => `<span style="display:inline-block;padding:2px 8px;background:#F3E5F5;color:#7B1FA2;border-radius:10px;font-size:10px;border:1px solid #E1BEE7;">${t}</span>`).join('')}</div>` : '';
+
+        return `
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+            ${statusBadge} ${fpBadge}
+            ${ai.category ? `<span style="font-size:10px;color:#9E9E9E;">${ai.category}</span>` : ''}
+          </div>
+          <div style="font-size:12px;color:#424242;line-height:1.6;margin-bottom:6px;padding:8px 0;border-bottom:1px solid #F0F0F0;">${ai.summary}</div>
+          ${ai.actionNote ? `<div style="font-size:11px;color:#757575;margin-bottom:2px;">처리: ${ai.actionNote}</div>` : ''}
+          ${ai.rootCause ? `<div style="font-size:11px;color:#757575;margin-bottom:2px;">원인: ${ai.rootCause}</div>` : ''}
+          ${ai.suggestedAction ? `<div style="font-size:11px;color:#1565C0;font-weight:600;margin-bottom:8px;">권장: ${ai.suggestedAction}</div>` : ''}
+          ${tagsHtml}
+          <div style="margin-top:12px;padding-top:12px;border-top:1px solid #F0F0F0;">
+            ${flowTimelineHtml}
+            ${intentHtml}
+            ${utteranceHtml}
+            ${riskHtml}
+          </div>`;
+      })();
+
+      /* [레이아웃] 4열 그리드: 콜정보 | 스크립트 | AI분석 | 키워드+묵음 */
       const modalBody = `
-        <div style="display:grid;grid-template-columns:30% 40% 30%;gap:0;height:calc(90vh - 160px);max-height:660px;">
+        <div style="display:grid;grid-template-columns:280px 1fr 400px 350px;gap:0;height:calc(90vh - 160px);max-height:700px;">
           <div style="padding:20px;border-right:1px solid #EEEEEE;overflow-y:auto;">
             <div style="font-size:14px;font-weight:700;margin-bottom:16px;color:#212121;">콜 정보</div>
             ${infoHtml}
           </div>
-          <div style="padding:20px;display:flex;flex-direction:column;min-width:0;min-height:0;" id="script-panel">
+          <div style="padding:20px;display:flex;flex-direction:column;min-width:0;min-height:0;border-right:1px solid #EEEEEE;" id="script-panel">
             <div style="font-size:13px;font-weight:700;color:#424242;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #424242;flex-shrink:0;">스크립트</div>
             <div id="script-scroll" style="flex:1;min-height:0;background:#FAFAFA;border:1px solid #E0E0E0;border-radius:8px;padding:12px;overflow-y:auto;">
               ${scriptHtml}
@@ -1145,7 +3162,14 @@
               </div>
             </div>
           </div>
-          <div style="padding:20px;border-left:1px solid #EEEEEE;overflow-y:auto;">
+          <div style="padding:20px;border-right:1px solid #EEEEEE;overflow-y:auto;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 2.38 1.19 4.47 3 5.74V17a1 1 0 001 1h6a1 1 0 001-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.87-3.13-7-7-7z" fill="#1E88E5"/><circle cx="12" cy="9" r="2" fill="#fff" opacity="0.8"/></svg>
+              <span style="font-size:14px;font-weight:700;color:#1565C0;">AI 스크립트 분석</span>
+            </div>
+            ${aiHtml}
+          </div>
+          <div style="padding:20px;overflow-y:auto;">
             <div style="font-size:14px;font-weight:700;margin-bottom:16px;color:#212121;">추출 키워드</div>
             ${kwHtml}
             ${silenceHtml}
@@ -1155,7 +3179,7 @@
       AICC_Modal.open({
         title: `콜 상세 - ${c.id}`,
         content: modalBody,
-        size: 'xxl',
+        size: 'xxxl',
         footer: '<button class="btn btn-secondary" onclick="AICC_Modal.close()">닫기</button>'
       });
 
@@ -1366,156 +3390,6 @@
       if (overlay) overlay.remove();
     }
 
-    function openActionModal() {
-      _initDtp();
-      modalSuggestions = activeSuggestions.length > 0 ? [...activeSuggestions] : pickSuggestions();
-      const filterLines = getFilterSummary();
-      const filterHtml = filterLines.length > 0
-        ? filterLines.map((line) => `<div style="font-size:13px;padding:2px 0;"><span style="color:#9E9E9E;font-weight:400;">${line.label}</span> <span style="margin:0 4px;color:#BDBDBD;">›</span> <span style="font-weight:500;color:#424242;">${line.value}</span></div>`).join('')
-        : '<div style="font-size:13px;color:#757575;">조건 없음</div>';
-      const userName = typeof AICC_Auth !== 'undefined' ? AICC_Auth.getCurrentUser().name : '관리자';
-      const statusOpts = ['미이행', '진행중', '완료'].map((status) => `<option${status === '미이행' ? ' selected' : ''}>${status}</option>`).join('');
-
-      const body = `
-        <div style="display:flex;gap:0;height:100%;">
-          <div style="flex:1;padding:20px;border-right:1px solid #EEEEEE;display:flex;flex-direction:column;max-height:520px;overflow-y:auto;">
-            <div style="font-size:14px;font-weight:700;color:#212121;margin-bottom:16px;">개선 제안 정보</div>
-            <div style="margin-bottom:12px;">
-              <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">조건</div>
-              <div>${filterHtml}</div>
-            </div>
-            <div style="margin-bottom:12px;">
-              <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">검색 결과</div>
-              <div style="font-size:13px;font-weight:500;">${filteredData.length}건</div>
-            </div>
-            <div style="flex:1;">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-                <div style="font-size:11px;color:#9E9E9E;">개선 제안 내용</div>
-                <button class="btn btn-sm" onclick="_showAddInput()" style="border:1px solid #D1C4E9;background:#fff;color:#5E35B1;font-size:11px;padding:2px 10px;">+ 추가</button>
-              </div>
-              <div id="act-suggestions-box" style="font-size:13px;line-height:1.6;background:#F9F9F9;border-radius:6px;padding:12px;border:1px solid #EEEEEE;"></div>
-            </div>
-          </div>
-          <div style="flex:1;padding:20px;display:flex;flex-direction:column;gap:16px;max-height:520px;overflow-y:auto;overflow-x:visible;">
-            <div style="font-size:14px;font-weight:700;color:#212121;">처리 관리</div>
-            <div>
-              <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">조치 날짜</div>
-              <div id="act-date-trigger" class="form-input" style="width:203px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;" onclick="_toggleDtp()">
-                <span id="act-date-display">${_getNow()}</span>
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5" stroke="#9E9E9E" stroke-width="1.2"/><path d="M1.5 6h13" stroke="#9E9E9E" stroke-width="1.2"/><path d="M5 1v3M11 1v3" stroke="#9E9E9E" stroke-width="1.2" stroke-linecap="round"/></svg>
-              </div>
-              <input type="hidden" id="act-date-val" value="${_getNow()}">
-            </div>
-            <div>
-              <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">담당자</div>
-              <div style="display:flex;gap:6px;">
-                <input type="text" id="act-admin" class="form-input" style="width:203px;" value="${userName}" onfocus="this.select()">
-                <button class="btn btn-sm" onclick="_openAdminSearch()" style="white-space:nowrap;border:1px solid #D8DAE5;background:#fff;color:#424242;">검색</button>
-              </div>
-            </div>
-            <div>
-              <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">이행 상태</div>
-              <select id="act-status" class="form-select" style="width:203px;">${statusOpts}</select>
-            </div>
-            <div style="flex:1;display:flex;flex-direction:column;">
-              <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">처리 메모</div>
-              <textarea id="act-memo" class="form-input" style="flex:1;min-height:80px;resize:none;" placeholder="처리 내용을 입력하세요"></textarea>
-              <div style="display:flex;justify-content:flex-end;margin-top:8px;">
-                <button class="btn btn-primary btn-sm" onclick="saveAction()">저장</button>
-              </div>
-            </div>
-          </div>
-        </div>`;
-
-      AICC_Modal.open({
-        title: '조치 등록 — 개선 제안',
-        content: body,
-        size: 'xl'
-      });
-      _renderSuggestionItems();
-    }
-
-    function _renderSuggestionItems() {
-      const box = document.getElementById('act-suggestions-box');
-      if (!box) return;
-      box.innerHTML = modalSuggestions.map((content, idx) => `
-        <div style="display:flex;align-items:flex-start;gap:6px;padding:3px 0;">
-          <span style="flex:1;color:#424242;">${idx + 1}. ${content}</span>
-          <span onclick="_removeSuggestionItem(${idx})" style="cursor:pointer;color:#BDBDBD;font-size:16px;line-height:1;flex-shrink:0;padding:0 2px;transition:color 0.15s;" onmouseenter="this.style.color='#F44336'" onmouseleave="this.style.color='#BDBDBD'">&times;</span>
-        </div>`).join('');
-    }
-
-    function _removeSuggestionItem(idx) {
-      if (modalSuggestions.length <= 1) {
-        AICC_Toast.show('최소 1개의 개선 제안이 필요합니다.');
-        return;
-      }
-      modalSuggestions.splice(idx, 1);
-      _renderSuggestionItems();
-    }
-
-    function _showAddInput() {
-      const box = document.getElementById('act-suggestions-box');
-      if (!box || document.getElementById('act-new-suggestion-row')) return;
-      const row = document.createElement('div');
-      row.id = 'act-new-suggestion-row';
-      row.style.cssText = 'display:flex;align-items:center;gap:6px;padding:6px 0 0;';
-      row.innerHTML = `
-        <input type="text" id="act-new-suggestion-input" class="form-input" style="flex:1;font-size:12px;padding:4px 8px;" placeholder="개선 제안 내용을 입력하세요">
-        <button class="btn btn-sm" onclick="_confirmAddItem()" style="white-space:nowrap;background:#5E35B1;color:#fff;border:none;font-size:11px;padding:4px 10px;">확인</button>`;
-      box.appendChild(row);
-      document.getElementById('act-new-suggestion-input').focus();
-    }
-
-    function _confirmAddItem() {
-      const input = document.getElementById('act-new-suggestion-input');
-      if (!input || !input.value.trim()) {
-        AICC_Toast.show('내용을 입력해주세요.');
-        return;
-      }
-      modalSuggestions.push(input.value.trim());
-      _renderSuggestionItems();
-    }
-
-    function saveAction() {
-      const actionDate = document.getElementById('act-date-val').value;
-      if (!actionDate) { AICC_Toast.show('조치 날짜를 선택해주세요.'); return; }
-
-      const adminName = document.getElementById('act-admin').value.trim();
-      if (!adminName) { AICC_Toast.show('담당자를 입력해주세요.'); return; }
-
-      const status = document.getElementById('act-status').value;
-      const memo = document.getElementById('act-memo').value.trim();
-      if (!memo) { AICC_Toast.show('처리 메모를 입력해주세요.'); return; }
-
-      const today = new Date();
-      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-      const periodRange = getPeriodRange(periodFilterInfo);
-
-      const newItem = {
-        reportType: getActionReportType(),
-        periodFrom: periodRange?.from || todayStr,
-        periodTo: periodRange?.to || todayStr,
-        contents: [...modalSuggestions],
-        admin: adminName,
-        status,
-        completedDate: status === '완료' ? todayStr : '-',
-        history: [{
-          date: actionDate,
-          author: adminName,
-          status,
-          memo
-        }]
-      };
-
-      const stored = JSON.parse(localStorage.getItem('AICC_IMPROVEMENT_ITEMS') || '[]');
-      stored.push(newItem);
-      localStorage.setItem('AICC_IMPROVEMENT_ITEMS', JSON.stringify(stored));
-
-      AICC_Modal.close();
-      AICC_Toast.show('조치가 등록되었습니다. 개선 이행 관리에서 확인할 수 있습니다.');
-    }
-
     /* ══════════════════════════ 초기화 ══════════════════════════ */
 
     document.addEventListener('DOMContentLoaded', async () => {
@@ -1530,7 +3404,18 @@
 
       createPeriodPicker();
 
-      /* 대시보드에서 전달된 URL 파라미터 파싱 */
+      /* ── 페이지 초기화 흐름 ────────────────────────────────────
+       *  1. URL 파라미터 파싱 → urlFilter 설정 (대시보드 연동)
+       *  2. 검색 UI 컨트롤을 urlFilter에 맞게 동기화
+       *  3. 필터 뱃지 렌더링 (상단에 "대시보드: 키워드: 주문번호" 등 표시)
+       *  4. applyFilter() 호출 → filteredData 생성 → KPI 렌더 → 테이블 렌더
+       *     → initAiAnalysis() → AI 카드 Level 1 렌더
+       *  5. urlFilter가 있으면 토스트로 필터 적용 안내
+       *
+       *  [결과] 대시보드에서 "주문번호" 클릭 시:
+       *   - 25건만 필터링 → KPI에 25건 반영 → AI 카드에 keyword 시나리오 표시
+       *   - 상담유형 Top5가 우측에 표시되며 드릴다운 가능
+       * ─────────────────────────────────────────────────────── */
       urlFilter = parseUrlFilter();
       syncFilterControls();
       renderActiveFilterBadge();
