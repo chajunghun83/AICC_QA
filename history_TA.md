@@ -699,3 +699,11 @@
   - 전체 경로 입력 → consultationType 정확히 일치 비교 (consultation-type.html 진입)
   - leaf 단일 입력 → 마지막 뎁스 비교 (대시보드 도넛 진입)
 - AI 현황분석(_buildConsultTypeScenario)과 콜 목록 테이블 모두 자동 채워짐
+
+---
+
+**수정 리스트 (26/05/06 — 5차)**
+
+[리포트 다운로드 형식 변경 (report-generator.html)]
+- 다운로드 모달의 "Excel 다운로드" 버튼 → "Docx로 다운로드"로 변경
+- doDownload 호출 인자도 'Excel' → 'Docx'로 동기화 (토스트 메시지 자동 반영)
