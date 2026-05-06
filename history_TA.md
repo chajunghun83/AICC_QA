@@ -615,3 +615,87 @@
 - 드릴다운 섹션: L2 약 720건, L3 약 80건 수치 명시
 - 체크리스트: 총 콜수 900 확인 항목 + 1페이지 20행 확인 항목 신규 추가
 - 한 줄 요약 4단계 전면 갱신
+
+---
+
+**수정 리스트 (26/05/06 — 4차)**
+
+[용어 통일 — "에스컬레이션" → "이관" 일괄 치환]
+- 실제 콜센터 현장에서 잘 쓰지 않는 "에스컬레이션" 용어를 "이관"으로 통일
+- 변경 파일 7개 (코드만, 이력/데모 .md는 보존)
+  - pages/ta/call-status.html (상담사 발화·flowPattern 값·UI·판정 키워드)
+  - pages/ta/issue-manage.html, ta-dashboard.html, system/keyword-manage.html
+  - pages/admin/dispute-inbox.html, system-settings/prompt-templates.html
+  - pages/agent/my-evaluations.html
+- analyzeTranscript의 followupPatterns 배열 '에스컬레이션' → '이관'으로 교체
+- flowPattern 값 4종: 즉시해결 / 콜백안내 / 이관 / 정보안내
+
+[scriptTemplates 전면 재작성 — 15종 톤 자연화 + 신규 4종 추가 (call-status.html)]
+- 기존 13개 + 금감원 2종 = 15개 템플릿 모두 고객 발화 톤 자연화
+  - 사무적 표현 → 구어 첨가어("아니", "아 그래요", "그러니까") 추가
+  - 콜 유형별 차등 톤 — 단순 문의는 차분, 불만/재인입/금감원 콜은 격앙 + 반말 종종 섞기
+  - 상담사 발화는 유지 (사용자 명시 요청)
+- 종목 0개였던 5종에 종목명 자연 삽입
+  - 결제오류 (이체 한도) → 삼성전자 매수 자금
+  - 결제오류_시스템 (HTS 장애) → SK하이닉스 매도
+  - 일반문의2 (수수료 이벤트) → 카카오 매수 사례
+  - 금감원민원 → 삼성전자·현대차 12건 거래
+  - 금감원민원_재조사 → 테슬라 해외주식 체결 오류
+- 신규 시나리오 4종 추가 (다양성 확보)
+  - 공모청약 (두산로보틱스 IPO 청약 한도/증거금/일정 문의)
+  - 야간거래 (테슬라 야간 환율 적용 시점/양도세 문의)
+  - 신용반대매매 (셀트리온·두산에너빌리티 신용 만기 도래/상환 옵션 문의)
+  - ETF분배금 (KODEX 200·TIGER 미국S&P500 분배금 일정/세금/D-2 원칙 문의)
+- 모든 19개 템플릿에 products 필드 추가 — 스크립트에 실제 등장하는 종목명 명시 (최소 1개 보장)
+- restScenarioPool에 신규 4종 가중치 추가 (각 weight 2~3)
+
+[generateCallData 종목 키워드 로직 교체 (call-status.html)]
+- 기존: extractedKeywordPool.product 풀에서 랜덤 3개 추출 → 스크립트와 무관한 종목 부여 (정합성 부재)
+- 변경: scenario.products 필드 기반으로 종목 키워드 생성
+  - count: transcript 라인 텍스트 내 실제 언급 횟수
+  - transcriptIdx: 종목명이 등장하는 라인 인덱스 (콜 상세 모달의 키워드 클릭 → 스크립트 스크롤 정합 보장)
+- 후처리 강제 주입(dashboardProductKws) 완전 제거
+  - 종목 랭킹은 scriptTemplates.products + restScenarioPool 가중치로 자연 형성
+  - 이슈/신규 키워드 강제 주입(dashboardIssueKws/dashboardNewKws)은 종목과 무관해 유지
+
+[콜 상담 페이지 차트 색상 다양화 (call-consultation.html)]
+- 기존: 4개 차트(전체/이슈/재인입/통화시간 vs 묵음시간) 모두 파랑 단일색 → 시인성 저하
+- 변경: 차트별 의미 컬러 부여 + CHART_COLORS 상수화
+  - 전체 콜: 파랑 #00A3FF (중립/기본)
+  - 이슈 콜: 빨강 #E53935 (위험/처리 필요)
+  - 재인입 콜: 주황 #FF8F00 (주의/1차 처리 미흡)
+  - 평균 통화 시간: 청록 #26A69A (운영 지표) + 평균 묵음 시간: 빨강 라인(기존 유지)
+- 헤더 우측 범례 색 칩 4곳도 동일 색으로 동기화
+
+[개선 이행 관리 contentPool/adminMemoPool 전면 교체 (improvement-manage.html)]
+- 문제: TA 페이지인데 QA 용어(FAIL 판정·금지어·스크립트 준수율·평가 점수·이의 제기)로 채워져 있음
+- contentPool 15개를 TA 컨텍스트로 전면 교체
+  - 체결지연 키워드 급증·금감원 민원 신규 진입·재인입 비율 상승·묵음 시간 증가·주문번호 키워드 급증 등
+  - AI 현황분석 드릴다운 사용률·종목 키워드 변화·신용반대매매 만기 도래 등
+- adminMemoPool 10개도 TA 처리 메모로 교체
+  - 거래소 호가 SLA 점검·금감원 사전 대응 매뉴얼·정정처리 큐 모니터링 대시보드·신용 만기 SMS 자동화 등
+
+[리포트 생성기 데이터·차트 전면 정비 (report-generator.html)]
+- 5개 데이터 셋을 키움증권 도메인으로 교체
+  - keywordTop20: 통신사 용어(로밍·5G·번호이동·멤버십·데이터) → 증권 키워드(체결지연·주문번호·공모청약·야간거래·환율·양도세·신용거래·배당락·분배금·미국주식·주식분할 등)
+  - issueKeywordTop5: 일반 콜센터(고소·소송·상급자·소비자원·녹음) → 증권 리스크(금감원·소송·보상 요구·분쟁조정·녹취)
+  - newKeywordTop5: AI 상담·개인정보 유출·앱 오류·프로모션·5G 전환 → 공모청약·신용반대매매·ETF 분배금·야간거래·주식분할
+  - consultTypeDist: 상품/서비스·요금/결제·고객불만 → 주식거래·입출금/이체·민원·HTS·MTS 오류·환매/정정
+  - consultTypeTop5: 통신/일반 4뎁스 경로 → 증권 4뎁스 경로 (체결확인/한도초과/처리지연/환매지연/주문불가)
+- 정합성 보정: improvements/pendingIssues/IMPROVEMENT_POOL.contents의 잔재 용어("고소/소송", "결제 오류", "이중결제", "AI 상담", "개인정보 유출") 모두 증권 컨텍스트로 교체
+- 차트 5종 색상 다양화
+  - 콜 건수 추이: 파랑 (유지) / 시간대별 콜량: 청록 / 재인입 콜: 주황 / 이슈 콜: 빨강 / 묵음 비율: 보라 / 도넛: 6색 다채(유지)
+- 상담유형 분포 도넛 범례 정렬 — flex 가변폭 → 3열 grid(색칩/카테고리명/건수+비율)로 변경하여 모든 행 정렬 일치
+
+[상담유형 leaf 진입 시 가상 콜 동적 생성 (call-status.html)]
+- 문제: consultation-type.html의 트리 leaf(체결확인·한도초과·오체결 등 200+개)는 call-status.html의 콜 100건과 거의 매칭되지 않아 진입 시 0건 표시
+- 해결: URL ?filter=consult_type 진입 시 매칭 콜이 5건 미만이면 가상 콜 12~24건 동적 생성
+  - categoryTreeForCT — consultation-type.html과 동일한 4뎁스 트리를 컴팩트 표현([name, children]/leaf)으로 복사
+  - findCtPathByLeaf — leaf 단일 또는 전체 경로 양쪽 호환 (입력에 ' > '가 있으면 전체 경로로 간주)
+  - generateVirtualConsultTypeCalls — value 문자열을 시드로 12~24건 생성, scriptTemplates 기반의 정상 콜 객체(transcript·aiAnalysis·extractedKeywords) 포함
+  - 가상 콜 ID: TA-CT-XXXXX prefix로 구분
+  - date는 화면 기간 필터(periodFilterInfo) 범위 내 임의 일자로 생성 — 진입 직후 KPI/AI 분석/콜 목록에 즉시 반영
+- matchesSpecialFilter의 consult_type 분기도 양쪽 형식 호환
+  - 전체 경로 입력 → consultationType 정확히 일치 비교 (consultation-type.html 진입)
+  - leaf 단일 입력 → 마지막 뎁스 비교 (대시보드 도넛 진입)
+- AI 현황분석(_buildConsultTypeScenario)과 콜 목록 테이블 모두 자동 채워짐

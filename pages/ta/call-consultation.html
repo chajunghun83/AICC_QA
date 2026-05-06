@@ -52,7 +52,7 @@
         <div class="content-card-header" style="padding:10px 16px;">
           <span style="font-size:14px;font-weight:600;">재인입 콜 건수</span>
           <div style="display:flex;align-items:center;gap:12px;font-size:10px;">
-            <span style="display:flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;background:rgba(0,163,255,0.7);border-radius:2px;"></span>현재 기간</span>
+            <span style="display:flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;background:rgba(255,143,0,0.8);border-radius:2px;"></span>현재 기간</span>
           </div>
         </div>
         <div class="content-card-body" style="padding:8px;"><div style="height:240px;"><canvas id="chart-reentry"></canvas></div></div>
@@ -63,7 +63,7 @@
         <div class="content-card-header" style="padding:10px 16px;">
           <span style="font-size:14px;font-weight:600;">통화 시간 대비 묵음 시간</span>
           <div style="display:flex;align-items:center;gap:12px;font-size:10px;">
-            <span style="display:flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;background:rgba(0,163,255,0.7);border-radius:2px;"></span>평균 통화 시간</span>
+            <span style="display:flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;background:rgba(38,166,154,0.8);border-radius:2px;"></span>평균 통화 시간</span>
             <span style="display:flex;align-items:center;gap:3px;"><span style="width:8px;height:8px;background:#EF5350;border-radius:50%;"></span>평균 묵음 시간</span>
           </div>
         </div>
@@ -75,7 +75,7 @@
         <div class="content-card-header" style="padding:10px 16px;">
           <span style="font-size:14px;font-weight:600;">이슈 콜 건수</span>
           <div style="display:flex;align-items:center;gap:12px;font-size:10px;">
-            <span style="display:flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;background:rgba(0,163,255,0.7);border-radius:2px;"></span>현재 기간</span>
+            <span style="display:flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;background:rgba(229,57,53,0.75);border-radius:2px;"></span>현재 기간</span>
           </div>
         </div>
         <div class="content-card-body" style="padding:8px;"><div style="height:240px;"><canvas id="chart-issue"></canvas></div></div>
@@ -240,10 +240,24 @@
       ];
     }
 
+    /* [정책] 차트 색상 팔레트 — 의미별로 색 구분하여 시각 인지 강화
+     *   total   : 파랑(중립/기본)
+     *   issue   : 빨강(위험/경고) — 이슈 콜은 처리 필요 신호
+     *   reentry : 주황(주의)     — 재인입은 1차 처리 미흡 신호
+     *   silence : 청록(통화시간) + 빨강 라인(묵음시간, 별도 함수에서 처리) */
+    const CHART_COLORS = {
+      total:   'rgba(0,163,255,0.75)',
+      issue:   'rgba(229,57,53,0.75)',
+      reentry: 'rgba(255,143,0,0.8)',
+      silence: 'rgba(38,166,154,0.8)'
+    };
+
     /** 현재 기간 막대 + 평균선 차트 */
     function renderTrendChart(canvasId, currentData, filterType, showAllLabels) {
       const canvas = document.getElementById(canvasId);
       if (!canvas) return null;
+
+      const color = CHART_COLORS[filterType] || CHART_COLORS.total;
 
       return new Chart(canvas, {
         type: 'bar',
@@ -252,7 +266,7 @@
           datasets: [{
             label: '현재 기간',
             data: currentData,
-            backgroundColor: 'rgba(0,163,255,0.7)',
+            backgroundColor: color,
             borderRadius: 4
           }]
         },
@@ -285,7 +299,7 @@
             {
               label: '평균 통화 시간',
               data: talkData,
-              backgroundColor: 'rgba(0,163,255,0.7)',
+              backgroundColor: CHART_COLORS.silence,
               borderRadius: 4,
               order: 1
             },

@@ -316,56 +316,58 @@
         { name: '한동우', team: '주식상담팀', ws: '서울센터', calls: 85 },
         { name: '김태희', team: '고객상담2팀', ws: '부산센터', calls: 92 }
       ],
+      /* [정책] TOP 20 키워드 — 키움증권 주식거래 도메인.
+       *  주문/체결/이체/환매/HTS/공모청약/야간거래/금감원/종목 등 핵심 상담 토픽 중심. */
       keywordTop20: [
-        { rank: 1, keyword: '해지', count: 842, prevCount: 750, change: 12.3 },
+        { rank: 1, keyword: '체결', count: 842, prevCount: 750, change: 12.3 },
         { rank: 2, keyword: '수수료', count: 756, prevCount: 695, change: 8.7 },
         { rank: 3, keyword: '예수금', count: 698, prevCount: 713, change: -2.1 },
         { rank: 4, keyword: '환매', count: 645, prevCount: 557, change: 15.8 },
-        { rank: 5, keyword: '체결', count: 612, prevCount: 581, change: 5.4 },
+        { rank: 5, keyword: '체결지연', count: 612, prevCount: 581, change: 5.4 },
         { rank: 6, keyword: '정정', count: 589, prevCount: 597, change: -1.3 },
         { rank: 7, keyword: 'HTS', count: 534, prevCount: 517, change: 3.2 },
         { rank: 8, keyword: '이체 오류', count: 487, prevCount: 399, change: 22.1 },
-        { rank: 9, keyword: '이자', count: 456, prevCount: 484, change: -5.8 },
-        { rank: 10, keyword: '멤버십', count: 423, prevCount: 415, change: 1.9 },
-        { rank: 11, keyword: '비밀번호', count: 398, prevCount: 412, change: -3.4 },
-        { rank: 12, keyword: '주소 변경', count: 376, prevCount: 373, change: 0.8 },
-        { rank: 13, keyword: '재발급', count: 354, prevCount: 332, change: 6.7 },
-        { rank: 14, keyword: '할인', count: 332, prevCount: 358, change: -7.2 },
+        { rank: 9, keyword: '주문번호', count: 456, prevCount: 484, change: -5.8 },
+        { rank: 10, keyword: '공모청약', count: 423, prevCount: 415, change: 1.9 },
+        { rank: 11, keyword: '야간거래', count: 398, prevCount: 412, change: -3.4 },
+        { rank: 12, keyword: '환율', count: 376, prevCount: 373, change: 0.8 },
+        { rank: 13, keyword: '양도세', count: 354, prevCount: 332, change: 6.7 },
+        { rank: 14, keyword: '신용거래', count: 332, prevCount: 358, change: -7.2 },
         { rank: 15, keyword: '약정', count: 318, prevCount: 304, change: 4.5 },
         { rank: 16, keyword: '통화 품질', count: 295, prevCount: 265, change: 11.4 },
-        { rank: 17, keyword: '로밍', count: 278, prevCount: 234, change: 18.9 },
-        { rank: 18, keyword: '데이터', count: 264, prevCount: 265, change: -0.5 },
-        { rank: 19, keyword: '번호이동', count: 241, prevCount: 220, change: 9.3 },
-        { rank: 20, keyword: '명의변경', count: 228, prevCount: 222, change: 2.6 }
+        { rank: 17, keyword: '배당락', count: 278, prevCount: 234, change: 18.9 },
+        { rank: 18, keyword: '분배금', count: 264, prevCount: 265, change: -0.5 },
+        { rank: 19, keyword: '미국주식', count: 241, prevCount: 220, change: 9.3 },
+        { rank: 20, keyword: '주식분할', count: 228, prevCount: 222, change: 2.6 }
       ],
       issueKeywordTop5: [
-        { rank: 1, keyword: '고소', count: 42, desc: '법적 조치 언급' },
-        { rank: 2, keyword: '소송', count: 38, desc: '소송 의사 표시' },
-        { rank: 3, keyword: '상급자', count: 35, desc: '상위 관리자 연결 요청' },
-        { rank: 4, keyword: '소비자원', count: 28, desc: '외부 기관 신고 언급' },
-        { rank: 5, keyword: '녹음', count: 24, desc: '통화 녹음 사실 고지' }
+        { rank: 1, keyword: '금감원', count: 42, desc: '금감원 민원 접수 언급' },
+        { rank: 2, keyword: '소송', count: 38, desc: '법적 조치 의사 표시' },
+        { rank: 3, keyword: '보상 요구', count: 35, desc: '시스템 장애 손실 보상 요구' },
+        { rank: 4, keyword: '분쟁조정', count: 28, desc: '금융분쟁조정위 신고 언급' },
+        { rank: 5, keyword: '녹취', count: 24, desc: '통화 녹음 사실 고지' }
       ],
       newKeywordTop5: [
-        { rank: 1, keyword: 'AI 상담', count: 156, firstDate: '2025-01-12 09:23' },
-        { rank: 2, keyword: '개인정보 유출', count: 89, firstDate: '2025-01-14 14:07' },
-        { rank: 3, keyword: '앱 오류', count: 72, firstDate: '2025-01-15 11:42' },
-        { rank: 4, keyword: '프로모션', count: 65, firstDate: '2025-01-16 10:15' },
-        { rank: 5, keyword: '5G 전환', count: 48, firstDate: '2025-01-17 16:38' }
+        { rank: 1, keyword: '공모청약', count: 156, firstDate: '2025-01-12 09:23' },
+        { rank: 2, keyword: '신용반대매매', count: 89, firstDate: '2025-01-14 14:07' },
+        { rank: 3, keyword: 'ETF 분배금', count: 72, firstDate: '2025-01-15 11:42' },
+        { rank: 4, keyword: '야간거래', count: 65, firstDate: '2025-01-16 10:15' },
+        { rank: 5, keyword: '주식분할', count: 48, firstDate: '2025-01-17 16:38' }
       ],
       consultTypeDist: [
-        { category: '상품/서비스', count: 3840, ratio: 30.8 },
-        { category: '요금/결제', count: 2980, ratio: 23.9 },
-        { category: '고객불만', count: 2120, ratio: 17.0 },
-        { category: '기술지원', count: 1680, ratio: 13.5 },
-        { category: '계약/해지', count: 1240, ratio: 9.9 },
+        { category: '주식거래', count: 3840, ratio: 30.8 },
+        { category: '입출금/이체', count: 2980, ratio: 23.9 },
+        { category: '민원', count: 2120, ratio: 17.0 },
+        { category: 'HTS·MTS 오류', count: 1680, ratio: 13.5 },
+        { category: '환매/정정', count: 1240, ratio: 9.9 },
         { category: '기타', count: 620, ratio: 4.9 }
       ],
       consultTypeTop5: [
-        { rank: 1, path: '요금/결제 > 청구 > 이중 청구', count: 312, ratio: 2.5 },
-        { rank: 2, path: '상품/서비스 > 변경 > 요금제 변경', count: 298, ratio: 2.4 },
-        { rank: 3, path: '고객불만 > 서비스불만 > 응대불만', count: 276, ratio: 2.2 },
-        { rank: 4, path: '계약/해지 > 해지 > 약정 해지', count: 254, ratio: 2.0 },
-        { rank: 5, path: '기술지원 > 장애 > 접속 불가', count: 238, ratio: 1.9 }
+        { rank: 1, path: '주식거래 > 주문조회 > 체결확인', count: 312, ratio: 2.5 },
+        { rank: 2, path: '입출금/이체 > 이체오류 > 한도초과', count: 298, ratio: 2.4 },
+        { rank: 3, path: '민원 > 서비스불만 > 처리지연', count: 276, ratio: 2.2 },
+        { rank: 4, path: '환매/정정 > 환매 > 환매지연', count: 254, ratio: 2.0 },
+        { rank: 5, path: 'HTS·MTS 오류 > 시스템장애 > 주문불가', count: 238, ratio: 1.9 }
       ],
       consultTypeTable: [
         { major: '주식거래', mid: '주문조회', minor: '체결확인', detail: '체결가 확인', count: 186, ratio: 1.5 },
@@ -388,17 +390,17 @@
       ],
       issueStatus: { pending: 48, review: 32, completed: 285, noIssue: 22 },
       pendingIssues: [
-        { callId: 'TA-2025-00312', date: '2025-01-19 14:23', agent: '문지혜', ws: '대구센터', team: '클레임처리팀', keyword: '고소', admin: '박관리자' },
+        { callId: 'TA-2025-00312', date: '2025-01-19 14:23', agent: '문지혜', ws: '대구센터', team: '클레임처리팀', keyword: '금감원', admin: '박관리자' },
         { callId: 'TA-2025-00298', date: '2025-01-19 11:05', agent: '황서연', ws: '대구센터', team: '종합상담팀', keyword: '소송', admin: '김관리자' },
-        { callId: 'TA-2025-00287', date: '2025-01-18 16:42', agent: '한동우', ws: '서울센터', team: '주식상담팀', keyword: '상급자', admin: '박관리자' },
-        { callId: 'TA-2025-00275', date: '2025-01-18 10:18', agent: '서다은', ws: '서울센터', team: '아웃바운드팀', keyword: '소비자원', admin: '이관리자' },
-        { callId: 'TA-2025-00261', date: '2025-01-17 15:33', agent: '김태희', ws: '부산센터', team: '고객상담2팀', keyword: '녹음', admin: '김관리자' }
+        { callId: 'TA-2025-00287', date: '2025-01-18 16:42', agent: '한동우', ws: '서울센터', team: '주식상담팀', keyword: '보상 요구', admin: '박관리자' },
+        { callId: 'TA-2025-00275', date: '2025-01-18 10:18', agent: '서다은', ws: '서울센터', team: '아웃바운드팀', keyword: '분쟁조정', admin: '이관리자' },
+        { callId: 'TA-2025-00261', date: '2025-01-17 15:33', agent: '김태희', ws: '부산센터', team: '고객상담2팀', keyword: '녹취', admin: '김관리자' }
       ],
       improvements: [
         { content: '클레임처리팀의 이슈 콜 비율이 5.8%로 타 팀 대비 높아 집중 모니터링 필요', source: 'ai' },
-        { content: '"결제 오류" 키워드 전기 대비 22.1% 급증 — 결제 시스템 점검 권장', source: 'ai' },
+        { content: '"이체 오류" 키워드 전기 대비 22.1% 급증 — 이체 시스템 점검 권장', source: 'ai' },
         { content: '재인입 콜 상위 팀(클레임처리팀 72건) 대상 1차 응대 완결률 개선 필요', source: 'ai' },
-        { content: '"고소/소송" 이슈 키워드 증가 추세 — 법무팀 연계 대응 프로세스 점검 필요', source: 'ai' },
+        { content: '"금감원/소송" 이슈 키워드 증가 추세 — 법무팀 연계 대응 프로세스 점검 필요', source: 'ai' },
         { content: '묵음 비율 평균 6.2% → HTS기술지원팀은 9.8%로 높아 상담 스크립트 개선 필요', source: 'ai' }
       ],
       prevImprovements: []
@@ -406,7 +408,7 @@
 
     /* 개선 이행 관리 전체 목록 (불러오기 모달용) — 리포트 단위로 묶은 개선 제안 */
     const IMPROVEMENT_POOL = [
-      { no:1, reportType:'월간', period:'2024-11-01 ~ 2024-11-30', admin:'박관리자', status:'완료', memo:'응대 교육 실시 및 환불 프로세스 개선 완료.',
+      { no:1, reportType:'월간', period:'2024-11-01 ~ 2024-11-30', admin:'박관리자', status:'완료', memo:'응대 교육 실시 및 환매 정정 프로세스 개선 완료.',
         contents: [
           '주식상담팀 재인입 콜 65건 — 1차 응대 완결률 교육 필요',
           '"환매 지연" 키워드 전기 대비 18% 증가 — 환매 프로세스 개선 권장',
@@ -417,19 +419,19 @@
         contents: [
           '"체결 지연" 키워드 3개월 연속 상위 — 거래소 SLA 재검토 필요',
           'HTS기술지원팀 묵음 비율 9.8% — 상담 스크립트 개선 필요',
-          '"이중결제" 키워드 급증 — 결제 모듈 긴급 점검 필요'
+          '"이중주문" 키워드 급증 — 주문 모듈 더블탭 방지 로직 긴급 점검 필요'
         ]},
       { no:3, reportType:'주간', period:'2025-01-06 ~ 2025-01-12', admin:'최수석', status:'완료', memo:'PG사 연동 오류 수정 배포. 스크립트 개선 완료.',
         contents: [
           '고객상담2팀 재인입 콜 78건 최다 — 1차 응대 품질 점검 필요',
           '오전 9~10시 콜 집중(전체 18%) — 상담사 근무 시간 조정 권장',
-          '"개인정보 유출" 신규 키워드 감지 — 보안팀 연계 필요',
+          '"신용반대매매" 신규 키워드 감지 — 만기 사전 안내 SMS 자동화 필요',
           '클레임처리팀 이슈 콜 비율 5.8% — 집중 모니터링 필요'
         ]},
       { no:4, reportType:'월간', period:'2025-01-01 ~ 2025-01-31', admin:'정매니저', status:'진행중', memo:'인력 추가 배치 요청 승인 완료. 3월부터 적용 예정.',
         contents: [
           '야간(20~23시) 콜 응답률 62% — 야간 인력 배치 재조정 필요',
-          '"결제 오류" 키워드 전기 대비 22.1% 급증 — 시스템 점검 권장',
+          '"이체 오류" 키워드 전기 대비 22.1% 급증 — 이체 시스템 점검 권장',
           '종합상담팀 묵음 비율 8.5% — 상담 매뉴얼 보완 필요'
         ]},
       { no:5, reportType:'월간', period:'2025-02-01 ~ 2025-02-28', admin:'한차장', status:'미이행', memo:'',
@@ -437,20 +439,20 @@
           '아웃바운드팀 이슈 콜 비율 3.5% — 콜 스크립트 표준화 필요',
           '종합상담팀 묵음 비율 8.5%로 평균 대비 높음 — 상담 매뉴얼 보완 필요',
           '오전 9~10시 콜 집중(전체의 18%) — 상담사 근무 시간 조정 권장',
-          '신규 키워드 "AI 상담" 급증 — FAQ 및 챗봇 시나리오 업데이트 필요'
+          '신규 키워드 "공모청약" 급증 — IPO 청약 FAQ 및 안내 스크립트 업데이트 필요'
         ]},
       { no:6, reportType:'주간', period:'2025-02-17 ~ 2025-02-23', admin:'박관리자', status:'완료', memo:'모니터링 체계 구축 완료. 이슈 콜 실시간 알림 설정.',
         contents: [
           '클레임처리팀 이슈 콜 비율 5.8% — 집중 모니터링 필요',
-          '"고소/소송" 이슈 키워드 증가 추세 — 법무팀 연계 대응 프로세스 점검 필요',
+          '"금감원/소송" 이슈 키워드 증가 추세 — 법무팀 연계 대응 프로세스 점검 필요',
           '재인입 콜 상위 팀(클레임처리팀 72건) 대상 1차 응대 완결률 개선 필요'
         ]},
       { no:7, reportType:'주간', period:'2025-03-03 ~ 2025-03-09', admin:'이팀장', status:'미이행', memo:'',
         contents: [
           '묵음 비율 평균 6.2% → HTS기술지원팀은 9.8%로 높아 상담 스크립트 개선 필요',
           '"체결지연" 키워드 지속 상위 — 거래소 SLA 재검토 권장',
-          '신규 키워드 "AI 상담" 급증 — FAQ 및 챗봇 시나리오 업데이트 필요',
-          '"개인정보 유출" 신규 키워드 감지 — 보안팀 연계 및 고객 안내 스크립트 마련'
+          '신규 키워드 "공모청약" 급증 — IPO 청약 FAQ 및 안내 스크립트 업데이트 필요',
+          '"신용반대매매" 신규 키워드 감지 — 만기 사전 안내 SMS 자동화 및 고객 안내 스크립트 마련'
         ]}
     ];
 
@@ -730,13 +732,12 @@
         html += `<div style="margin-bottom:24px;">${secTitle('상담유형 분포')}
           <div style="display:flex;align-items:center;justify-content:center;gap:40px;">
             <div style="width:200px;height:200px;flex-shrink:0;"><canvas id="chart-consult-donut"></canvas></div>
-            <div style="display:flex;flex-direction:column;gap:6px;">
+            <div style="display:grid;grid-template-columns:10px auto auto;column-gap:12px;row-gap:8px;align-items:center;font-size:12px;">
               ${D.consultTypeDist.map((c, i) => {
                 const colors = ['#00A3FF','#4CAF50','#F44336','#FF9800','#9C27B0','#607D8B'];
-                return `<div style="display:flex;align-items:center;gap:8px;font-size:12px;">
-                  <span style="width:10px;height:10px;border-radius:2px;background:${colors[i]};display:inline-block;flex-shrink:0;"></span>
-                  <span>${c.category}</span> <b style="margin-left:24px;white-space:nowrap;">${num(c.count)}건 (${c.ratio}%)</b>
-                </div>`;
+                return `<span style="width:10px;height:10px;border-radius:2px;background:${colors[i]};display:inline-block;"></span>
+                <span>${c.category}</span>
+                <b style="white-space:nowrap;text-align:right;">${num(c.count)}건 (${c.ratio}%)</b>`;
               }).join('')}
             </div>
           </div>
@@ -968,7 +969,7 @@
           <table class="data-table" style="font-size:12px;">
             <thead><tr><th style="text-align:center">용어</th><th style="text-align:center">설명</th></tr></thead>
             <tbody>
-              <tr><td style="text-align:center;font-weight:500;">이슈 콜</td><td style="font-size:12px;color:#757575;">이슈 키워드(고소, 소송, 상급자 등)가 감지된 통화</td></tr>
+              <tr><td style="text-align:center;font-weight:500;">이슈 콜</td><td style="font-size:12px;color:#757575;">이슈 키워드(금감원, 소송, 보상 요구 등)가 감지된 통화</td></tr>
               <tr><td style="text-align:center;font-weight:500;">초과 콜</td><td style="font-size:12px;color:#757575;">설정된 기준 시간을 초과한 통화 (현재 기준: 분석 기준 관리 설정값)</td></tr>
               <tr><td style="text-align:center;font-weight:500;">재인입 콜</td><td style="font-size:12px;color:#757575;">설정된 기간 내 동일 고객이 재문의한 통화 (현재 기준: 분석 기준 관리 설정값)</td></tr>
               <tr><td style="text-align:center;font-weight:500;">묵음 비율</td><td style="font-size:12px;color:#757575;">통화시간 대비 묵음시간의 비율(%). 묵음시간(초) ÷ (통화시간(분) × 60) × 100 으로 산출</td></tr>
@@ -1039,7 +1040,7 @@
       const prevData = labels.map((_, i) => i >= 9 && i <= 18 ? Math.round(280 + Math.random() * 380) : Math.round(15 + Math.random() * 70));
       new Chart(ctx, { type: 'bar', plugins: [ChartDataLabels], data: {
         labels, datasets: [
-          { label: curLabel, data: curData, backgroundColor: 'rgba(0,163,255,0.6)', borderRadius: 2, order: 2, datalabels: { anchor: 'end', align: 'end', offset: 2, font: { size: 8, weight: '600' }, color: '#424242' } },
+          { label: curLabel, data: curData, backgroundColor: 'rgba(38,166,154,0.75)', borderRadius: 2, order: 2, datalabels: { anchor: 'end', align: 'end', offset: 2, font: { size: 8, weight: '600' }, color: '#424242' } },
           { label: prevLabel, data: prevData, type: 'line', borderColor: '#BDBDBD', borderWidth: 1.5, borderDash: [4,4], pointRadius: 0, fill: false, order: 1, datalabels: { display: false } }
         ]
       }, options: { responsive: true, maintainAspectRatio: false, layout: { padding: { top: 18 } }, interaction: { mode: 'index', intersect: false }, plugins: { legend: { reverse: true, position: 'top', labels: { font: { size: 10 }, boxWidth: 12 } }, tooltip: { enabled: false }, datalabels: {} },
@@ -1053,7 +1054,7 @@
       const labels = getTimeLabels();
       new Chart(ctx, { type: 'bar', plugins: [ChartDataLabels], data: {
         labels, datasets: [
-          { label: curLabel, data: randData(labels, 15, 25), backgroundColor: 'rgba(21,101,192,0.7)', borderRadius: 3, order: 2, datalabels: { anchor: 'end', align: 'end', offset: 2, font: { size: 9, weight: '600' }, color: '#424242' } },
+          { label: curLabel, data: randData(labels, 15, 25), backgroundColor: 'rgba(255,143,0,0.8)', borderRadius: 3, order: 2, datalabels: { anchor: 'end', align: 'end', offset: 2, font: { size: 9, weight: '600' }, color: '#424242' } },
           { label: prevLabel, data: randData(labels, 12, 22), type: 'line', borderColor: '#BDBDBD', borderWidth: 1.5, borderDash: [4,4], pointRadius: 0, fill: false, order: 1, datalabels: { display: false } }
         ]
       }, options: { responsive: true, maintainAspectRatio: false, layout: { padding: { top: 18 } }, interaction: { mode: 'index', intersect: false }, plugins: { legend: { reverse: true, position: 'top', labels: { font: { size: 10 }, boxWidth: 12 } }, tooltip: { enabled: false }, datalabels: {} },
@@ -1083,7 +1084,7 @@
       const prevData = labels.map(() => +(2.5 + Math.random() * 6.5).toFixed(1));
       new Chart(ctx, { type: 'bar', plugins: [ChartDataLabels], data: {
         labels, datasets: [
-          { label: curLabel, data: curData, backgroundColor: 'rgba(0,163,255,0.7)', borderRadius: 3, order: 2, datalabels: { anchor: 'end', align: 'end', offset: 2, font: { size: 9, weight: '600' }, color: '#424242', formatter: v => v + '%' } },
+          { label: curLabel, data: curData, backgroundColor: 'rgba(142,68,173,0.75)', borderRadius: 3, order: 2, datalabels: { anchor: 'end', align: 'end', offset: 2, font: { size: 9, weight: '600' }, color: '#424242', formatter: v => v + '%' } },
           { label: prevLabel, data: prevData, type: 'line', borderColor: '#BDBDBD', borderWidth: 1.5, borderDash: [4,4], pointRadius: 0, fill: false, order: 1, datalabels: { display: false } }
         ]
       }, options: { responsive: true, maintainAspectRatio: false, layout: { padding: { top: 18 } }, interaction: { mode: 'index', intersect: false },
