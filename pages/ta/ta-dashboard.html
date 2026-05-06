@@ -108,7 +108,7 @@
       <!-- ===== 시안2: 우측 세로 스택 (이슈/신규/미처리) ===== -->
       <div id="variant-v2-right-stack" style="display:none;flex-direction:column;gap:8px;">
         <div class="content-card" style="flex:1;min-height:0;overflow:hidden;">
-          <div class="content-card-header"><span style="font-size:14px;font-weight:600;">이슈 키워드</span></div>
+          <div class="content-card-header"><span style="font-size:14px;font-weight:600;">리스크 키워드</span></div>
           <div class="content-card-body" style="padding:8px;" id="issue-list-v2"></div>
         </div>
         <div class="content-card" style="flex:1;min-height:0;overflow:hidden;">
@@ -116,7 +116,7 @@
           <div class="content-card-body" style="padding:8px;" id="freq-list-v2"></div>
         </div>
         <div class="content-card" style="flex:1;min-height:0;overflow:hidden;">
-          <div class="content-card-header"><span style="font-size:14px;font-weight:600;">이슈 처리 현황</span></div>
+          <div class="content-card-header"><span style="font-size:14px;font-weight:600;">개선 이행 처리 현황</span></div>
           <div class="content-card-body" style="padding:8px;" id="pending-list-v2"></div>
         </div>
       </div>
@@ -149,7 +149,7 @@
           <div class="content-card-body" style="padding:0;" id="trend-list"></div>
         </div>
         <div class="content-card">
-          <div class="content-card-header"><span style="font-size:14px;font-weight:600;">이슈 키워드</span></div>
+          <div class="content-card-header"><span style="font-size:14px;font-weight:600;">리스크 키워드</span></div>
           <div class="content-card-body" style="padding:0;" id="issue-list"></div>
         </div>
         <div class="content-card">
@@ -157,7 +157,7 @@
           <div class="content-card-body" style="padding:0;" id="freq-list"></div>
         </div>
         <div class="content-card">
-          <div class="content-card-header"><span style="font-size:14px;font-weight:600;">이슈 처리 현황</span></div>
+          <div class="content-card-header"><span style="font-size:14px;font-weight:600;">개선 이행 처리 현황</span></div>
           <div class="content-card-body" style="padding:4px;" id="pending-list"></div>
         </div>
       </div>
@@ -194,7 +194,7 @@
     /* ── 상태 ── */
     let currentDepth = 1;
     let selectedCatName = null;
-    let currentPeriod = 'monthly';
+    let currentPeriod = 'daily';
     let hourlyChart = null;
     let isRealtime = false;
     let leftTreemapChart = null;
@@ -1937,7 +1937,7 @@
 
       // 기간 선택기
       AICC_PeriodPicker.create('period-picker-container', {
-        defaultPeriod: 'monthly',
+        defaultPeriod: 'daily',
         onChange: function(periodType) { applyPeriod(periodType); }
       });
 
@@ -1950,8 +1950,8 @@
         }
       }, true);
 
-      // 전체 위젯 렌더
-      const cfg = periodConfig.monthly;
+      // 전체 위젯 렌더 (일간 기본)
+      const cfg = periodConfig.daily;
       renderKPICards(cfg);
       renderMainKeywords();
       renderRankList('trend-list', v3ProductData, false);

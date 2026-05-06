@@ -518,3 +518,55 @@
   - 다른 행은 좌우 레이아웃 유지, 상담 유형만 세로 레이아웃(라벨 위, 값 아래 전체 너비)
   - word-break:keep-all 추가로 한국어 단어 중간 줄바꿈 방지 ("예수금"이 "예/수금"으로 깨지는 현상 해결)
   - line-height:1.5로 가독성 확보
+
+---
+
+**수정 리스트 (26/05/06 — 후속)**
+
+[영업시간 기준 인사이트 문구 정정]
+- 콜센터 영업시간(9~18시)에 맞춰 실시간 모드 메시지의 시간 기준 정정 (ta-dashboard.html / 금감원_demo.md)
+  - "0시부터 4시간 만에 평소 일평균 초과" → "개장(9시) 후 4시간 만에 평소 일평균 초과"
+  - realtimeDashboardInsightPool 주석: "금일 0시~16시 기준" → "금일 9시 개장 후 4시간 누적 기준"
+
+[금감원 콜 정합성 개선 (call-status.html)]
+- 문제: 키워드 강제 주입 방식이 transcript와 무관한 콜에 금감원 태그만 박아 가짜 매치 발생
+  - 신규 키워드 "금감원" 클릭 시 22건 노출되었으나, 그중 다수가 삼성전자 미체결 등 무관 콜
+- 해결: 키워드 태그 주입 → 시나리오 자체 확정 배정으로 전환
+  - generateCallData() 슬롯 분리: i=1~25 주문번호 / i=26~45 금감원 / i=46~100 일반
+  - gamganwonScenarios[20] 신규 — 12건 금감원민원(1차) + 8건 금감원민원_재조사(재인입)
+  - restScenarioPool에서 금감원민원/금감원민원_재조사 weight 항목 2개 제거 (중복 방지)
+  - dashboardIssueKws/dashboardNewKws 강제 주입 리스트에서 '금감원', '금감원민원' 제거
+  - extractedKeywords.consult에 isGamganwon 분기로 '금감원' 키워드 count 3~5 확정 주입 (transcript 정합)
+- 결과: 필터링 결과 약 20~24건, transcript 포함 비율 100%, 시드 무관 20건 보장
+
+[리스크 키워드 탭 3-Depth 트리화 (keyword-manage.html)]
+- "이슈 키워드" → "리스크 키워드" 명칭 변경
+- 단일 평면 테이블(20건) → 좌(트리) + 우(테이블) split 레이아웃 (종목명 탭 패턴 동일)
+- 증권 도메인 3-Depth 트리 신규: D1 7개 / D2 17개 / D3 35개 (leaf)
+  - D1: 규제/감독, 법적 위험, 거래 분쟁, 에스컬레이션 요청, 미디어/SNS 노출, 증거 수집 요구, 자금세탁/시장교란
+- riskData 키워드 60건 신규 (금감원·금융위·KRX·소비자원·분조위·공정위·방통위 / 고소·고발·손해배상·민사소송·변호사·법무법인 / 부적합권유·적합성원칙·설명의무·불완전판매 / 오체결·미체결·수량불일치·잔고불일치·HTS오류·MTS멈춤·호가지연·원금손실·임의매매 / 팀장·관리자·본부장·센터장·임원·컴플라이언스·준법감시·감사실 / 기자·언론사·방송국·SNS·종토방·국민청원 / 녹취·주문로그·체결내역 / 의심거래·STR·자금세탁·미공개정보·시세조종·작전 등)
+- 트리 헬퍼 일반화: _buildTreeHtml/_inlineInputHtml에 ctx 인자 추가하여 모니터/리스크 양쪽 재사용
+- 신규 함수 10종(renderRiskTree, selectRiskCategory, addRiskRootCategory, startRiskAddChild, confirmRiskAddCategory, cancelRiskAddCategory, renderRiskTable, toggleRiskKeyword, deleteRiskKeyword, _updateRiskTabCount)
+- 상태 격리: _addingTo ↔ _riskAddingTo, _treeIdSeq(100~) ↔ _riskTreeIdSeq(400~)
+- 모달 가드: 부모 분류 선택 시 키워드 추가 차단 ("하위 분류를 선택해 주세요")
+- AML/시장교란 카테고리 일부 키워드 active:false 시작 — 시연 시 활성화 토글 가능
+
+[대시보드 명칭·기본값 변경 (ta-dashboard.html)]
+- 카드 헤더 명칭 변경 (일반/실시간 모드 양쪽)
+  - "이슈 키워드" → "리스크 키워드"
+  - "이슈 처리 현황" → "개선 이행 처리 현황"
+- 첫 화면 기본값을 월간 → 일간으로 변경
+  - currentPeriod 'monthly' → 'daily'
+  - AICC_PeriodPicker.create의 defaultPeriod 'monthly' → 'daily'
+  - 초기 렌더 cfg = periodConfig.daily (KPI 라벨 prefix "금일")
+  - 날짜는 period-picker가 항상 new Date() (오늘)로 초기화
+
+[금감원 데모 동선 문서화 (금감원_demo.md 신규)]
+- 데모 4단계 동선 정리: 발견(대시보드) → 집계(콜 현황) → 추적(드릴다운) → 검증(콜 상세), 약 3분
+- 일간 모드 기준 (대시보드 기본값 변경 반영)으로 작성 — 금감원 4,180건 톤
+  - 사전 세팅: F5 새로고침만으로 시작 (실시간 토글 불필요)
+  - 롤링 바 인용 3종 (신규/이슈/주요 키워드별 메시지)
+  - 3개 카드 노출 표 (주요 4180+52% rank 5 / 리스크 4180+52% 1위 / 신규 4180 1위)
+  - L1→L2→L3 드릴다운 시나리오 (후속 조치 필요 → 재인입 → 정식 검사 위험 콜)
+  - 콜 상세 검증 발화·AI 분석 패널 풍족함 포인트
+  - 데모 전 체크리스트 7항목, 한 줄 요약 4단계
