@@ -570,3 +570,48 @@
   - L1→L2→L3 드릴다운 시나리오 (후속 조치 필요 → 재인입 → 정식 검사 위험 콜)
   - 콜 상세 검증 발화·AI 분석 패널 풍족함 포인트
   - 데모 전 체크리스트 7항목, 한 줄 요약 4단계
+
+---
+
+**수정 리스트 (26/05/06 — 3차)**
+
+[금감원 키워드 수치 조정 (ta-dashboard.html)]
+- 금감원 건수 4,180건 → 900건으로 하향 조정 (리스크 키워드 4위로 재편)
+  - 조정 배경: 금감원민원(5위 820건)보다 많되 TOP 3 이내에 들지 않는 현실적 수준
+  - issueData(리스크 키워드): rank 4 (거래체결오류 1위, 환매지연 2위, 계좌해지 3위, 금감원 4위 900건 +52%, 금감원민원 5위 820건)
+  - mainKeywords(주요 키워드): rank 19, count 900 — TOP 20 중 가장 높은 +52% 증가율
+  - newKeywordData(신규 키워드): rank 1, count 900 (공모청약 892건보다 소폭 높음)
+  - realtimeNewKeywordData: 93건 → 20건 (900/45 환산치 적용)
+- AI 현황분석 롤링 바 메시지 수치 동기화
+  - "이슈 키워드 1위 금감원 4,180건" → "리스크 키워드 4위 금감원 900건"
+  - 신규/주요 카드 메시지도 900건 기준으로 일괄 수정
+  - _lookupKeywordCount() 헬퍼 함수 신규 추가 — 키워드 클릭 시 해당 카드의 count를 URL ?count=N으로 자동 전달
+
+[대시보드 ↔ 콜 현황 수치 정합성 (Ghost Call 시스템, call-status.html)]
+- 문제: 대시보드 리스크 카드 900건 클릭 → 콜 현황 총 콜수 20건 (큰 수치 격차로 발표 흐름 단절)
+- 해결: URL ?count=N 파라미터 기반 ghost call 패딩 시스템 구현
+  - parseUrlFilter()에 count 파라미터 파싱 추가
+  - generateGhostCalls(realCalls, needCount) 함수 신규 — 실 콜 분포를 라운드로빈으로 복사해 ghost 콜 생성
+    - _ghost:true 플래그, ID 'TA-2025-G####' 접두사
+    - issueKeywords/reentry/duration/status/rootCause/center/team/agent/callType/consultationType/extractedKeywords/employeeId/silenceRate/silenceSegments 실 콜에서 복사
+  - padGhostsByUrlCount() 함수 신규 — applyFilter() 끝에서 호출, sort 후 ghost append
+  - KPI 6종 카드: filteredData.length === 900으로 자동 표시
+  - 페이지네이션: 45페이지 (900/20)
+- 1페이지 = 실데이터 20행, 2페이지 이후 = ghost 그레이 행 정책
+  - renderTable()에 ghost 분기: page 1 ghost는 실 콜과 동일한 풀 콘텐츠 렌더링
+  - page 2+ ghost는 그레이 톤(color:#9E9E9E), cursor:not-allowed, 핵심 셀만 표시(–)
+  - ghost 행 클릭 시 토스트: "상세 데이터가 수집되지 않은 콜입니다. 1페이지의 콜에서 상세 시연을 진행해 주세요."
+- 드릴다운(L1→L2→L3) 각 레벨에서도 동일 정책 유지
+  - AI 드릴다운 스냅샷(_aiFilteredCalls)이 ghost 포함 filteredData에서 시작
+  - L2 약 720건, L3 약 80건으로 자연 환산
+  - 각 레벨 1페이지 = 실데이터 최우선 배치 (ghost-last sort 타이브레이커 적용)
+- 회귀 방지: URL count 미전달 시(직접 진입) ghost padding 미적용 — 기존 동작 그대로
+
+[금감원 데모 시나리오 최신화 (금감원_demo.md)]
+- 금감원 수치 전체 900건으로 갱신 (4,180건 → 900건)
+- 카드별 순위 명시: 리스크 4위 / 신규 1위(공모청약 892건) / 주요 rank 19
+- 롤링 바 인용 메시지 3종 갱신 (리스크 4위 톤, TOP 20 신규 진입 톤)
+- 콜 현황 섹션: "약 20건" → "900건 집계, 1페이지 20행 실데이터" 설명 추가
+- 드릴다운 섹션: L2 약 720건, L3 약 80건 수치 명시
+- 체크리스트: 총 콜수 900 확인 항목 + 1페이지 20행 확인 항목 신규 추가
+- 한 줄 요약 4단계 전면 갱신

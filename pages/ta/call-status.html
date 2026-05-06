@@ -978,6 +978,98 @@
     let periodFilterInfo = null;
     let kpiFilter = null;
 
+    /* ══════════════════════════════════════════════════════════════════
+     *  Ghost 콜 생성 — 대시보드 카드 카운트 ↔ 콜 현황 KPI 정합성 보장
+     *  ──────────────────────────────────────────────────────────────
+     *  [정책] 대시보드에서 키워드 카드 클릭 시 URL ?count=N 으로 카운트가
+     *   전달된다. 실제 mock 콜이 N건에 못 미치는 경우, 부족분을 ghost 콜로
+     *   채워 KPI 6종 / AI 패널 / 페이지네이션이 모두 N건 기준으로 동작하게 한다.
+     *
+     *  [Ghost 콜 특성]
+     *   - id에 'G' 접두사 (TA-2025-G####) — real과 식별
+     *   - _ghost: true 플래그 — 테이블·모달에서 차별 표시
+     *   - issueKeywords / reentry / duration / totalSilence / status / rootCause
+     *     필드는 real 콜의 분포를 라운드 로빈으로 복사 → 분포 자연스러움
+     *   - transcript / extractedKeywords / aiAnalysis 풍부 필드는 빈 값
+     *   - 1페이지 = real 우선, ghost는 끝에 append (sort 이미 끝난 상태에서)
+     * ════════════════════════════════════════════════════════════════ */
+    let _ghostSeq = 0;
+    function generateGhostCalls(realCalls, needCount) {
+      if (needCount <= 0 || realCalls.length === 0) return [];
+
+      /* real 콜 분포 미리 분석 — 키워드/상담유형도 복사하여 1페이지 노출 시 내용 채움 보장
+       *  (renderTable에서 currentPage===1 인 ghost는 풍부 표시, 2페이지+는 빈 목록) */
+      const realIssues = realCalls.map(c => c.issueKeywords || []);
+      const realReentry = realCalls.map(c => c.reentry);
+      const realDurations = realCalls.map(c => c.duration);
+      const realStatus = realCalls.map(c => (c.aiAnalysis && c.aiAnalysis.status) || 'completed');
+      const realRootCauses = realCalls.map(c => (c.aiAnalysis && c.aiAnalysis.rootCause) || '');
+      const realCenters = realCalls.map(c => c.center);
+      const realTeams = realCalls.map(c => c.team);
+      const realAgents = realCalls.map(c => c.agent);
+      const realCallTypes = realCalls.map(c => c.callType);
+      const realConsultTypes = realCalls.map(c => c.consultationType || '');
+      const realExtracted = realCalls.map(c => c.extractedKeywords || {issue:[], consult:[], product:[]});
+      const realSilences = realCalls.map(c => c.totalSilence || 0);
+      const realEmpIds = realCalls.map(c => c.employeeId || '-');
+      const realSilenceSegs = realCalls.map(c => c.silenceSegments || []);
+      const realSilenceRates = realCalls.map(c => c.silenceRate || 0);
+
+      const ghosts = [];
+      for (let i = 0; i < needCount; i++) {
+        const idx = i % realCalls.length; /* 라운드 로빈으로 분포 복사 */
+        _ghostSeq++;
+        const day = String(((i * 7) % 28) + 1).padStart(2, '0');
+        const hour = 9 + ((i * 3) % 9);
+        const min = String((i * 13) % 60).padStart(2, '0');
+        const ext = realExtracted[idx];
+        ghosts.push({
+          id: `TA-2025-G${String(_ghostSeq).padStart(4, '0')}`,
+          date: `2025-03-${day}`,
+          time: `${String(hour).padStart(2,'0')}:${min}`,
+          center: realCenters[idx],
+          team: realTeams[idx],
+          agent: realAgents[idx],
+          employeeId: realEmpIds[idx],
+          consultationType: realConsultTypes[idx],
+          callType: realCallTypes[idx],
+          reentry: realReentry[idx],
+          duration: realDurations[idx],
+          totalSilence: realSilences[idx],
+          silenceRate: realSilenceRates[idx],
+          silenceSegments: [...realSilenceSegs[idx]],
+          issueKeywords: [...realIssues[idx]],
+          extractedKeywords: {
+            issue: (ext.issue || []).map(k => ({...k})),
+            consult: (ext.consult || []).map(k => ({...k})),
+            product: (ext.product || []).map(k => ({...k}))
+          },
+          transcript: [],
+          aiAnalysis: {
+            status: realStatus[idx],
+            rootCause: realRootCauses[idx],
+            summary: '', actionNote: '', suggestedAction: '',
+            category: '', tags: [], flowPattern: '',
+            customerIntent: '', intentAchieved: false,
+            keyUtterances: [], riskFlags: [],
+            agentEval: { alternativeProvided:false, closingProper:false, score:0 }
+          },
+          _ghost: true
+        });
+      }
+      return ghosts;
+    }
+
+    /* filteredData에 ghost를 padding (urlFilter.count 기준).
+     * applyFilter()/initialLoad에서 filteredData 확정 직후 호출. */
+    function padGhostsByUrlCount() {
+      if (!urlFilter || !urlFilter.count) return;
+      const need = urlFilter.count - filteredData.length;
+      if (need <= 0) return;
+      const ghosts = generateGhostCalls(filteredData, need);
+      filteredData = [...filteredData, ...ghosts];
+    }
+
     /* ── URL 파라미터 기반 필터 (대시보드 연동) ──────────────────
      *  [정책] TA 대시보드에서 전체 콜 현황으로 이동할 때 URL 파라미터로
      *  필터 조건을 전달한다. 페이지 로드 시 parseUrlFilter()로 파싱한다.
@@ -1002,8 +1094,12 @@
       const params = new URLSearchParams(window.location.search);
       const filter = params.get('filter');
       const value = params.get('value');
+      const countRaw = params.get('count');
+      const count = countRaw ? parseInt(countRaw, 10) : null;
       if (!filter || filter === 'all') return null;
-      return { filter, value };
+      /* count: 대시보드 카드 ↔ 콜 현황 KPI 정합성 보장용 (ghost 콜 padding 기준).
+       * 미전달 시 기존 동작(필터링된 실제 mock만 노출). */
+      return { filter, value, count: (count && count > 0) ? count : null };
     }
 
     /* ══════════════════════════════════════════════════════════════════
@@ -2720,6 +2816,9 @@
         return true;
       });
 
+      /* 대시보드 카드 카운트와 정합성 보장 — ghost 콜로 부족분 padding */
+      padGhostsByUrlCount();
+
       currentPage = 1;
       renderKPICards();
       renderTable();
@@ -2885,6 +2984,9 @@
 
       if (sortKey && sortDir) {
         filteredData.sort((a, b) => {
+          /* ghost 콜은 항상 real 콜 뒤에 위치 — 1페이지 풍부함 보장 */
+          if (a._ghost && !b._ghost) return 1;
+          if (!a._ghost && b._ghost) return -1;
           let va, vb;
           switch (sortKey) {
             case 'id': va = a.id; vb = b.id; break;
@@ -2916,6 +3018,27 @@
       const tbody = document.getElementById('call-tbody');
 
       tbody.innerHTML = pageData.map(c => {
+        /* Ghost 콜:
+         *  - 1페이지 노출 시: real 분포 복사로 내용 채움 (real과 동일하게 표시)
+         *  - 2페이지+ 노출 시: 회색 톤 + 핵심 메타만 (상담유형/키워드 dash 처리) */
+        if (c._ghost && currentPage > 1) {
+          const typeBadgeG = `<span style="display:inline-block;padding:2px 8px;background:#EEEEEE;color:#9E9E9E;border-radius:4px;font-size:11px;font-weight:600;">${c.callType}</span>`;
+          return `<tr class="row-ghost" onclick="showCallDetail('${c.id}')" style="cursor:pointer;color:#9E9E9E;background:#FAFAFA;">
+            <td style="text-align:center;font-size:12px;white-space:nowrap;">${c.id}</td>
+            <td style="text-align:center;font-size:12px;white-space:nowrap;">${c.date} ${c.time}</td>
+            <td style="text-align:center;font-size:12px;white-space:nowrap;">${c.center}</td>
+            <td style="text-align:center;font-size:12px;white-space:nowrap;">${c.team}</td>
+            <td style="text-align:center;font-size:12px;">${c.employeeId}</td>
+            <td style="text-align:center;font-size:12px;">${c.agent}</td>
+            <td style="font-size:11px;color:#BDBDBD;padding:6px 12px;">—</td>
+            <td style="text-align:center;font-size:12px;white-space:nowrap;">${c.duration}</td>
+            <td style="text-align:center;">${typeBadgeG}</td>
+            <td style="text-align:center;font-size:12px;color:#BDBDBD;">—</td>
+            <td style="text-align:center;color:#BDBDBD;">—</td>
+            <td style="padding:6px 10px;color:#BDBDBD;">—</td>
+            <td style="padding:6px 10px;color:#BDBDBD;">—</td>
+          </tr>`;
+        }
         const typeBadge = c.callType === 'I/B'
           ? `<span style="display:inline-block;padding:2px 8px;background:#e8f5e9;color:#2e7d32;border-radius:4px;font-size:11px;font-weight:600;">${c.callType}</span>`
           : `<span style="display:inline-block;padding:2px 8px;background:#fff3e0;color:#e65100;border-radius:4px;font-size:11px;font-weight:600;">${c.callType}</span>`;
@@ -3021,7 +3144,14 @@
 
     function showCallDetail(callId) {
       const c = callData.find(x => x.id === callId);
-      if (!c) return;
+      if (!c) {
+        /* Ghost 콜 — 시연용으로 메타만 채워진 콜이라 상세 데이터 없음 */
+        const ghost = filteredData.find(x => x.id === callId && x._ghost);
+        if (ghost) {
+          AICC_Toast.show('상세 데이터가 수집되지 않은 콜입니다. 1페이지의 콜에서 상세 시연을 진행해 주세요.');
+        }
+        return;
+      }
 
       const infoRows = [
         { label:'콜 ID', value:`<span style="font-weight:600;">${c.id}</span>` },

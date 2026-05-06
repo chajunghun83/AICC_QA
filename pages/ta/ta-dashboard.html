@@ -300,7 +300,6 @@
       { name:'체결',      count:5019, rate:7 },
       { name:'예수금',    count:4665, rate:3 },
       { name:'계좌',      count:4253, rate:5 },
-      { name:'금감원',    count:4180, rate:52 },
       { name:'정정',      count:4148, rate:4 },
       { name:'종목',      count:3222, rate:8 },
       { name:'시세',      count:2906, rate:3 },
@@ -315,6 +314,7 @@
       { name:'이벤트',    count:1050, rate:3 },
       { name:'계좌해지',   count:980,  rate:6 },
       { name:'이자',      count:920,  rate:-2 },
+      { name:'금감원',    count:900,  rate:52 },
       { name:'배당',      count:870,  rate:1 }
     ];
 
@@ -327,12 +327,12 @@
       { name:'상품문의',   count:2190, rate:-1 }
     ];
 
-    /* ── 이슈 키워드 (이슈+리스크 통합 — call-status / _buildKeywordScenario 와 동기) ── */
+    /* ── 리스크 키워드 (call-status / _buildKeywordScenario 와 동기, 내부 키는 issue 유지) ── */
     const issueData = [
-      { name:'금감원',       count:4180, rate:52 },
       { name:'체결 지연',     count:1842, rate:12 },
       { name:'거래체결오류',  count:1356, rate:8 },
       { name:'환매 지연',     count:987,  rate:15 },
+      { name:'금감원',       count:900,  rate:52 },
       { name:'금감원민원',    count:820,  rate:45 },
       { name:'오체결',       count:673,  rate:6 },
       { name:'거래기록누락',  count:512,  rate:9 }
@@ -340,7 +340,7 @@
 
     /* ── 신규 키워드 (증권 도메인 신규 트렌드) ── */
     const newKeywordData = [
-      { name:'금감원',     count:4180, rate:null },
+      { name:'금감원',     count:900, rate:null },
       { name:'공모청약',   count:892, rate:null },
       { name:'배당락',     count:645, rate:null },
       { name:'주식분할',   count:423, rate:null },
@@ -382,14 +382,14 @@
     const realtimeIssueData = issueData.map(k => ({ ...k, count: Math.round(k.count / 45) }));
 
     /* 실시간 모드의 신규 키워드: 어제 대비 오늘 처음 등장한 키워드
-     * (★ 금감원 93건은 일반 모드 4,180건의 1/45 환산치 — 다른 카드와 일관성 유지) */
+     * (★ 금감원 20건은 일반 모드 900건의 1/45 환산치 — 다른 카드와 일관성 유지) */
     const realtimeNewKeywordData = [
-      { name:'금감원',     count:93, rate:null },
-      { name:'긴급체결',   count:12, rate:null },
-      { name:'IPO청약',    count:8,  rate:null },
-      { name:'야간단일가',  count:6,  rate:null },
-      { name:'배당기준일',  count:5,  rate:null },
-      { name:'대주거래',   count:3,  rate:null }
+      { name:'금감원',     count:20, rate:null },
+      { name:'공모청약',   count:20, rate:null },
+      { name:'배당락',     count:14, rate:null },
+      { name:'주식분할',   count:9,  rate:null },
+      { name:'신규상장',   count:7,  rate:null },
+      { name:'야간거래',   count:6,  rate:null }
     ];
 
     /* ── 시간대별 콜량 ── */
@@ -461,9 +461,24 @@
     /* ══════════════════════════ 전체 콜 현황 연동 ══════════════════════════ */
 
     const CALL_STATUS_URL = 'call-status.html';
-    function goCallStatus(filter, value) {
+    /* 키워드 풀에서 value에 해당하는 count 조회 — 콜 현황 진입 시 ghost padding 기준 */
+    function _lookupKeywordCount(filter, value) {
+      if (!value) return null;
+      let pool = null;
+      if (filter === 'keyword')            pool = isRealtime ? realtimeMainKeywords : mainKeywords;
+      else if (filter === 'issue_keyword') pool = isRealtime ? realtimeIssueData    : issueData;
+      else if (filter === 'new_keyword')   pool = isRealtime ? realtimeNewKeywordData : newKeywordData;
+      if (!pool) return null;
+      const item = pool.find(k => k.name === value);
+      return item ? item.count : null;
+    }
+
+    function goCallStatus(filter, value, count) {
       let url = CALL_STATUS_URL + '?filter=' + encodeURIComponent(filter);
       if (value !== undefined && value !== null) url += '&value=' + encodeURIComponent(value);
+      /* count 명시 미전달 시 키워드 풀에서 자동 lookup (대시보드 카드 ↔ 콜 현황 KPI 정합성) */
+      if (count === undefined || count === null) count = _lookupKeywordCount(filter, value);
+      if (count) url += '&count=' + count;
       window.location.href = url;
     }
     const searchIconSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
@@ -534,7 +549,7 @@
       const pad = compact ? '4px 10px' : '10px 14px';
       /* [정책] 카드별 필터 타입 매핑
        *   trend-list → product_keyword (상품 랭킹)
-       *   issue-list → issue_keyword (이슈 키워드)
+       *   issue-list → issue_keyword (리스크 키워드)
        *   freq-list  → new_keyword (신규 키워드) */
       const filterType = containerId.includes('issue') ? 'issue_keyword'
         : containerId.includes('trend') ? 'product_keyword'
@@ -1777,15 +1792,15 @@
      *  - color: 키워드 강조 색상 */
     const dashboardInsightPool = [
       /* ★ 금감원 우선 인사이트 3종 — pickDashboardInsights()에서 항상 첫 픽으로 노출됨 */
-      { text:'신규 키워드 "금감원" 어제 첫 등장 후 오늘 4,180건 급증 — 규제 민원 위험 신호 감지, 본부 민원처리팀 협조 권장', kw:'금감원', filter:'new_keyword', value:'금감원', color:'#D84315' },
-      { text:'이슈 키워드 1위 "금감원" 4,180건(+52%) — 수수료 정책 및 체결 오류 미보상 케이스 집중, 법무팀 사전 대응 매뉴얼 점검 권장', kw:'금감원', filter:'issue_keyword', value:'금감원', color:'#C62828' },
-      { text:'주요 키워드 TOP 5 진입 "금감원" 4,180건(+52%) — 다른 키워드 대비 압도적 증가율, 즉시 본부 에스컬레이션 체계 가동 필요', kw:'금감원', filter:'keyword', value:'금감원', color:'#B71C1C' },
-      { text:'이슈 콜 비율이 전기 대비 상승 추세입니다 — 이슈 키워드 다발 팀 대상 집중 모니터링 및 응대 스크립트 점검을 권장합니다.', kw:'이슈 콜', filter:'keyword', value:'이슈 콜', color:'#E53935' },
+      { text:'신규 키워드 "금감원" 어제 첫 등장 후 오늘 900건 급증 — 규제 민원 위험 신호 감지, 본부 민원처리팀 협조 권장', kw:'금감원', filter:'new_keyword', value:'금감원', color:'#D84315' },
+      { text:'리스크 키워드 4위 "금감원" 900건(+52%) — 수수료 정책 및 체결 오류 미보상 케이스 집중, 법무팀 사전 대응 매뉴얼 점검 권장', kw:'금감원', filter:'issue_keyword', value:'금감원', color:'#C62828' },
+      { text:'주요 키워드 "금감원" 900건(+52%) — TOP 20 신규 진입, 다른 키워드 대비 압도적 증가율, 즉시 본부 에스컬레이션 체계 가동 필요', kw:'금감원', filter:'keyword', value:'금감원', color:'#B71C1C' },
+      { text:'이슈 콜 비율이 전기 대비 상승 추세입니다 — 리스크 키워드 다발 팀 대상 집중 모니터링 및 응대 스크립트 점검을 권장합니다.', kw:'이슈 콜', filter:'keyword', value:'이슈 콜', color:'#E53935' },
       { text:'재인입 콜이 전기 대비 증가하고 있습니다 — 1차 응대 완결률이 낮은 팀의 상담 종결 멘트와 후속 안내 품질을 점검해 주세요.', kw:'재인입 콜', filter:'keyword', value:'재인입', color:'#FF6F00' },
       { text:'초과 콜 비율이 높아지고 있습니다 — 도입 멘트와 확인 절차를 간결하게 정리하고, 장기 통화 상위 상담사 대상 코칭을 권장합니다.', kw:'초과 콜', filter:'keyword', value:'초과 콜', color:'#D84315' },
       { text:'\u201C이체 오류\u201D 키워드가 급증하고 있습니다 — 이체 시스템 점검 및 관련 FAQ 긴급 업데이트를 권장합니다.', kw:'이체 오류', filter:'keyword', value:'이체오류', color:'#E53935' },
       { text:'\u201C체결 지연\u201D 키워드가 3개월 연속 상위를 유지하고 있습니다 — 거래소 호가 시스템 SLA 재검토 및 고객 안내 시나리오 보강이 필요합니다.', kw:'체결 지연', filter:'keyword', value:'체결지연', color:'#1565C0' },
-      { text:'이슈 키워드 \u201C민원/소송\u201D이 증가 추세입니다 — 법무팀 연계 대응 프로세스를 점검하고, 해당 콜 우선 배분 룰 설정을 권장합니다.', kw:'민원/소송', filter:'issue_keyword', value:'민원/소송', color:'#D84315' },
+      { text:'리스크 키워드 \u201C민원/소송\u201D이 증가 추세입니다 — 법무팀 연계 대응 프로세스를 점검하고, 해당 콜 우선 배분 룰 설정을 권장합니다.', kw:'민원/소송', filter:'issue_keyword', value:'민원/소송', color:'#D84315' },
       { text:'HTS기술지원팀 묵음 비율이 평균 대비 높습니다 — 상담 스크립트 개선 및 응대 흐름 재설계를 권장합니다.', kw:'묵음', filter:'keyword', value:'묵음', color:'#6A1B9A' },
       { text:'특정 센터의 평균 통화시간이 타 센터 대비 길게 나타납니다 — 해당 센터 상담사 대상 우수 응대 사례 공유를 권장합니다.', kw:'통화시간', filter:'keyword', value:'통화시간', color:'#00695C' },
       { text:'민원처리팀 이슈 콜 비율이 타 팀 대비 높습니다 — 집중 모니터링 체계 구축과 실시간 알림 설정을 권장합니다.', kw:'이슈 콜', filter:'keyword', value:'이슈 콜', color:'#E53935' },
@@ -1800,11 +1815,11 @@
     /* 실시간 모드용 인사이트 풀 (금일 9시 개장 후 4시간 누적 기준 수치) */
     const realtimeDashboardInsightPool = [
       /* ★ 금감원 우선 인사이트 3종 (실시간 수치) */
-      { text:'금일 신규 키워드 "금감원" 93건 등장 — 평소(0건/일) 대비 폭발적 페이스, 본부 민원처리팀 즉시 협조 권장', kw:'금감원', filter:'new_keyword', value:'금감원', color:'#D84315' },
-      { text:'금일 이슈 키워드 1위 "금감원" 93건 — 개장(9시) 후 4시간 만에 평소 일평균 초과, 법무팀 사전 대응 매뉴얼 즉시 점검', kw:'금감원', filter:'issue_keyword', value:'금감원', color:'#C62828' },
-      { text:'금일 주요 키워드 TOP 5 "금감원" 93건 — 압도적 증가 페이스, 본부 에스컬레이션 체계 즉시 가동 필요', kw:'금감원', filter:'keyword', value:'금감원', color:'#B71C1C' },
+      { text:'금일 신규 키워드 "금감원" 20건 등장 — 평소(0건/일) 대비 신규 진입, 본부 민원처리팀 즉시 협조 권장', kw:'금감원', filter:'new_keyword', value:'금감원', color:'#D84315' },
+      { text:'금일 리스크 키워드 4위 "금감원" 20건 — 개장(9시) 후 4시간 만에 신규 진입, 법무팀 사전 대응 매뉴얼 즉시 점검', kw:'금감원', filter:'issue_keyword', value:'금감원', color:'#C62828' },
+      { text:'금일 주요 키워드 "금감원" 20건 — TOP 20 신규 진입, 압도적 증가 페이스, 본부 에스컬레이션 체계 즉시 가동 필요', kw:'금감원', filter:'keyword', value:'금감원', color:'#B71C1C' },
       /* 일반 실시간 인사이트 */
-      { text:'금일 이슈 콜 비율이 평소 평균보다 빠르게 상승하는 추세입니다 — 이슈 키워드 다발 팀 실시간 모니터링을 권장합니다.', kw:'이슈 콜', filter:'keyword', value:'이슈 콜', color:'#E53935' },
+      { text:'금일 이슈 콜 비율이 평소 평균보다 빠르게 상승하는 추세입니다 — 리스크 키워드 다발 팀 실시간 모니터링을 권장합니다.', kw:'이슈 콜', filter:'keyword', value:'이슈 콜', color:'#E53935' },
       { text:'금일 재인입 콜이 누적되고 있습니다 — 1차 응대 완결률 낮은 팀에 즉시 알림 발송을 권장합니다.', kw:'재인입 콜', filter:'keyword', value:'재인입', color:'#FF6F00' },
       { text:'오전 9~10시(개장 직후) 콜이 평소 대비 집중되었습니다 — 피크 시간대 상담 인력 즉시 보강 검토.', kw:'9~10시', filter:'hour', value:'9', color:'#1565C0' },
       { text:'금일 "이체 오류" 키워드 발생 빈도가 평소보다 빠르게 누적되고 있습니다 — 이체 시스템 점검을 권장합니다.', kw:'이체 오류', filter:'keyword', value:'이체오류', color:'#E53935' },
