@@ -8,8 +8,8 @@
           "id": "greeting",
           "name": "인사",
           "items": [
-            { "id": "first-greeting", "name": "첫인사", "full_name": "스크립트 첫인사 내용대로 발화", "type": "NLP", "default_score": 6, "description": "안녕, 무신사, 서포터 중 포함 여부 확인", "criteria": [{"score": 6, "label": "정상", "desc": "스크립트 인사 발화 포함"}, {"score": 0, "label": "감점", "desc": "첫인사 누락 또는 미흡"}], "used_in": ["I/B 일반 상담 평가표 v2.1", "I/B VIP 평가표 v1.0"], "nlp_config": {"method": "script_match", "reference_scripts": ["안녕하세요, 무신사 서포터 OOO입니다. 무엇을 도와드릴까요?"], "keywords": ["안녕", "무신사", "서포터"], "matching_desc": "키워드 중 2개 이상 포함 시 정상 판정"} },
-            { "id": "last-greeting", "name": "끝인사", "full_name": "스크립트 끝인사 내용대로 발화", "type": "NLP", "default_score": 6, "description": "마무리 인사 발화 포함 여부 확인", "criteria": [{"score": 6, "label": "정상", "desc": "끝인사 발화 포함"}, {"score": 0, "label": "감점", "desc": "끝인사 누락"}], "used_in": ["I/B 일반 상담 평가표 v2.1"], "nlp_config": {"method": "script_match", "reference_scripts": ["감사합니다. 좋은 하루 되세요, 무신사 서포터 OOO이었습니다."], "keywords": ["감사", "좋은 하루", "무신사"], "matching_desc": "마무리 인사 키워드 1개 이상 포함 시 정상 판정"} }
+            { "id": "first-greeting", "name": "첫인사", "full_name": "스크립트 첫인사 내용대로 발화", "type": "NLP", "default_score": 6, "description": "안녕, 키움증권, 서포터 중 포함 여부 확인", "criteria": [{"score": 6, "label": "정상", "desc": "스크립트 인사 발화 포함"}, {"score": 0, "label": "감점", "desc": "첫인사 누락 또는 미흡"}], "used_in": ["I/B 일반 상담 평가표 v2.1", "I/B VIP 평가표 v1.0"], "nlp_config": {"method": "script_match", "reference_scripts": ["안녕하세요, 키움증권 서포터 OOO입니다. 무엇을 도와드릴까요?"], "keywords": ["안녕", "키움증권", "서포터"], "matching_desc": "키워드 중 2개 이상 포함 시 정상 판정"} },
+            { "id": "last-greeting", "name": "끝인사", "full_name": "스크립트 끝인사 내용대로 발화", "type": "NLP", "default_score": 6, "description": "마무리 인사 발화 포함 여부 확인", "criteria": [{"score": 6, "label": "정상", "desc": "끝인사 발화 포함"}, {"score": 0, "label": "감점", "desc": "끝인사 누락"}], "used_in": ["I/B 일반 상담 평가표 v2.1"], "nlp_config": {"method": "script_match", "reference_scripts": ["감사합니다. 좋은 하루 되세요, 키움증권 서포터 OOO이었습니다."], "keywords": ["감사", "좋은 하루", "키움증권"], "matching_desc": "마무리 인사 키워드 1개 이상 포함 시 정상 판정"} }
           ]
         },
         {

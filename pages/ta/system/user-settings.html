@@ -102,12 +102,12 @@
     const PERM_TREE = [
       { id: 'data-scope', label: '데이터 범위', children: [
         { id: 'data-seoul', label: '서울센터', children: [
-          { id: 'data-seoul-vip', label: 'VIP상담팀' },
-          { id: 'data-seoul-general', label: '일반상담팀' },
-          { id: 'data-seoul-tech', label: '기술지원팀' }
+          { id: 'data-seoul-vip', label: 'VIP고객팀' },
+          { id: 'data-seoul-general', label: '주식상담팀' },
+          { id: 'data-seoul-tech', label: 'HTS기술지원팀' }
         ]},
         { id: 'data-busan', label: '부산센터', children: [
-          { id: 'data-busan-general', label: '일반상담팀' },
+          { id: 'data-busan-general', label: '펀드상담팀' },
           { id: 'data-busan-happycall', label: '해피콜팀' }
         ]},
         { id: 'data-daegu', label: '대구센터', children: [
@@ -186,29 +186,29 @@
     }
 
     const centerTeamMap = {
-      '서울센터': ['VIP상담팀','일반상담팀','기술지원팀'],
-      '부산센터': ['일반상담팀','해피콜팀'],
+      '서울센터': ['VIP고객팀','주식상담팀','HTS기술지원팀'],
+      '부산센터': ['펀드상담팀','해피콜팀'],
       '대구센터': ['CS상담팀','아웃바운드팀']
     };
 
     const users = [
       /* 전체 데이터 + 전체 메뉴 */
-      { no:1, name:'김철수', email:'cskim@company.com', center:'서울센터', team:'VIP상담팀', status:'active', statusText:'활성', joinDate:'2023-03-15',
+      { no:1, name:'김철수', email:'cskim@company.com', center:'서울센터', team:'VIP고객팀', status:'active', statusText:'활성', joinDate:'2023-03-15',
         permissions: getAllIds(PERM_TREE) },
       /* 부산센터 전체 팀 + 메뉴 일부 */
-      { no:2, name:'박영희', email:'yhpark@company.com', center:'부산센터', team:'일반상담팀', status:'active', statusText:'활성', joinDate:'2023-05-20',
+      { no:2, name:'박영희', email:'yhpark@company.com', center:'부산센터', team:'펀드상담팀', status:'active', statusText:'활성', joinDate:'2023-05-20',
         permissions: ['data-scope','data-busan','data-busan-general','data-busan-happycall','ta-menu','ta-home','ta-dashboard','ta-call-status','ta-call-consultation','ta-consultation-type','ta-admin','ta-issue-manage','ta-report','ta-report-generator'] },
       /* 서울센터 2개 팀(VIP+일반) */
-      { no:3, name:'이준호', email:'jhlee@company.com', center:'서울센터', team:'VIP상담팀', status:'active', statusText:'활성', joinDate:'2023-08-01',
+      { no:3, name:'이준호', email:'jhlee@company.com', center:'서울센터', team:'VIP고객팀', status:'active', statusText:'활성', joinDate:'2023-08-01',
         permissions: ['data-scope','data-seoul','data-seoul-vip','data-seoul-general','ta-menu','ta-home','ta-dashboard','ta-call-status','ta-call-consultation','ta-consultation-type','ta-admin','ta-issue-manage'] },
       /* 서울센터 1개 팀(일반) */
-      { no:4, name:'김민수', email:'mskim@company.com', center:'서울센터', team:'일반상담팀', status:'active', statusText:'활성', joinDate:'2024-01-10',
+      { no:4, name:'김민수', email:'mskim@company.com', center:'서울센터', team:'주식상담팀', status:'active', statusText:'활성', joinDate:'2024-01-10',
         permissions: ['data-scope','data-seoul','data-seoul-general','ta-menu','ta-home','ta-dashboard','ta-call-status','ta-call-consultation','ta-consultation-type'] },
       /* 서울센터 전체 팀 */
-      { no:5, name:'이서연', email:'sylee@company.com', center:'서울센터', team:'기술지원팀', status:'active', statusText:'활성', joinDate:'2024-02-15',
+      { no:5, name:'이서연', email:'sylee@company.com', center:'서울센터', team:'HTS기술지원팀', status:'active', statusText:'활성', joinDate:'2024-02-15',
         permissions: ['data-scope','data-seoul','data-seoul-vip','data-seoul-general','data-seoul-tech','ta-menu','ta-home','ta-dashboard','ta-call-status','ta-call-consultation','ta-consultation-type'] },
       /* 부산센터 1개 팀(일반) + 대구센터 1개 팀(CS) → 2개 센터 걸침 */
-      { no:6, name:'박지훈', email:'jhpark@company.com', center:'부산센터', team:'일반상담팀', status:'active', statusText:'활성', joinDate:'2024-03-01',
+      { no:6, name:'박지훈', email:'jhpark@company.com', center:'부산센터', team:'펀드상담팀', status:'active', statusText:'활성', joinDate:'2024-03-01',
         permissions: ['data-scope','data-busan','data-busan-general','data-daegu','data-daegu-cs','ta-menu','ta-home','ta-dashboard','ta-call-status','ta-call-consultation','ta-consultation-type'] },
       /* 부산센터 1개 팀(해피콜) */
       { no:7, name:'최유진', email:'yjchoi@company.com', center:'부산센터', team:'해피콜팀', status:'active', statusText:'활성', joinDate:'2024-04-20',
@@ -217,7 +217,7 @@
       { no:8, name:'정다은', email:'dejung@company.com', center:'대구센터', team:'CS상담팀', status:'active', statusText:'활성', joinDate:'2024-05-10',
         permissions: ['data-scope','data-daegu','data-daegu-cs','data-daegu-ob','ta-menu','ta-home','ta-dashboard','ta-call-status','ta-call-consultation','ta-consultation-type'] },
       /* 서울센터 2개 팀(일반+기술) — 비활성 */
-      { no:9, name:'한승우', email:'swhan@company.com', center:'서울센터', team:'일반상담팀', status:'inactive', statusText:'비활성', joinDate:'2024-06-01',
+      { no:9, name:'한승우', email:'swhan@company.com', center:'서울센터', team:'주식상담팀', status:'inactive', statusText:'비활성', joinDate:'2024-06-01',
         permissions: ['data-scope','data-seoul','data-seoul-general','data-seoul-tech','ta-menu','ta-home','ta-dashboard'] },
       /* 대구센터 1개 팀(아웃바운드) — 비활성 */
       { no:10, name:'윤하나', email:'hnyoon@company.com', center:'대구센터', team:'아웃바운드팀', status:'inactive', statusText:'비활성', joinDate:'2024-07-15',

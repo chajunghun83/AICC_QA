@@ -1,12 +1,12 @@
 [
   { "id": "admin001", "name": "김관리자", "role": "ADMIN", "team": "QA팀", "center": "전체", "status": "active" },
   { "id": "admin002", "name": "박팀장", "role": "QA_MANAGER", "team": "QA팀", "center": "서울센터", "status": "active" },
-  { "id": "agent001", "name": "홍길동", "role": "AGENT", "team": "VIP상담팀", "team_id": "team-vip", "center": "서울센터", "center_id": "ct-seoul", "status": "active" },
-  { "id": "agent002", "name": "이영희", "role": "AGENT", "team": "VIP상담팀", "team_id": "team-vip", "center": "서울센터", "center_id": "ct-seoul", "status": "active" },
-  { "id": "agent003", "name": "김철수", "role": "AGENT", "team": "일반상담팀", "team_id": "team-general", "center": "서울센터", "center_id": "ct-seoul", "status": "active" },
-  { "id": "agent004", "name": "박지민", "role": "AGENT", "team": "일반상담팀", "team_id": "team-general", "center": "서울센터", "center_id": "ct-seoul", "status": "active" },
-  { "id": "agent005", "name": "최수진", "role": "AGENT", "team": "기술지원팀", "team_id": "team-tech", "center": "서울센터", "center_id": "ct-seoul", "status": "active" },
-  { "id": "agent006", "name": "정민호", "role": "AGENT", "team": "기술지원팀", "team_id": "team-tech", "center": "서울센터", "center_id": "ct-seoul", "status": "active" },
-  { "id": "agent007", "name": "강현우", "role": "AGENT", "team": "일반상담팀", "team_id": "team-general2", "center": "부산센터", "center_id": "ct-busan", "status": "active" },
+  { "id": "agent001", "name": "홍길동", "role": "AGENT", "team": "VIP고객팀", "team_id": "team-vip", "center": "서울센터", "center_id": "ct-seoul", "status": "active" },
+  { "id": "agent002", "name": "이영희", "role": "AGENT", "team": "VIP고객팀", "team_id": "team-vip", "center": "서울센터", "center_id": "ct-seoul", "status": "active" },
+  { "id": "agent003", "name": "김철수", "role": "AGENT", "team": "주식상담팀", "team_id": "team-general", "center": "서울센터", "center_id": "ct-seoul", "status": "active" },
+  { "id": "agent004", "name": "박지민", "role": "AGENT", "team": "주식상담팀", "team_id": "team-general", "center": "서울센터", "center_id": "ct-seoul", "status": "active" },
+  { "id": "agent005", "name": "최수진", "role": "AGENT", "team": "HTS기술지원팀", "team_id": "team-tech", "center": "서울센터", "center_id": "ct-seoul", "status": "active" },
+  { "id": "agent006", "name": "정민호", "role": "AGENT", "team": "HTS기술지원팀", "team_id": "team-tech", "center": "서울센터", "center_id": "ct-seoul", "status": "active" },
+  { "id": "agent007", "name": "강현우", "role": "AGENT", "team": "펀드상담팀", "team_id": "team-general2", "center": "부산센터", "center_id": "ct-busan", "status": "active" },
   { "id": "agent008", "name": "윤서연", "role": "AGENT", "team": "해피콜팀", "team_id": "team-happycall", "center": "부산센터", "center_id": "ct-busan", "status": "active" }
 ]

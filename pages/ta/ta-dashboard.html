@@ -145,7 +145,7 @@
       <!-- 시안1/시안3 공용 하단 4카드 -->
       <div id="variant-v1-bottom" style="grid-column:2/4;display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
         <div class="content-card">
-          <div class="content-card-header"><span style="font-size:14px;font-weight:600;">상품 랭킹</span></div>
+          <div class="content-card-header"><span style="font-size:14px;font-weight:600;">종목 랭킹</span></div>
           <div class="content-card-body" style="padding:0;" id="trend-list"></div>
         </div>
         <div class="content-card">
@@ -208,141 +208,144 @@
       custom:  { kpiPrefix:'기간 내', prevLabel:'이전 기간' }
     };
 
-    /* ── 4댑스 상담유형 트리 (쇼핑몰) ── */
+    /* ── 4댑스 상담유형 트리 (증권사) ── */
     const categoryTree = [
-      { name:'배송', count:5019, children:[
-        { name:'배송현황', count:1350, children:[{name:'택배추적',count:720},{name:'배송예정일',count:480},{name:'배송완료확인',count:150}] },
-        { name:'배송지연', count:890, children:[{name:'택배지연',count:540},{name:'물류지연',count:350}] },
-        { name:'배송지변경', count:832, children:[{name:'주소변경',count:520},{name:'수령인변경',count:312}] },
-        { name:'해외배송', count:637, children:[{name:'관세문의',count:387},{name:'해외배송추적',count:250}] },
-        { name:'특수배송', count:560, children:[{name:'새벽배송',count:320},{name:'당일배송',count:240}] },
-        { name:'배송비문의', count:420, children:[{name:'무료배송조건',count:250},{name:'추가배송비',count:170}] },
-        { name:'수령방법', count:180, children:[{name:'매장픽업',count:100},{name:'무인보관함',count:80}] },
-        { name:'포장상태', count:150, children:[{name:'포장불량',count:90},{name:'친환경포장',count:60}] }
+      { name:'체결관리', count:5019, children:[
+        { name:'체결조회', count:1350, children:[{name:'주문번호조회',count:720},{name:'예상체결가',count:480},{name:'체결완료확인',count:150}] },
+        { name:'체결지연', count:890, children:[{name:'호가지연',count:540},{name:'거래소지연',count:350}] },
+        { name:'주문정정', count:832, children:[{name:'가격정정',count:520},{name:'수량정정',count:312}] },
+        { name:'야간거래', count:637, children:[{name:'시간외단일가',count:387},{name:'야간체결조회',count:250}] },
+        { name:'특수주문', count:560, children:[{name:'IOC주문',count:320},{name:'FOK주문',count:240}] },
+        { name:'수수료문의', count:420, children:[{name:'수수료할인조건',count:250},{name:'추가수수료',count:170}] },
+        { name:'체결방법', count:180, children:[{name:'시장가체결',count:100},{name:'지정가체결',count:80}] },
+        { name:'주문상태', count:150, children:[{name:'미체결잔량',count:90},{name:'주문이력',count:60}] }
       ]},
-      { name:'교환/반품', count:4253, children:[
-        { name:'사이즈교환', count:890, children:[{name:'의류사이즈',count:540},{name:'신발사이즈',count:350}] },
-        { name:'단순변심반품', count:780, children:[{name:'전체반품',count:480},{name:'부분반품',count:300}] },
-        { name:'상품불량', count:570, children:[{name:'파손',count:340},{name:'오배송',count:230}] },
-        { name:'환불처리', count:523, children:[{name:'환불지연',count:300},{name:'환불방법',count:223}] },
-        { name:'색상교환', count:490, children:[{name:'색상차이',count:290},{name:'색상변경',count:200}] },
-        { name:'수거문의', count:400, children:[{name:'수거일정',count:240},{name:'수거방법',count:160}] },
-        { name:'교환배송비', count:350, children:[{name:'왕복비용',count:200},{name:'무료교환',count:150}] },
-        { name:'반품기간', count:250, children:[{name:'기간확인',count:150},{name:'기간연장',count:100}] }
+      { name:'환매/정정', count:4253, children:[
+        { name:'펀드환매', count:890, children:[{name:'국내펀드환매',count:540},{name:'해외펀드환매',count:350}] },
+        { name:'단순주문취소', count:780, children:[{name:'전체취소',count:480},{name:'부분취소',count:300}] },
+        { name:'거래체결오류', count:570, children:[{name:'오체결',count:340},{name:'중복체결',count:230}] },
+        { name:'환매지연', count:523, children:[{name:'정산지연',count:300},{name:'출금지연',count:223}] },
+        { name:'주문정정', count:490, children:[{name:'가격정정',count:290},{name:'수량정정',count:200}] },
+        { name:'환매절차', count:400, children:[{name:'환매일정',count:240},{name:'환매방법',count:160}] },
+        { name:'환매수수료', count:350, children:[{name:'중도환매',count:200},{name:'무료환매',count:150}] },
+        { name:'정정기간', count:250, children:[{name:'기간확인',count:150},{name:'기간연장',count:100}] }
       ]},
-      { name:'상품', count:3450, children:[
-        { name:'상품정보', count:820, children:[{name:'소재성분',count:440},{name:'색상확인',count:380}] },
-        { name:'사이즈정보', count:680, children:[{name:'사이즈표',count:420},{name:'실측문의',count:260}] },
-        { name:'재입고', count:530, children:[{name:'재입고알림',count:330},{name:'입고일정',count:200}] },
-        { name:'가격문의', count:440, children:[{name:'할인정보',count:260},{name:'가격변동',count:180}] },
-        { name:'리뷰후기', count:380, children:[{name:'리뷰작성',count:230},{name:'리뷰수정',count:150}] },
-        { name:'코디추천', count:320, children:[{name:'스타일링',count:190},{name:'세트추천',count:130}] },
-        { name:'세탁관리', count:280, children:[{name:'세탁방법',count:170},{name:'보관방법',count:110}] }
+      { name:'상품문의', count:3450, children:[
+        { name:'종목정보', count:820, children:[{name:'기업정보',count:440},{name:'재무정보',count:380}] },
+        { name:'시세조회', count:680, children:[{name:'실시간시세',count:420},{name:'차트분석',count:260}] },
+        { name:'신규상장', count:530, children:[{name:'상장일정',count:330},{name:'공모청약',count:200}] },
+        { name:'배당문의', count:440, children:[{name:'배당일정',count:260},{name:'배당락',count:180}] },
+        { name:'공시정보', count:380, children:[{name:'공시조회',count:230},{name:'공시알림',count:150}] },
+        { name:'추천종목', count:320, children:[{name:'리포트',count:190},{name:'분석의견',count:130}] },
+        { name:'관심종목', count:280, children:[{name:'등록방법',count:170},{name:'알림설정',count:110}] }
       ]},
-      { name:'주문', count:3222, children:[
+      { name:'주식거래', count:3222, children:[
         { name:'주문조회', count:720, children:[{name:'주문상태',count:420},{name:'주문내역',count:300}] },
-        { name:'주문변경', count:612, children:[{name:'수량변경',count:260},{name:'옵션변경',count:200},{name:'배송지변경',count:152}] },
-        { name:'주문취소', count:580, children:[{name:'단순변심',count:300},{name:'오류주문',count:180},{name:'품절취소',count:100}] },
-        { name:'장바구니', count:450, children:[{name:'담기오류',count:250},{name:'품절상품',count:200}] },
-        { name:'주문결제', count:410, children:[{name:'결제수단',count:230},{name:'결제오류',count:180}] },
-        { name:'선물주문', count:250, children:[{name:'선물포장',count:150},{name:'메시지카드',count:100}] },
-        { name:'대량주문', count:200, children:[{name:'견적요청',count:120},{name:'법인주문',count:80}] }
+        { name:'주문정정', count:612, children:[{name:'수량정정',count:260},{name:'가격정정',count:200},{name:'시간정정',count:152}] },
+        { name:'주문취소', count:580, children:[{name:'단순취소',count:300},{name:'오류주문',count:180},{name:'거래정지',count:100}] },
+        { name:'관심종목', count:450, children:[{name:'등록오류',count:250},{name:'거래정지종목',count:200}] },
+        { name:'매매체결', count:410, children:[{name:'주문방법',count:230},{name:'체결오류',count:180}] },
+        { name:'대량주문', count:250, children:[{name:'블록딜',count:150},{name:'기관주문',count:100}] },
+        { name:'법인거래', count:200, children:[{name:'견적요청',count:120},{name:'법인계좌',count:80}] }
       ]},
-      { name:'회원/계정', count:2890, children:[
-        { name:'회원가입', count:620, children:[{name:'가입방법',count:250},{name:'본인인증',count:220},{name:'인증오류',count:150}] },
-        { name:'로그인', count:560, children:[{name:'비밀번호찾기',count:330},{name:'아이디찾기',count:230}] },
-        { name:'회원정보', count:480, children:[{name:'정보변경',count:250},{name:'개인정보',count:230}] },
-        { name:'등급혜택', count:420, children:[{name:'등급조회',count:250},{name:'혜택안내',count:170}] },
-        { name:'탈퇴문의', count:410, children:[{name:'탈퇴절차',count:240},{name:'데이터삭제',count:170}] },
-        { name:'SNS연동', count:400, children:[{name:'카카오연동',count:220},{name:'네이버연동',count:180}] }
+      { name:'계좌관리', count:2890, children:[
+        { name:'계좌개설', count:620, children:[{name:'개설방법',count:250},{name:'본인인증',count:220},{name:'인증오류',count:150}] },
+        { name:'로그인', count:560, children:[{name:'비밀번호찾기',count:330},{name:'공동인증서',count:230}] },
+        { name:'계좌정보', count:480, children:[{name:'정보변경',count:250},{name:'개인정보',count:230}] },
+        { name:'등급혜택', count:420, children:[{name:'VIP등급',count:250},{name:'혜택안내',count:170}] },
+        { name:'계좌해지', count:410, children:[{name:'해지절차',count:240},{name:'잔고이전',count:170}] },
+        { name:'타사연동', count:400, children:[{name:'간편이체',count:220},{name:'오픈뱅킹',count:180}] }
       ]},
-      { name:'프로모션', count:2199, children:[
-        { name:'쿠폰', count:600, children:[{name:'쿠폰적용',count:280},{name:'쿠폰오류',count:200},{name:'쿠폰발급',count:120}] },
-        { name:'적립금', count:480, children:[{name:'적립금사용',count:290},{name:'적립금확인',count:190}] },
+      { name:'이벤트/혜택', count:2199, children:[
+        { name:'수수료할인', count:600, children:[{name:'할인적용',count:280},{name:'할인오류',count:200},{name:'할인발급',count:120}] },
+        { name:'예수금이자', count:480, children:[{name:'이자조회',count:290},{name:'이자지급',count:190}] },
         { name:'이벤트', count:419, children:[{name:'이벤트참여',count:219},{name:'당첨확인',count:200}] },
-        { name:'할인', count:350, children:[{name:'기간한정',count:200},{name:'회원할인',count:150}] },
-        { name:'시즌세일', count:350, children:[{name:'세일기간',count:200},{name:'추가할인',count:150}] }
+        { name:'캐시백', count:350, children:[{name:'기간한정',count:200},{name:'VIP캐시백',count:150}] },
+        { name:'시즌프로모션', count:350, children:[{name:'프로모션기간',count:200},{name:'추가혜택',count:150}] }
       ]},
-      { name:'결제', count:2105, children:[
-        { name:'카드결제', count:690, children:[{name:'승인실패',count:310},{name:'한도초과',count:210},{name:'할부변경',count:170}] },
-        { name:'간편결제', count:615, children:[{name:'네이버페이',count:235},{name:'카카오페이',count:205},{name:'토스',count:175}] },
-        { name:'현금결제', count:450, children:[{name:'무통장입금',count:260},{name:'계좌이체',count:190}] },
-        { name:'결제취소', count:350, children:[{name:'부분취소',count:200},{name:'전액취소',count:150}] }
+      { name:'입출금/이체', count:2105, children:[
+        { name:'예수금', count:690, children:[{name:'잔고조회',count:310},{name:'한도초과',count:210},{name:'증거금조회',count:170}] },
+        { name:'간편이체', count:615, children:[{name:'네이버페이',count:235},{name:'카카오페이',count:205},{name:'토스',count:175}] },
+        { name:'은행이체', count:450, children:[{name:'타행이체',count:260},{name:'당행이체',count:190}] },
+        { name:'이체취소', count:350, children:[{name:'부분취소',count:200},{name:'전액취소',count:150}] }
       ]},
-      { name:'A/S', count:1456, children:[
-        { name:'A/S접수', count:580, children:[{name:'수선요청',count:280},{name:'교체요청',count:180},{name:'부품교체',count:120}] },
-        { name:'A/S진행', count:476, children:[{name:'진행상태',count:150},{name:'소요기간',count:136},{name:'비용문의',count:190}] },
-        { name:'보증문의', count:400, children:[{name:'보증기간',count:150},{name:'보증범위',count:130},{name:'보증서분실',count:70},{name:'보증연장',count:50}] }
+      { name:'시스템지원', count:1456, children:[
+        { name:'HTS설치', count:580, children:[{name:'설치문의',count:280},{name:'재설치',count:180},{name:'호환성',count:120}] },
+        { name:'MTS설치', count:476, children:[{name:'다운로드',count:150},{name:'설치오류',count:136},{name:'사용방법',count:190}] },
+        { name:'기능문의', count:400, children:[{name:'주문화면',count:150},{name:'차트기능',count:130},{name:'알림설정',count:70},{name:'기능요청',count:50}] }
       ]},
-      { name:'고객불만', count:1180, children:[
+      { name:'민원', count:1180, children:[
         { name:'서비스불만', count:520, children:[{name:'응대불만',count:280},{name:'대기시간',count:240}] },
-        { name:'품질불만', count:410, children:[{name:'제품하자',count:250},{name:'포장불량',count:160}] },
-        { name:'보상요구', count:250, children:[{name:'환불요구',count:150},{name:'추가보상',count:100}] }
+        { name:'시스템불만', count:410, children:[{name:'시스템장애',count:250},{name:'느린응답',count:160}] },
+        { name:'보상요구', count:250, children:[{name:'배상요구',count:150},{name:'추가보상',count:100}] }
       ]},
-      { name:'앱/웹사이트', count:1050, children:[
-        { name:'앱오류', count:450, children:[{name:'로딩오류',count:200},{name:'결제오류',count:150},{name:'화면깨짐',count:100}] },
+      { name:'HTS·MTS 오류', count:1050, children:[
+        { name:'앱오류', count:450, children:[{name:'로딩오류',count:200},{name:'주문오류',count:150},{name:'화면멈춤',count:100}] },
         { name:'기능문의', count:350, children:[{name:'검색기능',count:180},{name:'필터기능',count:170}] },
-        { name:'계정연동', count:250, children:[{name:'SNS연동',count:150},{name:'기기변경',count:100}] }
+        { name:'계정연동', count:250, children:[{name:'기기변경',count:150},{name:'다중접속',count:100}] }
       ]}
     ];
 
-    /* ── KPI 기본 데이터 ── */
+    /* ── KPI 기본 데이터 (키움증권 콜센터 추정 규모) ── */
     const kpiBase = {
-      totalCalls: { current:12161, prev:11465, ib:7892, ob:4269, ibPrev:7456, obPrev:4009 },
+      totalCalls: { current:25318, prev:24487, ib:14820, ob:10498, ibPrev:14180, obPrev:10307 },
       issueCalls: { current:8974, prev:8977, ib:5840, ob:3134, ibPrev:5843, obPrev:3134 },
       overCalls:  { current:2185, prev:1876, ib:1420, ob:765, ibPrev:1220, obPrev:656 },
       reEntryCalls:{ current:8675, prev:8371, ib:5639, ob:3036, ibPrev:5436, obPrev:2935 }
     };
 
-    /* ── 주요 키워드 TOP 20 ── */
+    /* ── 주요 키워드 TOP 20 (증권 도메인) ── */
     const mainKeywords = [
       { name:'주문 번호',  count:6729, rate:3 },
-      { name:'배송',      count:5019, rate:7 },
-      { name:'사이즈',    count:4665, rate:3 },
-      { name:'주소',      count:4253, rate:5 },
-      { name:'변경',      count:4148, rate:4 },
-      { name:'제품',      count:3222, rate:8 },
-      { name:'훼손',      count:2906, rate:3 },
-      { name:'반품',      count:2580, rate:2 },
-      { name:'결제',      count:2105, rate:1 },
-      { name:'상품명',    count:1849, rate:4 },
-      { name:'배송지 변경', count:1832, rate:7 },
-      { name:'단순 변심',  count:1788, rate:4 },
-      { name:'교환',      count:1680, rate:2 },
+      { name:'체결',      count:5019, rate:7 },
+      { name:'예수금',    count:4665, rate:3 },
+      { name:'계좌',      count:4253, rate:5 },
+      { name:'금감원',    count:4180, rate:52 },
+      { name:'정정',      count:4148, rate:4 },
+      { name:'종목',      count:3222, rate:8 },
+      { name:'시세',      count:2906, rate:3 },
+      { name:'환매',      count:2580, rate:2 },
+      { name:'이체',      count:2105, rate:1 },
+      { name:'종목명',    count:1849, rate:4 },
+      { name:'주문 정정',  count:1832, rate:7 },
+      { name:'단순 취소',  count:1788, rate:4 },
+      { name:'펀드',      count:1680, rate:2 },
       { name:'환불',      count:1450, rate:-1 },
-      { name:'적립금',    count:1120, rate:1 },
-      { name:'쿠폰',      count:1050, rate:3 },
-      { name:'회원탈퇴',   count:980,  rate:6 },
-      { name:'포인트',    count:920,  rate:-2 },
-      { name:'색상',      count:870,  rate:1 },
-      { name:'재입고',    count:815,  rate:5 }
+      { name:'수수료',    count:1120, rate:1 },
+      { name:'이벤트',    count:1050, rate:3 },
+      { name:'계좌해지',   count:980,  rate:6 },
+      { name:'이자',      count:920,  rate:-2 },
+      { name:'배당',      count:870,  rate:1 }
     ];
 
-    /* ── 상담유형 트렌드 Top 5 ── */
+    /* ── 상담유형 트렌드 Top 5 (증권 분류) ── */
     const trendData = [
-      { name:'교환/반품',  count:2406, rate:3 },
-      { name:'배송현황',   count:2384, rate:4 },
-      { name:'사이즈교환', count:2292, rate:-2 },
-      { name:'주문변경',   count:2257, rate:-1 },
+      { name:'환매/정정',  count:2406, rate:3 },
+      { name:'체결조회',   count:2384, rate:4 },
+      { name:'펀드환매',   count:2292, rate:-2 },
+      { name:'주문정정',   count:2257, rate:-1 },
       { name:'상품문의',   count:2190, rate:-1 }
     ];
 
-    /* ── 이슈 키워드 (이슈+리스크 통합) ── */
+    /* ── 이슈 키워드 (이슈+리스크 통합 — call-status / _buildKeywordScenario 와 동기) ── */
     const issueData = [
-      { name:'반품 지연',  count:1842, rate:12 },
-      { name:'상품 불량',  count:1356, rate:8 },
-      { name:'환불 지연',  count:987,  rate:15 },
-      { name:'오배송',    count:673,  rate:6 },
-      { name:'포장 파손',  count:512,  rate:9 }
+      { name:'금감원',       count:4180, rate:52 },
+      { name:'체결 지연',     count:1842, rate:12 },
+      { name:'거래체결오류',  count:1356, rate:8 },
+      { name:'환매 지연',     count:987,  rate:15 },
+      { name:'금감원민원',    count:820,  rate:45 },
+      { name:'오체결',       count:673,  rate:6 },
+      { name:'거래기록누락',  count:512,  rate:9 }
     ];
 
-    /* ── 신규 키워드 ── */
+    /* ── 신규 키워드 (증권 도메인 신규 트렌드) ── */
     const newKeywordData = [
-      { name:'사전예약',   count:892, rate:null },
-      { name:'시즌오프',   count:645, rate:null },
-      { name:'한정판',    count:423, rate:null },
-      { name:'공동구매',   count:312, rate:null },
-      { name:'라이브방송',  count:287, rate:null }
+      { name:'금감원',     count:4180, rate:null },
+      { name:'공모청약',   count:892, rate:null },
+      { name:'배당락',     count:645, rate:null },
+      { name:'주식분할',   count:423, rate:null },
+      { name:'신규상장',   count:312, rate:null },
+      { name:'야간거래',   count:287, rate:null }
     ];
 
     /* ── 이슈 처리 현황 (이슈 처리 관리 데이터 기반 상태별 집계) ── */
@@ -378,13 +381,15 @@
     const realtimeTrendData = trendData.map(k => ({ ...k, count: Math.round(k.count / 45) }));
     const realtimeIssueData = issueData.map(k => ({ ...k, count: Math.round(k.count / 45) }));
 
-    /* 실시간 모드의 신규 키워드: 어제 대비 오늘 처음 등장한 키워드 */
+    /* 실시간 모드의 신규 키워드: 어제 대비 오늘 처음 등장한 키워드
+     * (★ 금감원 93건은 일반 모드 4,180건의 1/45 환산치 — 다른 카드와 일관성 유지) */
     const realtimeNewKeywordData = [
-      { name:'긴급배송',   count:12, rate:null },
-      { name:'선물세트',   count:8,  rate:null },
-      { name:'묶음할인',   count:6,  rate:null },
-      { name:'품절재입고',  count:5,  rate:null },
-      { name:'당일수령',   count:3,  rate:null }
+      { name:'금감원',     count:93, rate:null },
+      { name:'긴급체결',   count:12, rate:null },
+      { name:'IPO청약',    count:8,  rate:null },
+      { name:'야간단일가',  count:6,  rate:null },
+      { name:'배당기준일',  count:5,  rate:null },
+      { name:'대주거래',   count:3,  rate:null }
     ];
 
     /* ── 시간대별 콜량 ── */
@@ -1234,13 +1239,13 @@
       }
     }
 
-    // 시안3 상품 랭킹 더미 데이터
+    // 시안3 종목 랭킹 더미 데이터
     const v3ProductData = [
-      { name: '캐시미어 코트', count: 1842, rate: 12 },
-      { name: '오버핏 패딩', count: 1356, rate: -8 },
-      { name: '울 블렌드 자켓', count: 987, rate: 15 },
-      { name: '린넨 셔츠', count: 673, rate: -6 },
-      { name: '실크 블라우스', count: 512, rate: 9 }
+      { name: '삼성전자', count: 1842, rate: 12 },
+      { name: '카카오', count: 1356, rate: -8 },
+      { name: 'KODEX 200', count: 987, rate: 15 },
+      { name: 'NAVER', count: 673, rate: -6 },
+      { name: '테슬라', count: 512, rate: 9 }
     ];
 
     // 시안3 전환 시 하단 카드 제목/내용 변경
@@ -1670,6 +1675,7 @@
       if (currentLabel) currentLabel.textContent = isRealtime ? '금일' : '현재 기간';
 
       renderAllWidgets();
+      showDashboardInsightBar();
       AICC_Toast.show(isRealtime ? '실시간 모드가 활성화되었습니다.' : '실시간 모드가 해제되었습니다.');
     }
 
@@ -1693,6 +1699,7 @@
       if (prevLegend) prevLegend.style.display = 'flex';
       const currentLabel = document.getElementById('current-legend-label');
       if (currentLabel) currentLabel.textContent = '현재 기간';
+      showDashboardInsightBar();
     }
 
     /** 센터 선택 시 팀 필터 캐스케이딩 */
@@ -1769,21 +1776,40 @@
      *  - filter/value: 클릭 시 goCallStatus()에 전달할 파라미터
      *  - color: 키워드 강조 색상 */
     const dashboardInsightPool = [
+      /* ★ 금감원 우선 인사이트 3종 — pickDashboardInsights()에서 항상 첫 픽으로 노출됨 */
+      { text:'신규 키워드 "금감원" 어제 첫 등장 후 오늘 4,180건 급증 — 규제 민원 위험 신호 감지, 본부 민원처리팀 협조 권장', kw:'금감원', filter:'new_keyword', value:'금감원', color:'#D84315' },
+      { text:'이슈 키워드 1위 "금감원" 4,180건(+52%) — 수수료 정책 및 체결 오류 미보상 케이스 집중, 법무팀 사전 대응 매뉴얼 점검 권장', kw:'금감원', filter:'issue_keyword', value:'금감원', color:'#C62828' },
+      { text:'주요 키워드 TOP 5 진입 "금감원" 4,180건(+52%) — 다른 키워드 대비 압도적 증가율, 즉시 본부 에스컬레이션 체계 가동 필요', kw:'금감원', filter:'keyword', value:'금감원', color:'#B71C1C' },
       { text:'이슈 콜 비율이 전기 대비 상승 추세입니다 — 이슈 키워드 다발 팀 대상 집중 모니터링 및 응대 스크립트 점검을 권장합니다.', kw:'이슈 콜', filter:'keyword', value:'이슈 콜', color:'#E53935' },
       { text:'재인입 콜이 전기 대비 증가하고 있습니다 — 1차 응대 완결률이 낮은 팀의 상담 종결 멘트와 후속 안내 품질을 점검해 주세요.', kw:'재인입 콜', filter:'keyword', value:'재인입', color:'#FF6F00' },
       { text:'초과 콜 비율이 높아지고 있습니다 — 도입 멘트와 확인 절차를 간결하게 정리하고, 장기 통화 상위 상담사 대상 코칭을 권장합니다.', kw:'초과 콜', filter:'keyword', value:'초과 콜', color:'#D84315' },
-      { text:'\u201C결제 오류\u201D 키워드가 급증하고 있습니다 — 결제 시스템 점검 및 관련 FAQ 긴급 업데이트를 권장합니다.', kw:'결제 오류', filter:'keyword', value:'결제오류', color:'#E53935' },
-      { text:'\u201C배송 지연\u201D 키워드가 3개월 연속 상위를 유지하고 있습니다 — 물류사 SLA 재검토 및 고객 안내 시나리오 보강이 필요합니다.', kw:'배송 지연', filter:'keyword', value:'배송지연', color:'#1565C0' },
-      { text:'이슈 키워드 \u201C고소/소송\u201D이 증가 추세입니다 — 법무팀 연계 대응 프로세스를 점검하고, 해당 콜 우선 배분 룰 설정을 권장합니다.', kw:'고소/소송', filter:'issue_keyword', value:'고소/소송', color:'#D84315' },
-      { text:'기술지원팀 묵음 비율이 평균 대비 높습니다 — 상담 스크립트 개선 및 응대 흐름 재설계를 권장합니다.', kw:'묵음', filter:'keyword', value:'묵음', color:'#6A1B9A' },
+      { text:'\u201C이체 오류\u201D 키워드가 급증하고 있습니다 — 이체 시스템 점검 및 관련 FAQ 긴급 업데이트를 권장합니다.', kw:'이체 오류', filter:'keyword', value:'이체오류', color:'#E53935' },
+      { text:'\u201C체결 지연\u201D 키워드가 3개월 연속 상위를 유지하고 있습니다 — 거래소 호가 시스템 SLA 재검토 및 고객 안내 시나리오 보강이 필요합니다.', kw:'체결 지연', filter:'keyword', value:'체결지연', color:'#1565C0' },
+      { text:'이슈 키워드 \u201C민원/소송\u201D이 증가 추세입니다 — 법무팀 연계 대응 프로세스를 점검하고, 해당 콜 우선 배분 룰 설정을 권장합니다.', kw:'민원/소송', filter:'issue_keyword', value:'민원/소송', color:'#D84315' },
+      { text:'HTS기술지원팀 묵음 비율이 평균 대비 높습니다 — 상담 스크립트 개선 및 응대 흐름 재설계를 권장합니다.', kw:'묵음', filter:'keyword', value:'묵음', color:'#6A1B9A' },
       { text:'특정 센터의 평균 통화시간이 타 센터 대비 길게 나타납니다 — 해당 센터 상담사 대상 우수 응대 사례 공유를 권장합니다.', kw:'통화시간', filter:'keyword', value:'통화시간', color:'#00695C' },
-      { text:'클레임처리팀 이슈 콜 비율이 타 팀 대비 높습니다 — 집중 모니터링 체계 구축과 실시간 알림 설정을 권장합니다.', kw:'이슈 콜', filter:'keyword', value:'이슈 콜', color:'#E53935' },
+      { text:'민원처리팀 이슈 콜 비율이 타 팀 대비 높습니다 — 집중 모니터링 체계 구축과 실시간 알림 설정을 권장합니다.', kw:'이슈 콜', filter:'keyword', value:'이슈 콜', color:'#E53935' },
       { text:'야간 시간대(20~23시) 콜 응답률이 낮습니다 — 야간 인력 배치 재조정 및 자동 응답 시나리오 보강을 검토해 주세요.', kw:'20~23시', filter:'hour', value:'20', color:'#1565C0' },
       { text:'오전 9~10시 콜 집중도가 전체의 18%를 차지합니다 — 피크 시간대 상담사 근무 시간 조정 또는 사전 안내 강화를 권장합니다.', kw:'9~10시', filter:'hour', value:'9', color:'#1565C0' },
       { text:'상담사별 통화시간 편차가 크게 나타납니다 — 우수 응대 사례를 정리하여 공유하고, 표준 응대 시간 가이드를 배포해 주세요.', kw:'통화시간', filter:'keyword', value:'통화시간', color:'#00695C' },
       { text:'신규 키워드 \u201CAI 상담\u201D이 급증하고 있습니다 — FAQ 및 챗봇 시나리오 업데이트로 선제 대응이 필요합니다.', kw:'AI 상담', filter:'new_keyword', value:'AI상담', color:'#7B1FA2' },
-      { text:'재인입 고객 비중이 높은 상품군이 확인됩니다 — 해당 상품의 첫 상담 단계 안내 정확도 개선 및 스크립트 보완을 권장합니다.', kw:'재인입', filter:'keyword', value:'재인입', color:'#FF6F00' },
+      { text:'재인입 고객 비중이 높은 종목군이 확인됩니다 — 해당 종목의 첫 상담 단계 안내 정확도 개선 및 스크립트 보완을 권장합니다.', kw:'재인입', filter:'keyword', value:'재인입', color:'#FF6F00' },
       { text:'묵음시간과 장기 통화가 함께 높은 콜 패턴이 감지됩니다 — 응대 흐름 재설계 우선 대상으로 선정하여 개선을 추진해 주세요.', kw:'묵음시간', filter:'keyword', value:'묵음', color:'#6A1B9A' }
+    ];
+
+    /* 실시간 모드용 인사이트 풀 (금일 9시 개장 후 4시간 누적 기준 수치) */
+    const realtimeDashboardInsightPool = [
+      /* ★ 금감원 우선 인사이트 3종 (실시간 수치) */
+      { text:'금일 신규 키워드 "금감원" 93건 등장 — 평소(0건/일) 대비 폭발적 페이스, 본부 민원처리팀 즉시 협조 권장', kw:'금감원', filter:'new_keyword', value:'금감원', color:'#D84315' },
+      { text:'금일 이슈 키워드 1위 "금감원" 93건 — 개장(9시) 후 4시간 만에 평소 일평균 초과, 법무팀 사전 대응 매뉴얼 즉시 점검', kw:'금감원', filter:'issue_keyword', value:'금감원', color:'#C62828' },
+      { text:'금일 주요 키워드 TOP 5 "금감원" 93건 — 압도적 증가 페이스, 본부 에스컬레이션 체계 즉시 가동 필요', kw:'금감원', filter:'keyword', value:'금감원', color:'#B71C1C' },
+      /* 일반 실시간 인사이트 */
+      { text:'금일 이슈 콜 비율이 평소 평균보다 빠르게 상승하는 추세입니다 — 이슈 키워드 다발 팀 실시간 모니터링을 권장합니다.', kw:'이슈 콜', filter:'keyword', value:'이슈 콜', color:'#E53935' },
+      { text:'금일 재인입 콜이 누적되고 있습니다 — 1차 응대 완결률 낮은 팀에 즉시 알림 발송을 권장합니다.', kw:'재인입 콜', filter:'keyword', value:'재인입', color:'#FF6F00' },
+      { text:'오전 9~10시(개장 직후) 콜이 평소 대비 집중되었습니다 — 피크 시간대 상담 인력 즉시 보강 검토.', kw:'9~10시', filter:'hour', value:'9', color:'#1565C0' },
+      { text:'금일 "이체 오류" 키워드 발생 빈도가 평소보다 빠르게 누적되고 있습니다 — 이체 시스템 점검을 권장합니다.', kw:'이체 오류', filter:'keyword', value:'이체오류', color:'#E53935' },
+      { text:'금일 HTS기술지원팀 묵음 비율이 평균을 초과하고 있습니다 — 실시간 응대 흐름 점검 필요.', kw:'묵음', filter:'keyword', value:'묵음', color:'#6A1B9A' },
+      { text:'금일 초과 콜 비중이 평소 시간대보다 높아지고 있습니다 — 장기 통화 상위 상담사 즉시 모니터링 권장.', kw:'초과 콜', filter:'keyword', value:'초과 콜', color:'#D84315' }
     ];
 
     let _insightItems = [];
@@ -1808,8 +1834,15 @@
 
     function pickDashboardInsights() {
       const count = 3 + Math.floor(Math.random() * 3);
-      const shuffled = [...dashboardInsightPool].sort(() => Math.random() - 0.5);
-      return shuffled.slice(0, count);
+      /* ★ 금감원 관련 인사이트는 항상 첫 픽에 포함 (데모 보장용)
+       *  실시간 모드일 때는 금일 누적 수치 기준 풀을 사용 */
+      const pool = isRealtime ? realtimeDashboardInsightPool : dashboardInsightPool;
+      const priority = pool.filter(it => it.text.includes('금감원'));
+      const others = pool.filter(it => !it.text.includes('금감원'));
+      const shuffledPriority = [...priority].sort(() => Math.random() - 0.5);
+      const shuffledOthers = [...others].sort(() => Math.random() - 0.5);
+      const picked = shuffledPriority.length > 0 ? [shuffledPriority[0]] : [];
+      return [...picked, ...shuffledOthers].slice(0, count);
     }
 
     function showDashboardInsightBar() {

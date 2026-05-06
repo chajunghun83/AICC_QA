@@ -1,7 +1,7 @@
 /**
  * AICC QA - Sidebar Component
  * 2단 오버레이 사이드바 (1단: 고정 틸 그린, 2단: 흰색 오버레이)
- * ELP 포탈의 전체 메뉴 구조를 모방하되, QA 서브메뉴만 실제 동작
+ * ECP 포탈의 전체 메뉴 구조를 모방하되, QA 서브메뉴만 실제 동작
  */
 window.AICC_Sidebar = {
   /** 관리자/상담사 역할별 메뉴 트리 정의 */
@@ -123,9 +123,9 @@ window.AICC_Sidebar = {
       <div class="sidebar-1st" id="sidebar-1st">
         <div style="padding:16px 16px 8px;display:flex;align-items:center;gap:8px;">
           <div style="width:28px;height:28px;background:white;border-radius:4px;display:flex;align-items:center;justify-content:center;">
-            <span style="color:#00A3FF;font-weight:800;font-size:11px;">ELP</span>
+            <span style="color:#00A3FF;font-weight:800;font-size:11px;">ECP</span>
           </div>
-          <span style="font-size:12px;font-weight:600;opacity:0.9;">ELP Cloud Portal</span>
+          <span style="font-size:12px;font-weight:600;opacity:0.9;">ECP Cloud Portal</span>
         </div>
 
         <div style="padding:12px 12px 4px;">

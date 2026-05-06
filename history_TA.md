@@ -414,7 +414,6 @@
 - 
 
 [대시보드]
-
 - AI 현황분석 롤링 바 추가
   - KPI 카드와 주요 키워드/상담유형 영역 사이에 배치
   - "현황 분석 — 대처 방안" 결합 구조의 문구 풀 15개 (KPI 수치, 키워드 트렌드, 센터/팀별 비교 기반)
@@ -438,3 +437,84 @@
   - 상담 유형 Top10 body: 520px → 480px
   - 소분류 도넛 차트: 340px → 340px (도넛 크기 유지, 하단 여백 축소)
   - 소분류 랭크 리스트 margin-top: 30px → 8px
+
+---
+
+**수정 리스트 (26/05/06)**
+
+[키움증권 데모 도메인 전환]
+
+- 전체 목업 데이터를 패션 쇼핑몰(무신사) 도메인 → 키움증권 주식거래 도메인으로 전환
+  - 공유 데이터(centers, users, dashboard-stats, evaluations, manual-evaluations)와 TA 페이지 인라인 데이터 일괄 교체
+  - 별도 JSON 파일 5종(centers.json, users.json, dashboard-stats.json, evaluations.json, manual-evaluations.json) 동기화
+- 팀명 4-way 동기화 (centers ↔ users ↔ dashboard-stats ↔ evaluations)
+  - VIP상담팀 → VIP고객팀
+  - 일반상담팀(서울) → 주식상담팀
+  - 기술지원팀 → HTS기술지원팀
+  - 일반상담팀(부산) → 펀드상담팀
+- 이슈 키워드 5종 매핑 (5-way 정합성: ta-dashboard.issueData / call-status.dashboardIssueKws / extractedKeywordPool.issue / orderNumScenario.issues / restScenarioPool.issues / _buildKeywordScenario 하드코딩)
+  - 배송지연 → 체결지연 / 상품불량 → 거래체결오류 / 환불지연 → 환매지연 / 오배송 → 오체결 / 포장파손 → 거래기록누락
+- 종목 키워드 5종 (대시보드 trend-list + extractedKeywordPool.product)
+  - 캐시미어코트/오버핏패딩/울블렌드자켓/린넨셔츠/실크블라우스 → 삼성전자/카카오/KODEX 200/NAVER/테슬라
+- 신규 키워드 5종 (대시보드 newKeywordData)
+  - 사전예약/시즌오프/한정판/공동구매/라이브방송 → 공모청약/배당락/주식분할/신규상장/야간거래
+- KPI 키움증권 콜센터 추정 규모로 조정
+  - 일 통화 1,523건 → 25,318건 / 상담사 48명 → 380명
+- scriptTemplates 13종 lines/ai 객체 풍족 재작성 (각 11~14턴, 발화당 25~80자, 종목·수수료·체결 디테일)
+  - 키 13개 보존 (orderNumScenario/restScenarioPool tpl 매칭)
+  - ai 객체 모든 필드 채움 (summary/rootCause/suggestedAction/flowPattern/customerIntent/intentAchieved/keyUtterances/riskFlags)
+- _buildKeywordScenario 하드코딩 도메인 어휘 일괄 교체
+  - 배송지연/주문취소지연/결제오류/물류사 A 배송 지연/추적/미배송/택배 추적 불가/장기 미배송 → 체결지연/주문취소지연/이체오류/거래소 호가 시스템 지연/주문번호조회/미체결/주문조회 불가/장기 미체결
+  - triggerEvent: '물류사 A 배송 지연(12시간 이상) 발생' → '거래소 호가 시스템 지연(15분 이상) 발생'
+- analyzeTranscript followup 키워드(확인 후 연락/콜백/에스컬레이션 등) 도메인 독립 어휘로 변경 없음
+
+[금감원 규제 위험 데모 시나리오 추가 - 26/05/06]
+
+- 데모 동선: 발견(대시보드) → 집계(콜 현황) → 추적(드릴다운) → 검증(콜 상세). 실시간 모드 기준 약 3분
+- 대시보드 3중 노출 (모든 카드에서 금감원이 1순위로 부각)
+  - 주요 키워드 TOP 20: 금감원 4,180건 +52% (rank 5, TOP 20 중 가장 높은 증가율)
+  - 이슈 키워드: 금감원 4,180건 +52% (rank 1) + 금감원민원 820건 +45% (rank 5, 재인입 케이스)
+  - 신규 키워드: 금감원 4,180건 (rank 1)
+  - 실시간 모드 자동 환산: 모든 카드 93건으로 통일 (4,180/45)
+- AI 현황분석 롤링 바 강화
+  - dashboardInsightPool 앞쪽에 금감원 우선 인사이트 3종 추가 (신규/이슈/주요 각 카드별 메시지)
+  - pickDashboardInsights() 함수에 우선 픽 로직 추가 — 금감원 인사이트가 항상 첫 픽에 포함되도록 보장
+  - 색상 강도 차별화: #D84315(주황빨강) / #C62828(진한 빨강) / #B71C1C(가장 진한 빨강)
+- 실시간 모드 전용 인사이트 풀 추가 (realtimeDashboardInsightPool)
+  - 금감원 우선 인사이트 3종 (실시간 수치 93건 기준 + "0시부터 4시간 만에 평소 일평균 초과" 등 실시간 톤)
+  - 일반 실시간 인사이트 6종 (이체 오류/재인입/피크 시간대 등을 "금일 누적" 톤으로)
+  - toggleRealtime() / deactivateRealtime() 끝에 showDashboardInsightBar() 호출 추가 — 실시간 토글 시 인사이트 바 즉시 갱신
+  - pickDashboardInsights()에 isRealtime 분기 — 실시간 풀/일반 풀 자동 선택
+  - realtimeNewKeywordData에 금감원 93건(1위) 추가 — 다른 카드와 일관성 유지
+- 콜 데이터 강제 주입 배열 갱신 (call-status.html)
+  - dashboardIssueKws에 '금감원', '금감원민원' 2개 추가 (총 7종)
+  - dashboardNewKws에 '금감원' 추가 (총 6종)
+  - 클릭 시 ?filter=issue_keyword&value=금감원 또는 ?filter=new_keyword&value=금감원 진입 → 강제 주입된 콜로 빈 화면 방지
+- scriptTemplates 2종 신규 추가 (★ 풍족함)
+  - 금감원민원: 신규 민원 접수 (수수료 미적용, 영업일 7일 회신 약속, 12턴)
+    - 디테일: 금감원 접수번호 2025-0345, VIP 우대 0.005% vs 일반 0.015%, 80만원 차액
+    - ai: rootCause(VIP 등급 진입과 시스템 우대 적용 시점 불일치), riskFlags(규정위반우려/법적위험/이탈위험)
+  - 금감원민원_재조사: 재인입 케이스, 1차 회신 후 금감원 추가 자료 요구, 정식 검사 위험 (12턴)
+    - 디테일: 접수번호 2025-0289, 재조사 요구, 본부 IT팀 거래 로그 원본 추출
+    - ai: rootCause(민원 사후관리 부실), riskFlags(재인입위험/법적위험/규정위반우려/이탈위험)
+- restScenarioPool에 시나리오 2개 추가
+  - { tpl:'금감원민원', issues:['금감원민원','규정위반우려'], ctPrefix:'민원', weight:4 }
+  - { tpl:'금감원민원_재조사', issues:['금감원민원','재인입','법적위험'], ctPrefix:'민원', weight:3 }
+  - 75건 가중랜덤에서 자연 생성 7~9건 + 강제 주입 5+4=9건 → 약 12~15건 노출
+
+[정합성 보장 정책]
+- ID·필드 키 절대 불변 (centers/users/evaluations id, scores 키, transcript speaker 값, aiAnalysis 필드 키)
+- scriptTemplates 키 13→15종 ↔ orderNumScenario/restScenarioPool tpl 매칭 유지
+- 대시보드 키워드 데이터 ↔ call-status 강제 주입 배열 5-way 동기화 (이슈 5종/상품 5종/신규 5종)
+- AI 현황분석 함수 자체는 미변경 (데이터·어휘만 교체로 자동 작동)
+- 풍족함 기준: 발화 11~14턴 / 발화당 25~80자 / ai 객체 모든 필드 채움 / agentMemoPool 16건+ / adminMemoPool 18건+
+
+[UX 개선 - 26/05/06]
+- 콜 목록 테이블 컬럼 너비 재조정 (call-status.html)
+  - 콜 ID 6%→8% (TA-2025-XXXXX 한 줄 표시 보장)
+  - 상담 유형 13%→17% (긴 4단계 경로 줄바꿈 방지) + cell에 white-space:nowrap + ellipsis + title tooltip
+  - 일시 10%→9%, 상담 키워드 12%→10%, 이슈 키워드 13%→11%
+- 콜 상세 모달 - 콜 정보 패널 상담 유형 행 레이아웃 변경
+  - 다른 행은 좌우 레이아웃 유지, 상담 유형만 세로 레이아웃(라벨 위, 값 아래 전체 너비)
+  - word-break:keep-all 추가로 한국어 단어 중간 줄바꿈 방지 ("예수금"이 "예/수금"으로 깨지는 현상 해결)
+  - line-height:1.5로 가독성 확보

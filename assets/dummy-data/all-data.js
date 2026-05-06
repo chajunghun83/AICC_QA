@@ -15,16 +15,16 @@ window.AICC_DATA['centers.json'] =
     "id": "ct-seoul",
     "name": "서울센터",
     "teams": [
-      { "id": "team-vip", "name": "VIP상담팀", "agent_count": 12 },
-      { "id": "team-general", "name": "일반상담팀", "agent_count": 25 },
-      { "id": "team-tech", "name": "기술지원팀", "agent_count": 18 }
+      { "id": "team-vip", "name": "VIP고객팀", "agent_count": 12 },
+      { "id": "team-general", "name": "주식상담팀", "agent_count": 25 },
+      { "id": "team-tech", "name": "HTS기술지원팀", "agent_count": 18 }
     ]
   },
   {
     "id": "ct-busan",
     "name": "부산센터",
     "teams": [
-      { "id": "team-general2", "name": "일반상담팀", "agent_count": 20 },
+      { "id": "team-general2", "name": "펀드상담팀", "agent_count": 20 },
       { "id": "team-happycall", "name": "해피콜팀", "agent_count": 10 }
     ]
   },
@@ -43,36 +43,36 @@ window.AICC_DATA['users.json'] =
 [
   { "id": "admin001", "name": "김관리자", "role": "ADMIN", "team": "QA팀", "center": "전체", "status": "active" },
   { "id": "admin002", "name": "박팀장", "role": "QA_MANAGER", "team": "QA팀", "center": "서울센터", "status": "active" },
-  { "id": "agent001", "name": "홍길동", "role": "AGENT", "team": "VIP상담팀", "team_id": "team-vip", "center": "서울센터", "center_id": "ct-seoul", "status": "active" },
-  { "id": "agent002", "name": "이영희", "role": "AGENT", "team": "VIP상담팀", "team_id": "team-vip", "center": "서울센터", "center_id": "ct-seoul", "status": "active" },
-  { "id": "agent003", "name": "김철수", "role": "AGENT", "team": "일반상담팀", "team_id": "team-general", "center": "서울센터", "center_id": "ct-seoul", "status": "active" },
-  { "id": "agent004", "name": "박지민", "role": "AGENT", "team": "일반상담팀", "team_id": "team-general", "center": "서울센터", "center_id": "ct-seoul", "status": "active" },
-  { "id": "agent005", "name": "최수진", "role": "AGENT", "team": "기술지원팀", "team_id": "team-tech", "center": "서울센터", "center_id": "ct-seoul", "status": "active" },
-  { "id": "agent006", "name": "정민호", "role": "AGENT", "team": "기술지원팀", "team_id": "team-tech", "center": "서울센터", "center_id": "ct-seoul", "status": "active" },
-  { "id": "agent007", "name": "강현우", "role": "AGENT", "team": "일반상담팀", "team_id": "team-general2", "center": "부산센터", "center_id": "ct-busan", "status": "active" },
+  { "id": "agent001", "name": "홍길동", "role": "AGENT", "team": "VIP고객팀", "team_id": "team-vip", "center": "서울센터", "center_id": "ct-seoul", "status": "active" },
+  { "id": "agent002", "name": "이영희", "role": "AGENT", "team": "VIP고객팀", "team_id": "team-vip", "center": "서울센터", "center_id": "ct-seoul", "status": "active" },
+  { "id": "agent003", "name": "김철수", "role": "AGENT", "team": "주식상담팀", "team_id": "team-general", "center": "서울센터", "center_id": "ct-seoul", "status": "active" },
+  { "id": "agent004", "name": "박지민", "role": "AGENT", "team": "주식상담팀", "team_id": "team-general", "center": "서울센터", "center_id": "ct-seoul", "status": "active" },
+  { "id": "agent005", "name": "최수진", "role": "AGENT", "team": "HTS기술지원팀", "team_id": "team-tech", "center": "서울센터", "center_id": "ct-seoul", "status": "active" },
+  { "id": "agent006", "name": "정민호", "role": "AGENT", "team": "HTS기술지원팀", "team_id": "team-tech", "center": "서울센터", "center_id": "ct-seoul", "status": "active" },
+  { "id": "agent007", "name": "강현우", "role": "AGENT", "team": "펀드상담팀", "team_id": "team-general2", "center": "부산센터", "center_id": "ct-busan", "status": "active" },
   { "id": "agent008", "name": "윤서연", "role": "AGENT", "team": "해피콜팀", "team_id": "team-happycall", "center": "부산센터", "center_id": "ct-busan", "status": "active" }
 ]
 ;
 
-window.AICC_DATA['dashboard-stats.json'] = 
+window.AICC_DATA['dashboard-stats.json'] =
 {
   "summary": {
-    "total_agents": 48,
-    "total_agents_prev": 45,
-    "total_calls": 1523,
-    "total_calls_prev": 1487,
-    "calls_auto_ib": 890,
-    "calls_auto_ib_done": 869,
-    "calls_auto_ib_prev": 838,
-    "calls_auto_ib_done_prev": 838,
-    "calls_auto_ob": 357,
-    "calls_auto_ob_done": 342,
-    "calls_auto_ob_prev": 339,
-    "calls_auto_ob_done_prev": 336,
-    "calls_manual": 276,
-    "calls_manual_done": 120,
-    "calls_manual_prev": 310,
-    "calls_manual_done_prev": 270,
+    "total_agents": 380,
+    "total_agents_prev": 372,
+    "total_calls": 25318,
+    "total_calls_prev": 24487,
+    "calls_auto_ib": 14820,
+    "calls_auto_ib_done": 14512,
+    "calls_auto_ib_prev": 14180,
+    "calls_auto_ib_done_prev": 14180,
+    "calls_auto_ob": 5940,
+    "calls_auto_ob_done": 5712,
+    "calls_auto_ob_prev": 5640,
+    "calls_auto_ob_done_prev": 5588,
+    "calls_manual": 4558,
+    "calls_manual_done": 1980,
+    "calls_manual_prev": 4667,
+    "calls_manual_done_prev": 4054,
     "avg_score": 82.5,
     "avg_score_prev": 81.2,
     "avg_score_auto_ib": 84.3,
@@ -83,17 +83,17 @@ window.AICC_DATA['dashboard-stats.json'] =
     "avg_score_manual_prev": 76.8,
     "avg_duration": "6:32",
     "avg_duration_prev": "6:48",
-    "excluded_agents": 12,
-    "excluded_agents_prev": 8,
+    "excluded_agents": 32,
+    "excluded_agents_prev": 24,
     "urgent_issues": 14,
     "urgent_issues_prev": 11,
-    "top_deduction": { "item": "첫인사", "calls": 74, "pct": 8 },
-    "low_score_calls": 55,
+    "top_deduction": { "item": "첫인사", "calls": 1247, "pct": 8 },
+    "low_score_calls": 920,
     "low_score_pct": 6.2
   },
   "channel_distribution": {
-    "IB": 890,
-    "OB": 357
+    "IB": 14820,
+    "OB": 5940
   },
   "quality_trend_30days": [
     { "date": "01/01", "score": 79.2 },
@@ -113,29 +113,29 @@ window.AICC_DATA['dashboard-stats.json'] =
     { "date": "01/29", "score": 82.5 }
   ],
   "team_scores": [
-    { "team": "VIP상담팀", "score": 85.2, "color": "#00A3FF" },
-    { "team": "일반상담팀", "score": 84.8, "color": "#2196F3" },
-    { "team": "기술지원팀", "score": 69.8, "color": "#FF9800" },
+    { "team": "VIP고객팀", "score": 85.2, "color": "#00A3FF" },
+    { "team": "주식상담팀", "score": 84.8, "color": "#2196F3" },
+    { "team": "HTS기술지원팀", "score": 69.8, "color": "#FF9800" },
     { "team": "해피콜팀", "score": 88.1, "color": "#9C27B0" },
     { "team": "CS상담팀", "score": 81.5, "color": "#4CAF50" }
   ],
   "urgent_issues": [
-    { "type": "FAIL(금지어)", "count": 3, "team": "VIP상담팀 외" },
-    { "type": "기준 미달", "count": 9, "team": "기술지원팀 외" },
+    { "type": "FAIL(금지어)", "count": 3, "team": "VIP고객팀 외" },
+    { "type": "기준 미달", "count": 9, "team": "HTS기술지원팀 외" },
     { "type": "이의 제기 대기", "count": 5, "status": "pending" }
   ],
   "fail_agents": [
-    { "name": "진민호", "center": "서울센터", "team": "기술지원팀", "score": 45, "reason": "공감 부족 + 기준 미달" },
-    { "name": "변서현", "center": "서울센터", "team": "기술지원팀", "score": 52, "reason": "신속성 미달" },
-    { "name": "김민수", "center": "서울센터", "team": "VIP상담팀", "score": 58, "reason": "FAIL(금지어)" },
-    { "name": "서지원", "center": "대구센터", "team": "종합상담팀", "score": 62, "reason": "해결력 부족" },
-    { "name": "김하늘", "center": "부산센터", "team": "고객상담1팀", "score": 66, "reason": "인사 멘트 누락" }
+    { "name": "진민호", "center": "서울센터", "team": "HTS기술지원팀", "score": 45, "reason": "공감 부족 + 기준 미달" },
+    { "name": "변서현", "center": "서울센터", "team": "HTS기술지원팀", "score": 52, "reason": "신속성 미달" },
+    { "name": "김민수", "center": "서울센터", "team": "VIP고객팀", "score": 58, "reason": "FAIL(금지어)" },
+    { "name": "서지원", "center": "대구센터", "team": "CS상담팀", "score": 62, "reason": "해결력 부족" },
+    { "name": "김하늘", "center": "부산센터", "team": "펀드상담팀", "score": 66, "reason": "인사 멘트 누락" }
   ],
   "improvement_needed_top5": [
     {
       "rank": 1,
       "center": "서울센터",
-      "team": "기술지원팀",
+      "team": "HTS기술지원팀",
       "team_id": "team-tech",
       "item": "공감 표현 부족",
       "item_id": "pos-neg-empathy",
@@ -146,7 +146,7 @@ window.AICC_DATA['dashboard-stats.json'] =
     {
       "rank": 2,
       "center": "서울센터",
-      "team": "VIP상담팀",
+      "team": "VIP고객팀",
       "team_id": "team-vip",
       "item": "비전문적 화법",
       "item_id": "professional-speech",
@@ -157,7 +157,7 @@ window.AICC_DATA['dashboard-stats.json'] =
     {
       "rank": 3,
       "center": "서울센터",
-      "team": "기술지원팀",
+      "team": "HTS기술지원팀",
       "team_id": "team-tech",
       "item": "응답 지연",
       "item_id": "speed",
@@ -168,7 +168,7 @@ window.AICC_DATA['dashboard-stats.json'] =
     {
       "rank": 4,
       "center": "서울센터",
-      "team": "일반상담팀",
+      "team": "주식상담팀",
       "team_id": "team-general",
       "item": "고객 불편 공감 부족",
       "item_id": "customer-discomfort",
@@ -179,7 +179,7 @@ window.AICC_DATA['dashboard-stats.json'] =
     {
       "rank": 5,
       "center": "서울센터",
-      "team": "VIP상담팀",
+      "team": "VIP고객팀",
       "team_id": "team-vip",
       "item": "설명 불충분",
       "item_id": "easy-explanation",
@@ -192,10 +192,10 @@ window.AICC_DATA['dashboard-stats.json'] =
     {
       "center": "서울센터",
       "center_id": "ct-seoul",
-      "team": "VIP상담팀",
+      "team": "VIP고객팀",
       "team_id": "team-vip",
-      "calls": 380,
-      "evaluations": 312,
+      "calls": 6240,
+      "evaluations": 5180,
       "avg_score": 85.2,
       "agent_count": 12,
       "issues": [{ "type": "FAIL(금지어)", "count": 1 }]
@@ -203,10 +203,10 @@ window.AICC_DATA['dashboard-stats.json'] =
     {
       "center": "서울센터",
       "center_id": "ct-seoul",
-      "team": "일반상담팀",
+      "team": "주식상담팀",
       "team_id": "team-general",
-      "calls": 702,
-      "evaluations": 580,
+      "calls": 11650,
+      "evaluations": 9620,
       "avg_score": 84.8,
       "agent_count": 25,
       "issues": [{ "type": "공감 부족", "count": 3 }, { "type": "기준 미달", "count": 1 }]
@@ -214,10 +214,10 @@ window.AICC_DATA['dashboard-stats.json'] =
     {
       "center": "서울센터",
       "center_id": "ct-seoul",
-      "team": "기술지원팀",
+      "team": "HTS기술지원팀",
       "team_id": "team-tech",
-      "calls": 268,
-      "evaluations": 215,
+      "calls": 4438,
+      "evaluations": 3578,
       "avg_score": 69.8,
       "agent_count": 18,
       "issues": [{ "type": "기준 미달", "count": 2 }]
@@ -225,10 +225,10 @@ window.AICC_DATA['dashboard-stats.json'] =
     {
       "center": "부산센터",
       "center_id": "ct-busan",
-      "team": "일반상담팀",
+      "team": "펀드상담팀",
       "team_id": "team-general2",
-      "calls": 520,
-      "evaluations": 438,
+      "calls": 8625,
+      "evaluations": 7268,
       "avg_score": 83.1,
       "agent_count": 20,
       "issues": [{ "type": "FAIL(금지어)", "count": 2 }]
@@ -238,8 +238,8 @@ window.AICC_DATA['dashboard-stats.json'] =
       "center_id": "ct-busan",
       "team": "해피콜팀",
       "team_id": "team-happycall",
-      "calls": 185,
-      "evaluations": 172,
+      "calls": 3072,
+      "evaluations": 2855,
       "avg_score": 88.1,
       "agent_count": 10,
       "issues": []
@@ -249,8 +249,8 @@ window.AICC_DATA['dashboard-stats.json'] =
       "center_id": "ct-daegu",
       "team": "CS상담팀",
       "team_id": "team-cs",
-      "calls": 310,
-      "evaluations": 265,
+      "calls": 5145,
+      "evaluations": 4395,
       "avg_score": 81.5,
       "agent_count": 15,
       "issues": [{ "type": "공감 부족", "count": 1 }]
@@ -260,8 +260,8 @@ window.AICC_DATA['dashboard-stats.json'] =
       "center_id": "ct-daegu",
       "team": "아웃바운드팀",
       "team_id": "team-ob",
-      "calls": 158,
-      "evaluations": 132,
+      "calls": 2620,
+      "evaluations": 2192,
       "avg_score": 79.3,
       "agent_count": 8,
       "issues": []
@@ -281,8 +281,8 @@ window.AICC_DATA['evaluation-items.json'] =
           "id": "greeting",
           "name": "인사",
           "items": [
-            { "id": "first-greeting", "name": "첫인사", "full_name": "스크립트 첫인사 내용대로 발화", "type": "NLP", "default_score": 6, "description": "안녕, 무신사, 서포터 중 포함 여부 확인", "criteria": [{"score": 6, "label": "정상", "desc": "스크립트 인사 발화 포함"}, {"score": 0, "label": "감점", "desc": "첫인사 누락 또는 미흡"}], "used_in": ["I/B 일반 상담 평가표 v2.1", "I/B VIP 평가표 v1.0"], "score_type": "deduction", "is_active": true, "nlp_config": {"method": "script_match", "reference_scripts": ["안녕하세요, 무신사 서포터 OOO입니다. 무엇을 도와드릴까요?"], "keywords": ["안녕", "무신사", "서포터"], "matching_desc": "키워드 중 2개 이상 포함 시 정상 판정"} },
-            { "id": "last-greeting", "name": "끝인사", "full_name": "스크립트 끝인사 내용대로 발화", "type": "NLP", "default_score": 6, "description": "마무리 인사 발화 포함 여부 확인", "criteria": [{"score": 6, "label": "정상", "desc": "끝인사 발화 포함"}, {"score": 0, "label": "감점", "desc": "끝인사 누락"}], "used_in": ["I/B 일반 상담 평가표 v2.1"], "score_type": "deduction", "is_active": true, "nlp_config": {"method": "script_match", "reference_scripts": ["감사합니다. 좋은 하루 되세요, 무신사 서포터 OOO이었습니다."], "keywords": ["감사", "좋은 하루", "무신사"], "matching_desc": "마무리 인사 키워드 1개 이상 포함 시 정상 판정"} }
+            { "id": "first-greeting", "name": "첫인사", "full_name": "스크립트 첫인사 내용대로 발화", "type": "NLP", "default_score": 6, "description": "안녕, 키움증권, 서포터 중 포함 여부 확인", "criteria": [{"score": 6, "label": "정상", "desc": "스크립트 인사 발화 포함"}, {"score": 0, "label": "감점", "desc": "첫인사 누락 또는 미흡"}], "used_in": ["I/B 일반 상담 평가표 v2.1", "I/B VIP 평가표 v1.0"], "score_type": "deduction", "is_active": true, "nlp_config": {"method": "script_match", "reference_scripts": ["안녕하세요, 키움증권 서포터 OOO입니다. 무엇을 도와드릴까요?"], "keywords": ["안녕", "키움증권", "서포터"], "matching_desc": "키워드 중 2개 이상 포함 시 정상 판정"} },
+            { "id": "last-greeting", "name": "끝인사", "full_name": "스크립트 끝인사 내용대로 발화", "type": "NLP", "default_score": 6, "description": "마무리 인사 발화 포함 여부 확인", "criteria": [{"score": 6, "label": "정상", "desc": "끝인사 발화 포함"}, {"score": 0, "label": "감점", "desc": "끝인사 누락"}], "used_in": ["I/B 일반 상담 평가표 v2.1"], "score_type": "deduction", "is_active": true, "nlp_config": {"method": "script_match", "reference_scripts": ["감사합니다. 좋은 하루 되세요, 키움증권 서포터 OOO이었습니다."], "keywords": ["감사", "좋은 하루", "키움증권"], "matching_desc": "마무리 인사 키워드 1개 이상 포함 시 정상 판정"} }
           ]
         },
         {
@@ -498,7 +498,7 @@ window.AICC_DATA['evaluation-forms.json'] =
     "fail_rule": { "item_id": "profanity", "name": "욕설/금지어", "description": "탐지 시 전 항목 0점 처리" },
     "pass_threshold": 70,
     "applied_to": ["ct-seoul"],
-    "applied_teams": "VIP상담팀"
+    "applied_teams": "VIP고객팀"
   },
   {
     "id": "form-ob-tele",
@@ -560,7 +560,7 @@ window.AICC_DATA['evaluations.json'] =
     "agent_name": "홍길동",
     "center": "서울센터",
     "center_id": "ct-seoul",
-    "team": "VIP상담팀",
+    "team": "VIP고객팀",
     "team_id": "team-vip",
     "call_type": "I/B",
     "date": "2024-01-10",
@@ -698,17 +698,17 @@ window.AICC_DATA['evaluations.json'] =
       {
         "speaker": "agent",
         "time": "00:01",
-        "text": "안녕하세요, VIP 고객님. 무신사 서포터 홍길동입니다. 무엇을 도와드릴까요?"
+        "text": "안녕하세요, VIP 고객님. 키움증권 서포터 홍길동입니다. 무엇을 도와드릴까요?"
       },
       {
         "speaker": "customer",
         "time": "00:05",
-        "text": "네, 안녕하세요. 제가 주문한 한정판 스니커즈 배송 상태를 확인하고 싶어서요."
+        "text": "네, 안녕하세요. 제가 주문한 삼성전자 100주 매수 주문 체결 상태를 확인하고 싶어서요."
       },
       {
         "speaker": "agent",
         "time": "00:10",
-        "text": "네, 한정판 스니커즈 배송 확인 도와드리겠습니다. 주문번호 확인 부탁드리겠습니다."
+        "text": "네, 삼성전자 100주 매수 체결 확인 도와드리겠습니다. 주문번호 확인 부탁드리겠습니다."
       },
       {
         "speaker": "customer",
@@ -718,7 +718,7 @@ window.AICC_DATA['evaluations.json'] =
       {
         "speaker": "agent",
         "time": "00:20",
-        "text": "확인하겠습니다. 잠시만 기다려주세요. 네, 확인되었습니다. 현재 물류센터에서 출고되어 내일 오전 중 도착 예정입니다."
+        "text": "확인하겠습니다. 잠시만 기다려주세요. 네, 확인되었습니다. 현재 거래소 호가 처리가 진행 중이며, 곧 체결 알림이 발송될 예정입니다."
       },
       {
         "speaker": "customer",
@@ -742,7 +742,7 @@ window.AICC_DATA['evaluations.json'] =
       }
     ],
     "eval_form": "I/B VIP 평가표 v1.0",
-    "consultation_type": "배송 > 배송조회 > 한정판 스니커즈"
+    "consultation_type": "체결관리 > 일반체결 > 주문번호조회 > 체결조회"
   },
   {
     "id": "AE-2024-00002",
@@ -750,7 +750,7 @@ window.AICC_DATA['evaluations.json'] =
     "agent_name": "이영희",
     "center": "서울센터",
     "center_id": "ct-seoul",
-    "team": "VIP상담팀",
+    "team": "VIP고객팀",
     "team_id": "team-vip",
     "call_type": "I/B",
     "date": "2024-01-10",
@@ -895,7 +895,7 @@ window.AICC_DATA['evaluations.json'] =
       {
         "speaker": "agent",
         "time": "00:01",
-        "text": "안녕하세요, VIP 고객님. 무신사 서포터 이영희입니다. 어떤 도움이 필요하신가요?"
+        "text": "안녕하세요, VIP 고객님. 키움증권 서포터 이영희입니다. 어떤 도움이 필요하신가요?"
       },
       {
         "speaker": "customer",
@@ -949,7 +949,7 @@ window.AICC_DATA['evaluations.json'] =
       }
     ],
     "eval_form": "I/B VIP 평가표 v1.0",
-    "consultation_type": "결제 > 환불처리 > 환불지연"
+    "consultation_type": "환매/정정 > 환매정산 > 정산지연 > 환매지연"
   },
   {
     "id": "AE-2024-00003",
@@ -957,7 +957,7 @@ window.AICC_DATA['evaluations.json'] =
     "agent_name": "김철수",
     "center": "서울센터",
     "center_id": "ct-seoul",
-    "team": "일반상담팀",
+    "team": "주식상담팀",
     "team_id": "team-general",
     "call_type": "I/B",
     "date": "2024-01-11",
@@ -1122,37 +1122,37 @@ window.AICC_DATA['evaluations.json'] =
       {
         "speaker": "agent",
         "time": "00:01",
-        "text": "네, 무신사입니다."
+        "text": "네, 키움증권입니다."
       },
       {
         "speaker": "customer",
         "time": "00:03",
-        "text": "안녕하세요, 사이즈 교환하고 싶은데요."
+        "text": "안녕하세요, 매수 주문 수량 정정하고 싶은데요."
       },
       {
         "speaker": "agent",
         "time": "00:06",
-        "text": "네, 교환이요. 주문번호 알려주세요."
+        "text": "네, 정정이요. 주문번호 알려주세요."
       },
       {
         "speaker": "customer",
         "time": "00:09",
-        "text": "MU-2024-00234인데요, 사이즈가 좀 작아서..."
+        "text": "MU-2024-00234인데요, 처음에 너무 적게 주문해서요..."
       },
       {
         "speaker": "agent",
         "time": "00:12",
-        "text": "아, 네 그러면 교환 접수 해드릴게요. 원하시는 사이즈가 어떻게 되세요?"
+        "text": "아, 네 그러면 정정 접수 해드릴게요. 원하시는 수량이 어떻게 되세요?"
       },
       {
         "speaker": "customer",
         "time": "00:17",
-        "text": "L사이즈로 바꿔주세요. 그런데 교환하면 배송비는..."
+        "text": "100주로 정정해주세요. 그런데 정정하면 수수료는..."
       },
       {
         "speaker": "agent",
         "time": "00:19",
-        "text": "배송비는 사이즈 교환이니까 무료로 처리됩니다."
+        "text": "수수료는 수량 정정이니까 추가 부과 없이 처리됩니다."
       },
       {
         "speaker": "customer",
@@ -1176,7 +1176,7 @@ window.AICC_DATA['evaluations.json'] =
       }
     ],
     "eval_form": "I/B 일반 상담 평가표 v2.1",
-    "consultation_type": "교환/반품 > 사이즈교환"
+    "consultation_type": "환매/정정 > 정정처리 > 수량정정"
   },
   {
     "id": "AE-2024-00004",
@@ -1184,7 +1184,7 @@ window.AICC_DATA['evaluations.json'] =
     "agent_name": "박지민",
     "center": "서울센터",
     "center_id": "ct-seoul",
-    "team": "일반상담팀",
+    "team": "주식상담팀",
     "team_id": "team-general",
     "call_type": "I/B",
     "date": "2024-01-11",
@@ -1326,7 +1326,7 @@ window.AICC_DATA['evaluations.json'] =
     "ai_feedback": "안정적이고 깔끔한 상담입니다. 고객 추가 질문에 좀 더 적극적으로 대응하면 더욱 좋은 평가를 받을 수 있습니다.",
     "transcript": [],
     "eval_form": "I/B 일반 상담 평가표 v2.1",
-    "consultation_type": "상품문의 > 의류 > 사이즈안내"
+    "consultation_type": "상품문의 > 종목조회 > 기업정보"
   },
   {
     "id": "AE-2024-00005",
@@ -1334,7 +1334,7 @@ window.AICC_DATA['evaluations.json'] =
     "agent_name": "최수진",
     "center": "서울센터",
     "center_id": "ct-seoul",
-    "team": "기술지원팀",
+    "team": "HTS기술지원팀",
     "team_id": "team-tech",
     "call_type": "I/B",
     "date": "2024-01-12",
@@ -1482,7 +1482,7 @@ window.AICC_DATA['evaluations.json'] =
     "ai_feedback": "기술적 내용을 고객 눈높이에 맞춰 설명하는 연습이 필요합니다. 전문 용어 대신 일상 표현을 활용해주세요. 문제 해결 능력은 우수합니다.",
     "transcript": [],
     "eval_form": "I/B 일반 상담 평가표 v2.1",
-    "consultation_type": "기술지원 > 앱오류 > 로그인실패"
+    "consultation_type": "HTS·MTS 오류 > 시스템오류 > 앱오류 > 로그인실패"
   },
   {
     "id": "AE-2024-00006",
@@ -1490,7 +1490,7 @@ window.AICC_DATA['evaluations.json'] =
     "agent_name": "정민호",
     "center": "서울센터",
     "center_id": "ct-seoul",
-    "team": "기술지원팀",
+    "team": "HTS기술지원팀",
     "team_id": "team-tech",
     "call_type": "I/B",
     "date": "2024-01-12",
@@ -1641,7 +1641,7 @@ window.AICC_DATA['evaluations.json'] =
     "ai_feedback": "고객 감정에 대한 공감 표현을 강화해야 합니다. 기술 설명 시 단계별로 정리하여 안내하면 고객 이해도가 높아질 것입니다.",
     "transcript": [],
     "eval_form": "I/B 일반 상담 평가표 v2.1",
-    "consultation_type": "기술지원 > 결제오류 > 카드결제"
+    "consultation_type": "입출금/이체 > 이체오류 > 승인실패 > 예수금"
   },
   {
     "id": "AE-2024-00007",
@@ -1649,7 +1649,7 @@ window.AICC_DATA['evaluations.json'] =
     "agent_name": "강현우",
     "center": "부산센터",
     "center_id": "ct-busan",
-    "team": "일반상담팀",
+    "team": "펀드상담팀",
     "team_id": "team-general2",
     "call_type": "I/B",
     "date": "2024-01-13",
@@ -1812,7 +1812,7 @@ window.AICC_DATA['evaluations.json'] =
     "ai_feedback": "고객 감정 변화에 민감하게 반응하는 훈련이 필요합니다. 끼어들기 습관을 교정하고, 적극적인 문제 해결 자세를 보여주세요.",
     "transcript": [],
     "eval_form": "I/B 일반 상담 평가표 v2.1",
-    "consultation_type": "배송 > 배송비 > 추가배송비 외 2건"
+    "consultation_type": "이벤트/혜택 > 혜택관리 > 수수료할인 외 2건"
   },
   {
     "id": "AE-2024-00008",
@@ -1956,7 +1956,7 @@ window.AICC_DATA['evaluations.json'] =
     "ai_feedback": "매우 우수한 해피콜 상담입니다. 밝은 톤과 적극적인 태도가 돋보입니다. 후속 조치 안내 시 구체적인 일정을 함께 말씀해주시면 완벽합니다.",
     "transcript": [],
     "eval_form": "O/B 텔레마케팅 평가표 v1.3",
-    "consultation_type": "해피콜 > 만족도조사 > 배송완료"
+    "consultation_type": "해피콜 > 만족도조사 > 체결완료"
   },
   {
     "id": "AE-2024-00009",
@@ -1964,7 +1964,7 @@ window.AICC_DATA['evaluations.json'] =
     "agent_name": "홍길동",
     "center": "서울센터",
     "center_id": "ct-seoul",
-    "team": "VIP상담팀",
+    "team": "VIP고객팀",
     "team_id": "team-vip",
     "call_type": "O/B",
     "date": "2024-01-14",
@@ -2102,7 +2102,7 @@ window.AICC_DATA['evaluations.json'] =
     "ai_feedback": "VIP 고객 관리 아웃바운드에서 우수한 성과를 보였습니다. 통화 초반에 목적을 명확히 전달하면 더욱 효율적인 상담이 가능합니다.",
     "transcript": [],
     "eval_form": "O/B 텔레마케팅 평가표 v1.3",
-    "consultation_type": "VIP관리 > 프로모션안내 > 시즌할인"
+    "consultation_type": "VIP관리 > 프로모션안내 > 수수료우대"
   },
   {
     "id": "AE-2024-00010",
@@ -2110,7 +2110,7 @@ window.AICC_DATA['evaluations.json'] =
     "agent_name": "김철수",
     "center": "서울센터",
     "center_id": "ct-seoul",
-    "team": "일반상담팀",
+    "team": "주식상담팀",
     "team_id": "team-general",
     "call_type": "I/B",
     "date": "2024-01-14",
@@ -2277,7 +2277,7 @@ window.AICC_DATA['evaluations.json'] =
     "ai_feedback": "전반적으로 상담 품질이 크게 미달합니다. 고객 감정에 공감하고 경청하는 자세가 시급히 필요합니다. 코칭 대상으로 분류됩니다.",
     "transcript": [],
     "eval_form": "I/B 일반 상담 평가표 v2.1",
-    "consultation_type": "교환/반품 > 반품접수 > 불량상품"
+    "consultation_type": "환매/정정 > 취소처리 > 거래체결오류"
   },
   {
     "id": "AE-2024-00011",
@@ -2285,7 +2285,7 @@ window.AICC_DATA['evaluations.json'] =
     "agent_name": "이영희",
     "center": "서울센터",
     "center_id": "ct-seoul",
-    "team": "VIP상담팀",
+    "team": "VIP고객팀",
     "team_id": "team-vip",
     "call_type": "I/B",
     "date": "2024-01-15",
@@ -2425,7 +2425,7 @@ window.AICC_DATA['evaluations.json'] =
     "ai_feedback": "고객 응대 품질이 매우 높습니다. 상담 마무리 시 관련 추가 정보를 안내하면 고객 만족도를 더 높일 수 있습니다.",
     "transcript": [],
     "eval_form": "I/B VIP 평가표 v1.0",
-    "consultation_type": "상품문의 > 신발 > 재입고문의"
+    "consultation_type": "상품문의 > 종목문의 > 신규상장 > 공모청약"
   },
   {
     "id": "AE-2024-00012",
@@ -2433,7 +2433,7 @@ window.AICC_DATA['evaluations.json'] =
     "agent_name": "박지민",
     "center": "서울센터",
     "center_id": "ct-seoul",
-    "team": "일반상담팀",
+    "team": "주식상담팀",
     "team_id": "team-general",
     "call_type": "O/B",
     "date": "2024-01-15",
@@ -2577,7 +2577,7 @@ window.AICC_DATA['evaluations.json'] =
     "ai_feedback": "아웃바운드 상담 시 핵심 메시지를 간결하게 전달하는 연습이 필요합니다. 프로모션 안내를 간결하게 요약하고, 명확한 클로징 멘트를 활용하세요.",
     "transcript": [],
     "eval_form": "O/B 텔레마케팅 평가표 v1.3",
-    "consultation_type": "프로모션 > 쿠폰안내 > 생일쿠폰"
+    "consultation_type": "이벤트/혜택 > 혜택관리 > 수수료할인 > 생일우대"
   },
   {
     "id": "AE-2024-00013",
@@ -2585,7 +2585,7 @@ window.AICC_DATA['evaluations.json'] =
     "agent_name": "최수진",
     "center": "서울센터",
     "center_id": "ct-seoul",
-    "team": "기술지원팀",
+    "team": "HTS기술지원팀",
     "team_id": "team-tech",
     "call_type": "I/B",
     "date": "2024-01-16",
@@ -2737,7 +2737,7 @@ window.AICC_DATA['evaluations.json'] =
     "ai_feedback": "기술 문제 해결 능력은 뛰어나나, 고객 눈높이에서 설명하는 역량 강화가 필요합니다. 설명 후 고객 이해도를 반드시 확인하세요.",
     "transcript": [],
     "eval_form": "I/B 일반 상담 평가표 v2.1",
-    "consultation_type": "기술지원 > 시스템장애 > 주문내역조회"
+    "consultation_type": "HTS·MTS 오류 > 시스템오류 > 시스템장애 > 주문내역조회"
   },
   {
     "id": "AE-2024-00014",
@@ -2745,7 +2745,7 @@ window.AICC_DATA['evaluations.json'] =
     "agent_name": "강현우",
     "center": "부산센터",
     "center_id": "ct-busan",
-    "team": "일반상담팀",
+    "team": "펀드상담팀",
     "team_id": "team-general2",
     "call_type": "I/B",
     "date": "2024-01-16",
@@ -2910,7 +2910,7 @@ window.AICC_DATA['evaluations.json'] =
     "ai_feedback": "심각한 서비스 품질 저하가 감지되었습니다. 부적절한 표현 사용으로 FAIL 처리됩니다. 긴급 코칭 및 관리자 면담이 필요합니다. 고객 존중과 경청 자세를 반드시 개선해야 합니다.",
     "transcript": [],
     "eval_form": "I/B 일반 상담 평가표 v2.1",
-    "consultation_type": "결제 > 결제취소 > 중복결제"
+    "consultation_type": "입출금/이체 > 이체관리 > 부분취소 > 이중주문"
   },
   {
     "id": "AE-2024-00015",
@@ -3060,7 +3060,7 @@ window.AICC_DATA['evaluations.json'] =
     "ai_feedback": "해피콜 응대 품질이 좋습니다. 고객 거절 시 부드럽게 재안내하는 스킬을 연습하면 아웃바운드 성과가 더욱 향상될 것입니다.",
     "transcript": [],
     "eval_form": "O/B 텔레마케팅 평가표 v1.3",
-    "consultation_type": "해피콜 > 서비스개선 > 배송피드백"
+    "consultation_type": "해피콜 > 서비스개선 > 체결피드백"
   },
   {
     "id": "AE-2024-00016",
@@ -3068,7 +3068,7 @@ window.AICC_DATA['evaluations.json'] =
     "agent_name": "정민호",
     "center": "서울센터",
     "center_id": "ct-seoul",
-    "team": "기술지원팀",
+    "team": "HTS기술지원팀",
     "team_id": "team-tech",
     "call_type": "I/B",
     "date": "2024-01-17",
@@ -3214,7 +3214,7 @@ window.AICC_DATA['evaluations.json'] =
     "ai_feedback": "기술지원 역량은 양호하나, 고객이 이해하기 쉬운 표현으로 설명하는 훈련이 필요합니다. 고객 질문에 완전한 답변을 제공하는 습관을 길러주세요.",
     "transcript": [],
     "eval_form": "I/B 일반 상담 평가표 v2.1",
-    "consultation_type": "기술지원 > 앱오류 > 장바구니오류"
+    "consultation_type": "HTS·MTS 오류 > 시스템오류 > 앱오류 > 관심종목오류"
   },
   {
     "id": "AE-2024-00017",
@@ -3222,7 +3222,7 @@ window.AICC_DATA['evaluations.json'] =
     "agent_name": "홍길동",
     "center": "서울센터",
     "center_id": "ct-seoul",
-    "team": "VIP상담팀",
+    "team": "VIP고객팀",
     "team_id": "team-vip",
     "call_type": "I/B",
     "date": "2024-01-18",
@@ -3358,7 +3358,7 @@ window.AICC_DATA['evaluations.json'] =
     "ai_feedback": "탁월한 VIP 상담 사례입니다. 고객 니즈를 선제적으로 파악하고 완벽하게 응대했습니다. 약관 관련 설명을 좀 더 쉽게 풀어서 안내하면 만점입니다.",
     "transcript": [],
     "eval_form": "I/B VIP 평가표 v1.0",
-    "consultation_type": "상품문의 > 가방 > 정품확인"
+    "consultation_type": "상품문의 > 종목조회 > 재무정보"
   },
   {
     "id": "AE-2024-00018",
@@ -3366,7 +3366,7 @@ window.AICC_DATA['evaluations.json'] =
     "agent_name": "김철수",
     "center": "서울센터",
     "center_id": "ct-seoul",
-    "team": "일반상담팀",
+    "team": "주식상담팀",
     "team_id": "team-general",
     "call_type": "I/B",
     "date": "2024-01-18",
@@ -3532,7 +3532,7 @@ window.AICC_DATA['evaluations.json'] =
     "ai_feedback": "지속적으로 품질 저하가 관찰됩니다. 고객 공감 능력과 적극적 응대 자세를 집중적으로 교육받으시기 바랍니다. 관리자 모니터링이 권장됩니다.",
     "transcript": [],
     "eval_form": "I/B 일반 상담 평가표 v2.1",
-    "consultation_type": "배송 > 배송지연 > 택배분실 외 1건"
+    "consultation_type": "체결관리 > 체결지연 > 주문이력누락 외 1건"
   },
   {
     "id": "AE-2024-00019",
@@ -3540,7 +3540,7 @@ window.AICC_DATA['evaluations.json'] =
     "agent_name": "박지민",
     "center": "서울센터",
     "center_id": "ct-seoul",
-    "team": "일반상담팀",
+    "team": "주식상담팀",
     "team_id": "team-general",
     "call_type": "I/B",
     "date": "2024-01-19",
@@ -3684,7 +3684,7 @@ window.AICC_DATA['evaluations.json'] =
     "ai_feedback": "안정적인 상담 품질을 유지하고 있습니다. 정책 안내 시 구체적인 예시를 들어 설명하면 고객 이해도를 높일 수 있습니다.",
     "transcript": [],
     "eval_form": "I/B 일반 상담 평가표 v2.1",
-    "consultation_type": "회원 > 정보변경 > 배송지변경"
+    "consultation_type": "계좌관리 > 정보변경 > 입금계좌변경"
   },
   {
     "id": "AE-2024-00020",
@@ -3692,7 +3692,7 @@ window.AICC_DATA['evaluations.json'] =
     "agent_name": "강현우",
     "center": "부산센터",
     "center_id": "ct-busan",
-    "team": "일반상담팀",
+    "team": "펀드상담팀",
     "team_id": "team-general2",
     "call_type": "O/B",
     "date": "2024-01-20",
@@ -3858,7 +3858,7 @@ window.AICC_DATA['evaluations.json'] =
     "ai_feedback": "아웃바운드 상담 시 부적절한 표현과 강압적 태도가 감지되어 FAIL 처리됩니다. 고객 거절 시 존중하는 자세가 필수적입니다. 즉각 코칭 및 재교육이 필요합니다.",
     "transcript": [],
     "eval_form": "O/B 텔레마케팅 평가표 v1.3",
-    "consultation_type": "프로모션 > 멤버십안내 > 등급혜택"
+    "consultation_type": "이벤트/혜택 > 멤버십안내 > VIP등급혜택"
   },
   {
     "id": "AE-2024-00021",
@@ -3866,7 +3866,7 @@ window.AICC_DATA['evaluations.json'] =
     "agent_name": "이영희",
     "center": "서울센터",
     "center_id": "ct-seoul",
-    "team": "VIP상담팀",
+    "team": "VIP고객팀",
     "team_id": "team-vip",
     "call_type": "I/B",
     "date": "2024-01-18",
@@ -3902,7 +3902,7 @@ window.AICC_DATA['evaluations.json'] =
     "ai_feedback": "금지어 사용이 감지되어 FAIL 처리되었습니다. 고객 응대 시 언어 사용에 각별한 주의가 필요합니다.",
     "transcript": [],
     "eval_form": "I/B VIP 평가표 v1.0",
-    "consultation_type": "상품문의 > 의류 > 교환요청"
+    "consultation_type": "환매/정정 > 정정처리 > 정정요청"
   },
   {
     "id": "AE-2024-00022",
@@ -3910,7 +3910,7 @@ window.AICC_DATA['evaluations.json'] =
     "agent_name": "최수진",
     "center": "서울센터",
     "center_id": "ct-seoul",
-    "team": "기술지원팀",
+    "team": "HTS기술지원팀",
     "team_id": "team-tech",
     "call_type": "I/B",
     "date": "2024-01-17",
@@ -3945,7 +3945,7 @@ window.AICC_DATA['evaluations.json'] =
     "ai_feedback": "전반적인 응대 품질이 매우 낮습니다. 기본적인 고객 응대 역량 재교육이 시급합니다.",
     "transcript": [],
     "eval_form": "I/B 일반 상담 평가표 v2.1",
-    "consultation_type": "기술문의 > 앱오류 > 결제오류"
+    "consultation_type": "HTS·MTS 오류 > 앱오류 > 이체오류"
   },
   {
     "id": "AE-2024-00023",
@@ -3953,7 +3953,7 @@ window.AICC_DATA['evaluations.json'] =
     "agent_name": "정민호",
     "center": "서울센터",
     "center_id": "ct-seoul",
-    "team": "기술지원팀",
+    "team": "HTS기술지원팀",
     "team_id": "team-tech",
     "call_type": "I/B",
     "date": "2024-01-16",
@@ -3988,7 +3988,7 @@ window.AICC_DATA['evaluations.json'] =
     "ai_feedback": "응대 속도와 공감 능력이 현저히 부족합니다. 신속한 응대 훈련이 필요합니다.",
     "transcript": [],
     "eval_form": "I/B 일반 상담 평가표 v2.1",
-    "consultation_type": "기술문의 > 배송조회 > 배송지연"
+    "consultation_type": "HTS·MTS 오류 > 체결조회 > 체결지연"
   },
   {
     "id": "AE-2024-00024",
@@ -4030,7 +4030,7 @@ window.AICC_DATA['evaluations.json'] =
     "ai_feedback": "기본적인 응대는 가능하나, 고객 문제 해결 역량과 적극적 태도가 부족합니다.",
     "transcript": [],
     "eval_form": "I/B 일반 상담 평가표 v2.1",
-    "consultation_type": "주문문의 > 주문취소 > 취소요청"
+    "consultation_type": "주식거래 > 주문취소 > 취소요청"
   },
   {
     "id": "AE-2024-00025",
@@ -4038,7 +4038,7 @@ window.AICC_DATA['evaluations.json'] =
     "agent_name": "김하늘",
     "center": "부산센터",
     "center_id": "ct-busan",
-    "team": "일반상담팀",
+    "team": "펀드상담팀",
     "team_id": "team-general2",
     "call_type": "I/B",
     "date": "2024-01-14",
@@ -4072,7 +4072,7 @@ window.AICC_DATA['evaluations.json'] =
     "ai_feedback": "인사와 설명 부분에서 개선이 필요합니다. 기본적인 태도는 양호합니다.",
     "transcript": [],
     "eval_form": "I/B 일반 상담 평가표 v2.1",
-    "consultation_type": "상품문의 > 의류 > 반품요청"
+    "consultation_type": "환매/정정 > 환매처리 > 환매요청"
   }
 ]
 ;
@@ -4085,14 +4085,14 @@ window.AICC_DATA["manual-evaluations.json"] =
     "call_time": "09:15",
     "center": "서울센터",
     "center_id": "ct-seoul",
-    "team": "VIP상담팀",
+    "team": "VIP고객팀",
     "team_id": "team-vip",
     "agent_name": "김신입",
     "call_type": "I/B",
     "duration": "06:42",
     "total_score": 0,
     "eval_form": "I/B VIP 평가표 v1.0",
-    "consultation_type": "상품문의 > 의류 > 사이즈안내",
+    "consultation_type": "상품문의 > 종목조회 > 기업정보",
     "manual_plan": "2025년 1분기 신입 상담사 수동 평가",
     "manual_plan_criteria": "근무일수 30일 미만",
     "eval_status": "pending",
@@ -4106,10 +4106,10 @@ window.AICC_DATA["manual-evaluations.json"] =
       "item-forbidden": { "type": "NLP", "score": 10, "max": 10, "status": "pass", "confidence": 99 }
     },
     "transcript": [
-      { "time": "0:00", "speaker": "agent", "text": "안녕하세요, VIP상담팀 김신입입니다." },
-      { "time": "0:05", "speaker": "customer", "text": "네, 사이즈 문의 좀 하려고요." },
-      { "time": "0:12", "speaker": "agent", "text": "네, 어떤 상품 사이즈가 궁금하신가요?" },
-      { "time": "0:20", "speaker": "customer", "text": "이번에 나온 겨울 코트 M사이즈 실측이 어떻게 되나요?" },
+      { "time": "0:00", "speaker": "agent", "text": "안녕하세요, VIP고객팀 김신입입니다." },
+      { "time": "0:05", "speaker": "customer", "text": "네, 종목 문의 좀 하려고요." },
+      { "time": "0:12", "speaker": "agent", "text": "네, 어떤 종목 정보가 궁금하신가요?" },
+      { "time": "0:20", "speaker": "customer", "text": "이번에 신규 상장한 IPO 종목 공모가는 얼마인가요?" },
       { "time": "0:30", "speaker": "agent", "text": "확인해 드리겠습니다. 잠시만 기다려 주세요." }
     ]
   },
@@ -4119,14 +4119,14 @@ window.AICC_DATA["manual-evaluations.json"] =
     "call_time": "10:32",
     "center": "서울센터",
     "center_id": "ct-seoul",
-    "team": "일반상담팀",
+    "team": "주식상담팀",
     "team_id": "team-general",
     "agent_name": "박신입",
     "call_type": "I/B",
     "duration": "09:18",
     "total_score": 0,
     "eval_form": "I/B 일반 상담 평가표 v2.1",
-    "consultation_type": "배송 > 배송조회 > 한정판 스니커즈",
+    "consultation_type": "체결관리 > 일반체결 > 주문번호조회 > 체결조회",
     "manual_plan": "2025년 1분기 신입 상담사 수동 평가",
     "manual_plan_criteria": "근무일수 30일 미만",
     "eval_status": "pending",
@@ -4140,7 +4140,7 @@ window.AICC_DATA["manual-evaluations.json"] =
       "item-forbidden": { "type": "NLP", "score": 10, "max": 10, "status": "pass", "confidence": 99 }
     },
     "transcript": [
-      { "time": "0:00", "speaker": "agent", "text": "안녕하세요, 일반상담팀 박신입입니다." },
+      { "time": "0:00", "speaker": "agent", "text": "안녕하세요, 주식상담팀 박신입입니다." },
       { "time": "0:04", "speaker": "customer", "text": "제 택배가 어디쯤 왔는지 확인 좀 해주세요." },
       { "time": "0:10", "speaker": "agent", "text": "주문번호 알려주시면 확인해 드리겠습니다." }
     ]
@@ -4151,14 +4151,14 @@ window.AICC_DATA["manual-evaluations.json"] =
     "call_time": "14:05",
     "center": "서울센터",
     "center_id": "ct-seoul",
-    "team": "VIP상담팀",
+    "team": "VIP고객팀",
     "team_id": "team-vip",
     "agent_name": "홍길동",
     "call_type": "I/B",
     "duration": "12:03",
     "total_score": 88,
     "eval_form": "I/B VIP 평가표 v1.0",
-    "consultation_type": "교환/반품 > 사이즈교환",
+    "consultation_type": "환매/정정 > 정정처리 > 수량정정",
     "manual_plan": "2025년 2월 품질 샘플링 검증",
     "manual_plan_criteria": "샘플링 10%",
     "eval_status": "completed",
@@ -4172,9 +4172,9 @@ window.AICC_DATA["manual-evaluations.json"] =
       "item-forbidden": { "type": "NLP", "score": 10, "max": 10, "status": "pass", "confidence": 99 }
     },
     "transcript": [
-      { "time": "0:00", "speaker": "agent", "text": "안녕하세요, VIP상담팀 홍길동입니다. 무엇을 도와드릴까요?" },
-      { "time": "0:06", "speaker": "customer", "text": "사이즈가 안 맞아서 교환하고 싶어요." },
-      { "time": "0:12", "speaker": "agent", "text": "네, 교환 접수 도와드리겠습니다. 주문번호 확인 부탁드립니다." }
+      { "time": "0:00", "speaker": "agent", "text": "안녕하세요, VIP고객팀 홍길동입니다. 무엇을 도와드릴까요?" },
+      { "time": "0:06", "speaker": "customer", "text": "주문 수량이 잘못 들어가서 정정하고 싶어요." },
+      { "time": "0:12", "speaker": "agent", "text": "네, 정정 접수 도와드리겠습니다. 주문번호 확인 부탁드립니다." }
     ],
     "manual_review": {
       "reviewed_at": "2025-01-28 11:30",
@@ -4189,14 +4189,14 @@ window.AICC_DATA["manual-evaluations.json"] =
     "call_time": "15:20",
     "center": "서울센터",
     "center_id": "ct-seoul",
-    "team": "일반상담팀",
+    "team": "주식상담팀",
     "team_id": "team-general",
     "agent_name": "이영희",
     "call_type": "O/B",
     "duration": "05:45",
     "total_score": 82,
     "eval_form": "O/B 텔레마케팅 평가표 v1.3",
-    "consultation_type": "프로모션 > 쿠폰안내 > 생일쿠폰",
+    "consultation_type": "이벤트/혜택 > 혜택관리 > 수수료할인 > 생일우대",
     "manual_plan": "2025년 2월 품질 샘플링 검증",
     "manual_plan_criteria": "샘플링 10%",
     "eval_status": "completed",
@@ -4210,7 +4210,7 @@ window.AICC_DATA["manual-evaluations.json"] =
       "item-forbidden": { "type": "NLP", "score": 10, "max": 10, "status": "pass", "confidence": 99 }
     },
     "transcript": [
-      { "time": "0:00", "speaker": "agent", "text": "안녕하세요, 이영희입니다. 생일 축하 쿠폰 안내 드리려고 연락드렸어요." },
+      { "time": "0:00", "speaker": "agent", "text": "안녕하세요, 이영희입니다. 생일 축하 수수료 우대 혜택 안내 드리려고 연락드렸어요." },
       { "time": "0:08", "speaker": "customer", "text": "아 네, 감사합니다." }
     ],
     "manual_review": {
@@ -4226,14 +4226,14 @@ window.AICC_DATA["manual-evaluations.json"] =
     "call_time": "11:42",
     "center": "서울센터",
     "center_id": "ct-seoul",
-    "team": "기술지원팀",
+    "team": "HTS기술지원팀",
     "team_id": "team-tech",
     "agent_name": "최수진",
     "call_type": "I/B",
     "duration": "18:25",
     "total_score": 0,
     "eval_form": "기술지원 전문 평가표",
-    "consultation_type": "기술지원 > 앱오류 > 로그인실패",
+    "consultation_type": "HTS·MTS 오류 > 시스템오류 > 앱오류 > 로그인실패",
     "manual_plan": "특정 상담사 집중 모니터링",
     "manual_plan_criteria": "특정 상담사 지정",
     "eval_status": "pending",
@@ -4258,14 +4258,14 @@ window.AICC_DATA["manual-evaluations.json"] =
     "call_time": "13:10",
     "center": "서울센터",
     "center_id": "ct-seoul",
-    "team": "기술지원팀",
+    "team": "HTS기술지원팀",
     "team_id": "team-tech",
     "agent_name": "박상현",
     "call_type": "I/B",
     "duration": "14:50",
     "total_score": 0,
     "eval_form": "기술지원 전문 평가표",
-    "consultation_type": "기술지원 > 결제오류 > 카드결제",
+    "consultation_type": "입출금/이체 > 이체오류 > 승인실패 > 예수금",
     "manual_plan": "특정 상담사 집중 모니터링",
     "manual_plan_criteria": "특정 상담사 지정",
     "eval_status": "pending",
@@ -4290,14 +4290,14 @@ window.AICC_DATA["manual-evaluations.json"] =
     "call_time": "16:30",
     "center": "서울센터",
     "center_id": "ct-seoul",
-    "team": "VIP상담팀",
+    "team": "VIP고객팀",
     "team_id": "team-vip",
     "agent_name": "정대리",
     "call_type": "I/B",
     "duration": "07:12",
     "total_score": 55,
     "eval_form": "I/B VIP 평가표 v1.0",
-    "consultation_type": "VIP관리 > 프로모션안내 > 시즌할인",
+    "consultation_type": "VIP관리 > 프로모션안내 > 수수료우대",
     "manual_plan": "2025년 2월 AI 저점수 재평가",
     "manual_plan_criteria": "AI 점수 60점 미만",
     "eval_status": "completed",
@@ -4331,14 +4331,14 @@ window.AICC_DATA["manual-evaluations.json"] =
     "call_time": "09:50",
     "center": "서울센터",
     "center_id": "ct-seoul",
-    "team": "일반상담팀",
+    "team": "주식상담팀",
     "team_id": "team-general",
     "agent_name": "한과장",
     "call_type": "I/B",
     "duration": "10:05",
     "total_score": 0,
     "eval_form": "I/B 일반 상담 평가표 v2.1",
-    "consultation_type": "결제 > 환불처리 > 환불지연",
+    "consultation_type": "환매/정정 > 환매정산 > 정산지연 > 환매지연",
     "manual_plan": "2025년 2월 AI 저점수 재평가",
     "manual_plan_criteria": "AI 점수 60점 미만",
     "eval_status": "pending",
@@ -4363,14 +4363,14 @@ window.AICC_DATA["manual-evaluations.json"] =
     "call_time": "11:20",
     "center": "부산센터",
     "center_id": "ct-busan",
-    "team": "일반상담팀",
+    "team": "펀드상담팀",
     "team_id": "team-general2",
     "agent_name": "강신입",
     "call_type": "I/B",
     "duration": "08:33",
     "total_score": 0,
     "eval_form": "I/B 일반 상담 평가표 v2.1",
-    "consultation_type": "상품문의 > 신발 > 재입고문의",
+    "consultation_type": "상품문의 > 종목문의 > 신규상장 > 공모청약",
     "manual_plan": "2025년 1분기 신입 상담사 수동 평가",
     "manual_plan_criteria": "근무일수 30일 미만",
     "eval_status": "pending",
@@ -4402,7 +4402,7 @@ window.AICC_DATA["manual-evaluations.json"] =
     "duration": "04:20",
     "total_score": 90,
     "eval_form": "O/B 텔레마케팅 평가표 v1.3",
-    "consultation_type": "해피콜 > 만족도조사 > 배송완료",
+    "consultation_type": "해피콜 > 만족도조사 > 체결완료",
     "manual_plan": "2025년 2월 품질 샘플링 검증",
     "manual_plan_criteria": "샘플링 10%",
     "eval_status": "completed",
@@ -4416,7 +4416,7 @@ window.AICC_DATA["manual-evaluations.json"] =
       "item-forbidden": { "type": "NLP", "score": 10, "max": 10, "status": "pass", "confidence": 99 }
     },
     "transcript": [
-      { "time": "0:00", "speaker": "agent", "text": "안녕하세요, 해피콜팀 윤해피입니다. 배송 받으신 상품 만족하셨나요?" },
+      { "time": "0:00", "speaker": "agent", "text": "안녕하세요, 해피콜팀 윤해피입니다. 최근 체결 처리 만족하셨나요?" },
       { "time": "0:08", "speaker": "customer", "text": "네, 잘 받았어요. 감사합니다." }
     ],
     "manual_review": {
@@ -4432,14 +4432,14 @@ window.AICC_DATA["manual-evaluations.json"] =
     "call_time": "10:15",
     "center": "서울센터",
     "center_id": "ct-seoul",
-    "team": "VIP상담팀",
+    "team": "VIP고객팀",
     "team_id": "team-vip",
     "agent_name": "김신입",
     "call_type": "I/B",
     "duration": "11:28",
     "total_score": 0,
     "eval_form": "I/B VIP 평가표 v1.0",
-    "consultation_type": "교환/반품 > 반품접수 > 불량상품",
+    "consultation_type": "환매/정정 > 취소처리 > 거래체결오류",
     "manual_plan": "2025년 1분기 신입 상담사 수동 평가",
     "manual_plan_criteria": "근무일수 30일 미만",
     "eval_status": "pending",
@@ -4453,9 +4453,9 @@ window.AICC_DATA["manual-evaluations.json"] =
       "item-forbidden": { "type": "NLP", "score": 10, "max": 10, "status": "pass", "confidence": 99 }
     },
     "transcript": [
-      { "time": "0:00", "speaker": "agent", "text": "안녕하세요, VIP상담팀 김신입입니다." },
-      { "time": "0:05", "speaker": "customer", "text": "받은 상품에 불량이 있어서 반품하고 싶어요." },
-      { "time": "0:12", "speaker": "agent", "text": "불편을 드려 죄송합니다. 반품 접수 도와드리겠습니다." }
+      { "time": "0:00", "speaker": "agent", "text": "안녕하세요, VIP고객팀 김신입입니다." },
+      { "time": "0:05", "speaker": "customer", "text": "체결가가 잘못된 것 같아서 정정하고 싶어요." },
+      { "time": "0:12", "speaker": "agent", "text": "불편을 드려 죄송합니다. 정정 접수 도와드리겠습니다." }
     ]
   },
   {
@@ -4464,14 +4464,14 @@ window.AICC_DATA["manual-evaluations.json"] =
     "call_time": "15:40",
     "center": "서울센터",
     "center_id": "ct-seoul",
-    "team": "기술지원팀",
+    "team": "HTS기술지원팀",
     "team_id": "team-tech",
     "agent_name": "최수진",
     "call_type": "I/B",
     "duration": "22:10",
     "total_score": 60,
     "eval_form": "기술지원 전문 평가표",
-    "consultation_type": "기술지원 > 앱오류 > 결제화면",
+    "consultation_type": "HTS·MTS 오류 > 앱오류 > 주문화면",
     "manual_plan": "특정 상담사 집중 모니터링",
     "manual_plan_criteria": "특정 상담사 지정",
     "eval_status": "completed",

@@ -160,137 +160,137 @@
     /* ══════════════════════════ 4댑스 상담유형 트리 ══════════════════════════ */
 
     const categoryTree = [
-      { name:'주문', count:3222, children:[
+      { name:'주식거래', count:3222, children:[
         { name:'주문조회', count:1205, children:[
-          { name:'주문상태', count:680, children:[{name:'배송현황확인',count:380},{name:'입금확인',count:300}] },
-          { name:'주문내역', count:525, children:[{name:'주문상세보기',count:320},{name:'영수증발급',count:205}] }
+          { name:'주문상태', count:680, children:[{name:'체결확인',count:380},{name:'예수금확인',count:300}] },
+          { name:'주문내역', count:525, children:[{name:'주문상세보기',count:320},{name:'거래내역발급',count:205}] }
         ]},
-        { name:'주문변경', count:987, children:[
-          {name:'수량변경',count:412},{name:'옵션변경',count:355},{name:'배송지변경',count:220}
+        { name:'주문정정', count:987, children:[
+          {name:'수량정정',count:412},{name:'가격정정',count:355},{name:'시간정정',count:220}
         ]},
         { name:'주문취소', count:1030, children:[
-          { name:'단순변심', count:480, children:[{name:'전체취소',count:290},{name:'부분취소',count:190}] },
-          {name:'오류주문',count:320},{name:'품절취소',count:230}
+          { name:'단순취소', count:480, children:[{name:'전체취소',count:290},{name:'부분취소',count:190}] },
+          {name:'오류주문',count:320},{name:'거래정지',count:230}
         ]}
       ]},
-      { name:'결제', count:2105, children:[
-        { name:'카드결제', count:890, children:[
-          { name:'결제오류', count:520, children:[{name:'승인실패',count:310},{name:'한도초과',count:210}] },
-          {name:'할부변경',count:370}
+      { name:'입출금/이체', count:2105, children:[
+        { name:'예수금', count:890, children:[
+          { name:'이체오류', count:520, children:[{name:'승인실패',count:310},{name:'한도초과',count:210}] },
+          {name:'증거금조회',count:370}
         ]},
-        { name:'간편결제', count:615, children:[
+        { name:'간편이체', count:615, children:[
           {name:'네이버페이',count:235},{name:'카카오페이',count:205},{name:'토스',count:175}
         ]},
-        { name:'현금결제', count:350, children:[{name:'무통장입금',count:210},{name:'계좌이체',count:140}] },
-        { name:'결제취소', count:250, children:[{name:'부분취소',count:150},{name:'전액취소',count:100}] }
+        { name:'은행이체', count:350, children:[{name:'타행이체',count:210},{name:'당행이체',count:140}] },
+        { name:'이체취소', count:250, children:[{name:'부분취소',count:150},{name:'전액취소',count:100}] }
       ]},
-      { name:'배송', count:5019, children:[
-        { name:'배송현황', count:2100, children:[
-          { name:'일반배송', count:1200, children:[{name:'택배추적',count:720},{name:'배송예정일',count:480}] },
-          { name:'특수배송', count:900, children:[{name:'새벽배송',count:520},{name:'당일배송',count:380}] }
+      { name:'체결관리', count:5019, children:[
+        { name:'체결조회', count:2100, children:[
+          { name:'일반체결', count:1200, children:[{name:'주문번호조회',count:720},{name:'예상체결가',count:480}] },
+          { name:'특수주문', count:900, children:[{name:'IOC주문',count:520},{name:'FOK주문',count:380}] }
         ]},
-        { name:'배송기간', count:1450, children:[
-          { name:'배송지연', count:890, children:[{name:'택배지연',count:540},{name:'물류지연',count:350}] },
-          {name:'배송소요일',count:560}
+        { name:'체결지연', count:1450, children:[
+          { name:'호가지연', count:890, children:[{name:'거래소지연',count:540},{name:'시스템지연',count:350}] },
+          {name:'체결소요시간',count:560}
         ]},
-        { name:'배송지', count:832, children:[{name:'주소변경',count:520},{name:'수령인변경',count:312}] },
-        { name:'해외배송', count:637, children:[{name:'관세문의',count:387},{name:'해외배송추적',count:250}] }
+        { name:'주문정정', count:832, children:[{name:'가격정정',count:520},{name:'수량정정',count:312}] },
+        { name:'야간거래', count:637, children:[{name:'시간외단일가',count:387},{name:'야간체결조회',count:250}] }
       ]},
-      { name:'교환/반품', count:4253, children:[
-        { name:'교환접수', count:1680, children:[
-          { name:'사이즈교환', count:890, children:[{name:'의류사이즈',count:540},{name:'신발사이즈',count:350}] },
-          {name:'색상교환',count:490},{name:'불량교환',count:300}
+      { name:'환매/정정', count:4253, children:[
+        { name:'환매처리', count:1680, children:[
+          { name:'펀드환매', count:890, children:[{name:'국내펀드',count:540},{name:'해외펀드',count:350}] },
+          {name:'정정요청',count:490},{name:'환매신청',count:300}
         ]},
-        { name:'반품접수', count:1350, children:[
-          {name:'단순변심반품',count:780},
-          { name:'상품불량', count:570, children:[{name:'파손',count:340},{name:'오배송',count:230}] }
+        { name:'취소처리', count:1350, children:[
+          {name:'단순주문취소',count:780},
+          { name:'거래체결오류', count:570, children:[{name:'오체결',count:340},{name:'중복체결',count:230}] }
         ]},
-        { name:'환불처리', count:823, children:[{name:'환불지연',count:450},{name:'환불방법',count:373}] },
-        { name:'수거문의', count:400, children:[{name:'수거일정',count:240},{name:'수거방법',count:160}] }
+        { name:'환매정산', count:823, children:[{name:'환매지연',count:450},{name:'정산일정',count:373}] },
+        { name:'정정수수료', count:400, children:[{name:'정정비용',count:240},{name:'면제기준',count:160}] }
       ]},
-      { name:'회원/계정', count:2890, children:[
-        { name:'회원가입', count:890, children:[{name:'가입방법',count:320},{name:'본인인증',count:370},{name:'인증오류',count:200}] },
-        { name:'로그인', count:760, children:[{name:'비밀번호찾기',count:480},{name:'아이디찾기',count:280}] },
-        { name:'회원정보', count:680, children:[{name:'정보변경',count:320},{name:'탈퇴문의',count:260},{name:'개인정보',count:100}] },
-        { name:'등급혜택', count:560, children:[{name:'등급조회',count:340},{name:'혜택안내',count:220}] }
+      { name:'계좌관리', count:2890, children:[
+        { name:'계좌개설', count:890, children:[{name:'개설방법',count:320},{name:'본인인증',count:370},{name:'인증오류',count:200}] },
+        { name:'로그인', count:760, children:[{name:'비밀번호찾기',count:480},{name:'공동인증서',count:280}] },
+        { name:'계좌정보', count:680, children:[{name:'정보변경',count:320},{name:'해지문의',count:260},{name:'개인정보',count:100}] },
+        { name:'등급혜택', count:560, children:[{name:'등급조회',count:340},{name:'VIP혜택',count:220}] }
       ]},
-      { name:'상품', count:3450, children:[
-        { name:'상품정보', count:1420, children:[
-          { name:'사이즈정보', count:680, children:[{name:'사이즈표',count:420},{name:'실측문의',count:260}] },
-          {name:'소재성분',count:440},{name:'색상확인',count:300}
+      { name:'상품문의', count:3450, children:[
+        { name:'종목정보', count:1420, children:[
+          { name:'기업정보', count:680, children:[{name:'기업개요',count:420},{name:'재무제표',count:260}] },
+          {name:'재무정보',count:440},{name:'공시조회',count:300}
         ]},
-        { name:'재입고', count:890, children:[{name:'재입고알림',count:530},{name:'입고일정',count:360}] },
-        { name:'가격문의', count:640, children:[{name:'할인정보',count:390},{name:'가격변동',count:250}] },
-        { name:'리뷰후기', count:500, children:[{name:'리뷰작성',count:300},{name:'리뷰수정',count:200}] }
+        { name:'신규상장', count:890, children:[{name:'공모청약',count:530},{name:'상장일정',count:360}] },
+        { name:'시세조회', count:640, children:[{name:'실시간시세',count:390},{name:'차트분석',count:250}] },
+        { name:'배당문의', count:500, children:[{name:'배당일정',count:300},{name:'배당락',count:200}] }
       ]},
-      { name:'프로모션', count:2199, children:[
-        { name:'쿠폰', count:900, children:[{name:'쿠폰적용',count:420},{name:'쿠폰오류',count:300},{name:'쿠폰발급',count:180}] },
-        { name:'적립금', count:580, children:[{name:'적립금사용',count:350},{name:'적립금확인',count:230}] },
+      { name:'이벤트/혜택', count:2199, children:[
+        { name:'수수료할인', count:900, children:[{name:'할인적용',count:420},{name:'할인오류',count:300},{name:'할인발급',count:180}] },
+        { name:'예수금이자', count:580, children:[{name:'이자조회',count:350},{name:'이자지급',count:230}] },
         { name:'이벤트', count:369, children:[{name:'이벤트참여',count:169},{name:'당첨확인',count:200}] },
-        { name:'할인', count:350, children:[{name:'기간한정',count:200},{name:'회원할인',count:150}] }
+        { name:'캐시백', count:350, children:[{name:'기간한정',count:200},{name:'VIP캐시백',count:150}] }
       ]},
-      { name:'A/S', count:1456, children:[
-        { name:'A/S접수', count:680, children:[
-          { name:'수선요청', count:380, children:[{name:'의류수선',count:230},{name:'가방수선',count:150}] },
-          {name:'교체요청',count:180},{name:'부품교체',count:120}
+      { name:'시스템지원', count:1456, children:[
+        { name:'HTS설치', count:680, children:[
+          { name:'설치문의', count:380, children:[{name:'재설치',count:230},{name:'호환성',count:150}] },
+          {name:'사용방법',count:180},{name:'설치오류',count:120}
         ]},
-        { name:'A/S진행', count:476, children:[{name:'진행상태',count:150},{name:'소요기간',count:136},{name:'비용문의',count:190}] },
-        { name:'보증문의', count:300, children:[{name:'보증기간',count:100},{name:'보증범위',count:80},{name:'보증서분실',count:70},{name:'보증연장',count:50}] }
+        { name:'MTS설치', count:476, children:[{name:'다운로드',count:150},{name:'기능문의',count:136},{name:'사용법',count:190}] },
+        { name:'기능요청', count:300, children:[{name:'주문화면',count:100},{name:'차트기능',count:80},{name:'알림설정',count:70},{name:'기타기능',count:50}] }
       ]},
-      { name:'포인트/마일리지', count:987, children:[
-        { name:'포인트적립', count:420, children:[{name:'구매적립',count:250},{name:'리뷰적립',count:100},{name:'출석적립',count:70}] },
-        { name:'포인트사용', count:350, children:[{name:'사용방법',count:210},{name:'사용제한',count:140}] },
-        { name:'마일리지', count:217, children:[{name:'전환문의',count:120},{name:'소멸안내',count:97}] }
+      { name:'IRP/연금', count:987, children:[
+        { name:'연금저축', count:420, children:[{name:'개설문의',count:250},{name:'납입한도',count:100},{name:'세제혜택',count:70}] },
+        { name:'IRP', count:350, children:[{name:'운용방법',count:210},{name:'수수료',count:140}] },
+        { name:'중도해지', count:217, children:[{name:'해지절차',count:120},{name:'세금문의',count:97}] }
       ]},
-      { name:'기타', count:654, children:[
-        { name:'매장문의', count:260, children:[{name:'영업시간',count:80},{name:'매장위치',count:60},{name:'주차안내',count:60},{name:'매장전화',count:60}] },
-        { name:'제휴문의', count:207, children:[{name:'제휴카드',count:120},{name:'기업제휴',count:87}] },
-        { name:'기타문의', count:187, children:[{name:'칭찬제안',count:50},{name:'불편사항',count:47},{name:'시스템오류',count:40},{name:'앱문의',count:30},{name:'기타',count:20}] }
+      { name:'세무', count:654, children:[
+        { name:'양도세', count:260, children:[{name:'세금계산',count:80},{name:'신고방법',count:60},{name:'면제기준',count:60},{name:'세금환급',count:60}] },
+        { name:'배당소득세', count:207, children:[{name:'원천징수',count:120},{name:'종합과세',count:87}] },
+        { name:'기타문의', count:187, children:[{name:'세금증명',count:50},{name:'증빙서류',count:47},{name:'시스템오류',count:40},{name:'앱문의',count:30},{name:'기타',count:20}] }
       ]},
-      { name:'고객불만', count:1180, children:[
+      { name:'민원', count:1180, children:[
         { name:'서비스불만', count:520, children:[{name:'응대불만',count:280},{name:'대기시간',count:240}] },
-        { name:'품질불만', count:410, children:[{name:'제품하자',count:250},{name:'포장불량',count:160}] },
-        { name:'보상요구', count:250, children:[{name:'환불요구',count:150},{name:'추가보상',count:100}] }
+        { name:'시스템불만', count:410, children:[{name:'시스템장애',count:250},{name:'느린응답',count:160}] },
+        { name:'보상요구', count:250, children:[{name:'배상요구',count:150},{name:'추가보상',count:100}] }
       ]},
-      { name:'앱/웹사이트', count:1050, children:[
-        { name:'앱오류', count:450, children:[{name:'로딩오류',count:200},{name:'결제오류',count:150},{name:'화면깨짐',count:100}] },
+      { name:'HTS·MTS 오류', count:1050, children:[
+        { name:'앱오류', count:450, children:[{name:'로딩오류',count:200},{name:'주문오류',count:150},{name:'화면멈춤',count:100}] },
         { name:'기능문의', count:350, children:[{name:'검색기능',count:180},{name:'필터기능',count:170}] },
-        { name:'계정연동', count:250, children:[{name:'SNS연동',count:150},{name:'기기변경',count:100}] }
+        { name:'계정연동', count:250, children:[{name:'기기변경',count:150},{name:'다중접속',count:100}] }
       ]},
       { name:'멤버십', count:920, children:[
         { name:'등급문의', count:380, children:[{name:'승급조건',count:220},{name:'등급유지',count:160}] },
-        { name:'혜택문의', count:310, children:[{name:'무료배송',count:180},{name:'전용쿠폰',count:130}] },
+        { name:'혜택문의', count:310, children:[{name:'수수료우대',count:180},{name:'전용이벤트',count:130}] },
         { name:'가입탈퇴', count:230, children:[{name:'가입방법',count:140},{name:'해지방법',count:90}] }
       ]},
-      { name:'선물/기프트', count:780, children:[
-        { name:'기프트카드', count:350, children:[{name:'카드구매',count:200},{name:'카드사용',count:150}] },
-        { name:'선물포장', count:250, children:[{name:'포장옵션',count:150},{name:'메시지카드',count:100}] },
-        { name:'선물배송', count:180, children:[{name:'익명배송',count:100},{name:'예약배송',count:80}] }
+      { name:'선물/증여', count:780, children:[
+        { name:'주식증여', count:350, children:[{name:'증여방법',count:200},{name:'세금문의',count:150}] },
+        { name:'증여신고', count:250, children:[{name:'신고방법',count:150},{name:'증빙서류',count:100}] },
+        { name:'증여한도', count:180, children:[{name:'한도조회',count:100},{name:'면제기준',count:80}] }
       ]},
-      { name:'구독서비스', count:650, children:[
-        { name:'정기배송', count:300, children:[{name:'주기변경',count:170},{name:'상품변경',count:130}] },
-        { name:'구독관리', count:220, children:[{name:'일시정지',count:130},{name:'해지문의',count:90}] },
-        { name:'구독혜택', count:130, children:[{name:'할인율',count:80},{name:'추가혜택',count:50}] }
+      { name:'관심종목', count:650, children:[
+        { name:'등록관리', count:300, children:[{name:'등록방법',count:170},{name:'그룹관리',count:130}] },
+        { name:'알림관리', count:220, children:[{name:'알림설정',count:130},{name:'알림해제',count:90}] },
+        { name:'관심혜택', count:130, children:[{name:'시세알림',count:80},{name:'추천종목',count:50}] }
       ]},
-      { name:'매장안내', count:580, children:[
-        { name:'매장정보', count:280, children:[{name:'위치안내',count:150},{name:'영업시간',count:130}] },
-        { name:'픽업서비스', count:180, children:[{name:'매장픽업',count:110},{name:'드라이브스루',count:70}] },
-        { name:'매장재고', count:120, children:[{name:'재고확인',count:70},{name:'매장예약',count:50}] }
+      { name:'지점안내', count:580, children:[
+        { name:'지점정보', count:280, children:[{name:'위치안내',count:150},{name:'영업시간',count:130}] },
+        { name:'방문상담', count:180, children:[{name:'방문예약',count:110},{name:'전문상담',count:70}] },
+        { name:'지점업무', count:120, children:[{name:'업무문의',count:70},{name:'예약관리',count:50}] }
       ]},
-      { name:'세금계산서', count:490, children:[
+      { name:'증명서/세금', count:490, children:[
         { name:'발급요청', count:250, children:[{name:'전자발급',count:160},{name:'수정발급',count:90}] },
-        { name:'현금영수증', count:150, children:[{name:'발급문의',count:90},{name:'취소문의',count:60}] },
-        { name:'영수증재발급', count:90, children:[{name:'이메일발송',count:50},{name:'팩스발송',count:40}] }
+        { name:'거래내역서', count:150, children:[{name:'발급문의',count:90},{name:'재발급',count:60}] },
+        { name:'증명서재발급', count:90, children:[{name:'이메일발송',count:50},{name:'팩스발송',count:40}] }
       ]},
-      { name:'해외직구', count:430, children:[
-        { name:'통관문의', count:200, children:[{name:'관세계산',count:120},{name:'통관지연',count:80}] },
-        { name:'해외반품', count:130, children:[{name:'반품절차',count:80},{name:'반품비용',count:50}] },
-        { name:'사이즈문의', count:100, children:[{name:'해외사이즈',count:60},{name:'사이즈변환',count:40}] }
+      { name:'해외주식', count:430, children:[
+        { name:'환전문의', count:200, children:[{name:'환율적용',count:120},{name:'환전수수료',count:80}] },
+        { name:'해외환매', count:130, children:[{name:'환매절차',count:80},{name:'환매수수료',count:50}] },
+        { name:'시차문의', count:100, children:[{name:'미국시차',count:60},{name:'홍콩시차',count:40}] }
       ]},
       { name:'카탈로그', count:370, children:[
-        { name:'신상품', count:170, children:[{name:'신상알림',count:100},{name:'사전예약',count:70}] },
-        { name:'브랜드문의', count:120, children:[{name:'입점문의',count:70},{name:'브랜드정보',count:50}] },
-        { name:'품절상품', count:80, children:[{name:'재입고알림',count:50},{name:'대체상품',count:30}] }
+        { name:'신규종목', count:170, children:[{name:'상장알림',count:100},{name:'공모청약',count:70}] },
+        { name:'발행회사', count:120, children:[{name:'발행정보',count:70},{name:'기업개요',count:50}] },
+        { name:'거래정지종목', count:80, children:[{name:'거래재개알림',count:50},{name:'대체종목',count:30}] }
       ]},
       { name:'챗봇/AI상담', count:320, children:[
         { name:'챗봇오류', count:150, children:[{name:'응답오류',count:90},{name:'연결실패',count:60}] },
@@ -310,23 +310,23 @@
 
     /* 동일 키워드가 다른 상담유형 경로에도 등장하는 추가 더미 매핑 */
     const extraMappings = {
-      '수량변경': [
-        { depth1:'교환/반품', depth2:'교환접수', depth3:'사이즈교환', depth4:'수량변경', count:125 },
-        { depth1:'결제', depth2:'결제취소', depth3:'부분취소', depth4:'수량변경', count:78 },
-        { depth1:'프로모션', depth2:'쿠폰', depth3:'쿠폰적용', depth4:'수량변경', count:52 },
-        { depth1:'배송', depth2:'배송현황', depth3:'일반배송', depth4:'수량변경', count:35 }
+      '수량정정': [
+        { depth1:'환매/정정', depth2:'환매처리', depth3:'펀드환매', depth4:'수량정정', count:125 },
+        { depth1:'입출금/이체', depth2:'이체취소', depth3:'부분취소', depth4:'수량정정', count:78 },
+        { depth1:'이벤트/혜택', depth2:'수수료할인', depth3:'할인적용', depth4:'수량정정', count:52 },
+        { depth1:'체결관리', depth2:'체결조회', depth3:'일반체결', depth4:'수량정정', count:35 }
       ],
-      '배송현황확인': [
-        { depth1:'배송', depth2:'배송현황', depth3:'일반배송', depth4:'배송현황확인', count:210 },
-        { depth1:'교환/반품', depth2:'반품접수', depth3:'상품불량', depth4:'배송현황확인', count:95 },
-        { depth1:'고객불만', depth2:'서비스불만', depth3:'대기시간', depth4:'배송현황확인', count:62 },
-        { depth1:'앱/웹사이트', depth2:'기능문의', depth3:'검색기능', depth4:'배송현황확인', count:38 }
+      '체결확인': [
+        { depth1:'체결관리', depth2:'체결조회', depth3:'일반체결', depth4:'체결확인', count:210 },
+        { depth1:'환매/정정', depth2:'취소처리', depth3:'거래체결오류', depth4:'체결확인', count:95 },
+        { depth1:'민원', depth2:'서비스불만', depth3:'대기시간', depth4:'체결확인', count:62 },
+        { depth1:'HTS·MTS 오류', depth2:'기능문의', depth3:'검색기능', depth4:'체결확인', count:38 }
       ],
-      '입금확인': [
-        { depth1:'결제', depth2:'카드결제', depth3:'결제오류', depth4:'입금확인', count:145 },
-        { depth1:'결제', depth2:'현금결제', depth3:'무통장입금', depth4:'입금확인', count:88 },
-        { depth1:'세금계산서', depth2:'발급요청', depth3:'전자발급', depth4:'입금확인', count:42 },
-        { depth1:'프로모션', depth2:'적립금', depth3:'적립금확인', depth4:'입금확인', count:28 }
+      '예수금확인': [
+        { depth1:'입출금/이체', depth2:'예수금', depth3:'이체오류', depth4:'예수금확인', count:145 },
+        { depth1:'입출금/이체', depth2:'은행이체', depth3:'타행이체', depth4:'예수금확인', count:88 },
+        { depth1:'증명서/세금', depth2:'발급요청', depth3:'전자발급', depth4:'예수금확인', count:42 },
+        { depth1:'이벤트/혜택', depth2:'예수금이자', depth3:'이자조회', depth4:'예수금확인', count:28 }
       ]
     };
 

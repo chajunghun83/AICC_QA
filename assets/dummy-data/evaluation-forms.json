@@ -115,7 +115,7 @@
     "fail_rule": { "item_id": "profanity", "name": "욕설/금지어", "description": "탐지 시 전 항목 0점 처리" },
     "pass_threshold": 70,
     "applied_to": ["ws-seoul"],
-    "applied_teams": "VIP상담팀"
+    "applied_teams": "VIP고객팀"
   },
   {
     "id": "form-ob-tele",
