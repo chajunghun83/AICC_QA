@@ -141,13 +141,9 @@
           </thead>
           <tbody id="eval-tbody"></tbody>
         </table>
-        <div id="pagination-area" class="pagination">
-          <button class="pagination-btn">&laquo;</button>
-          <button class="pagination-btn active">1</button>
-          <button class="pagination-btn">2</button>
-          <button class="pagination-btn">&raquo;</button>
+        <div id="pagination-area" class="pagination" style="display:flex;align-items:center;gap:4px;">
           <span style="margin-left:16px;font-size:12px;color:#757575;">페이지당:
-            <select id="per-page-select" class="form-select" style="min-width:60px;padding:2px 24px 2px 8px;" onchange="applyFilter()">
+            <select id="per-page-select" class="form-select" style="min-width:60px;padding:2px 24px 2px 8px;" onchange="changeManualPageSize()">
               <option>10</option>
               <option selected>20</option>
               <option>50</option>
@@ -292,18 +288,61 @@
       return map;
     }
 
-    // innerHTML 일괄 교체로 테이블을 렌더링하고, 이슈는 최대 2개로 제한해 행 높이 일관성 유지
+    // 페이지네이션 상태
+    let manualCurrentPage = 1;
+    let manualLastFiltered = [];
+
+    function changeManualPageSize() {
+      manualCurrentPage = 1;
+      renderTable(manualLastFiltered);
+    }
+    function goToManualPage(p) {
+      const perPageEl = document.getElementById('per-page-select');
+      const perPage = perPageEl ? parseInt(perPageEl.value, 10) : 20;
+      const totalPages = Math.max(1, Math.ceil(manualLastFiltered.length / perPage));
+      manualCurrentPage = Math.max(1, Math.min(totalPages, p));
+      renderTable(manualLastFiltered);
+    }
+
+    function renderManualPagination(totalItems) {
+      const container = document.getElementById('pagination-area');
+      if (!container) return;
+      const perPageEl = document.getElementById('per-page-select');
+      const perPage = perPageEl ? parseInt(perPageEl.value, 10) : 20;
+      const totalPages = Math.max(1, Math.ceil(totalItems / perPage));
+      const maxBtns = 7;
+      let start = Math.max(1, manualCurrentPage - 3);
+      let end = Math.min(totalPages, start + maxBtns - 1);
+      start = Math.max(1, end - maxBtns + 1);
+      let html = `<button class="pagination-btn" ${manualCurrentPage === 1 ? 'disabled' : ''} onclick="goToManualPage(${manualCurrentPage - 1})">&laquo;</button>`;
+      for (let p = start; p <= end; p++) {
+        html += `<button class="pagination-btn ${p === manualCurrentPage ? 'active' : ''}" onclick="goToManualPage(${p})">${p}</button>`;
+      }
+      html += `<button class="pagination-btn" ${manualCurrentPage === totalPages ? 'disabled' : ''} onclick="goToManualPage(${manualCurrentPage + 1})">&raquo;</button>`;
+      html += `<span style="margin-left:16px;font-size:12px;color:#757575;">페이지당:
+        <select id="per-page-select" class="form-select" style="min-width:60px;padding:2px 24px 2px 8px;" onchange="changeManualPageSize()">
+          <option ${perPage === 10 ? 'selected' : ''}>10</option>
+          <option ${perPage === 20 ? 'selected' : ''}>20</option>
+          <option ${perPage === 50 ? 'selected' : ''}>50</option>
+        </select>
+      </span>`;
+      container.innerHTML = html;
+    }
+
+    // innerHTML 일괄 교체 + 페이지네이션 — 페이지당 N건만 렌더
     function renderTable(evals) {
       const tbody = document.getElementById('eval-tbody');
       document.getElementById('eval-count').textContent = `총 ${evals.length}건`;
 
-      // 총 건수가 페이지당 표시 건수 이하이면 페이지네이션 비표시 (A-045)
+      manualLastFiltered = evals;
       const perPageEl = document.getElementById('per-page-select');
       const perPage = perPageEl ? parseInt(perPageEl.value, 10) : 20;
-      const paginationEl = document.getElementById('pagination-area');
-      if (paginationEl) paginationEl.style.display = evals.length > perPage ? 'flex' : 'none';
+      const totalPages = Math.max(1, Math.ceil(evals.length / perPage));
+      if (manualCurrentPage > totalPages) manualCurrentPage = 1;
+      const startIdx = (manualCurrentPage - 1) * perPage;
+      const pageEvals = evals.slice(startIdx, startIdx + perPage);
 
-      tbody.innerHTML = evals.map(ev => {
+      tbody.innerHTML = pageEvals.map(ev => {
         const issueHtml = ev.issues && ev.issues.length > 0
           ? ev.issues.slice(0, 2).map(i => `<div style="font-size:10px;color:#F57F17;">${i}</div>`).join('')
           : '<span style="color:#9E9E9E;font-size:11px;">-</span>';
@@ -335,6 +374,8 @@
           </tr>
         `;
       }).join('');
+
+      renderManualPagination(evals.length);
     }
 
     /* ── 상세 모달 ── */
@@ -769,6 +810,7 @@
       const consultSearch = (document.getElementById('consult-search').value || '').trim().toLowerCase();
       if (consultSearch) filtered = filtered.filter(e => (e.consultation_type || '').toLowerCase().includes(consultSearch));
       filtered = applySorting(filtered);
+      manualCurrentPage = 1;  // 필터 적용 시 첫 페이지로
       renderTable(filtered);
     }
 

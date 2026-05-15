@@ -2,146 +2,146 @@
   "summary": {
     "total_agents": 108,
     "total_agents_prev": 100,
-    "total_calls": 6956,
-    "total_calls_prev": 6125,
-    "calls_auto_ib": 4043,
-    "calls_auto_ib_done": 3921,
-    "calls_auto_ib_prev": 3735,
-    "calls_auto_ib_done_prev": 3711,
-    "calls_auto_ob": 833,
-    "calls_auto_ob_done": 799,
-    "calls_auto_ob_prev": 709,
-    "calls_auto_ob_done_prev": 681,
-    "calls_manual": 2080,
-    "calls_manual_done": 640,
-    "calls_manual_prev": 1971,
-    "calls_manual_done_prev": 1576,
-    "avg_score": 80.7,
-    "avg_score_prev": 79.4,
-    "avg_score_auto_ib": 80.3,
-    "avg_score_auto_ib_prev": 79.1,
-    "avg_score_auto_ob": 81.9,
-    "avg_score_auto_ob_prev": 80.7,
-    "avg_score_manual": 43.1,
-    "avg_score_manual_prev": 41.7,
+    "total_calls": 2790,
+    "total_calls_prev": 2710,
+    "calls_auto_ib": 1830,
+    "calls_auto_ib_done": 1830,
+    "calls_auto_ib_prev": 1800,
+    "calls_auto_ib_done_prev": 1800,
+    "calls_auto_ob": 570,
+    "calls_auto_ob_done": 570,
+    "calls_auto_ob_prev": 558,
+    "calls_auto_ob_done_prev": 558,
+    "calls_manual": 390,
+    "calls_manual_done": 161,
+    "calls_manual_prev": 380,
+    "calls_manual_done_prev": 151,
+    "avg_score": 80.6,
+    "avg_score_prev": 79.3,
+    "avg_score_auto_ib": 79.9,
+    "avg_score_auto_ib_prev": 78.7,
+    "avg_score_auto_ob": 82.7,
+    "avg_score_auto_ob_prev": 81.5,
+    "avg_score_manual": 41.2,
+    "avg_score_manual_prev": 39.8,
     "avg_duration": "6:32",
     "avg_duration_prev": "6:48",
-    "excluded_agents": 32,
-    "excluded_agents_prev": 24,
-    "urgent_issues": 19,
-    "urgent_issues_prev": 16,
+    "excluded_agents": 7,
+    "excluded_agents_prev": 6,
+    "urgent_issues": 418,
+    "urgent_issues_prev": 415,
     "top_deduction": {
-      "item": "첫인사",
-      "calls": 1664,
-      "pct": 8
+      "item": "적극적 응대",
+      "calls": 1923,
+      "pct": 80
     },
-    "low_score_calls": 1300,
-    "low_score_pct": 16.2
+    "low_score_calls": 383,
+    "low_score_pct": 16.0
   },
   "channel_distribution": {
-    "IB": 4043,
-    "OB": 833
+    "IB": 1830,
+    "OB": 570
   },
   "quality_trend_30days": [
     {
       "date": "01/15",
-      "score": 82.5
-    },
-    {
-      "date": "01/16",
       "score": 79.4
     },
     {
+      "date": "01/16",
+      "score": 80.1
+    },
+    {
       "date": "01/17",
-      "score": 80.5
+      "score": 80.6
     },
     {
       "date": "01/18",
-      "score": 83.8
+      "score": 80.8
     },
     {
       "date": "01/19",
-      "score": 76.1
+      "score": 80.0
     },
     {
       "date": "01/20",
-      "score": 79.6
+      "score": 82.2
     },
     {
       "date": "01/21",
-      "score": 82.0
+      "score": 80.3
     },
     {
       "date": "01/22",
-      "score": 84.9
+      "score": 81.3
     },
     {
       "date": "01/23",
-      "score": 78.8
+      "score": 81.0
     },
     {
       "date": "01/24",
-      "score": 83.0
+      "score": 80.1
     },
     {
       "date": "01/25",
-      "score": 83.0
+      "score": 80.2
     },
     {
       "date": "01/26",
-      "score": 75.5
+      "score": 80.1
     },
     {
       "date": "01/27",
-      "score": 87.7
+      "score": 81.6
     }
   ],
   "team_scores": [
     {
-      "team": "아웃바운드팀",
-      "score": 81.5,
-      "color": "#EF5350"
-    },
-    {
-      "team": "HTS기술지원팀",
-      "score": 77.7,
-      "color": "#FF9800"
-    },
-    {
       "team": "펀드상담팀",
-      "score": 72.8,
+      "score": 80.9,
       "color": "#7E57C2"
     },
     {
-      "team": "해피콜팀",
-      "score": 71.0,
-      "color": "#9C27B0"
-    },
-    {
       "team": "CS상담팀",
-      "score": 66.0,
+      "score": 77.8,
       "color": "#4CAF50"
     },
     {
+      "team": "HTS기술지원팀",
+      "score": 77.5,
+      "color": "#FF9800"
+    },
+    {
+      "team": "아웃바운드팀",
+      "score": 76.6,
+      "color": "#EF5350"
+    },
+    {
+      "team": "해피콜팀",
+      "score": 75.3,
+      "color": "#9C27B0"
+    },
+    {
       "team": "VIP고객팀",
-      "score": 62.8,
+      "score": 72.0,
       "color": "#0F766E"
     },
     {
       "team": "주식상담팀",
-      "score": 49.7,
+      "score": 57.0,
       "color": "#2196F3"
     }
   ],
   "urgent_issues": [
     {
       "type": "FAIL(금지어)",
-      "count": 1,
+      "count": 30,
       "team": "전체"
     },
     {
       "type": "기준 미달",
-      "count": 13,
+      "count": 383,
       "team": "전체"
     },
     {
@@ -152,38 +152,38 @@
   ],
   "fail_agents": [
     {
-      "name": "박지민",
-      "center": "서울센터",
-      "team": "주식상담팀",
-      "score": 37,
-      "reason": "기준 미달"
-    },
-    {
-      "name": "이영희",
-      "center": "서울센터",
-      "team": "VIP고객팀",
-      "score": 37,
-      "reason": "기준 미달"
-    },
-    {
-      "name": "이도현",
-      "center": "서울센터",
-      "team": "주식상담팀",
-      "score": 38,
-      "reason": "기준 미달"
-    },
-    {
-      "name": "윤서연",
-      "center": "부산센터",
-      "team": "해피콜팀",
-      "score": 40,
-      "reason": "기준 미달 + 첫인사 미흡"
-    },
-    {
       "name": "한지석",
       "center": "서울센터",
       "team": "주식상담팀",
-      "score": 40,
+      "score": 28,
+      "reason": "기준 미달"
+    },
+    {
+      "name": "박서연",
+      "center": "서울센터",
+      "team": "주식상담팀",
+      "score": 30,
+      "reason": "기준 미달"
+    },
+    {
+      "name": "최민서",
+      "center": "서울센터",
+      "team": "VIP고객팀",
+      "score": 30,
+      "reason": "기준 미달"
+    },
+    {
+      "name": "최지호",
+      "center": "서울센터",
+      "team": "주식상담팀",
+      "score": 31,
+      "reason": "기준 미달"
+    },
+    {
+      "name": "임민서",
+      "center": "서울센터",
+      "team": "주식상담팀",
+      "score": 31,
       "reason": "기준 미달"
     }
   ],
@@ -193,32 +193,32 @@
       "center": "서울센터",
       "team": "HTS기술지원팀",
       "team_id": "team-tech",
-      "item": "첫인사",
-      "item_id": "first-greeting",
-      "category": "응대품질",
-      "calls": 64,
+      "item": "적극적 응대",
+      "item_id": "active-response",
+      "category": "응대내용",
+      "calls": 1923,
       "status": "danger"
     },
     {
       "rank": 2,
       "center": "서울센터",
-      "team": "주식상담팀",
-      "team_id": "team-general",
+      "team": "HTS기술지원팀",
+      "team_id": "team-tech",
       "item": "문제 해결",
       "item_id": "problem-solve",
       "category": "응대내용",
-      "calls": 64,
+      "calls": 1904,
       "status": "danger"
     },
     {
       "rank": 3,
-      "center": "부산센터",
-      "team": "해피콜팀",
-      "team_id": "team-happycall",
-      "item": "적극적 응대",
-      "item_id": "active-response",
+      "center": "서울센터",
+      "team": "HTS기술지원팀",
+      "team_id": "team-tech",
+      "item": "쉬운 설명",
+      "item_id": "easy-explanation",
       "category": "응대내용",
-      "calls": 61,
+      "calls": 1888,
       "status": "danger"
     },
     {
@@ -226,10 +226,10 @@
       "center": "서울센터",
       "team": "HTS기술지원팀",
       "team_id": "team-tech",
-      "item": "쉬운 설명",
-      "item_id": "easy-explanation",
-      "category": "응대내용",
-      "calls": 61,
+      "item": "첫인사",
+      "item_id": "first-greeting",
+      "category": "응대품질",
+      "calls": 1823,
       "status": "danger"
     },
     {
@@ -240,7 +240,7 @@
       "item": "어조",
       "item_id": "tone",
       "category": "응대품질",
-      "calls": 58,
+      "calls": 1823,
       "status": "danger"
     }
   ],
@@ -250,25 +250,38 @@
       "center_id": "ct-seoul",
       "team": "VIP고객팀",
       "team_id": "team-vip",
-      "calls": 558,
-      "evaluations": 466,
-      "avg_score": 62.8,
+      "calls": 483,
+      "evaluations": 483,
+      "avg_score": 72.0,
       "agent_count": 12,
-      "issues": []
+      "issues": [
+        {
+          "type": "FAIL(금지어)",
+          "count": 2
+        },
+        {
+          "type": "기준 미달",
+          "count": 41
+        }
+      ]
     },
     {
       "center": "서울센터",
       "center_id": "ct-seoul",
       "team": "주식상담팀",
       "team_id": "team-general",
-      "calls": 1114,
-      "evaluations": 930,
-      "avg_score": 49.7,
+      "calls": 696,
+      "evaluations": 696,
+      "avg_score": 57.0,
       "agent_count": 25,
       "issues": [
         {
-          "type": "기준 미달",
+          "type": "FAIL(금지어)",
           "count": 3
+        },
+        {
+          "type": "기준 미달",
+          "count": 127
         }
       ]
     },
@@ -277,14 +290,18 @@
       "center_id": "ct-seoul",
       "team": "HTS기술지원팀",
       "team_id": "team-tech",
-      "calls": 831,
-      "evaluations": 693,
-      "avg_score": 77.7,
+      "calls": 642,
+      "evaluations": 642,
+      "avg_score": 77.5,
       "agent_count": 18,
       "issues": [
         {
           "type": "FAIL(금지어)",
-          "count": 1
+          "count": 4
+        },
+        {
+          "type": "기준 미달",
+          "count": 4
         }
       ]
     },
@@ -293,25 +310,38 @@
       "center_id": "ct-busan",
       "team": "펀드상담팀",
       "team_id": "team-general2",
-      "calls": 905,
-      "evaluations": 752,
-      "avg_score": 72.8,
+      "calls": 329,
+      "evaluations": 329,
+      "avg_score": 80.9,
       "agent_count": 20,
-      "issues": []
+      "issues": [
+        {
+          "type": "FAIL(금지어)",
+          "count": 2
+        },
+        {
+          "type": "기준 미달",
+          "count": 12
+        }
+      ]
     },
     {
       "center": "부산센터",
       "center_id": "ct-busan",
       "team": "해피콜팀",
       "team_id": "team-happycall",
-      "calls": 471,
-      "evaluations": 394,
-      "avg_score": 71.0,
+      "calls": 169,
+      "evaluations": 169,
+      "avg_score": 75.3,
       "agent_count": 10,
       "issues": [
         {
+          "type": "FAIL(금지어)",
+          "count": 3
+        },
+        {
           "type": "기준 미달",
-          "count": 2
+          "count": 22
         }
       ]
     },
@@ -320,22 +350,36 @@
       "center_id": "ct-daegu",
       "team": "CS상담팀",
       "team_id": "team-cs",
-      "calls": 635,
-      "evaluations": 527,
-      "avg_score": 66.0,
+      "calls": 379,
+      "evaluations": 379,
+      "avg_score": 77.8,
       "agent_count": 15,
-      "issues": []
+      "issues": [
+        {
+          "type": "FAIL(금지어)",
+          "count": 10
+        },
+        {
+          "type": "기준 미달",
+          "count": 16
+        }
+      ]
     },
     {
       "center": "대구센터",
       "center_id": "ct-daegu",
       "team": "아웃바운드팀",
       "team_id": "team-ob",
-      "calls": 362,
-      "evaluations": 300,
-      "avg_score": 81.5,
+      "calls": 92,
+      "evaluations": 92,
+      "avg_score": 76.6,
       "agent_count": 8,
-      "issues": []
+      "issues": [
+        {
+          "type": "FAIL(금지어)",
+          "count": 6
+        }
+      ]
     }
   ]
 }

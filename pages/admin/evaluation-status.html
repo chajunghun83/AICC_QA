@@ -134,13 +134,9 @@
           </thead>
           <tbody id="eval-tbody"></tbody>
         </table>
-        <div class="pagination">
-          <button class="pagination-btn">&laquo;</button>
-          <button class="pagination-btn active">1</button>
-          <button class="pagination-btn">2</button>
-          <button class="pagination-btn">&raquo;</button>
+        <div class="pagination" id="eval-pagination" style="display:flex;align-items:center;gap:4px;">
           <span style="margin-left:16px;font-size:12px;color:#757575;">페이지당:
-            <select class="form-select" style="min-width:60px;padding:2px 24px 2px 8px;">
+            <select class="form-select" id="eval-page-size" style="min-width:60px;padding:2px 24px 2px 8px;" onchange="changeEvalPageSize()">
               <option>10</option>
               <option selected>20</option>
               <option>50</option>
@@ -337,12 +333,59 @@
       }
     }
 
-    // innerHTML 일괄 교체 방식으로 대량 행을 빠르게 렌더링 (개별 DOM 조작 대비 성능 이점)
+    // 페이지네이션 상태 (대용량 데이터 — 페이지당 N건만 렌더)
+    let evalCurrentPage = 1;
+    let evalPageSize = 20;
+    let evalLastFiltered = [];
+
+    function changeEvalPageSize() {
+      evalPageSize = parseInt(document.getElementById('eval-page-size').value, 10) || 20;
+      evalCurrentPage = 1;
+      renderEvalTable(evalLastFiltered);
+    }
+    function goToEvalPage(p) {
+      const totalPages = Math.max(1, Math.ceil(evalLastFiltered.length / evalPageSize));
+      evalCurrentPage = Math.max(1, Math.min(totalPages, p));
+      renderEvalTable(evalLastFiltered);
+    }
+
+    function renderEvalPagination(totalItems) {
+      const container = document.getElementById('eval-pagination');
+      if (!container) return;
+      const totalPages = Math.max(1, Math.ceil(totalItems / evalPageSize));
+      // 페이지 버튼 1~7개 (현재 페이지 중심) — 너무 많을 때는 ... 압축
+      const maxBtns = 7;
+      let start = Math.max(1, evalCurrentPage - 3);
+      let end = Math.min(totalPages, start + maxBtns - 1);
+      start = Math.max(1, end - maxBtns + 1);
+      let html = `<button class="pagination-btn" ${evalCurrentPage === 1 ? 'disabled' : ''} onclick="goToEvalPage(${evalCurrentPage - 1})">&laquo;</button>`;
+      for (let p = start; p <= end; p++) {
+        html += `<button class="pagination-btn ${p === evalCurrentPage ? 'active' : ''}" onclick="goToEvalPage(${p})">${p}</button>`;
+      }
+      html += `<button class="pagination-btn" ${evalCurrentPage === totalPages ? 'disabled' : ''} onclick="goToEvalPage(${evalCurrentPage + 1})">&raquo;</button>`;
+      html += `<span style="margin-left:16px;font-size:12px;color:#757575;">페이지당:
+        <select class="form-select" id="eval-page-size" style="min-width:60px;padding:2px 24px 2px 8px;" onchange="changeEvalPageSize()">
+          <option ${evalPageSize === 10 ? 'selected' : ''}>10</option>
+          <option ${evalPageSize === 20 ? 'selected' : ''}>20</option>
+          <option ${evalPageSize === 50 ? 'selected' : ''}>50</option>
+        </select>
+      </span>`;
+      container.innerHTML = html;
+    }
+
+    // innerHTML 일괄 교체 방식으로 대량 행을 빠르게 렌더링 + 페이지네이션 적용
     function renderEvalTable(evals) {
       const tbody = document.getElementById('eval-tbody');
       document.getElementById('eval-count').textContent = `총 ${evals.length}건`;
 
-      tbody.innerHTML = evals.map(ev => {
+      // 페이지 슬라이스 — 현재 페이지의 evalPageSize 만큼만 렌더
+      evalLastFiltered = evals;
+      const totalPages = Math.max(1, Math.ceil(evals.length / evalPageSize));
+      if (evalCurrentPage > totalPages) evalCurrentPage = 1;
+      const startIdx = (evalCurrentPage - 1) * evalPageSize;
+      const pageEvals = evals.slice(startIdx, startIdx + evalPageSize);
+
+      tbody.innerHTML = pageEvals.map(ev => {
         const confBadge = ev.confidence === 'High'
           ? '<span class="badge badge-active">High</span>'
           : ev.confidence === 'Medium'
@@ -376,6 +419,8 @@
           </tr>
         `;
       }).join('');
+
+      renderEvalPagination(evals.length);
     }
 
     // 평가 상세 모달: 항목별 점수와 스크립트를 탭으로 분리하여 정보 과부하 방지
@@ -924,6 +969,7 @@
         const consultSearch = (document.getElementById('consult-search').value || '').trim().toLowerCase();
         if (consultSearch) filtered = filtered.filter(e => (e.consultation_type || '').toLowerCase().includes(consultSearch));
         filtered = applySorting(filtered);
+        evalCurrentPage = 1;  // 필터 적용 시 첫 페이지로
         renderEvalTable(filtered);
       }
 

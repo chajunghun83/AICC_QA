@@ -444,6 +444,11 @@
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
+/* 비검색(정보성) 카드 — hover 효과 제거 */
+.kpi-card.kpi-card-static:hover {
+  box-shadow: none;
+}
+
 .content-card {
   background: white;
   border-radius: 8px;

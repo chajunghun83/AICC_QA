@@ -362,3 +362,92 @@
 - 카드 재클릭 시 활성 키 해제 → 노드 base로 복귀
 - iframe 내부 카드는 본체 외관 그대로, sub-cell만 hover 강조(`#F5F5F5`) + title 툴팁 표시
 - 기존 L2/L3 `filterByCard()` 호출 흐름 제거 (함수는 보존, 호출 없음)
+
+**수정 리스트 (26/05/16)**
+
+[상세 분석 iframe 스크롤 통합]
+
+- 부모-자식 단일 스크롤 — 카드 영역에 별도 스크롤 발생 / 모달 클리핑 / 무한 확장 루프 등 단계적 시행착오 후 안정화
+  - 자식(detail-analysis.html, embed 모드)이 `#page-content.getBoundingClientRect().bottom` 으로 자기 콘텐츠 높이만 측정해 부모에 `da-height` postMessage 전송 (file:// 환경의 cross-origin 제약 우회)
+  - 부모(integrated-evaluation.html)는 수신 즉시 iframe.style.height 동기화, `Math.max(h, 600) + 16px` 여유 버퍼
+  - 자식 측 폴링(50ms~3초 8개 시점) + MutationObserver + ResizeObserver + 5초간 500ms 안전망 인터벌
+  - iframe `scrolling="no"` 로 내부 스크롤바 노출 차단
+  - iframe 모달(da-modal-expand) 활성 중에는 부모 body/html `overflow:hidden` 으로 배경 스크롤 잠금, 모달 복원 시 원래 overflow 복원
+- AICC_Modal 컴포넌트 — `document.body.style.overflow` 만 잠그던 것을 `documentElement` 까지 함께 잠그도록 확장. 이전 값을 보존했다가 close 시 정확히 복원
+
+[데이터 정합성 풀 전환 — 단일 진실의 원천 + 시연 풍부도 확보]
+
+- 기존 정합성 충돌 (대시보드 6956건 vs 통합현황 286건 vs 상세분석 101건) 해소 → 모든 화면이 동일 데이터셋(2790건) 사용
+- 평가 데이터 확장 — AUTO_DISTRIBUTION ×30 / MANUAL_DISTRIBUTION ×15 (총 자동 2400 + 수동 390)
+- generateRecentEvals 가짜 보강 로직 제거 — evaluations.json + manual-evaluations.json 만 단일 출처로 사용
+- build_dashboard 의 인위적 스케일링 제거 — `scale = (agent_count // 2) * 90` 같은 부풀림 제거, 실 record 카운트 기반 산출
+- 평가 record에 `employee_id` 직접 박기 — integrated-evaluation 의 EMPLOYEE_ID_MAP / EMPLOYEE_NAME_MAP 의존성 제거 (assignEmployeeId fallback만 유지)
+- centers.json `agent_count` (108명) 만큼 자동 충원 — `build_agent_pool` 에 filler 상담사 생성 로직 추가 (이름은 결정론적 한국식 풀에서 추출, 사번은 `_CENTER_PREFIX + tid_seq + seq` 패턴)
+- agent_id 충돌 해소 — `_TEAM_SEQ` 7팀 모두 unique prefix 부여
+- 모든 팀에 OB·FAIL·기준미달 분포 보장
+  - `SCENARIO_TEAM_PREF["form-ob-tele"]` 가중치 조정 + VIP·기술팀까지 OB 분배
+  - `CATEGORY_TEAM_BIAS` 의 해피콜·적합성진단·설명의무·상품권유 카테고리에 CS·HTS 팀 보조 추가
+  - FAIL 카테고리 특수 처리 — `pick_team_for_template` 가 form 제약 무시하고 7팀 전체에 분배
+- sync_detail_analysis_dummy.py — evaluations.json 기반 자동 추출로 변경 (EXTRA_AGENTS 정적 명단 의존 제거), 108명 트리에 정확히 분배
+- agent_count vs agentCount 키 표준화 — 팀 객체 7곳 일괄 `agentCount` 로 통일 (이전엔 표시값이 "undefined명" 으로 나오던 버그 해소)
+- verify_qa_consistency.py — agent_id 화이트리스트 → 패턴 검사로 완화, 팀 평균 점수 tolerance 0.1 → 1.0 (데모 inject 후 미세 변동 허용)
+
+[KPI 카드 — 검색 키워드 / 필터 정합 강화]
+
+- 비검색 카드 클릭 비활성 — `SEARCHABLE_KINDS = ['urgentIssue', 'topDeduction', 'lowScore', 'excluded', 'durationScope']` 만 클릭 가능, 그 외(평가 상담사/평가 건수 본체/평균 점수 본체) 는 `cursor:default` + `.kpi-card-static` 클래스로 hover 그림자 제거
+- 카드별 sub-cell 키 unique 분리 — `autoIB-call` / `autoIB-score` 등 prefix 부여, 클릭 시 같은 키 가진 다른 카드의 sub-cell이 동시 강조되던 문제 해소
+- 점수 카드 sub-cell 점수 구간 필터 — 카드의 평균 점수가 속한 버킷(60미만/60-69/70-79/80-89/90+) 만 노출. 필터 배지에 구간 명시
+- 평균 통화시간 카드 검색 기능 추가 — 1분 단위 버킷(1분 미만/1-1:59/2-2:59/3-3:59/4-4:59/5분+) 필터링. 돋보기 아이콘 노출
+- 카드 카운트 = 부모 필터 결과 정합화
+  - `urgentIssues` : 상담사 단위 → record 단위(FAIL profanity record 수) 로 산식 변경
+  - `lowScoreCalls` : `s <= 70` → `0 < s < 70` 로 부모 필터와 동일 산식
+  - `calls_manual_done` : 센터 집계 시 `= calls_manual` 박혀있던 버그 → 팀별 completed 합산으로 수정
+- 자동/수동 채널 분리 정확화 — `to_detail_eval(r, is_manual)` 인자로 type 결정. manual record가 type="AI" 로 잘못 분류되던 문제 해소
+- 수동 평가 전체(pending 포함) 카운트 = 부모 manualOnly 필터 결과 정합 — `tobj["calls_manual"]` 에 manual 전체, `calls_manual_done` 에 completed만
+
+[평가 제외 상담사 카드 — 명단 카드로 전환]
+
+- 평가 record에 `excluded=true` 필드 직접 박기 — 각 팀 마지막 1명을 결정론적으로 평가 제외 처리(총 7명, 그 사람들 평가 모두 excluded=true)
+- 카드 클릭 시 통합 평가 결과 테이블 숨기고 `detail-excluded-card` 노출 — 상담사 단위 명단 표시 (NO/상담사/사번/센터/팀/제외 사유/제외 시작일/예상 복귀)
+- 결정론적 제외 사유 7가지 풀 — 신입 교육 중/육아 휴직/병가 휴직/교육 파견/평가 제외 사유 보유/신규 부서 이동/리더 직무 전환 (agent_id 해시 기반 배정)
+- 평가 모순감 해소 — 평가 제외인데 점수·평가표 컬럼 표시되던 위화감 제거
+
+[VIP고객팀 윤민서 — 시연 효과 풍성한 5건 데모 데이터]
+
+- `tools/inject_vip_demo.py` 신규 — 윤민서 최근 5건 평가 record를 다양한 시나리오로 덮어쓰기
+- 5개 시나리오 — 비대면 일반계좌 개설(95점) / ELS 21호 설명의무(92점) / 펀드 적합성 진단(78점, 일부 감점) / VIP 포트폴리오 자산배분(88점) / 고령자 보호 절차(90점)
+- 각 record — transcript 15~25턴 자연스러운 한국어 증권 도메인 대화, ai_feedback 250~300자 강점/약점/코칭, scores 16개 항목 + 일부 reason, tags 6개, 시나리오별 평가표/상담유형 분기
+- manual pending 2건은 completed 로 변환하여 점수 표시 (사용자가 상세 모달에서 풍성한 내용 확인 가능)
+- detail-analysis.html `showEvalDetail` 보강 — `window.AICC_DATA` 에서 동일 ID record lookup, 풍성한 데이터가 있으면 transcript/ai_feedback/scores/eval_form/consultation_type 모두 우선 사용 (기존엔 sim 함수가 무조건 동적 생성하던 흐름)
+- `convertRichScoresToSim` 헬퍼 + `RICH_SCORE_NAME_MAP` (영문 item_id → 한국어 라벨) 추가
+- generate_qa_data.py main 끝에 `inject_vip_demo.main()` 자동 호출 — generate 재실행해도 데모 보강이 사라지지 않음
+
+[L2 이슈 컬럼 — 상담사 단위 산정으로 변경]
+
+- 기존엔 평가 30+건 중 한 건이라도 issue 있으면 모두 동일 "기준 미달" 로 표시되어 12명 전원 동일 이슈 처럼 보이는 문제 해소
+- 새 기준
+  - 긴급(`urgentIssue=True`, 빨간 배지) : FAIL 1건 이상 또는 평균 < 70 또는 미달 콜 비율 30%+
+  - 일반 이슈 : 이슈 콜 1건 이상 (L3와 정합 유지 — 클릭 시 그 콜들 직접 확인 가능)
+  - 이슈 없음 : 0건
+- L2 테이블 이슈 컬럼 배경 박스 제거 → 차분한 회색 텍스트(#757575)만 표시. 긴급만 빨강 + 작은 배지로 시각 강조
+- 분포 — 108명 중 긴급 25명 / 이슈 있음 41명 / 이슈 없음 42명
+
+[브레드크럼 / 사용자 시연 친화 개선]
+
+- L1 진입 시 브레드크럼이 "전체"만 표시되던 문제 — `renderLevel1` 시작에 navStack 자가 보정 + 마지막에 `updateBreadcrumb()` 명시 호출
+- "경미한 흔들림 1회 탐지" 모호 표현 → "기준점 대비 경미한 감점 (1회 탐지)" 통일 (전 영역 16,948곳 일괄 교체)
+
+[페이지네이션 적용 — 대용량 데이터 성능 개선]
+
+- evaluation-status.html (자동 2,400건) — 정적 페이지 버튼 → 동적 페이지네이션 (페이지당 10/20/50 셀렉트). 페이지당 슬라이스 후 innerHTML — DOM 행 2400 → 20 으로 120배 감소
+- manual-evaluation-status.html (수동 390건) — 동일 패턴 적용. `manualCurrentPage` / `goToManualPage` / `renderManualPagination` 헬퍼
+- 필터 적용 시 자동으로 첫 페이지로 리셋, 정렬·필터·페이지 이동 모두 호환
+
+[리포트 생성기]
+
+- "Excel 다운로드" 버튼 → "Docx 다운로드" 로 라벨 변경 (`doDownload('Docx')`)
+
+[기타 사용자 경험 보정]
+
+- iframe 깊이별 KPI 카드 컬럼 폭 자동 조정
+- detail-analysis tree 의 팀 객체에서 `agent_count` (snake) → `agentCount` (camel) 표준화. 렌더링 코드(4곳)와 데이터(7곳) 모두 통일하여 "undefined명" 표시 사라짐

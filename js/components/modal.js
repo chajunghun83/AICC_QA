@@ -54,7 +54,12 @@ window.AICC_Modal = {
     });
 
     document.body.appendChild(backdrop);
+    // 배경 스크롤 차단 — body + html 둘 다 잠그고 현재 스크롤 위치 보존
+    this._prevScrollY = window.scrollY || window.pageYOffset || 0;
+    this._prevBodyOverflow = document.body.style.overflow;
+    this._prevHtmlOverflow = document.documentElement.style.overflow;
     document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
 
     // DOM 삽입 직후 rAF로 class를 추가해야 CSS transition이 정상 작동
     requestAnimationFrame(() => {
@@ -81,7 +86,8 @@ window.AICC_Modal = {
     backdrop.classList.remove('active');
     setTimeout(() => {
       backdrop.remove();
-      document.body.style.overflow = '';
+      document.body.style.overflow = this._prevBodyOverflow || '';
+      document.documentElement.style.overflow = this._prevHtmlOverflow || '';
     }, 200);
 
     if (this._escHandler) {

@@ -65,40 +65,35 @@ for c in centers:
     for t in c["teams"]:
         team_to_center[t["id"]] = c
         center_id_to_obj[c["id"]]["teams"].append({
-            "id": t["id"], "name": t["name"], "agent_count": t["agent_count"], "_agents": []
+            "id": t["id"], "name": t["name"], "agentCount": t["agent_count"], "_agents": []
         })
 
 agents_pool = []
-for u in users:
-    if u.get("role") != "AGENT":
+# === evaluations.json + manual-evaluations.json 에 등장하는 모든 agent 자동 등록 ===
+# generate_qa_data.py 가 centers.json agent_count 만큼 채우므로 여기서도 같은 풀이 형성됨.
+# 평가 record에 employee_id / team / center 가 미리 박혀 있어 외부 매핑 불필요 (정합성 단일 진실의 원천)
+_seen_agents = {}
+for r in (auto + manual):
+    aid = r.get("agent_id")
+    if not aid or aid in _seen_agents:
         continue
-    agents_pool.append({
-        "id": u["id"].replace("agent", "ag-"),
-        "agent_id": u["id"],
-        "name": u["name"],
-        "employeeId": EMPLOYEE_ID_MAP.get(u["id"], "-"),
-        "team_id": u["team_id"],
-        "center_id": u["center_id"],
+    _seen_agents[aid] = {
+        "id": str(aid).replace("agent", "ag-"),
+        "agent_id": aid,
+        "name": r.get("agent_name", aid),
+        "employeeId": r.get("employee_id") or "-",
+        "team_id": r.get("team_id"),
+        "center_id": r.get("center_id"),
         "evaluations": [],
-    })
-for tid, names in EXTRA_AGENTS.items():
-    for nm, aid in names:
-        agents_pool.append({
-            "id": aid.replace("agent", "ag-"),
-            "agent_id": aid,
-            "name": nm,
-            "employeeId": EMPLOYEE_ID_MAP.get(aid, "-"),
-            "team_id": tid,
-            "center_id": team_to_center[tid]["id"],
-            "evaluations": [],
-        })
+    }
+agents_pool = list(_seen_agents.values())
 
 agent_by_id = {a["agent_id"]: a for a in agents_pool}
 
 # === evaluations.json → agent.evaluations 매핑 ===
 # detail-analysis 의 evaluations 항목은 {id, date, time, duration, score, type, confidence,
 #   issue, callType, category, deductionItems, urgentIssue} 구조
-def to_detail_eval(r):
+def to_detail_eval(r, is_manual=False):
     is_fail = bool(r.get("scores", {}).get("profanity", {}).get("is_fail"))
     score = r.get("total_score") or 0
     deduction_items = []
@@ -123,28 +118,36 @@ def to_detail_eval(r):
         "time": r["call_time"],
         "duration": r["duration"],
         "score": score,
-        "type": "AI" if r.get("call_type") in ("I/B", "O/B") else "수동",
+        "type": "수동" if is_manual else "AI",
         "confidence": r.get("confidence", "High"),
         "issue": issue,
         "callType": r.get("call_type", "I/B"),
         "category": r.get("consultation_type", ""),
         "deductionItems": deduction_items,
         "urgentIssue": urgent,
+        "excluded": bool(r.get("excluded")),
     }
 
 # auto + manual completed 를 agent 에 분배
 for r in auto:
     aid = r.get("agent_id")
     if aid in agent_by_id:
-        agent_by_id[aid]["evaluations"].append(to_detail_eval(r))
+        agent_by_id[aid]["evaluations"].append(to_detail_eval(r, is_manual=False))
 for r in manual:
     if r.get("eval_status") != "completed":
         continue
     aid = r.get("agent_id")
     if aid in agent_by_id:
-        ev = to_detail_eval(r)
-        ev["type"] = "수동"
-        agent_by_id[aid]["evaluations"].append(ev)
+        agent_by_id[aid]["evaluations"].append(to_detail_eval(r, is_manual=True))
+
+# 팀별 manual 전체 카운트 (pending 포함) — 카드와 부모 페이지 manualOnly 필터 결과(=manual 전체) 정합용
+team_manual_total = defaultdict(int)
+team_manual_completed = defaultdict(int)
+for r in manual:
+    tid = r.get("team_id")
+    team_manual_total[tid] += 1
+    if r.get("eval_status") == "completed":
+        team_manual_completed[tid] += 1
 
 # 평가 이력 없는 상담사도 시연용으로 1~3건 채움 (정상 콜로)
 import random
@@ -210,9 +213,34 @@ for a in agents_pool:
         for it in e.get("deductionItems") or []:
             dmap[it] += 1
     a["topDeductionItem"] = max(dmap, key=dmap.get) if dmap else "-"
-    a["urgentIssue"] = any(e.get("urgentIssue") for e in evals)
-    a["issue"] = next((e["issue"] for e in evals if e.get("issue")), None)
-    a["excluded"] = False  # 별도 데이터 없음 — false 통일
+
+    # 상담사 레벨 이슈 산정
+    # issue 텍스트: 이슈 콜이 1건이라도 있으면 표시(L3 평가 목록과 정합 유지)
+    # urgentIssue: 심각도가 높은 경우(긴급 배지)만 True
+    fail_calls = sum(1 for e in evals if (e.get("issue") or "").startswith("FAIL"))
+    below_calls = sum(1 for e in evals if 0 < (e.get("score") or 0) < 60)
+    issue_calls = fail_calls + below_calls
+    below_ratio = below_calls / max(1, len(evals))
+    avg_score_for_issue = a["avgScore"]
+
+    # 긴급 여부 (배지 노출) — FAIL 1+ / 평균 미달 / 미달 콜 30%+
+    a["urgentIssue"] = (
+        fail_calls > 0
+        or (avg_score_for_issue and avg_score_for_issue < 70)
+        or below_ratio >= 0.3
+    )
+
+    # 이슈 텍스트 — L3 평가 목록과 정합 유지를 위해 1건이라도 있으면 표시
+    if fail_calls > 0 and below_calls > 0:
+        a["issue"] = f"FAIL {fail_calls}건 + 기준 미달 {below_calls}건"
+    elif fail_calls > 0:
+        a["issue"] = f"FAIL(금지어) {fail_calls}건 감지"
+    elif below_calls > 0:
+        a["issue"] = f"기준 미달 콜 {below_calls}건 ({round(below_ratio*100)}%)"
+    else:
+        a["issue"] = None
+    # 평가 record에 excluded=true 가 박혀 있으면 상담사도 excluded 처리
+    a["excluded"] = any(e.get("excluded") for e in evals) if evals else False
 
 # 팀별 agents 배치
 for a in agents_pool:
@@ -247,30 +275,37 @@ for cobj in center_id_to_obj.values():
         tobj["totalEvals"] = len(all_team_evals)
         tobj["avgScore"] = avg_or(80.0, team_scores)
         tobj["avgScore_prev"] = round(tobj["avgScore"] - random.uniform(0.5, 2.5), 1)
-        tobj["agentCount_prev"] = max(1, tobj["agent_count"] - random.randint(0, 3))
+        tobj["agentCount_prev"] = max(1, tobj["agentCount"] - random.randint(0, 3))
         tobj["completionRate"] = round(random.uniform(85, 96), 1)
         tobj["avgDuration"] = team_dur_avg(team_agents)
         tobj["avgDuration_prev"] = team_dur_avg(team_agents)  # 동일 처리
-        tobj["urgentIssues"] = sum(1 for a in team_agents if a["urgentIssue"])
+        # 긴급 이슈 = 부모 필터(urgentIssue)와 정합 — FAIL(profanity) record 수
+        tobj["urgentIssues"] = sum(1 for e in all_team_evals if (e.get("issue") or "").startswith("FAIL"))
         tobj["urgentIssues_prev"] = max(0, tobj["urgentIssues"] - 1)
-        tobj["excludedAgents"] = 0
-        tobj["excludedAgents_prev"] = 0
-        # 콜 분포 (편의상 비율)
-        ib = sum(1 for e in all_team_evals if e["callType"] == "I/B")
-        ob = len(all_team_evals) - ib
+        tobj["excludedAgents"] = sum(1 for a in team_agents if a.get("excluded"))
+        tobj["excludedAgents_prev"] = max(0, tobj["excludedAgents"] - 1)
+        # 콜 분포 — type 으로 자동/수동 구분
+        auto_evals = [e for e in all_team_evals if e["type"] != "수동"]
+        manual_evals_t = [e for e in all_team_evals if e["type"] == "수동"]
+        ib = sum(1 for e in auto_evals if e["callType"] == "I/B")
+        ob = sum(1 for e in auto_evals if e["callType"] == "O/B")
+        mn_total = team_manual_total.get(tobj["id"], 0)
+        mn_done = team_manual_completed.get(tobj["id"], 0)
         tobj["calls_auto_ib"] = ib; tobj["calls_auto_ib_done"] = ib
         tobj["calls_auto_ob"] = ob; tobj["calls_auto_ob_done"] = ob
-        tobj["calls_manual"] = 0; tobj["calls_manual_done"] = 0
+        # calls_manual = manual 전체 (pending 포함) — 부모 페이지 manualOnly 필터 결과와 정합
+        tobj["calls_manual"] = mn_total; tobj["calls_manual_done"] = mn_done
         tobj["calls_auto_ib_prev"] = max(0, ib - random.randint(0, 3))
         tobj["calls_auto_ib_done_prev"] = tobj["calls_auto_ib_prev"]
         tobj["calls_auto_ob_prev"] = max(0, ob - random.randint(0, 2))
         tobj["calls_auto_ob_done_prev"] = tobj["calls_auto_ob_prev"]
-        tobj["calls_manual_prev"] = 0; tobj["calls_manual_done_prev"] = 0
-        tobj["avg_score_auto_ib"] = avg_or(80, [e["score"] for e in all_team_evals if e["callType"]=="I/B" and e["score"]>0])
+        tobj["calls_manual_prev"] = max(0, mn_total - random.randint(0, 5))
+        tobj["calls_manual_done_prev"] = max(0, mn_done - random.randint(0, 5))
+        tobj["avg_score_auto_ib"] = avg_or(80, [e["score"] for e in auto_evals if e["callType"]=="I/B" and e["score"]>0])
         tobj["avg_score_auto_ib_prev"] = round(tobj["avg_score_auto_ib"] - random.uniform(0.5,2), 1)
-        tobj["avg_score_auto_ob"] = avg_or(80, [e["score"] for e in all_team_evals if e["callType"]=="O/B" and e["score"]>0])
+        tobj["avg_score_auto_ob"] = avg_or(80, [e["score"] for e in auto_evals if e["callType"]=="O/B" and e["score"]>0])
         tobj["avg_score_auto_ob_prev"] = round(tobj["avg_score_auto_ob"] - random.uniform(0.5,2), 1)
-        tobj["avg_score_manual"] = avg_or(80, team_scores)
+        tobj["avg_score_manual"] = avg_or(80, [e["score"] for e in manual_evals_t if e["score"]>0])
         tobj["avg_score_manual_prev"] = round(tobj["avg_score_manual"] - random.uniform(0.5,2), 1)
         # 최다 감점 항목
         d = defaultdict(int)
@@ -282,7 +317,8 @@ for cobj in center_id_to_obj.values():
             "item": top_item, "calls": top_cnt,
             "pct": round(top_cnt / max(1, len(all_team_evals)) * 100)
         }
-        low = sum(1 for s in team_scores if s <= 70)
+        # 70점 이하 콜 = 부모 필터(lowScore)와 정합 — 0 < score < 70 만 카운트
+        low = sum(1 for s in team_scores if 0 < s < 70)
         tobj["lowScoreCalls"] = low
         tobj["lowScorePct"] = round(low / max(1, len(team_scores)) * 100, 1)
         # agents 키 정리 (_agents → agents) — JSON 출력용
@@ -293,7 +329,7 @@ for cobj in center_id_to_obj.values():
     teams = cobj["teams"]
     sum_calls = sum(t["totalCalls"] for t in teams)
     sum_evals = sum(t["totalEvals"] for t in teams)
-    sum_agents = sum(t["agent_count"] for t in teams)
+    sum_agents = sum(t["agentCount"] for t in teams)
     cobj["totalCalls"] = sum_calls
     cobj["totalEvals"] = sum_evals
     cobj["agentCount"] = sum_agents
@@ -307,23 +343,27 @@ for cobj in center_id_to_obj.values():
     cobj["urgentIssues"] = sum(t["urgentIssues"] for t in teams)
     cobj["urgentIssues_prev"] = max(0, cobj["urgentIssues"] - 1)
     cobj["excludedAgents"] = sum(t["excludedAgents"] for t in teams)
-    cobj["excludedAgents_prev"] = 0
+    cobj["excludedAgents_prev"] = max(0, cobj["excludedAgents"] - 1)
     cobj["calls_auto_ib"] = sum(t["calls_auto_ib"] for t in teams)
     cobj["calls_auto_ib_done"] = cobj["calls_auto_ib"]
     cobj["calls_auto_ob"] = sum(t["calls_auto_ob"] for t in teams)
     cobj["calls_auto_ob_done"] = cobj["calls_auto_ob"]
-    cobj["calls_manual"] = 0; cobj["calls_manual_done"] = 0
+    cobj["calls_manual"] = sum(t["calls_manual"] for t in teams)
+    cobj["calls_manual_done"] = sum(t["calls_manual_done"] for t in teams)
     cobj["calls_auto_ib_prev"] = max(0, cobj["calls_auto_ib"] - random.randint(0,5))
     cobj["calls_auto_ib_done_prev"] = cobj["calls_auto_ib_prev"]
     cobj["calls_auto_ob_prev"] = max(0, cobj["calls_auto_ob"] - random.randint(0,3))
     cobj["calls_auto_ob_done_prev"] = cobj["calls_auto_ob_prev"]
-    cobj["calls_manual_prev"] = 0; cobj["calls_manual_done_prev"] = 0
-    cobj["avg_score_auto_ib"] = avg_or(80, [e["score"] for t in teams for a in t["agents"] for e in a["evaluations"] if e["callType"]=="I/B" and e["score"]>0])
+    cobj["calls_manual_prev"] = max(0, cobj["calls_manual"] - random.randint(0,5))
+    cobj["calls_manual_done_prev"] = cobj["calls_manual_prev"]
+    # type 기반 자동/수동 분리 점수 평균
+    _all_ev = [e for t in teams for a in t["agents"] for e in a["evaluations"]]
+    cobj["avg_score_auto_ib"] = avg_or(80, [e["score"] for e in _all_ev if e["type"] != "수동" and e["callType"]=="I/B" and e["score"]>0])
     cobj["avg_score_auto_ib_prev"] = round(cobj["avg_score_auto_ib"] - 1, 1)
-    cobj["avg_score_auto_ob"] = avg_or(80, [e["score"] for t in teams for a in t["agents"] for e in a["evaluations"] if e["callType"]=="O/B" and e["score"]>0])
+    cobj["avg_score_auto_ob"] = avg_or(80, [e["score"] for e in _all_ev if e["type"] != "수동" and e["callType"]=="O/B" and e["score"]>0])
     cobj["avg_score_auto_ob_prev"] = round(cobj["avg_score_auto_ob"] - 1, 1)
-    cobj["avg_score_manual"] = cobj["avgScore"]
-    cobj["avg_score_manual_prev"] = round(cobj["avgScore"] - 1, 1)
+    cobj["avg_score_manual"] = avg_or(80, [e["score"] for e in _all_ev if e["type"] == "수동" and e["score"]>0])
+    cobj["avg_score_manual_prev"] = round(cobj["avg_score_manual"] - 1, 1)
     d = defaultdict(int)
     for t in teams:
         if t["topDeduction"]["item"] != "-":
@@ -340,7 +380,7 @@ new_json = json.dumps(dummy_obj, ensure_ascii=False, indent=2)
 # === detail-analysis.html 의 const DUMMY = {...} 블록 치환 ===
 html_path = ROOT / "pages/admin/detail-analysis.html"
 html = html_path.read_text(encoding="utf-8")
-pattern = re.compile(r"const DUMMY = \{[\s\S]*?\n    \};", re.MULTILINE)
+pattern = re.compile(r"const DUMMY = \{[\s\S]*?\n\s*\};", re.MULTILINE)
 new_block = f"const DUMMY = {new_json};"
 new_html, n = pattern.subn(new_block, html, count=1)
 if n == 0:

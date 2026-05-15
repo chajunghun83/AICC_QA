@@ -48,34 +48,34 @@ random.seed(20260515)
 # 시나리오 가중치 (전체 자동평가 ~80건 기준)
 # ---------------------------------------------------------------------------
 AUTO_DISTRIBUTION = [
-    ("qa-01-account-open-ok", 8),
-    ("qa-02-account-open-privacy-miss", 4),
-    ("qa-03-minor-account", 3),
-    ("qa-04-fund-recommend-ok", 6),
-    ("qa-05-fund-unsuitable", 2),
-    ("qa-06-els-explanation-ok", 5),
-    ("qa-07-els-explanation-miss", 3),
-    ("qa-08-credit-trade-risk", 5),
-    ("qa-09-suitability-redo", 6),
-    ("qa-10-elder-protection", 4),
-    ("qa-11-overseas-stock", 7),
-    ("qa-12-hts-install", 8),
-    ("qa-13-system-claim", 4),
-    ("qa-14-fss-complaint", 3),
-    ("qa-15-happy-call", 7),
-    ("qa-16-vip-portfolio", 4),
-    ("qa-17-profanity-fail", 1),
+    ("qa-01-account-open-ok", 240),
+    ("qa-02-account-open-privacy-miss", 120),
+    ("qa-03-minor-account", 90),
+    ("qa-04-fund-recommend-ok", 180),
+    ("qa-05-fund-unsuitable", 60),
+    ("qa-06-els-explanation-ok", 150),
+    ("qa-07-els-explanation-miss", 90),
+    ("qa-08-credit-trade-risk", 150),
+    ("qa-09-suitability-redo", 180),
+    ("qa-10-elder-protection", 120),
+    ("qa-11-overseas-stock", 210),
+    ("qa-12-hts-install", 240),
+    ("qa-13-system-claim", 120),
+    ("qa-14-fss-complaint", 90),
+    ("qa-15-happy-call", 210),
+    ("qa-16-vip-portfolio", 120),
+    ("qa-17-profanity-fail", 30),
 ]
 
 MANUAL_DISTRIBUTION = [
-    ("qa-18-newbie", 6),
-    ("qa-07-els-explanation-miss", 3),
-    ("qa-02-account-open-privacy-miss", 3),
-    ("qa-13-system-claim", 2),
-    ("qa-15-happy-call", 4),
-    ("qa-16-vip-portfolio", 3),
-    ("qa-14-fss-complaint", 2),
-    ("qa-08-credit-trade-risk", 3),
+    ("qa-18-newbie", 90),
+    ("qa-07-els-explanation-miss", 45),
+    ("qa-02-account-open-privacy-miss", 45),
+    ("qa-13-system-claim", 30),
+    ("qa-15-happy-call", 60),
+    ("qa-16-vip-portfolio", 45),
+    ("qa-14-fss-complaint", 30),
+    ("qa-08-credit-trade-risk", 45),
 ]
 
 # ---------------------------------------------------------------------------
@@ -136,10 +136,35 @@ def pick_recent_date() -> str:
 
 
 # ---------------------------------------------------------------------------
-# 상담사 풀 구성 (users.json + EXTRA_AGENTS)
+# 상담사 풀 구성 (users.json + EXTRA_AGENTS + centers.json agent_count 까지 자동 충원)
 # ---------------------------------------------------------------------------
+# 가짜 상담사 이름 풀 (시연용 — 81명 충원 대비)
+_FILLER_SURNAMES = [
+    "김", "이", "박", "최", "정", "강", "조", "윤", "장", "임",
+    "한", "오", "서", "신", "권", "황", "안", "송", "유", "전",
+]
+_FILLER_GIVEN = [
+    "민서", "지호", "서연", "예준", "하윤", "도윤", "지유", "시우", "수아", "은우",
+    "지안", "건우", "윤서", "현우", "다은", "준서", "서윤", "지환", "예린", "민준",
+    "서아", "재윤", "유나", "주원", "지원", "선우", "민재", "다현", "태윤", "서현",
+    "동현", "가은", "성민", "지수", "현서", "수빈", "지율", "도현", "예나", "재훈",
+]
+
+# 센터 prefix 매핑 (사번 자동 부여용)
+_CENTER_PREFIX = {
+    "ct-seoul": "S-1",
+    "ct-busan": "S-2",
+    "ct-daegu": "S-3",
+}
+
+
+def _gen_filler_name(idx: int) -> str:
+    """seed 고정된 random 환경에서 결정론적으로 이름 생성."""
+    return _FILLER_SURNAMES[idx % len(_FILLER_SURNAMES)] + _FILLER_GIVEN[idx // len(_FILLER_SURNAMES) % len(_FILLER_GIVEN)]
+
+
 def build_agent_pool(users: list[dict], centers: list[dict]) -> dict[str, list[dict]]:
-    """team_id 별 상담사 목록 반환."""
+    """team_id 별 상담사 목록 반환. centers.json agent_count 만큼 자동 충원하여 정합성 확보."""
     team_to_center = {}
     for c in centers:
         for t in c["teams"]:
@@ -147,33 +172,93 @@ def build_agent_pool(users: list[dict], centers: list[dict]) -> dict[str, list[d
                 "center": c["name"],
                 "center_id": c["id"],
                 "team": t["name"],
+                "agent_count": t["agent_count"],
             }
     pool: dict[str, list[dict]] = defaultdict(list)
+    used_names: set[str] = set()
+
+    # 1) users.json AGENT 등록 + employee_id 박기 (team_id 기준 일련번호)
     for u in users:
         if u.get("role") != "AGENT":
             continue
         tid = u["team_id"]
         meta = team_to_center.get(tid, {})
+        seq = len(pool[tid]) + 1
+        emp_id = f"{_CENTER_PREFIX.get(meta.get('center_id'), 'S-X')}{tid_seq(tid)}{seq:02d}"
         pool[tid].append({
             "agent_id": u["id"],
             "agent_name": u["name"],
+            "employee_id": emp_id,
             "team_id": tid,
             "team": u["team"],
             "center": meta.get("center", u.get("center", "")),
             "center_id": meta.get("center_id", u.get("center_id", "")),
         })
+        used_names.add(u["name"])
+
+    # 2) EXTRA_AGENTS 추가 (사용자 정의 가짜 상담사)
     for tid, extras in EXTRA_AGENTS.items():
         meta = team_to_center.get(tid, {})
         for name, aid in extras:
+            seq = len(pool[tid]) + 1
+            emp_id = f"{_CENTER_PREFIX.get(meta.get('center_id'), 'S-X')}{tid_seq(tid)}{seq:02d}"
             pool[tid].append({
                 "agent_id": aid,
                 "agent_name": name,
+                "employee_id": emp_id,
+                "team_id": tid,
+                "team": meta.get("team", ""),
+                "center": meta.get("center", ""),
+                "center_id": meta.get("center_id", ""),
+            })
+            used_names.add(name)
+
+    # 3) centers.json agent_count 까지 자동 충원 (시연 풍부도 확보)
+    filler_global_idx = 0
+    for tid, meta in team_to_center.items():
+        target = meta["agent_count"]
+        while len(pool[tid]) < target:
+            # 결정론적 이름 생성 (중복 방지)
+            attempt = 0
+            while True:
+                nm = _gen_filler_name(filler_global_idx + attempt)
+                if nm not in used_names:
+                    break
+                attempt += 1
+                if attempt > 800:  # 안전 가드
+                    nm = nm + str(filler_global_idx)
+                    break
+            filler_global_idx += attempt + 1
+            used_names.add(nm)
+            seq = len(pool[tid]) + 1
+            aid = f"agent{tid_seq(tid)}{seq:02d}f"  # f = filler
+            emp_id = f"{_CENTER_PREFIX.get(meta.get('center_id'), 'S-X')}{tid_seq(tid)}{seq:02d}"
+            pool[tid].append({
+                "agent_id": aid,
+                "agent_name": nm,
+                "employee_id": emp_id,
                 "team_id": tid,
                 "team": meta.get("team", ""),
                 "center": meta.get("center", ""),
                 "center_id": meta.get("center_id", ""),
             })
     return pool
+
+
+# 팀별 사번/agent_id seq 번호 prefix (팀마다 unique 해야 ID 충돌 없음)
+_TEAM_SEQ = {
+    "team-vip": "0",        # 서울/VIP고객팀     → S-10xx
+    "team-general": "1",    # 서울/주식상담팀     → S-11xx
+    "team-tech": "2",       # 서울/HTS기술지원팀  → S-12xx
+    "team-general2": "3",   # 부산/펀드상담팀     → S-23xx
+    "team-happycall": "4",  # 부산/해피콜팀       → S-24xx
+    "team-cs": "5",         # 대구/CS상담팀       → S-35xx
+    "team-ob": "6",         # 대구/아웃바운드팀   → S-36xx
+}
+
+
+def tid_seq(tid: str) -> str:
+    return _TEAM_SEQ.get(tid, "9")
 
 
 # ---------------------------------------------------------------------------
@@ -184,19 +269,30 @@ SCENARIO_TEAM_PREF = {
     "form-ib-general": [
         "team-general", "team-tech", "team-general2", "team-cs",
     ],
-    "form-ob-tele": ["team-happycall", "team-ob"],
+    # OB 시나리오: 전담 OB 팀(가중치 3배) + 일반 상담팀 보조(2배) + VIP/기술팀 일부(1배) — 모든 팀에 OB 분포 보장
+    "form-ob-tele": [
+        "team-happycall", "team-happycall", "team-happycall",  # 부산 전담
+        "team-ob", "team-ob", "team-ob",                       # 대구 전담
+        "team-general", "team-general",                         # 서울 보조
+        "team-general2", "team-general2",                       # 부산 보조
+        "team-cs", "team-cs",                                   # 대구 보조
+        "team-vip",                                             # 서울 VIP follow-up 콜
+        "team-tech",                                            # 서울 기술팀 보조
+    ],
 }
 
 # 특정 카테고리는 팀 편향 강화
 CATEGORY_TEAM_BIAS = {
     "기술지원": ["team-tech"],
-    "FAIL": ["team-tech", "team-general"],
+    # FAIL은 모든 팀에 발생 가능 — 일부 팀에만 쏠리지 않도록 전팀 포함
+    "FAIL": ["team-tech", "team-general", "team-vip", "team-general2", "team-happycall", "team-cs", "team-ob"],
     "신입": ["team-vip", "team-general"],
     "민원": ["team-vip", "team-general"],
-    "해피콜": ["team-happycall"],
-    "적합성진단": ["team-general", "team-general2"],
-    "설명의무": ["team-vip", "team-general"],
-    "상품권유": ["team-vip", "team-general2", "team-happycall"],
+    # 모든 팀에 OB·기타 카테고리 데이터 최소 분포 보장 — 전담 팀 + 보조 팀 1~2개
+    "해피콜": ["team-happycall", "team-ob", "team-cs", "team-tech"],
+    "적합성진단": ["team-general", "team-general2", "team-tech", "team-cs"],
+    "설명의무": ["team-vip", "team-general", "team-tech"],
+    "상품권유": ["team-vip", "team-general2", "team-happycall", "team-cs", "team-tech"],
 }
 
 
@@ -204,6 +300,9 @@ def pick_team_for_template(template: dict) -> str:
     form_id = template["target_form"]
     teams = SCENARIO_TEAM_PREF.get(form_id, ["team-general"]).copy()
     bias = CATEGORY_TEAM_BIAS.get(template["category"], [])
+    # FAIL은 form 제약을 무시하고 bias 팀 전체에 분배 (모든 팀에 FAIL 데이터 분포 보장)
+    if template["category"] == "FAIL" and bias:
+        return random.choice(bias)
     if bias:
         candidates = [t for t in teams if t in bias] or teams
     else:
@@ -513,8 +612,8 @@ def make_full_score_block(form: dict, template: dict, agent_info: dict) -> tuple
             fail_items.append(item_name_map[iid])
             issues.append(f"{item_name_map[iid]}: {reason[:40]}")
         elif status == "warn":
-            reason = "경미한 흔들림 1회 탐지"
-            issues.append(f"{item_name_map[iid]}: 경미 감점")
+            reason = "기준점 대비 경미한 감점 (1회 탐지)"
+            issues.append(f"{item_name_map[iid]}: 기준점 대비 경미한 감점")
         elif status == "fail" and not is_fail_item:
             reason = REASON_TEMPLATES.get(iid, {}).get("fail", "해당 항목 기준 미달")
             fail_items.append(item_name_map[iid])
@@ -754,6 +853,7 @@ def make_auto_evaluation(
         "id": eval_id,
         "agent_id": agent_info["agent_id"],
         "agent_name": agent_info["agent_name"],
+        "employee_id": agent_info.get("employee_id", "-"),
         "center": agent_info["center"],
         "center_id": agent_info["center_id"],
         "team": agent_info["team"],
@@ -916,6 +1016,7 @@ def make_manual_evaluation(
         "team_id": agent_info["team_id"],
         "agent_id": agent_info["agent_id"],
         "agent_name": agent_info["agent_name"],
+        "employee_id": agent_info.get("employee_id", "-"),
         "call_type": template["channel"],
         "duration": duration,
         "total_score": total_score,
@@ -964,6 +1065,13 @@ def generate_all() -> tuple[list[dict], list[dict], dict]:
 
     pool = build_agent_pool(users, centers)
 
+    # 평가 제외 상담사 선정 — 각 팀 마지막 1명을 결정론적으로 평가 제외 처리 (총 7명)
+    # 사유: 신입 교육중 / 휴직 / 평가 제외 사유 보유 등 시연용
+    excluded_agent_ids: set[str] = set()
+    for tid, lst in pool.items():
+        if lst:
+            excluded_agent_ids.add(lst[-1]["agent_id"])
+
     # 자동 평가 생성
     auto_records: list[dict] = []
     seq = 1
@@ -973,7 +1081,9 @@ def generate_all() -> tuple[list[dict], list[dict], dict]:
         for _ in range(count):
             team_id = pick_team_for_template(tpl)
             agent = random.choice(pool[team_id])
-            auto_records.append(make_auto_evaluation(tpl, form, agent, seq))
+            rec = make_auto_evaluation(tpl, form, agent, seq)
+            rec["excluded"] = agent["agent_id"] in excluded_agent_ids
+            auto_records.append(rec)
             seq += 1
 
     # 자동 평가 → AI 점수 lookup (수동 평가 ai_feedback 에 노출)
@@ -993,7 +1103,9 @@ def generate_all() -> tuple[list[dict], list[dict], dict]:
             # 동일 상담사의 평균 자동평가 점수 (없으면 50점 기준)
             auto_scores = auto_index_by_agent.get(agent["agent_id"], [])
             auto_avg = sum(auto_scores) // max(1, len(auto_scores)) if auto_scores else random.randint(55, 75)
-            manual_records.append(make_manual_evaluation(tpl, form, agent, mseq, auto_avg))
+            mrec = make_manual_evaluation(tpl, form, agent, mseq, auto_avg)
+            mrec["excluded"] = agent["agent_id"] in excluded_agent_ids
+            manual_records.append(mrec)
             mseq += 1
 
     # 정렬: 날짜 desc + 시간 desc
@@ -1161,15 +1273,15 @@ def build_dashboard(auto: list[dict], manual: list[dict], centers: list[dict]) -
             if t_below:
                 issues_list.append({"type": "기준 미달", "count": t_below})
 
-            # 시연용 스케일링: 실제 레코드 수가 아니라 대시보드용 가상 분포
-            scale = max(1, t["agent_count"] // 2) * 90
+            # 실 레코드 카운트 기반 (정합성 우선) — 인위적 부풀림 제거
+            team_call_total = team_call_counts[tid]
             teams_detail.append({
                 "center": c["name"],
                 "center_id": c["id"],
                 "team": t["name"],
                 "team_id": tid,
-                "calls": scale + team_call_counts[tid],
-                "evaluations": int(scale * 0.83) + team_call_counts[tid],
+                "calls": team_call_total,
+                "evaluations": team_call_total,
                 "avg_score": round(sum(tscores) / len(tscores), 1) if tscores else 80.0,
                 "agent_count": t["agent_count"],
                 "issues": issues_list,
@@ -1186,28 +1298,31 @@ def build_dashboard(auto: list[dict], manual: list[dict], centers: list[dict]) -
         mm, dd = d.split("-")[1:]
         trend.append({"date": f"{mm}/{dd}", "score": round(sum(by_date[d]) / len(by_date[d]), 1)})
 
-    # 시연용 KPI 스케일링 (실제 레코드 수는 ~80 + ~30, 대시보드는 수천 단위로 표시)
-    calls_auto_ib = sum(t["calls"] for t in teams_detail if t["team_id"] in ("team-vip", "team-general", "team-tech", "team-general2", "team-cs"))
-    calls_auto_ob = sum(t["calls"] for t in teams_detail if t["team_id"] in ("team-happycall", "team-ob"))
-    calls_manual = sum(1 for _ in manual) * 80  # 시연용 스케일
+    # 실 레코드 기반 KPI — 인위적 스케일링 제거, 모든 화면(대시보드/통합현황/상세분석)이 동일 값 공유
+    calls_auto_ib = sum(1 for r in auto if r["call_type"] == "I/B")
+    calls_auto_ob = sum(1 for r in auto if r["call_type"] == "O/B")
+    calls_manual = len(manual)
+    calls_auto_ib_done = calls_auto_ib  # auto 는 즉시 완료로 간주
+    calls_auto_ob_done = calls_auto_ob
+    calls_manual_done = len(completed_manual)
 
     summary = {
         "total_agents": total_agents,
-        "total_agents_prev": total_agents - 8,
+        "total_agents_prev": max(0, total_agents - 8),
         "total_calls": calls_auto_ib + calls_auto_ob + calls_manual,
-        "total_calls_prev": calls_auto_ib + calls_auto_ob + calls_manual - 831,
+        "total_calls_prev": max(0, calls_auto_ib + calls_auto_ob + calls_manual - 80),
         "calls_auto_ib": calls_auto_ib,
-        "calls_auto_ib_done": int(calls_auto_ib * 0.97),
-        "calls_auto_ib_prev": calls_auto_ib - 308,
-        "calls_auto_ib_done_prev": calls_auto_ib - 332,
+        "calls_auto_ib_done": calls_auto_ib_done,
+        "calls_auto_ib_prev": max(0, calls_auto_ib - 30),
+        "calls_auto_ib_done_prev": max(0, calls_auto_ib_done - 30),
         "calls_auto_ob": calls_auto_ob,
-        "calls_auto_ob_done": int(calls_auto_ob * 0.96),
-        "calls_auto_ob_prev": calls_auto_ob - 124,
-        "calls_auto_ob_done_prev": calls_auto_ob - 152,
+        "calls_auto_ob_done": calls_auto_ob_done,
+        "calls_auto_ob_prev": max(0, calls_auto_ob - 12),
+        "calls_auto_ob_done_prev": max(0, calls_auto_ob_done - 12),
         "calls_manual": calls_manual,
-        "calls_manual_done": len(completed_manual) * 80,
-        "calls_manual_prev": calls_manual - 109,
-        "calls_manual_done_prev": calls_manual - 504,
+        "calls_manual_done": calls_manual_done,
+        "calls_manual_prev": max(0, calls_manual - 10),
+        "calls_manual_done_prev": max(0, calls_manual_done - 10),
         "avg_score": avg_score,
         "avg_score_prev": round(avg_score - 1.3, 1),
         "avg_score_auto_ib": avg(avg_ib),
@@ -1218,16 +1333,16 @@ def build_dashboard(auto: list[dict], manual: list[dict], centers: list[dict]) -
         "avg_score_manual_prev": round((avg(completed_manual) if completed_manual else 78.0) - 1.4, 1),
         "avg_duration": "6:32",
         "avg_duration_prev": "6:48",
-        "excluded_agents": 32,
-        "excluded_agents_prev": 24,
+        "excluded_agents": len({r["agent_id"] for r in (auto + manual) if r.get("excluded")}),
+        "excluded_agents_prev": max(0, len({r["agent_id"] for r in (auto + manual) if r.get("excluded")}) - 1),
         "urgent_issues": fail_profanity + below_threshold + dispute_pending,
         "urgent_issues_prev": max(0, fail_profanity + below_threshold + dispute_pending - 3),
         "top_deduction": {
             "item": improvement_top5[0]["item"] if improvement_top5 else "공감 표현 부족",
-            "calls": improvement_top5[0]["calls"] * 26 if improvement_top5 else 1247,
-            "pct": 8,
+            "calls": improvement_top5[0]["calls"] if improvement_top5 else 0,
+            "pct": round((improvement_top5[0]["calls"] / max(1, len(auto))) * 100) if improvement_top5 else 0,
         },
-        "low_score_calls": below_threshold * 100,
+        "low_score_calls": below_threshold,
         "low_score_pct": round(below_threshold / max(1, len(auto)) * 100, 1),
     }
 
@@ -1374,6 +1489,14 @@ def main() -> None:
     print(f"[OK] auto={len(auto)}건  manual={len(manual)}건")
     print(f"     dashboard.summary.avg_score = {dashboard['summary']['avg_score']}")
     print(f"     FAIL(금지어) {dashboard['urgent_issues'][0]['count']}건 / 기준미달 {dashboard['urgent_issues'][1]['count']}건 / 이의대기 {dashboard['urgent_issues'][2]['count']}건")
+
+    # 데모 페이지 시연 효과 — VIP고객팀 윤민서의 상위 5건을 풍성한 시나리오로 덮어쓰기
+    try:
+        import inject_vip_demo
+        print("\n[데모 보강] 윤민서 상위 5건 풍성한 시나리오 적용 중...")
+        inject_vip_demo.main()
+    except Exception as e:
+        print(f"[WARN] inject_vip_demo 실행 실패: {e}")
 
 
 if __name__ == "__main__":
