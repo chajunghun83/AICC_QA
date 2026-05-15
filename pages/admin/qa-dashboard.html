@@ -153,6 +153,7 @@
     let dashboardData = null;
     let trendChart = null;
     let teamChart = null;
+    let allEvals = [];
 
     document.addEventListener('DOMContentLoaded', async () => {
       await loadDashboard();
@@ -165,7 +166,7 @@
 
     let centersData = null;
 
-    /* 선택 월의 1일~말일 전체 데이터 생성 */
+    /* 선택 월의 1일~말일 전체 데이터 생성 (실 데이터 없을 때 폴백) */
     function generateMonthTrendData(year, month) {
       const daysInMonth = new Date(year, month, 0).getDate();
       const result = [];
@@ -181,22 +182,64 @@
       return result;
     }
 
+    /* 실 평가 데이터에서 가장 최근 일자가 속한 (year, month) 반환 */
+    function getLatestEvalMonth() {
+      const dates = allEvals.map(e => e.date).filter(Boolean).sort();
+      if (dates.length === 0) {
+        const now = new Date();
+        return { year: now.getFullYear(), month: now.getMonth() + 1 };
+      }
+      const last = dates[dates.length - 1];
+      return { year: parseInt(last.slice(0, 4), 10), month: parseInt(last.slice(5, 7), 10) };
+    }
+
+    /* 실 평가 데이터(allEvals)를 일자별 평균 점수로 집계 — 클릭 시 통합평가현황과 100% 정합 */
+    function buildTrendFromEvals(year, month) {
+      const mm = String(month).padStart(2, '0');
+      const prefix = `${year}-${mm}-`;
+      const byDate = {};
+      allEvals.forEach(e => {
+        if (!e.date || !e.date.startsWith(prefix)) return;
+        const score = Number(e.total_score);
+        if (!score || score <= 0) return;
+        if (!byDate[e.date]) byDate[e.date] = { sum: 0, count: 0 };
+        byDate[e.date].sum += score;
+        byDate[e.date].count += 1;
+      });
+      const dates = Object.keys(byDate).sort();
+      if (dates.length === 0) {
+        return generateMonthTrendData(year, month);
+      }
+      return dates.map(d => ({
+        date: d.slice(5).replace('-', '/'),
+        fullDate: d,
+        score: Math.round((byDate[d].sum / byDate[d].count) * 10) / 10
+      }));
+    }
+
     async function loadDashboard() {
       const data = await AICC_DataLoader.loadAll([
         'dashboard-stats.json',
-        'centers.json'
+        'centers.json',
+        'evaluations.json',
+        'manual-evaluations.json'
       ]);
 
       dashboardData = data['dashboard-stats.json'];
       centersData = data['centers.json'];
+      allEvals = [
+        ...((data['evaluations.json']) || []),
+        ...((data['manual-evaluations.json']) || [])
+      ];
 
       if (!dashboardData) {
         document.getElementById('kpi-cards').innerHTML = '<p style="color:#757575;grid-column:span 4;text-align:center;padding:40px;">데이터를 불러올 수 없습니다.</p>';
         return;
       }
 
-      const now = new Date();
-      dashboardData.quality_trend_monthly = generateMonthTrendData(now.getFullYear(), now.getMonth() + 1);
+      // 실 평가 데이터의 최신 월 기준으로 트렌드 생성 → 클릭 시 통합평가현황과 정합
+      const latest = getLatestEvalMonth();
+      dashboardData.quality_trend_monthly = buildTrendFromEvals(latest.year, latest.month);
 
       if (centersData) {
         const wsSelect = document.getElementById('ws-filter');
@@ -705,7 +748,8 @@
         case 'monthly': {
           const year = info && info.year ? info.year : new Date().getFullYear();
           const month = info && info.month ? info.month : new Date().getMonth() + 1;
-          dashboardData.quality_trend_monthly = generateMonthTrendData(year, month);
+          // 실 평가 데이터 기준 트렌드 (없으면 폴백) → 통합평가현황과 동일한 단일 진실의 원천
+          dashboardData.quality_trend_monthly = buildTrendFromEvals(year, month);
           return dashboardData.quality_trend_monthly;
         }
         case 'yearly':

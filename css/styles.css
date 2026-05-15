@@ -566,6 +566,16 @@
   background: #F5F5F5;
 }
 
+/* 채널 토글 (전체/IB/OB) 활성 상태 표시 */
+.channel-btn.active {
+  background: #00A3FF;
+  color: #FFFFFF;
+  border-color: #00A3FF;
+}
+.channel-btn.active:hover {
+  background: #0091E5;
+}
+
 .btn-danger {
   background: #F44336;
   color: white;

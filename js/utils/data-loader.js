@@ -34,7 +34,7 @@ window.AICC_DataLoader = {
 
     // all-data.js에서 주입한 인라인 데이터 우선 사용 (file:// 환경 대응)
     if (window.AICC_DATA && window.AICC_DATA[filename]) {
-      this.cache[filename] = window.AICC_DATA[filename];
+      this.cache[filename] = this._postProcess(filename, window.AICC_DATA[filename]);
       return this.cache[filename];
     }
 
@@ -43,12 +43,56 @@ window.AICC_DataLoader = {
       const response = await fetch(url);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
-      this.cache[filename] = data;
-      return data;
+      this.cache[filename] = this._postProcess(filename, data);
+      return this.cache[filename];
     } catch (e) {
       console.warn(`[DataLoader] Failed to load ${filename}:`, e.message);
       return null;
     }
+  },
+
+  /**
+   * 평가 데이터의 일자를 "데이터셋 최대일 → 오늘"로 시프트
+   * 정합성 원칙: 모든 화면이 동일한 일자 평행이동을 본다.
+   * - 원본 e.date 의 행 간 간격은 보존
+   * - 평가 데이터(evaluations.json / manual-evaluations.json) 한정
+   */
+  _postProcess(filename, data) {
+    if (filename !== 'evaluations.json' && filename !== 'manual-evaluations.json') {
+      return data;
+    }
+    if (!Array.isArray(data) || data.length === 0) return data;
+
+    // 데이터셋 전체 최대일을 한 번만 계산해 캐시 (두 파일이 동일 기준선을 공유)
+    if (!this._dateShiftDays) {
+      const allDates = [];
+      const collectDates = (arr) => {
+        if (!Array.isArray(arr)) return;
+        arr.forEach(e => { if (e && e.date) allDates.push(e.date); });
+      };
+      collectDates((window.AICC_DATA && window.AICC_DATA['evaluations.json']) || data);
+      collectDates((window.AICC_DATA && window.AICC_DATA['manual-evaluations.json']));
+      allDates.sort();
+      const maxDateStr = allDates[allDates.length - 1];
+      if (!maxDateStr) return data;
+      const maxDate = new Date(maxDateStr + 'T00:00:00');
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      this._dateShiftDays = Math.floor((today - maxDate) / 86400000);
+    }
+    const shift = this._dateShiftDays;
+    if (!shift) return data;
+
+    const shiftDate = (ds) => {
+      if (!ds || typeof ds !== 'string') return ds;
+      const d = new Date(ds + 'T00:00:00');
+      if (isNaN(d)) return ds;
+      d.setDate(d.getDate() + shift);
+      return d.getFullYear() + '-' +
+        String(d.getMonth() + 1).padStart(2, '0') + '-' +
+        String(d.getDate()).padStart(2, '0');
+    };
+    return data.map(e => (e && e.date) ? { ...e, date: shiftDate(e.date) } : e);
   },
 
   /**
