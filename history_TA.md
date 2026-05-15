@@ -442,9 +442,9 @@
 
 **수정 리스트 (26/05/06)**
 
-[키움증권 데모 도메인 전환]
+[ECS증권 데모 도메인 전환]
 
-- 전체 목업 데이터를 패션 쇼핑몰(무신사) 도메인 → 키움증권 주식거래 도메인으로 전환
+- 전체 목업 데이터를 패션 쇼핑몰(무신사) 도메인 → ECS증권 주식거래 도메인으로 전환
   - 공유 데이터(centers, users, dashboard-stats, evaluations, manual-evaluations)와 TA 페이지 인라인 데이터 일괄 교체
   - 별도 JSON 파일 5종(centers.json, users.json, dashboard-stats.json, evaluations.json, manual-evaluations.json) 동기화
 - 팀명 4-way 동기화 (centers ↔ users ↔ dashboard-stats ↔ evaluations)
@@ -458,7 +458,7 @@
   - 캐시미어코트/오버핏패딩/울블렌드자켓/린넨셔츠/실크블라우스 → 삼성전자/카카오/KODEX 200/NAVER/테슬라
 - 신규 키워드 5종 (대시보드 newKeywordData)
   - 사전예약/시즌오프/한정판/공동구매/라이브방송 → 공모청약/배당락/주식분할/신규상장/야간거래
-- KPI 키움증권 콜센터 추정 규모로 조정
+- KPI ECS증권 콜센터 추정 규모로 조정
   - 일 통화 1,523건 → 25,318건 / 상담사 48명 → 380명
 - scriptTemplates 13종 lines/ai 객체 풍족 재작성 (각 11~14턴, 발화당 25~80자, 종목·수수료·체결 디테일)
   - 키 13개 보존 (orderNumScenario/restScenarioPool tpl 매칭)
@@ -676,7 +676,7 @@
   - 거래소 호가 SLA 점검·금감원 사전 대응 매뉴얼·정정처리 큐 모니터링 대시보드·신용 만기 SMS 자동화 등
 
 [리포트 생성기 데이터·차트 전면 정비 (report-generator.html)]
-- 5개 데이터 셋을 키움증권 도메인으로 교체
+- 5개 데이터 셋을 ECS증권 도메인으로 교체
   - keywordTop20: 통신사 용어(로밍·5G·번호이동·멤버십·데이터) → 증권 키워드(체결지연·주문번호·공모청약·야간거래·환율·양도세·신용거래·배당락·분배금·미국주식·주식분할 등)
   - issueKeywordTop5: 일반 콜센터(고소·소송·상급자·소비자원·녹음) → 증권 리스크(금감원·소송·보상 요구·분쟁조정·녹취)
   - newKeywordTop5: AI 상담·개인정보 유출·앱 오류·프로모션·5G 전환 → 공모청약·신용반대매매·ETF 분배금·야간거래·주식분할
@@ -707,3 +707,17 @@
 [리포트 다운로드 형식 변경 (report-generator.html)]
 - 다운로드 모달의 "Excel 다운로드" 버튼 → "Docx로 다운로드"로 변경
 - doDownload 호출 인자도 'Excel' → 'Docx'로 동기화 (토스트 메시지 자동 반영)
+
+---
+
+**수정 리스트 (26/05/15)**
+
+[브랜드 일괄 전환]
+- "키움증권" → "ECS증권" 일괄 치환 (TA 모듈 5개 파일 — pages/ta/call-status.html, issue-manage.html, report-generator.html, system/keyword-manage.html, ta-dashboard.html + history_TA.md)
+  - 통화 스크립트 / 종목 키워드 / 시나리오 ID / 회사명 호명 멘트 모두 포함
+  - "키움성장형주식펀드", "키움레버리지인덱스펀드", "키움채권형펀드", "키움달러플러스MMF", "키움 ELS 제…회" 등 상품명도 함께 ECS로 통일
+- 전체 프로젝트 잔존 키움 텍스트 0건 검증 (대소문자 변형·영문 표기 포함)
+
+[QA-TA 공유 자산 정합화]
+- `assets/dummy-data/all-data.js` 인라인 데이터 동기화 — QA evaluations/manual-evaluations/dashboard-stats 변경분 반영, TA가 공유하는 centers/users 구조는 보존
+- centers.json / users.json 의 조직 구조는 변경하지 않음 — TA 페이지의 키워드·필터·차트가 의존하므로 영향 없음을 검증

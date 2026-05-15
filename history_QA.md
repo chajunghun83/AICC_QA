@@ -275,3 +275,90 @@
 
 **해야 할 일**
 자동, 수동 미평가 항목 탭으로 분리할 필요가 있음. 
+
+---
+
+**수정 리스트 (26/05/15)**
+
+[데이터 정합성 풀 전환 — 금융권(ECS증권)]
+
+- QA 모듈 더미 데이터를 시나리오 기반으로 전면 재생성
+  - `assets/dummy-data/qa-script-templates.json` 신규 — 18개 QA 시나리오 (계좌개설/상품권유/설명의무/적합성진단/거래지원/기술지원/민원/해피콜/FAIL/신입)
+  - `tools/generate_qa_data.py` 신규 — 시나리오 기반 평가 데이터 생성기 (seed 고정 idempotent)
+  - `tools/verify_qa_consistency.py` 신규 — KPI ↔ 평가 데이터 정합성 검증 스크립트
+  - `assets/dummy-data/evaluations.json` 80건, `manual-evaluations.json` 26건 재생성
+  - `assets/dummy-data/dashboard-stats.json` — 모든 KPI 수치를 evaluations 집계로 도출 (FAIL/기준미달/이의대기/팀별 점수 등)
+  - `assets/dummy-data/all-data.js` 인라인 동기화 (file:// 환경 대응)
+  - `pages/agent/my-evaluations.html` 의 하드코딩 allEvals 15건 블록도 동기화
+- 풍부도 강제 기준 (verify로 자동 검증)
+  - transcript: 모든 레코드 8턴 이상 (인사→본론→해결→마무리 4단)
+  - ai_feedback: 150~280자 (강점+감점항목+카테고리 포커스+코칭 제안)
+  - scores[*].reason / evidence: 감점 항목마다 구체 사유 + NLP/AI 탐지 근거 동봉
+  - manual: qa_comment(QA 매니저 코멘트) + coaching_plan(신입/저성과자)
+- "키움증권" → "ECS증권" 브랜드 전환 (전체 1,015건 일괄 치환, 13개 파일)
+- `evaluation-items.json` 의 `required-privacy` 키워드를 증권 도메인으로 보정 (구매자명 → 고객명/생년월일/계좌번호)
+- `pages/admin/detail-analysis.html` 의 쇼핑몰 시대 카테고리 54건과 하드코딩 transcript 2건을 증권 시나리오로 치환
+
+[QA 대시보드]
+
+- "관리자 확인 영역" → "이상징후 감지" 라벨 변경
+- 최다 감점 콜 Top 5 산출 로직 개선
+  - manual pending(평가 미완료) 레코드 제외
+  - 욕설 FAIL(0점) 콜 제외 — 이상징후 감지의 FAIL 카드로만 노출
+  - 1~79점 구간의 저점수 콜만 후보로 포함
+- 이의 제기 대기 카운트 = dispute-inbox.html status='대기' 5건과 정합
+
+[통합 평가 현황 — 전체 탭]
+
+- AI 개선 제안 롤링 바 동작 개선
+  - 정적 15개 풀 → 현재 필터링된 결과에서 동적 집계로 변경 (팀 평균/FAIL 발생/기준미달/Top 감점항목/I·O 채널 점수차/우수 콜 비율/통화시간 이상치)
+  - 팀명 정규화 (시드 잔재 "기술지원팀" ↔ "HTS기술지원팀" 등) 으로 통계 분리 방지, 최소 표본 5건 이상으로 신뢰성 확보
+  - 페이지 진입 시 즉시 노출 + 초기화 후에도 유지 (다른 추천 set으로 갱신)
+  - 마우스 hover 시 롤링 일시정지, ⌃/⌄ 화살표로 수동 prev/next 이동, N/M 카운터 표시
+- mergeEvaluations 데이터 변조 제거
+  - 기존: fail_items 모두 빈배열로 덮어쓰고 issues 에서 FAIL/기준미달 키워드 필터링, total_score 65로 클램핑 → 실 데이터의 FAIL/저점수 콜 사라짐
+  - 변경: evaluations.json 의 원본 그대로 사용
+- generateRecentEvals 의 가짜 FAIL 3건·기준미달 6건 시드 삽입 코드 제거 (transcript·점수가 정상콜 클론이라 상세 모달에서 "FAIL 표시인데 내용 정상" 현상 발생)
+- issue=fail 필터 로직 정확화: `fail_items.length>0` → `scores.profanity.is_fail === true` (감점 항목 목록과 FAIL 판정 의미 충돌 해소)
+- issue=under 필터 로직 보강: manual pending 제외, auto + manual completed 합산
+- 사번 매핑 확장: EXTRA_AGENTS 19명(agent101~agent702) 사번 추가, 매핑 누락 시 "-" 표시 해소
+- 조치 등록 모달의 개선 제안 카드 레이아웃 정리
+  - 1줄 텍스트 → [핵심 사실 / 권장 액션] 2단 카드 구조
+  - 보라색 원 번호 + 항목 간 구분선 + ×버튼 우측 정렬
+
+[통합 평가 현황 — 상세 분석 탭]
+
+- 4뎁스(전체/센터/팀/상담사) KPI 카드를 모두 8개(2행 × 4개)로 통일
+  - L0/L1: 기존 4개 → 평가 상담사/평가 건수/긴급 이슈/평균 통화시간(Row1) + 평가 제외/평균 점수/최다 감점/70점이하(Row2) 추가
+  - L3: 기존 6개 → 팀 내 순위(좌측 narrow) + 이의 제기 건수(좌측 narrow 2행)로 8개 완성
+- L3 "팀 내 순위" 카드에 비교 지표 추가 — 좌측 큰 숫자(순위) + 우측 2컬럼(팀 평균 ↔ 본인 평균)
+  - 본인 평균이 팀 평균보다 높으면 파란색, 낮으면 빨간색으로 즉시 인지
+- 4뎁스 정합성 검증 및 보정
+  - Level 2 카드 = team 사전 집계값 사용 (10명 표본 기반 actual* 계산 제거)
+  - Level 1 카드 = teams 합산 (센터 사전값 대신)
+  - Level 0 카드 = centers→teams 말단 합산 (Level 1 합과 자동 정합)
+  - dashboardSummary 의존 제거 — DUMMY 트리 단일 진실의 원천
+- detail-analysis DUMMY 트리 전면 재생성 (`tools/sync_detail_analysis_dummy.py` 신규)
+  - centers.json + users.json + EXTRA_AGENTS + evaluations.json 기반으로 27명 상담사 / 101건 평가 이력 분배
+  - 쇼핑몰 시대 팀명(VIP상담팀/기술지원팀/일반상담팀 등) → 현재 마스터 명칭(VIP고객팀/HTS기술지원팀/주식상담팀)으로 동기화
+  - qa-dashboard 최다 감점 콜 클릭 → 3뎁스 자동 진입 정상 작동 (이전엔 매칭 실패로 0뎁스로 떨어짐)
+- FAIL 콜 항목별 점수 분배 개선
+  - 기존: 욕설 탐지 시 전 항목 0점 강제 처리 → "첫인사 잘했는데도 모두 미달" 부자연
+  - 변경: profanity 항목만 `is_fail=true` + score=0, 나머지는 시나리오 transcript 흐름에 맞춰 차등 분배 (GOOD_ITEMS 만점 / POOR_ITEMS 30~50% / profanity 0점)
+  - 총점 60~70점대로 표시되지만 FAIL 분류는 `is_fail` 플래그로 유지
+
+[상세 분석 탭 하단 통합 평가 결과 + 카드 검색 키워드 연동]
+
+- iframe(detail-analysis) 하단에 통합 평가 결과 테이블 신규 추가
+  - 전체 탭과 동일한 14컬럼 + 정렬 + 페이지네이션 + 평가 상세 모달
+  - 전체 탭과 독립 상태 (`detailFilteredEvals`/`detailCurrentPage`/`detailSortKey`)
+- 4뎁스 모든 카드를 검색 키워드처럼 사용 (Option C — 하단 테이블만 필터링, iframe 내부 테이블은 불변)
+  - 정보성 카드(평가 상담사/평가 건수/평균 통화시간/평균 점수/팀내순위/이의제기) 본체 클릭 = Base 노드 전체 콜
+  - 작용 카드(긴급 이슈/평가 제외/최다 감점/70점 이하) 클릭 = Base + 해당 조건
+  - 평가 건수·평균 점수 카드 sub-cell(자동/IB·자동/OB·수동) 분리 클릭 = Base + 채널/평가방식
+- 통신 프로토콜
+  - 자식 → 부모 `da-node-change` (드릴다운·브레드크럼 시) → 하단 테이블이 새 노드 base로 갱신
+  - 자식 → 부모 `da-card-filter` (카드/sub-cell 클릭 시) → 하단 테이블에 Base + kind 필터링
+- 카드 재클릭 시 활성 키 해제 → 노드 base로 복귀
+- iframe 내부 카드는 본체 외관 그대로, sub-cell만 hover 강조(`#F5F5F5`) + title 툴팁 표시
+- 기존 L2/L3 `filterByCard()` 호출 흐름 제거 (함수는 보존, 호출 없음)

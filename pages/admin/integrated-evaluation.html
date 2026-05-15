@@ -95,13 +95,23 @@
       </div>
 
       <!-- 개선 제안 롤링 바 -->
-      <div id="suggestion-bar" style="display:none;margin-top:16px;padding:12px 20px;background:linear-gradient(135deg,#EDE7F6 0%,#E8EAF6 100%);border-radius:8px;border:1px solid #D1C4E9;align-items:center;gap:30px;">
+      <div id="suggestion-bar" style="display:none;margin-top:16px;padding:12px 20px;background:linear-gradient(135deg,#EDE7F6 0%,#E8EAF6 100%);border-radius:8px;border:1px solid #D1C4E9;align-items:center;gap:30px;"
+           onmouseenter="pauseSuggestionRolling()" onmouseleave="resumeSuggestionRolling()">
         <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 2.38 1.19 4.47 3 5.74V17a1 1 0 001 1h6a1 1 0 001-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.87-3.13-7-7-7z" fill="#7C4DFF"/><rect x="9" y="19" width="6" height="2" rx="1" fill="#7C4DFF" opacity="0.6"/><circle cx="12" cy="9" r="2" fill="#fff" opacity="0.8"/></svg>
           <span style="font-size:12px;font-weight:700;color:#5E35B1;white-space:nowrap;">AI 개선 제안</span>
         </div>
         <div id="suggestion-text-wrap" style="flex:1;overflow:hidden;height:20px;position:relative;">
           <div id="suggestion-text" style="font-size:13px;color:#424242;line-height:20px;position:absolute;width:100%;transition:all 0.4s ease;"></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:2px;flex-shrink:0;">
+          <button type="button" onclick="prevSuggestion()" title="이전 제안" aria-label="이전 제안" style="background:transparent;border:1px solid #D1C4E9;border-radius:4px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5E35B1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+          </button>
+          <span id="suggestion-counter" style="font-size:11px;color:#5E35B1;min-width:32px;text-align:center;font-weight:600;">1/1</span>
+          <button type="button" onclick="nextSuggestion()" title="다음 제안" aria-label="다음 제안" style="background:transparent;border:1px solid #D1C4E9;border-radius:4px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5E35B1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
         </div>
         <button class="btn btn-sm" onclick="openActionModal()" style="flex-shrink:0;background:#5E35B1;color:#fff;border:none;padding:5px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">조치 등록</button>
       </div>
@@ -168,6 +178,67 @@
     <!-- 상세 분석 탭: detail-analysis.html을 embedded 모드로 로드 -->
     <div id="tab-detail" style="display:none;">
       <iframe id="detail-iframe" style="width:100%;border:none;min-height:calc(100vh - 200px);"></iframe>
+
+      <!-- 상세 분석 탭 하단 통합 평가 결과 (iframe 카드/sub-cell 클릭으로 필터링됨) -->
+      <div class="content-card" id="detail-eval-card" style="margin-top:20px;">
+        <div class="content-card-header" style="display:flex;align-items:center;gap:12px;">
+          <span style="font-size:14px;font-weight:600;">통합 평가 결과</span>
+          <span id="detail-eval-filter-badge" style="display:none;font-size:11px;padding:3px 10px;border-radius:12px;background:#E3F2FD;color:#1976D2;font-weight:600;"></span>
+          <span style="flex:1;"></span>
+          <span style="font-size:12px;color:#757575;" id="detail-eval-count">총 0건</span>
+        </div>
+        <div class="content-card-body" style="padding:0;">
+          <table class="data-table">
+            <colgroup>
+              <col style="width:7%">
+              <col style="width:9%">
+              <col style="width:5%">
+              <col style="width:5%">
+              <col style="width:5%">
+              <col style="width:5%">
+              <col style="width:12%">
+              <col style="width:5%">
+              <col style="width:5%">
+              <col style="width:6%">
+              <col style="width:11%">
+              <col style="width:5%">
+              <col style="width:5%">
+              <col style="width:15%">
+            </colgroup>
+            <thead>
+              <tr>
+                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="detailToggleSort('id')">평가 ID <span id="d-sort-icon-id" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="detailToggleSort('date')">일시 <span id="d-sort-icon-date" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="detailToggleSort('center')">센터 <span id="d-sort-icon-center" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="detailToggleSort('team')">팀 <span id="d-sort-icon-team" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="detailToggleSort('empid')">사번 <span id="d-sort-icon-empid" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="detailToggleSort('agent')">상담사 <span id="d-sort-icon-agent" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="detailToggleSort('consult')">상담 유형 <span id="d-sort-icon-consult" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="detailToggleSort('duration')">통화 시간 <span id="d-sort-icon-duration" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="detailToggleSort('type')">유형 <span id="d-sort-icon-type" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="detailToggleSort('method')">평가방식 <span id="d-sort-icon-method" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="detailToggleSort('form')">평가표 <span id="d-sort-icon-form" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="detailToggleSort('score')">점수 <span id="d-sort-icon-score" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="detailToggleSort('confidence')">신뢰도 <span id="d-sort-icon-confidence" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
+                <th style="text-align:center;">이슈</th>
+              </tr>
+            </thead>
+            <tbody id="detail-eval-tbody"></tbody>
+          </table>
+          <div class="pagination">
+            <button class="pagination-btn" onclick="detailGoPage('first')">&laquo;</button>
+            <span id="detail-page-buttons"></span>
+            <button class="pagination-btn" onclick="detailGoPage('last')">&raquo;</button>
+            <span style="margin-left:16px;font-size:12px;color:#757575;">페이지당:
+              <select class="form-select" id="detail-page-size-select" style="min-width:60px;padding:2px 24px 2px 8px;" onchange="detailChangePageSize()">
+                <option>10</option>
+                <option selected>20</option>
+                <option>50</option>
+              </select>
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -210,6 +281,8 @@
       });
 
       renderTable();
+      // 상세분석과 동일하게 진입 즉시 AI 개선 제안 바 노출
+      showSuggestionBar();
     });
 
     // 당월 1일~말일 전체 + 전월 더미 데이터 생성
@@ -256,62 +329,41 @@
         }
       });
 
-      // 대시보드 숫자와 일치하도록 당월에 FAIL 3건, 기준미달 6건 삽입
-      const failAgents = [
-        { name: '이영희', center: '서울센터', center_id: 'ct-seoul', team: 'VIP상담팀', team_id: 'team-vip' },
-        { name: '최수진', center: '서울센터', center_id: 'ct-seoul', team: '기술지원팀', team_id: 'team-tech' },
-        { name: '박지훈', center: '대구센터', center_id: 'ct-daegu', team: 'CS상담팀', team_id: 'team-cs' }
-      ];
-      const underAgents = [
-        { name: '정민호', center: '서울센터', center_id: 'ct-seoul', team: '기술지원팀', team_id: 'team-tech' },
-        { name: '김하늘', center: '부산센터', center_id: 'ct-busan', team: '일반상담팀', team_id: 'team-general' },
-        { name: '오세훈', center: '서울센터', center_id: 'ct-seoul', team: '일반상담팀', team_id: 'team-general' },
-        { name: '한지민', center: '대구센터', center_id: 'ct-daegu', team: 'CS상담팀', team_id: 'team-cs' },
-        { name: '윤서연', center: '부산센터', center_id: 'ct-busan', team: '해피콜팀', team_id: 'team-happy' },
-        { name: '장현우', center: '서울센터', center_id: 'ct-seoul', team: 'VIP상담팀', team_id: 'team-vip' }
-      ];
-      const baseSrc = cleanSources[0] || sourceEvals[0];
-      failAgents.forEach((ag, i) => {
-        const day = 5 + i * 7;
-        const date = `${year}-${mm}-${String(Math.min(day, daysInMonth)).padStart(2, '0')}`;
-        generated.push({
-          ...baseSrc,
-          id: `AE-${year}-F${String(i+1).padStart(4, '0')}`,
-          date, agent_name: ag.name, center: ag.center, center_id: ag.center_id, team: ag.team, team_id: ag.team_id,
-          total_score: 30 + Math.floor(Math.random() * 20),
-          fail_items: ['profanity'],
-          issues: ['FAIL(금지어) - 부적절한 표현 감지'],
-          call_time: `${String(9 + i * 2).padStart(2, '0')}:${String(15 + i * 10).padStart(2, '0')}`
-        });
-      });
-      underAgents.forEach((ag, i) => {
-        const day = 3 + i * 4;
-        const date = `${year}-${mm}-${String(Math.min(day, daysInMonth)).padStart(2, '0')}`;
-        generated.push({
-          ...baseSrc,
-          id: `AE-${year}-U${String(i+1).padStart(4, '0')}`,
-          date, agent_name: ag.name, center: ag.center, center_id: ag.center_id, team: ag.team, team_id: ag.team_id,
-          total_score: 45 + Math.floor(Math.random() * 12),
-          fail_items: [],
-          issues: ['기준 미달 - 평가 기준점 미충족'],
-          call_time: `${String(9 + i).padStart(2, '0')}:${String(20 + i * 5).padStart(2, '0')}`
-        });
-      });
-
+      // FAIL/기준미달 시드 삽입은 제거 — 대시보드와 정합되도록 evaluations.json 실 데이터의
+      // FAIL/저점수 콜만 노출한다. 정상 콜 클론으로 가짜 FAIL을 만들면 transcript·AI 피드백·점수가
+      // 정상 콜 내용이라 사용자가 상세를 확인했을 때 "문제로 보이지 않음" 현상이 발생한다.
       return generated;
     }
 
     // agent_id -> 사번 매핑
+    // S-1XXX: 서울센터 / S-2XXX: 부산센터 / S-3XXX: 대구센터
     const EMPLOYEE_ID_MAP = {
+      // users.json 기본 10명 (홍길동~윤서연)
       'agent001': 'S-1001', 'agent002': 'S-1002', 'agent003': 'S-1003', 'agent004': 'S-1004',
       'agent005': 'S-1005', 'agent006': 'S-1006', 'agent007': 'S-1007', 'agent008': 'S-1008',
-      'agent009': 'S-1009', 'agent010': 'S-1010', 'agent011': 'S-1011', 'agent012': 'S-1012'
+      'agent009': 'S-1009', 'agent010': 'S-1010', 'agent011': 'S-1011', 'agent012': 'S-1012',
+      // generate_qa_data.py 의 EXTRA_AGENTS 19명 (시연 다양성 확보용)
+      'agent101': 'S-1011', 'agent102': 'S-1012',                                            // VIP고객팀
+      'agent201': 'S-1101', 'agent202': 'S-1102', 'agent203': 'S-1103', 'agent204': 'S-1104',// 주식상담팀
+      'agent301': 'S-1201', 'agent302': 'S-1202', 'agent303': 'S-1203',                      // HTS기술지원팀
+      'agent401': 'S-2101', 'agent402': 'S-2102', 'agent403': 'S-2103',                      // 펀드상담팀
+      'agent501': 'S-2201', 'agent502': 'S-2202',                                            // 해피콜팀
+      'agent601': 'S-3101', 'agent602': 'S-3102', 'agent603': 'S-3103',                      // CS상담팀
+      'agent701': 'S-3201', 'agent702': 'S-3202'                                             // 아웃바운드팀
     };
-    // agent_name -> 사번 매핑 (generateRecentEvals에서 생성된 데이터용)
+    // agent_name -> 사번 매핑 (generateRecentEvals에서 생성된 데이터 + EXTRA_AGENTS 이름 동시 매핑)
     const EMPLOYEE_NAME_MAP = {
       '홍길동': 'S-1001', '이영희': 'S-1002', '김철수': 'S-1003', '박지민': 'S-1004',
       '최수진': 'S-1005', '정민호': 'S-1006', '강현우': 'S-1007', '윤서연': 'S-1008',
-      '박지훈': 'S-2001', '김하늘': 'S-2002', '오세훈': 'S-2003', '한지민': 'S-2004', '장현우': 'S-2005'
+      '박지훈': 'S-2001', '김하늘': 'S-2002', '오세훈': 'S-2003', '한지민': 'S-2004', '장현우': 'S-2005',
+      // EXTRA_AGENTS 이름 ↔ 사번 (이름 충돌 없음)
+      '김유진': 'S-1011', '서태원': 'S-1012',
+      '이도현': 'S-1101', '박서연': 'S-1102', '정하늘': 'S-1103', '한지석': 'S-1104',
+      '오민재': 'S-1201', '배지훈': 'S-1202', '황현지': 'S-1203',
+      '임수경': 'S-2101', '조성훈': 'S-2102', '문가영': 'S-2103',
+      '백시영': 'S-2201', '권나윤': 'S-2202',
+      '남궁준': 'S-3101', '류재훈': 'S-3102', '표지원': 'S-3103',
+      '도현철': 'S-3201', '선우민': 'S-3202'
     };
     function assignEmployeeId(ev) {
       if (ev.employee_id) return ev;
@@ -320,20 +372,14 @@
     }
 
     function mergeEvaluations() {
-      const autoEvals = (allData['evaluations.json'] || []).map(e => ({
-        ...e,
-        fail_items: [],
-        issues: (e.issues || []).filter(x => !x.includes('FAIL') && !x.includes('기준 미달')),
-        total_score: Math.max(65, e.total_score || 80)
-      }));
-      const manualEvals = (allData['manual-evaluations.json'] || []).map(e => ({
-        ...e,
-        fail_items: [],
-        issues: (e.issues || []).filter(x => !x.includes('FAIL') && !x.includes('기준 미달')),
-        total_score: Math.max(65, e.total_score || 80)
-      }));
+      // === 정합성 원칙: evaluations.json / manual-evaluations.json 의 실 데이터를 변조 없이 그대로 사용 ===
+      // 기존에는 fail_items 를 비우고 issues 에서 FAIL/기준미달 키워드를 필터링했지만,
+      // 그 결과 대시보드(dashboard-stats.json)와 페이지의 FAIL/저점수 카운트가 어긋났다.
+      const autoEvals = (allData['evaluations.json'] || []).slice();
+      const manualEvals = (allData['manual-evaluations.json'] || []).slice();
 
-      const recentAuto = generateRecentEvals(allData['evaluations.json'] || []);
+      // 시연 풍부도를 위한 정상 콜 보강 (FAIL/저점수 시드는 더 이상 생성하지 않음 — 실 데이터 사용)
+      const recentAuto = generateRecentEvals(autoEvals);
 
       const tagged_auto = [...autoEvals, ...recentAuto].map(e => ({ ...assignEmployeeId(e), eval_method: 'auto' }));
       const tagged_manual = manualEvals.map(e => ({ ...assignEmployeeId(e), eval_method: 'manual' }));
@@ -639,6 +685,237 @@
       renderTable();
     }
 
+    /* ══════════════════════════ 상세 분석 탭 하단 통합 평가 결과 ══════════════════════════
+       전체 탭과 독립 상태. iframe(detail-analysis)의 카드/sub-cell 클릭으로 postMessage 수신해서
+       필터링·렌더링한다. 전체 탭의 검색조건/페이지/정렬과는 분리 운용. */
+    let detailFilteredEvals = [];
+    let detailCurrentPage = 1;
+    let detailPageSize = 20;
+    let detailSortKey = null;
+    let detailSortDir = null;
+    let detailActiveFilter = {
+      level: 0, center_name: null, team_name: null, agent_name: null,
+      kind: null, deduction_item: null, label: null
+    };
+
+    // postMessage 로 받은 base 노드 + kind 로 allEvals 필터링
+    function buildDetailFilteredList() {
+      const f = detailActiveFilter || {};
+      let arr = (allEvals || []).slice();
+      // Base 필터 — 노드 컨텍스트
+      if (f.center_name) arr = arr.filter(e => (e.center || '') === f.center_name);
+      if (f.team_name) arr = arr.filter(e => (e.team || '') === f.team_name);
+      if (f.agent_name) arr = arr.filter(e => (e.agent_name || '') === f.agent_name);
+      // 카드 종류별 추가 조건
+      switch (f.kind) {
+        case 'urgentIssue':
+          arr = arr.filter(e => !!(e.scores && e.scores.profanity && e.scores.profanity.is_fail));
+          break;
+        case 'lowScore':
+          arr = arr.filter(e => {
+            const s = Number(e.total_score) || 0;
+            if (s <= 0 || s >= 70) return false;
+            if (e.eval_method === 'manual' && e.eval_status !== 'completed') return false;
+            return true;
+          });
+          break;
+        case 'topDeduction':
+          if (f.deduction_item) {
+            // scores 의 한국어 이름을 매핑하기 위해 evaluation-items.json 이름 맵 활용
+            const nameMap = buildItemNameMap();
+            arr = arr.filter(e => {
+              if (!e.scores) return false;
+              return Object.entries(e.scores).some(([k, v]) => {
+                if (v.status === 'pass') return false;
+                const koName = nameMap[k] || k;
+                return koName === f.deduction_item || k === f.deduction_item;
+              });
+            });
+          }
+          break;
+        case 'excluded':
+          // 더미 데이터에 excluded 필드가 없어 빈 결과 반환 (정의상 후속 데이터 보강 필요)
+          arr = arr.filter(e => e.excluded === true);
+          break;
+        case 'autoIB':
+          arr = arr.filter(e => e.call_type === 'I/B' && e.eval_method !== 'manual');
+          break;
+        case 'autoOB':
+          arr = arr.filter(e => e.call_type === 'O/B' && e.eval_method !== 'manual');
+          break;
+        case 'manualOnly':
+          arr = arr.filter(e => e.eval_method === 'manual');
+          break;
+        // 정보성 카드(agentScope/callScope/scoreScope/durationScope/rankScope/disputeScope)는 Base만
+        default:
+          break;
+      }
+      return arr;
+    }
+
+    // 자식 페이지에서 postMessage 로 전달된 필터 적용
+    function applyDetailFilter(msg) {
+      detailActiveFilter = {
+        level: msg.level || 0,
+        center_name: msg.center_name || null,
+        team_name: msg.team_name || null,
+        agent_name: msg.agent_name || null,
+        kind: msg.kind || null,
+        deduction_item: msg.deduction_item || null,
+        label: msg.label || null
+      };
+      detailFilteredEvals = buildDetailFilteredList();
+      // 정렬 유지
+      if (detailSortKey && detailSortDir) {
+        detailFilteredEvals.sort((a, b) => detailCompareByKey(a, b, detailSortKey, detailSortDir));
+      }
+      detailCurrentPage = 1;
+      renderDetailTable();
+      updateDetailFilterBadge();
+    }
+
+    function updateDetailFilterBadge() {
+      const badge = document.getElementById('detail-eval-filter-badge');
+      if (!badge) return;
+      const f = detailActiveFilter || {};
+      const parts = [];
+      if (f.center_name) parts.push(f.center_name);
+      if (f.team_name) parts.push(f.team_name);
+      if (f.agent_name) parts.push(f.agent_name);
+      if (f.label) parts.push(f.label);
+      if (parts.length > 0) {
+        badge.textContent = parts.join(' · ');
+        badge.style.display = '';
+      } else {
+        badge.textContent = '전체';
+        badge.style.display = '';
+      }
+    }
+
+    function detailCompareByKey(a, b, key, dir) {
+      let va = '', vb = '';
+      switch (key) {
+        case 'id': va = a.id || ''; vb = b.id || ''; break;
+        case 'date': va = (a.date || '') + ' ' + (a.call_time || ''); vb = (b.date || '') + ' ' + (b.call_time || ''); break;
+        case 'center': va = a.center || ''; vb = b.center || ''; break;
+        case 'team': va = a.team || ''; vb = b.team || ''; break;
+        case 'empid': va = a.employee_id || ''; vb = b.employee_id || ''; break;
+        case 'agent': va = a.agent_name || ''; vb = b.agent_name || ''; break;
+        case 'consult': va = a.consultation_type || ''; vb = b.consultation_type || ''; break;
+        case 'duration': va = a.duration || ''; vb = b.duration || ''; break;
+        case 'type': va = a.call_type || ''; vb = b.call_type || ''; break;
+        case 'method': va = a.eval_method || ''; vb = b.eval_method || ''; break;
+        case 'form': va = a.eval_form || ''; vb = b.eval_form || ''; break;
+        case 'score': return dir === 'asc' ? (a.total_score - b.total_score) : (b.total_score - a.total_score);
+        case 'confidence': va = a.confidence || ''; vb = b.confidence || ''; break;
+      }
+      const cmp = String(va).localeCompare(String(vb));
+      return dir === 'asc' ? cmp : -cmp;
+    }
+
+    function detailToggleSort(key) {
+      if (detailSortKey === key) {
+        detailSortDir = detailSortDir === 'asc' ? 'desc' : (detailSortDir === 'desc' ? null : 'asc');
+        if (!detailSortDir) detailSortKey = null;
+      } else {
+        detailSortKey = key;
+        detailSortDir = 'asc';
+      }
+      // 모든 정렬 아이콘 초기화
+      ['id','date','center','team','empid','agent','consult','duration','type','method','form','score','confidence'].forEach(k => {
+        const el = document.getElementById('d-sort-icon-' + k);
+        if (el) { el.textContent = '⇅'; el.style.color = '#BDBDBD'; }
+      });
+      if (detailSortKey) {
+        const el = document.getElementById('d-sort-icon-' + detailSortKey);
+        if (el) { el.textContent = detailSortDir === 'asc' ? '↑' : '↓'; el.style.color = '#1976D2'; }
+      }
+      detailFilteredEvals = buildDetailFilteredList();
+      if (detailSortKey && detailSortDir) {
+        detailFilteredEvals.sort((a, b) => detailCompareByKey(a, b, detailSortKey, detailSortDir));
+      }
+      renderDetailTable();
+    }
+
+    function detailGoPage(page) {
+      const totalPages = Math.max(1, Math.ceil(detailFilteredEvals.length / detailPageSize));
+      if (page === 'first') detailCurrentPage = 1;
+      else if (page === 'last') detailCurrentPage = totalPages;
+      else detailCurrentPage = Math.max(1, Math.min(totalPages, page));
+      renderDetailTable();
+    }
+
+    function detailChangePageSize() {
+      detailPageSize = parseInt(document.getElementById('detail-page-size-select').value, 10);
+      detailCurrentPage = 1;
+      renderDetailTable();
+    }
+
+    function renderDetailTable() {
+      const tbody = document.getElementById('detail-eval-tbody');
+      if (!tbody) return;
+      const total = detailFilteredEvals.length;
+      const totalPages = Math.max(1, Math.ceil(total / detailPageSize));
+      detailCurrentPage = Math.max(1, Math.min(totalPages, detailCurrentPage));
+      const start = (detailCurrentPage - 1) * detailPageSize;
+      document.getElementById('detail-eval-count').textContent = `총 ${total}건`;
+      const pageData = detailFilteredEvals.slice(start, start + detailPageSize);
+
+      if (pageData.length === 0) {
+        const f = detailActiveFilter || {};
+        const msg = f.kind === 'excluded'
+          ? '평가 제외 상담사 데이터가 없습니다.'
+          : '조건에 맞는 평가 결과가 없습니다.';
+        tbody.innerHTML = `<tr><td colspan="14" style="text-align:center;padding:24px;color:#9E9E9E;font-size:13px;">${msg}</td></tr>`;
+      } else {
+        tbody.innerHTML = pageData.map(ev => {
+          const callTypeBadge = getCallTypeBadge(ev.call_type);
+          const scoreHtml = ev.total_score > 0
+            ? AICC_Fmt.scoreHtml(ev.total_score)
+            : '<span style="color:#9E9E9E;">-</span>';
+          const issueHtml = ev.issues && ev.issues.length > 0
+            ? ev.issues.slice(0, 2).map(i => `<div style="font-size:10px;color:#F57F17;">${i}</div>`).join('')
+            : (ev.fail_items && ev.fail_items.length > 0
+              ? '<div style="font-size:10px;color:#F57F17;">' + ev.fail_items[0] + '</div>'
+              : '<span style="color:#9E9E9E;">-</span>');
+          const conf = ev.confidence || '-';
+          const evMethod = ev.eval_method === 'manual' ? '수동' : '자동';
+          return `
+            <tr onclick="showEvalDetail('${ev.id}')" style="cursor:pointer;">
+              <td style="text-align:center;font-size:12px;">${ev.id}</td>
+              <td style="text-align:center;font-size:12px;">${ev.date || ''} ${ev.call_time || ''}</td>
+              <td style="text-align:center;font-size:12px;">${ev.center || '-'}</td>
+              <td style="text-align:center;font-size:12px;">${ev.team || '-'}</td>
+              <td style="text-align:center;font-size:11px;font-family:monospace;">${ev.employee_id || '-'}</td>
+              <td style="text-align:center;font-size:12px;">${ev.agent_name || '-'}</td>
+              <td style="text-align:center;font-size:11px;">${ev.consultation_type || '-'}</td>
+              <td style="text-align:center;font-size:12px;">${ev.duration || '-'}</td>
+              <td style="text-align:center;">${callTypeBadge}</td>
+              <td style="text-align:center;font-size:12px;">${evMethod}</td>
+              <td style="text-align:center;font-size:11px;">${ev.eval_form || '-'}</td>
+              <td style="text-align:center;">${scoreHtml}</td>
+              <td style="text-align:center;font-size:11px;">${conf}</td>
+              <td style="text-align:center;">${issueHtml}</td>
+            </tr>
+          `;
+        }).join('');
+      }
+      renderDetailPagination(totalPages);
+    }
+
+    function renderDetailPagination(totalPages) {
+      const wrap = document.getElementById('detail-page-buttons');
+      if (!wrap) return;
+      const start = Math.max(1, detailCurrentPage - 2);
+      const end = Math.min(totalPages, start + 4);
+      let html = '';
+      for (let p = start; p <= end; p++) {
+        const active = p === detailCurrentPage ? 'style="background:#1976D2;color:#fff;"' : '';
+        html += `<button class="pagination-btn" onclick="detailGoPage(${p})" ${active}>${p}</button>`;
+      }
+      wrap.innerHTML = html;
+    }
+
     // 모든 필터 조건을 순차 체이닝하여 AND 조건 적용
     function getFilteredEvals() {
       let filtered = [...allEvals];
@@ -671,16 +948,18 @@
 
       const issueVal = document.getElementById('issue-filter').value;
       if (issueVal === 'fail') {
-        filtered = filtered.filter(e =>
-          (e.fail_items && e.fail_items.length > 0) ||
-          (e.issues && e.issues.some(i => i.includes('FAIL')))
-        );
+        // FAIL = 욕설/금지어 탐지로 전 항목 0점 처리된 콜만.
+        // evaluations.json 의 fail_items 는 "감점 항목 목록"이라 FAIL 판정에 사용 불가.
+        filtered = filtered.filter(e => !!(e.scores && e.scores.profanity && e.scores.profanity.is_fail));
       }
       if (issueVal === 'under') {
-        filtered = filtered.filter(e =>
-          isUnderThreshold(e) ||
-          (e.issues && e.issues.some(i => i.includes('기준 미달')))
-        );
+        // 기준미달 = 0 < total_score < 60 (FAIL 0점은 별도 카테고리). 평가 완료된 콜만.
+        filtered = filtered.filter(e => {
+          const s = Number(e.total_score) || 0;
+          if (s <= 0 || s >= 60) return false;
+          if (e.eval_method === 'manual' && e.eval_status !== 'completed') return false;
+          return true;
+        });
       }
 
       const agentSearch = (document.getElementById('agent-search').value || '').trim().toLowerCase();
@@ -986,8 +1265,8 @@
     function applyFilter() {
       currentPage = 1;
       renderTable();
-      if (hasActiveFilter()) { showSuggestionBar(); }
-      else { hideSuggestionBar(); }
+      // 필터 변경 시 현재 결과 기준으로 제안을 재집계해 표시
+      showSuggestionBar();
       AICC_Toast.show('필터가 적용되었습니다.');
     }
 
@@ -1004,70 +1283,213 @@
       dateParam = null;
       periodFilterInfo = null;
       currentPage = 1;
-      hideSuggestionBar();
+      // 상세분석과 동일하게 초기화 후에도 AI 개선 제안 바는 계속 노출 (다른 추천 set으로 갱신)
+      showSuggestionBar();
       renderTable();
     }
 
     /* ══════════════════════════ 개선 제안 롤링 바 ══════════════════════════ */
 
-    const suggestionPool = [
-      '클레임처리팀 대상 "고객 응대 스킬" 재교육 권장 (평균 72.8점)',
-      '필수 스크립트 준수율 향상을 위한 모니터링 강화 필요',
-      '아웃바운드팀 "동의 확보" 관련 프로세스 재정비 필요',
-      '고객지원1팀 필수 인사말 누락률 12% — 인사 스크립트 교육 실시 권장',
-      '신규 입사자 대상 품질 기준 안내 교육 실시 권장',
-      '기술지원팀 고객 확인 절차 누락 48건 — 본인확인 프로세스 강화 필요',
-      'VIP상담팀 평균 점수 85.1점으로 기준 미달 근접 — 집중 모니터링 권장',
-      '고객상담2팀 FAIL 판정 비율 2.8% — 금지어 관련 재교육 필요',
-      '수동 평가 완료율 73.5%로 목표 대비 미달 — 평가 일정 재조정 필요',
-      '이의 제기 처리 평균 3.2일 소요 — 처리 기한 단축 방안 마련 필요',
-      '스크립트 순서 오류 41건 — 스크립트 매뉴얼 업데이트 및 교육 실시',
-      '종합상담팀 평균 통화시간 8분 초과 — 콜 효율화 방안 마련 필요',
-      '고객확인 미흡 항목 감점 빈도 최다 — 본인확인 절차 점검표 배포 권장',
-      '야간 상담사 평가 점수 평균 68.5점 — 야간 전용 교육 프로그램 개발 필요',
-      '월간 FAIL 판정 건수 전기 대비 15% 증가 — 금지어 목록 재검토 필요'
-    ];
-
     let activeSuggestions = [];
     let suggestionIdx = 0;
     let suggestionTimer = null;
+    let suggestionPaused = false;
 
-    function pickSuggestions() {
-      const count = 3 + Math.floor(Math.random() * 3);
-      const shuffled = [...suggestionPool].sort(() => Math.random() - 0.5);
-      return shuffled.slice(0, count);
+    // 현재 필터링된 통합 평가 결과에서 동적으로 제안 생성.
+    // mergeEvaluations() 결과 스키마: total_score(숫자), call_type(I/B|O/B),
+    // eval_method(auto|manual), issues(배열), fail_items(배열), team/center 등.
+    function scoreOf(r) { return Number(r.total_score) || 0; }
+    function isFailRecord(r) {
+      if (Array.isArray(r.fail_items) && r.fail_items.length > 0) return true;
+      if (Array.isArray(r.issues) && r.issues.some(x => /FAIL|금지어/.test(String(x)))) return true;
+      return false;
+    }
+    // generateRecentEvals 의 시드 더미는 일부 팀명이 다른 형태로 들어 있어
+    // (예: '기술지원팀' vs 'HTS기술지원팀') 통계가 갈리지 않도록 정규화한다.
+    const TEAM_ALIAS = {
+      '기술지원팀': 'HTS기술지원팀',
+      'VIP상담팀': 'VIP고객팀',
+      '일반상담팀': '주식상담팀'
+    };
+    function teamOf(r) {
+      const raw = (r && r.team) || '미분류';
+      return TEAM_ALIAS[raw] || raw;
+    }
+
+    function buildSuggestions() {
+      const source = (filteredEvals && filteredEvals.length)
+        ? filteredEvals
+        : allEvals;
+      const suggestions = [];
+      if (!source || source.length === 0) {
+        return ['표시할 데이터가 없습니다. 검색 조건을 변경해 보세요.'];
+      }
+
+      // 1) 평균 점수 (전체 결과 기준)
+      const totalScore = source.reduce((s, r) => s + scoreOf(r), 0);
+      const avgScore = (totalScore / source.length).toFixed(1);
+      suggestions.push(`현재 조건 평균 점수 ${avgScore}점 (${source.length}건) — 품질 추세를 정기 모니터링하세요.`);
+
+      // 2) 팀별 평균 점수 집계 (팀명 정규화 적용)
+      const teamAgg = {};
+      source.forEach(r => {
+        const team = teamOf(r);
+        if (!teamAgg[team]) teamAgg[team] = { sum: 0, cnt: 0, fail: 0, low: 0 };
+        teamAgg[team].sum += scoreOf(r);
+        teamAgg[team].cnt += 1;
+        if (isFailRecord(r)) teamAgg[team].fail += 1;
+        const s = scoreOf(r);
+        if (s > 0 && s < 60) teamAgg[team].low += 1;
+      });
+      const teamStats = Object.entries(teamAgg).map(([team, v]) => ({
+        team, avg: v.cnt ? v.sum / v.cnt : 0, cnt: v.cnt, fail: v.fail, low: v.low
+      }));
+
+      // 최저/최고 평균 팀 — 통계 신뢰성을 위해 최소 5건 이상 표본만 포함
+      const MIN_TEAM_SAMPLE = 5;
+      const teamsByAvg = [...teamStats].filter(t => t.cnt >= MIN_TEAM_SAMPLE).sort((a, b) => a.avg - b.avg);
+      if (teamsByAvg.length >= 2) {
+        const low = teamsByAvg[0];
+        suggestions.push(`${low.team} 평균 ${low.avg.toFixed(1)}점 (${low.cnt}건) — 최저 점수 팀으로 집중 코칭 권장합니다.`);
+        const high = teamsByAvg[teamsByAvg.length - 1];
+        if (high.team !== low.team) {
+          suggestions.push(`${high.team} 평균 ${high.avg.toFixed(1)}점 (${high.cnt}건) — 우수 응대 사례로 팀 내 공유 추천합니다.`);
+        }
+      } else if (teamsByAvg.length === 1) {
+        const t = teamsByAvg[0];
+        suggestions.push(`${t.team} 평균 ${t.avg.toFixed(1)}점 (${t.cnt}건) — 단일 팀 결과로 추세 분석에 추가 데이터 권장.`);
+      }
+
+      // 3) FAIL(금지어) 발생 팀
+      const failTeams = teamStats.filter(t => t.fail > 0).sort((a, b) => b.fail - a.fail);
+      if (failTeams[0]) {
+        const t = failTeams[0];
+        suggestions.push(`${t.team} FAIL(금지어) ${t.fail}건 — 즉시 코칭 및 금지어 사전 재배포가 필요합니다.`);
+      }
+
+      // 4) 기준 미달(60점 미만, 0점 제외) 총량
+      const lowCount = source.filter(r => { const s = scoreOf(r); return s > 0 && s < 60; }).length;
+      if (lowCount > 0) {
+        const pct = (lowCount / source.length * 100).toFixed(1);
+        suggestions.push(`기준 미달 콜 ${lowCount}건 (${pct}%) — 해당 상담사 대상 표준 스크립트 재교육이 시급합니다.`);
+      }
+
+      // 5) 자동/수동 평가 분포
+      const manual = source.filter(r => r.eval_method === 'manual').length;
+      const auto = source.length - manual;
+      if (manual > 0 && auto > 0) {
+        const manualPct = (manual / source.length * 100).toFixed(0);
+        suggestions.push(`수동 평가 비중 ${manualPct}% (${manual}건) — 수동 평가 적정 비율 유지 여부 점검을 권장합니다.`);
+      }
+
+      // 6) 통화유형 분포 (I/B vs O/B)
+      const ibRecs = source.filter(r => r.call_type === 'I/B');
+      const obRecs = source.filter(r => r.call_type === 'O/B');
+      if (ibRecs.length > 0 && obRecs.length > 0) {
+        const ibAvg = ibRecs.reduce((s, r) => s + scoreOf(r), 0) / ibRecs.length;
+        const obAvg = obRecs.reduce((s, r) => s + scoreOf(r), 0) / obRecs.length;
+        if (Math.abs(ibAvg - obAvg) >= 3) {
+          const lower = ibAvg < obAvg
+            ? `I/B (${ibAvg.toFixed(1)}점) — O/B 대비 ${(obAvg - ibAvg).toFixed(1)}점 낮음`
+            : `O/B (${obAvg.toFixed(1)}점) — I/B 대비 ${(ibAvg - obAvg).toFixed(1)}점 낮음`;
+          suggestions.push(`${lower}, 채널별 스크립트 차이 점검이 필요합니다.`);
+        }
+      }
+
+      // 7) 감점 사유 Top — issues 배열을 모두 분해해 카운트
+      const deductionCnt = {};
+      source.forEach(r => {
+        const arr = Array.isArray(r.issues) ? r.issues : [];
+        arr.forEach(raw => {
+          const txt = String(raw).trim();
+          if (!txt || txt === '-' || /FAIL|금지어|기준 미달/.test(txt)) return;
+          // ":"가 있으면 항목명만 추출, 너무 길면 잘라냄
+          const key = txt.split(':')[0].trim().slice(0, 24);
+          if (!key) return;
+          deductionCnt[key] = (deductionCnt[key] || 0) + 1;
+        });
+      });
+      const topDeduction = Object.entries(deductionCnt).sort((a, b) => b[1] - a[1])[0];
+      if (topDeduction && topDeduction[1] >= 2) {
+        suggestions.push(`감점 사유 1위 "${topDeduction[0]}" ${topDeduction[1]}건 — 해당 항목 표준 매뉴얼 재배포가 효과적입니다.`);
+      }
+
+      // 8) 90점 이상 우수 콜 비율
+      const excellent = source.filter(r => scoreOf(r) >= 90).length;
+      if (excellent >= 3) {
+        const excellentPct = (excellent / source.length * 100).toFixed(0);
+        suggestions.push(`90점 이상 우수 콜 ${excellent}건 (${excellentPct}%) — 모범 응대 사례 라이브러리화를 추천합니다.`);
+      }
+
+      // 9) 통화시간 이상치 — 평균 대비 50% 초과 콜
+      const durationsSec = source.map(r => {
+        const d = String(r.duration || '0:00');
+        const [m, s] = d.split(':').map(n => Number(n) || 0);
+        return m * 60 + s;
+      }).filter(v => v > 0);
+      if (durationsSec.length >= 5) {
+        const avgDur = durationsSec.reduce((s, v) => s + v, 0) / durationsSec.length;
+        const longCount = durationsSec.filter(v => v > avgDur * 1.5).length;
+        if (longCount >= 2) {
+          suggestions.push(`평균 통화시간 대비 50% 초과 콜 ${longCount}건 — 콜 효율화 방안 마련을 권장합니다.`);
+        }
+      }
+
+      return suggestions.slice(0, 8);
     }
 
     function showSuggestionBar() {
-      activeSuggestions = pickSuggestions();
+      activeSuggestions = buildSuggestions();
       suggestionIdx = 0;
+      suggestionPaused = false;
       const bar = document.getElementById('suggestion-bar');
       const textEl = document.getElementById('suggestion-text');
       bar.style.display = 'flex';
       textEl.style.opacity = '1';
       textEl.style.transform = 'translateY(0)';
       textEl.textContent = activeSuggestions[0];
+      updateSuggestionCounter();
 
       if (suggestionTimer) clearInterval(suggestionTimer);
       if (activeSuggestions.length > 1) {
-        suggestionTimer = setInterval(rollSuggestion, 4000);
+        suggestionTimer = setInterval(() => { if (!suggestionPaused) rollSuggestion(1); }, 4000);
       }
     }
 
-    function rollSuggestion() {
+    function rollSuggestion(direction) {
+      const dir = direction || 1;
       const textEl = document.getElementById('suggestion-text');
       textEl.style.opacity = '0';
-      textEl.style.transform = 'translateY(-10px)';
+      textEl.style.transform = `translateY(${dir > 0 ? -10 : 10}px)`;
       setTimeout(() => {
-        suggestionIdx = (suggestionIdx + 1) % activeSuggestions.length;
+        const len = activeSuggestions.length;
+        suggestionIdx = (suggestionIdx + dir + len) % len;
         textEl.textContent = activeSuggestions[suggestionIdx];
-        textEl.style.transform = 'translateY(10px)';
+        textEl.style.transform = `translateY(${dir > 0 ? 10 : -10}px)`;
+        updateSuggestionCounter();
         requestAnimationFrame(() => {
           textEl.style.opacity = '1';
           textEl.style.transform = 'translateY(0)';
         });
       }, 350);
     }
+
+    function updateSuggestionCounter() {
+      const el = document.getElementById('suggestion-counter');
+      if (el) el.textContent = `${suggestionIdx + 1}/${activeSuggestions.length}`;
+    }
+
+    function prevSuggestion() {
+      if (!activeSuggestions.length) return;
+      rollSuggestion(-1);
+    }
+    function nextSuggestion() {
+      if (!activeSuggestions.length) return;
+      rollSuggestion(1);
+    }
+
+    function pauseSuggestionRolling() { suggestionPaused = true; }
+    function resumeSuggestionRolling() { suggestionPaused = false; }
 
     function hideSuggestionBar() {
       document.getElementById('suggestion-bar').style.display = 'none';
@@ -1362,15 +1784,33 @@
 
     let modalSuggestions = [];
 
+    // 개선 제안 1건을 [핵심 사실]과 [권장 액션] 2단으로 분해해 가독성을 높임.
+    // 빌더에서 ' — ' 또는 ' - ' 구분자를 기준으로 자른다.
+    function _splitSuggestion(text) {
+      const m = String(text).match(/^(.*?)\s+[—\-–]\s+(.*)$/);
+      if (m) return { head: m[1].trim(), tail: m[2].trim() };
+      return { head: String(text).trim(), tail: '' };
+    }
+
     function _renderSuggestionItems() {
       const box = document.getElementById('act-suggestions-box');
       if (!box) return;
-      box.innerHTML = modalSuggestions.map((c, i) => `
-        <div style="display:flex;align-items:flex-start;gap:6px;padding:3px 0;">
-          <span style="flex:1;color:#424242;">${i+1}. ${c}</span>
-          <span onclick="_removeSuggestionItem(${i})" style="cursor:pointer;color:#BDBDBD;font-size:16px;line-height:1;flex-shrink:0;padding:0 2px;transition:color 0.15s;" onmouseenter="this.style.color='#F44336'" onmouseleave="this.style.color='#BDBDBD'">&times;</span>
-        </div>
-      `).join('');
+      box.innerHTML = modalSuggestions.map((c, i) => {
+        const { head, tail } = _splitSuggestion(c);
+        const tailHtml = tail
+          ? `<div style="font-size:12px;color:#757575;line-height:1.45;margin-top:2px;">${tail}</div>`
+          : '';
+        const isLast = i === modalSuggestions.length - 1;
+        return `
+          <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 4px;${isLast ? '' : 'border-bottom:1px solid #ECEFF1;'}">
+            <span style="flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#EDE7F6;color:#5E35B1;font-size:11px;font-weight:700;line-height:1;">${i+1}</span>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:13px;color:#212121;font-weight:500;line-height:1.45;">${head}</div>
+              ${tailHtml}
+            </div>
+            <span onclick="_removeSuggestionItem(${i})" style="cursor:pointer;color:#BDBDBD;font-size:16px;line-height:1;flex-shrink:0;padding:2px 4px;transition:color 0.15s;" onmouseenter="this.style.color='#F44336'" onmouseleave="this.style.color='#BDBDBD'" title="삭제">&times;</span>
+          </div>`;
+      }).join('');
     }
 
     function _removeSuggestionItem(idx) {
@@ -1464,6 +1904,22 @@
             _iframeOrigStyle = null;
           }
         }, 220);
+      }
+
+      // 상세 분석 탭 — iframe(detail-analysis) 카드/노드 변경 → 하단 통합 평가 결과 필터링
+      if (e.data.type === 'da-node-change') {
+        applyDetailFilter({
+          level: e.data.level,
+          center_name: e.data.center_name,
+          team_name: e.data.team_name,
+          agent_name: e.data.agent_name,
+          kind: null,
+          deduction_item: null,
+          label: null
+        });
+      }
+      if (e.data.type === 'da-card-filter') {
+        applyDetailFilter(e.data);
       }
     });
   </script>

@@ -1,419 +1,3383 @@
 [
   {
-    "id": "ME-2025-00001",
+    "id": "ME-2025-00015",
     "date": "2025-01-27",
-    "call_time": "09:15",
-    "center": "서울센터",
-    "center_id": "ct-seoul",
-    "team": "VIP고객팀",
-    "team_id": "team-vip",
-    "agent_name": "김신입",
-    "call_type": "I/B",
-    "duration": "06:42",
+    "call_time": "14:50",
+    "center": "부산센터",
+    "center_id": "ct-busan",
+    "team": "해피콜팀",
+    "team_id": "team-happycall",
+    "agent_id": "agent501",
+    "agent_name": "백시영",
+    "call_type": "O/B",
+    "duration": "1:47",
     "total_score": 0,
-    "eval_form": "I/B VIP 평가표 v1.0",
-    "consultation_type": "상품문의 > 종목조회 > 기업정보",
-    "manual_plan": "2025년 1분기 신입 상담사 수동 평가",
-    "manual_plan_criteria": "근무일수 30일 미만",
+    "eval_form": "O/B 텔레마케팅 평가표 v1.3",
+    "consultation_type": "고객관리 > 해피콜 > 만족도조사 > 신규가입",
+    "scenario_id": "qa-15-happy-call",
+    "scenario_category": "해피콜",
+    "products": [
+      "ECS증권 서비스"
+    ],
+    "manual_plan": "특정 상담사 집중 모니터링",
+    "manual_plan_criteria": "특정 상담사 지정",
     "eval_status": "pending",
     "issues": [],
-    "ai_feedback": "AI 자동 평가 점수: 72점. 신입 상담사로 수동 평가 대상입니다.",
+    "ai_feedback": "AI 자동 평가 점수: 89점. 특정 상담사 지정 기준으로 수동 평가 대상에 포함되었습니다. 시나리오 카테고리: 해피콜, 결과: 정보 안내.",
+    "qa_comment": "수동평가 사유: 특정 상담사 지정. 통화 청취 결과 해피콜 카테고리 시나리오로 분류되며, AI 자동평가(89점)와 수동평가 결과의 편차는 미미한 수준입니다. 코칭 권장 사항: 특정 상담사 집중 모니터링 가이드라인 준수.",
     "scores": {
-      "item-greeting": { "type": "NLP", "score": 8, "max": 10, "status": "pass", "confidence": 92 },
-      "item-empathy": { "type": "AI", "score": 7, "max": 10, "status": "warn", "confidence": 78 },
-      "item-solution": { "type": "AI", "score": 6, "max": 15, "status": "warn", "confidence": 65 },
-      "item-closing": { "type": "NLP", "score": 9, "max": 10, "status": "pass", "confidence": 95 },
-      "item-forbidden": { "type": "NLP", "score": 10, "max": 10, "status": "pass", "confidence": 99 }
+      "item-greeting": {
+        "type": "NLP",
+        "score": 9,
+        "max": 10,
+        "status": "pass",
+        "confidence": 95
+      },
+      "item-empathy": {
+        "type": "AI",
+        "score": 8,
+        "max": 10,
+        "status": "warn",
+        "confidence": 77,
+        "reason": "공감·경청 영역에서 기준점 대비 부족"
+      },
+      "item-solution": {
+        "type": "AI",
+        "score": 14,
+        "max": 15,
+        "status": "pass",
+        "confidence": 94
+      },
+      "item-closing": {
+        "type": "NLP",
+        "score": 10,
+        "max": 10,
+        "status": "pass",
+        "confidence": 90
+      },
+      "item-forbidden": {
+        "type": "NLP",
+        "score": 10,
+        "max": 10,
+        "status": "pass",
+        "confidence": 99
+      }
     },
     "transcript": [
-      { "time": "0:00", "speaker": "agent", "text": "안녕하세요, VIP고객팀 김신입입니다." },
-      { "time": "0:05", "speaker": "customer", "text": "네, 종목 문의 좀 하려고요." },
-      { "time": "0:12", "speaker": "agent", "text": "네, 어떤 종목 정보가 궁금하신가요?" },
-      { "time": "0:20", "speaker": "customer", "text": "이번에 신규 상장한 IPO 종목 공모가는 얼마인가요?" },
-      { "time": "0:30", "speaker": "agent", "text": "확인해 드리겠습니다. 잠시만 기다려 주세요." }
-    ]
-  },
-  {
-    "id": "ME-2025-00002",
-    "date": "2025-01-27",
-    "call_time": "10:32",
-    "center": "서울센터",
-    "center_id": "ct-seoul",
-    "team": "주식상담팀",
-    "team_id": "team-general",
-    "agent_name": "박신입",
-    "call_type": "I/B",
-    "duration": "09:18",
-    "total_score": 0,
-    "eval_form": "I/B 일반 상담 평가표 v2.1",
-    "consultation_type": "체결관리 > 일반체결 > 주문번호조회 > 체결조회",
-    "manual_plan": "2025년 1분기 신입 상담사 수동 평가",
-    "manual_plan_criteria": "근무일수 30일 미만",
-    "eval_status": "pending",
-    "issues": [],
-    "ai_feedback": "AI 자동 평가 점수: 65점. 신입 상담사로 수동 평가 대상입니다.",
-    "scores": {
-      "item-greeting": { "type": "NLP", "score": 7, "max": 10, "status": "warn", "confidence": 88 },
-      "item-empathy": { "type": "AI", "score": 5, "max": 10, "status": "warn", "confidence": 70 },
-      "item-solution": { "type": "AI", "score": 8, "max": 15, "status": "pass", "confidence": 72 },
-      "item-closing": { "type": "NLP", "score": 7, "max": 10, "status": "warn", "confidence": 85 },
-      "item-forbidden": { "type": "NLP", "score": 10, "max": 10, "status": "pass", "confidence": 99 }
-    },
-    "transcript": [
-      { "time": "0:00", "speaker": "agent", "text": "안녕하세요, 주식상담팀 박신입입니다." },
-      { "time": "0:04", "speaker": "customer", "text": "제 택배가 어디쯤 왔는지 확인 좀 해주세요." },
-      { "time": "0:10", "speaker": "agent", "text": "주문번호 알려주시면 확인해 드리겠습니다." }
+      {
+        "speaker": "agent",
+        "time": "0:00",
+        "text": "안녕하세요, ECS증권 해피콜팀 백시영입니다. 김지원 고객님 되시죠? 통화 가능하신가요?"
+      },
+      {
+        "speaker": "customer",
+        "time": "0:08",
+        "text": "네, 잠깐이면 괜찮아요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:20",
+        "text": "감사합니다. 지난주 신규 계좌 개설하신 것 관련해 간단한 만족도 조사 진행드리려고 연락드렸습니다. 5분 이내 소요됩니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:27",
+        "text": "네, 진행하세요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:38",
+        "text": "먼저 계좌 개설 과정에서 불편한 점이나 어려운 점은 없으셨나요?"
+      },
+      {
+        "speaker": "customer",
+        "time": "0:48",
+        "text": "신분증 인식이 한 번에 안 돼서 두 번 정도 다시 찍었어요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:57",
+        "text": "불편을 드려 죄송합니다. 신분증 촬영 부분 개선 의견으로 접수하겠습니다. 그 외 영웅문S 앱 사용은 어떠셨나요?"
+      },
+      {
+        "speaker": "customer",
+        "time": "1:07",
+        "text": "전반적으로 만족해요. 화면이 좀 복잡한 느낌은 있지만 익숙해지면 괜찮네요."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:14",
+        "text": "네 소중한 의견 감사합니다. 마지막으로 ECS증권을 지인에게 추천 의향이 있으시다면 0~10점 중 어느 정도이신가요?"
+      },
+      {
+        "speaker": "customer",
+        "time": "1:26",
+        "text": "8점이요."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:35",
+        "text": "네 감사합니다. 더 나은 서비스로 보답드리겠습니다. 좋은 하루 되세요, ECS증권 해피콜팀 백시영이었습니다."
+      }
     ]
   },
   {
     "id": "ME-2025-00003",
-    "date": "2025-01-26",
-    "call_time": "14:05",
-    "center": "서울센터",
-    "center_id": "ct-seoul",
-    "team": "VIP고객팀",
-    "team_id": "team-vip",
-    "agent_name": "홍길동",
-    "call_type": "I/B",
-    "duration": "12:03",
-    "total_score": 88,
-    "eval_form": "I/B VIP 평가표 v1.0",
-    "consultation_type": "환매/정정 > 정정처리 > 수량정정",
-    "manual_plan": "2025년 2월 품질 샘플링 검증",
-    "manual_plan_criteria": "샘플링 10%",
-    "eval_status": "completed",
-    "issues": [],
-    "ai_feedback": "AI 자동 평가 점수: 91점. 샘플링에 의해 수동 평가 대상으로 선별되었습니다.",
-    "scores": {
-      "item-greeting": { "type": "NLP", "score": 9, "max": 10, "status": "pass", "confidence": 95 },
-      "item-empathy": { "type": "AI", "score": 9, "max": 10, "status": "pass", "confidence": 88 },
-      "item-solution": { "type": "AI", "score": 12, "max": 15, "status": "pass", "confidence": 82 },
-      "item-closing": { "type": "NLP", "score": 8, "max": 10, "status": "pass", "confidence": 90 },
-      "item-forbidden": { "type": "NLP", "score": 10, "max": 10, "status": "pass", "confidence": 99 }
-    },
-    "transcript": [
-      { "time": "0:00", "speaker": "agent", "text": "안녕하세요, VIP고객팀 홍길동입니다. 무엇을 도와드릴까요?" },
-      { "time": "0:06", "speaker": "customer", "text": "주문 수량이 잘못 들어가서 정정하고 싶어요." },
-      { "time": "0:12", "speaker": "agent", "text": "네, 정정 접수 도와드리겠습니다. 주문번호 확인 부탁드립니다." }
-    ],
-    "manual_review": {
-      "reviewed_at": "2025-01-28 11:30",
-      "reviewer": "김팀장",
-      "modified_items": [{ "item_id": "item-empathy", "original_score": 9, "new_score": 8 }],
-      "comment": "공감 표현은 양호하나 적극성이 다소 부족"
-    }
-  },
-  {
-    "id": "ME-2025-00004",
-    "date": "2025-01-26",
-    "call_time": "15:20",
+    "date": "2025-01-27",
+    "call_time": "13:55",
     "center": "서울센터",
     "center_id": "ct-seoul",
     "team": "주식상담팀",
     "team_id": "team-general",
-    "agent_name": "이영희",
+    "agent_id": "agent004",
+    "agent_name": "박지민",
+    "call_type": "I/B",
+    "duration": "1:45",
+    "total_score": 37,
+    "eval_form": "I/B 일반 상담 평가표 v2.1",
+    "consultation_type": "계좌관리 > 일반문의 > 잔고조회 > 예수금",
+    "scenario_id": "qa-18-newbie",
+    "scenario_category": "신입",
+    "products": [
+      "ECS증권 계좌"
+    ],
+    "manual_plan": "2025년 1분기 신입 상담사 수동 평가",
+    "manual_plan_criteria": "근무일수 30일 미만",
+    "eval_status": "completed",
+    "issues": [
+      "신입 시나리오 감점 항목 다수"
+    ],
+    "ai_feedback": "AI 자동 평가 점수: 76점. 근무일수 30일 미만 기준으로 수동 평가 대상에 포함되었습니다. 시나리오 카테고리: 신입, 결과: 수동평가 필요.",
+    "qa_comment": "수동평가 사유: 근무일수 30일 미만. 통화 청취 결과 신입 카테고리 시나리오로 분류되며, AI 자동평가(76점)와 수동평가 결과의 편차는 미미한 수준입니다. 코칭 권장 사항: 2025년 1분기 신입 상담사 수동 평가 가이드라인 준수.",
+    "scores": {
+      "item-greeting": {
+        "type": "NLP",
+        "score": 7,
+        "max": 10,
+        "status": "warn",
+        "confidence": 84,
+        "reason": "인사·도입 영역에서 기준점 대비 부족"
+      },
+      "item-empathy": {
+        "type": "AI",
+        "score": 6,
+        "max": 10,
+        "status": "warn",
+        "confidence": 92,
+        "reason": "공감·경청 영역에서 기준점 대비 부족"
+      },
+      "item-solution": {
+        "type": "AI",
+        "score": 9,
+        "max": 15,
+        "status": "warn",
+        "confidence": 78,
+        "reason": "문제 해결 영역에서 기준점 대비 부족"
+      },
+      "item-closing": {
+        "type": "NLP",
+        "score": 5,
+        "max": 10,
+        "status": "fail",
+        "confidence": 90,
+        "reason": "종결·마무리 영역에서 기준점 대비 부족"
+      },
+      "item-forbidden": {
+        "type": "NLP",
+        "score": 10,
+        "max": 10,
+        "status": "pass",
+        "confidence": 99
+      }
+    },
+    "transcript": [
+      {
+        "speaker": "agent",
+        "time": "0:00",
+        "text": "여보세요, 박지민입니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:08",
+        "text": "잔고 좀 확인해 보고 싶은데요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:18",
+        "text": "아 네, 어떤 잔고요?"
+      },
+      {
+        "speaker": "customer",
+        "time": "0:27",
+        "text": "예수금이요. 어제 입금한 게 들어왔는지요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:37",
+        "text": "음, 본인 확인이 필요해요. 성함이랑 주민번호 앞자리..."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:47",
+        "text": "주민번호요? 보안에 안 좋을 것 같은데요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:58",
+        "text": "어, 죄송합니다. 생년월일만 알려주세요."
+      },
+      {
+        "speaker": "customer",
+        "time": "1:10",
+        "text": "신영주, 1995년 1월 30일이요."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:20",
+        "text": "잠시만요... 예수금 500만원 정상 입금됐어요."
+      },
+      {
+        "speaker": "customer",
+        "time": "1:27",
+        "text": "감사합니다."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:35",
+        "text": "네 끊을게요."
+      }
+    ],
+    "coaching_plan": "1) 표준 스크립트 재숙지 (1주 내)\n2) 시나리오별 롤플레잉 3회 진행\n3) 재평가 일정: 2주 후",
+    "manual_review": {
+      "reviewed_at": "2025-01-27 15:30",
+      "reviewer": "이평가",
+      "modified_items": [],
+      "comment": "수동평가 사유: 근무일수 30일 미만. 통화 청취 결과 신입 카테고리 시나리오로 분류되며, AI 자동평가(76점)와 수동평가 결과의 편차는 미미…"
+    }
+  },
+  {
+    "id": "ME-2025-00012",
+    "date": "2025-01-27",
+    "call_time": "09:10",
+    "center": "서울센터",
+    "center_id": "ct-seoul",
+    "team": "주식상담팀",
+    "team_id": "team-general",
+    "agent_id": "agent204",
+    "agent_name": "한지석",
+    "call_type": "I/B",
+    "duration": "1:21",
+    "total_score": 40,
+    "eval_form": "I/B 일반 상담 평가표 v2.1",
+    "consultation_type": "계좌관리 > 계좌개설 > 비대면개설 > 일반계좌",
+    "scenario_id": "qa-02-account-open-privacy-miss",
+    "scenario_category": "계좌개설",
+    "products": [
+      "ECS증권 비대면 계좌"
+    ],
+    "manual_plan": "특정 상담사 집중 모니터링",
+    "manual_plan_criteria": "특정 상담사 지정",
+    "eval_status": "completed",
+    "issues": [
+      "계좌개설 시나리오 감점 항목 다수"
+    ],
+    "ai_feedback": "AI 자동 평가 점수: 82점. 특정 상담사 지정 기준으로 수동 평가 대상에 포함되었습니다. 시나리오 카테고리: 계좌개설, 결과: 즉시 해결 (감점).",
+    "qa_comment": "수동평가 사유: 특정 상담사 지정. 통화 청취 결과 계좌개설 카테고리 시나리오로 분류되며, AI 자동평가(82점)와 수동평가 결과의 편차는 미미한 수준입니다. 코칭 권장 사항: 특정 상담사 집중 모니터링 가이드라인 준수.",
+    "scores": {
+      "item-greeting": {
+        "type": "NLP",
+        "score": 7,
+        "max": 10,
+        "status": "warn",
+        "confidence": 81,
+        "reason": "인사·도입 영역에서 기준점 대비 부족"
+      },
+      "item-empathy": {
+        "type": "AI",
+        "score": 7,
+        "max": 10,
+        "status": "warn",
+        "confidence": 95,
+        "reason": "공감·경청 영역에서 기준점 대비 부족"
+      },
+      "item-solution": {
+        "type": "AI",
+        "score": 10,
+        "max": 15,
+        "status": "warn",
+        "confidence": 76,
+        "reason": "문제 해결 영역에서 기준점 대비 부족"
+      },
+      "item-closing": {
+        "type": "NLP",
+        "score": 6,
+        "max": 10,
+        "status": "warn",
+        "confidence": 81,
+        "reason": "종결·마무리 영역에서 기준점 대비 부족"
+      },
+      "item-forbidden": {
+        "type": "NLP",
+        "score": 10,
+        "max": 10,
+        "status": "pass",
+        "confidence": 99
+      }
+    },
+    "transcript": [
+      {
+        "speaker": "agent",
+        "time": "0:00",
+        "text": "안녕하세요, ECS증권 주식상담팀 한지석입니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:09",
+        "text": "비대면 계좌 만들려고요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:20",
+        "text": "네, 영웅문S 앱에서 신분증이랑 1원 인증으로 진행하시면 됩니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:26",
+        "text": "신분증 사진은 어떻게 찍어요?"
+      },
+      {
+        "speaker": "agent",
+        "time": "0:35",
+        "text": "앱 가이드 따라서 찍으시면 됩니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:40",
+        "text": "그럼 인증 끝나면 바로 거래 가능한가요?"
+      },
+      {
+        "speaker": "agent",
+        "time": "0:45",
+        "text": "네, 입금 확인 후 바로 가능합니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:54",
+        "text": "알겠습니다."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:06",
+        "text": "네, 추가 문의 있으시면 다시 연락 주세요."
+      },
+      {
+        "speaker": "customer",
+        "time": "1:13",
+        "text": "감사합니다."
+      }
+    ],
+    "coaching_plan": "1) 고령투자자 응대 가이드라인 학습\n2) 컴플라이언스 부서 합동 코칭 1회\n3) 재평가 후 결과 본부 보고",
+    "manual_review": {
+      "reviewed_at": "2025-01-27 11:30",
+      "reviewer": "이평가",
+      "modified_items": [],
+      "comment": "수동평가 사유: 특정 상담사 지정. 통화 청취 결과 계좌개설 카테고리 시나리오로 분류되며, AI 자동평가(82점)와 수동평가 결과의 편차는 미미…"
+    }
+  },
+  {
+    "id": "ME-2025-00019",
+    "date": "2025-01-26",
+    "call_time": "16:25",
+    "center": "서울센터",
+    "center_id": "ct-seoul",
+    "team": "VIP고객팀",
+    "team_id": "team-vip",
+    "agent_id": "agent001",
+    "agent_name": "홍길동",
+    "call_type": "I/B",
+    "duration": "1:51",
+    "total_score": 0,
+    "eval_form": "I/B VIP 평가표 v1.0",
+    "consultation_type": "고객관리 > VIP관리 > 포트폴리오 > 자산배분",
+    "scenario_id": "qa-16-vip-portfolio",
+    "scenario_category": "상품권유",
+    "products": [
+      "ECS 랩어카운트",
+      "삼성전자",
+      "SK하이닉스"
+    ],
+    "manual_plan": "특정 상담사 집중 모니터링",
+    "manual_plan_criteria": "특정 상담사 지정",
+    "eval_status": "pending",
+    "issues": [],
+    "ai_feedback": "AI 자동 평가 점수: 86점. 특정 상담사 지정 기준으로 수동 평가 대상에 포함되었습니다. 시나리오 카테고리: 상품권유, 결과: 정보 안내.",
+    "qa_comment": "수동평가 사유: 특정 상담사 지정. 통화 청취 결과 상품권유 카테고리 시나리오로 분류되며, AI 자동평가(86점)와 수동평가 결과의 편차는 미미한 수준입니다. 코칭 권장 사항: 특정 상담사 집중 모니터링 가이드라인 준수.",
+    "scores": {
+      "item-greeting": {
+        "type": "NLP",
+        "score": 9,
+        "max": 10,
+        "status": "pass",
+        "confidence": 87
+      },
+      "item-empathy": {
+        "type": "AI",
+        "score": 10,
+        "max": 10,
+        "status": "pass",
+        "confidence": 83
+      },
+      "item-solution": {
+        "type": "AI",
+        "score": 14,
+        "max": 15,
+        "status": "pass",
+        "confidence": 80
+      },
+      "item-closing": {
+        "type": "NLP",
+        "score": 8,
+        "max": 10,
+        "status": "warn",
+        "confidence": 94,
+        "reason": "종결·마무리 영역에서 기준점 대비 부족"
+      },
+      "item-forbidden": {
+        "type": "NLP",
+        "score": 10,
+        "max": 10,
+        "status": "pass",
+        "confidence": 99
+      }
+    },
+    "transcript": [
+      {
+        "speaker": "agent",
+        "time": "0:00",
+        "text": "안녕하세요, VIP 고객님. ECS증권 VIP고객팀 홍길동입니다. 무엇을 도와드릴까요?"
+      },
+      {
+        "speaker": "customer",
+        "time": "0:10",
+        "text": "현재 포트폴리오 리밸런싱 좀 상담받고 싶어요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:18",
+        "text": "네 자세히 안내드리겠습니다. 본인 확인 부탁드립니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:25",
+        "text": "조현우, 1968년 9월 14일이요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:30",
+        "text": "확인되었습니다. 현재 고객님 포트폴리오는 국내주식 65%, 해외주식 20%, 채권 10%, 현금 5%로 구성되어 있습니다. 작년 대비 국내주식 비중이 높아진 상태입니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:37",
+        "text": "비중이 너무 높은 것 같아요. 조정이 필요할까요?"
+      },
+      {
+        "speaker": "agent",
+        "time": "0:49",
+        "text": "고객님 투자성향(적극투자형)과 시장 상황 고려할 때, 국내주식 비중을 55~60% 수준으로 낮추고 해외주식과 채권 비중을 확대하는 방안 권장드립니다. 다만 최종 결정은 고객님 판단입니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:58",
+        "text": "랩어카운트로 일임 운용 받는 것도 고려 중인데 어떤가요?"
+      },
+      {
+        "speaker": "agent",
+        "time": "1:10",
+        "text": "ECS 랩어카운트는 가입 한도 1억원 이상, 일임수수료 연 1.5% 수준입니다. 운용 전략에 따라 가치주형/성장주형/배당형 등 6종이 있습니다. 최근 1년 수익률은 모델 포트폴리오 기준 8~14% 수준이나 과거 성과가 미래를 보장하지는 않습니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "1:16",
+        "text": "자세한 안내자료 좀 받아볼 수 있을까요?"
+      },
+      {
+        "speaker": "agent",
+        "time": "1:22",
+        "text": "네 카카오톡과 이메일로 발송드리겠습니다. 검토 후 추가 문의 주시면 영업점 방문 상담 일정 잡아드리겠습니다. 추가 문의 있으신가요?"
+      },
+      {
+        "speaker": "customer",
+        "time": "1:29",
+        "text": "충분합니다. 감사합니다."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:39",
+        "text": "감사합니다. 좋은 하루 되세요, ECS증권 VIP고객팀 홍길동이었습니다."
+      }
+    ]
+  },
+  {
+    "id": "ME-2025-00016",
+    "date": "2025-01-26",
+    "call_time": "12:40",
+    "center": "부산센터",
+    "center_id": "ct-busan",
+    "team": "해피콜팀",
+    "team_id": "team-happycall",
+    "agent_id": "agent501",
+    "agent_name": "백시영",
     "call_type": "O/B",
-    "duration": "05:45",
-    "total_score": 82,
+    "duration": "1:29",
+    "total_score": 48,
     "eval_form": "O/B 텔레마케팅 평가표 v1.3",
-    "consultation_type": "이벤트/혜택 > 혜택관리 > 수수료할인 > 생일우대",
+    "consultation_type": "고객관리 > 해피콜 > 만족도조사 > 신규가입",
+    "scenario_id": "qa-15-happy-call",
+    "scenario_category": "해피콜",
+    "products": [
+      "ECS증권 서비스"
+    ],
     "manual_plan": "2025년 2월 품질 샘플링 검증",
     "manual_plan_criteria": "샘플링 10%",
     "eval_status": "completed",
-    "issues": [],
-    "ai_feedback": "AI 자동 평가 점수: 85점. 샘플링에 의해 수동 평가 대상으로 선별되었습니다.",
+    "issues": [
+      "해피콜 시나리오 감점 항목 다수"
+    ],
+    "ai_feedback": "AI 자동 평가 점수: 89점. 샘플링 10% 기준으로 수동 평가 대상에 포함되었습니다. 시나리오 카테고리: 해피콜, 결과: 정보 안내.",
+    "qa_comment": "수동평가 사유: 샘플링 10%. 통화 청취 결과 해피콜 카테고리 시나리오로 분류되며, AI 자동평가(89점)와 수동평가 결과의 편차는 미미한 수준입니다. 코칭 권장 사항: 2025년 2월 품질 샘플링 검증 가이드라인 준수.",
     "scores": {
-      "item-greeting": { "type": "NLP", "score": 9, "max": 10, "status": "pass", "confidence": 93 },
-      "item-empathy": { "type": "AI", "score": 8, "max": 10, "status": "pass", "confidence": 85 },
-      "item-solution": { "type": "AI", "score": 10, "max": 15, "status": "warn", "confidence": 75 },
-      "item-closing": { "type": "NLP", "score": 8, "max": 10, "status": "pass", "confidence": 91 },
-      "item-forbidden": { "type": "NLP", "score": 10, "max": 10, "status": "pass", "confidence": 99 }
+      "item-greeting": {
+        "type": "NLP",
+        "score": 9,
+        "max": 10,
+        "status": "pass",
+        "confidence": 84
+      },
+      "item-empathy": {
+        "type": "AI",
+        "score": 8,
+        "max": 10,
+        "status": "warn",
+        "confidence": 90,
+        "reason": "공감·경청 영역에서 기준점 대비 부족"
+      },
+      "item-solution": {
+        "type": "AI",
+        "score": 13,
+        "max": 15,
+        "status": "pass",
+        "confidence": 82
+      },
+      "item-closing": {
+        "type": "NLP",
+        "score": 8,
+        "max": 10,
+        "status": "warn",
+        "confidence": 90,
+        "reason": "종결·마무리 영역에서 기준점 대비 부족"
+      },
+      "item-forbidden": {
+        "type": "NLP",
+        "score": 10,
+        "max": 10,
+        "status": "pass",
+        "confidence": 99
+      }
     },
     "transcript": [
-      { "time": "0:00", "speaker": "agent", "text": "안녕하세요, 이영희입니다. 생일 축하 수수료 우대 혜택 안내 드리려고 연락드렸어요." },
-      { "time": "0:08", "speaker": "customer", "text": "아 네, 감사합니다." }
+      {
+        "speaker": "agent",
+        "time": "0:00",
+        "text": "안녕하세요, ECS증권 해피콜팀 백시영입니다. 김지원 고객님 되시죠? 통화 가능하신가요?"
+      },
+      {
+        "speaker": "customer",
+        "time": "0:08",
+        "text": "네, 잠깐이면 괜찮아요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:18",
+        "text": "감사합니다. 지난주 신규 계좌 개설하신 것 관련해 간단한 만족도 조사 진행드리려고 연락드렸습니다. 5분 이내 소요됩니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:25",
+        "text": "네, 진행하세요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:32",
+        "text": "먼저 계좌 개설 과정에서 불편한 점이나 어려운 점은 없으셨나요?"
+      },
+      {
+        "speaker": "customer",
+        "time": "0:43",
+        "text": "신분증 인식이 한 번에 안 돼서 두 번 정도 다시 찍었어요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:54",
+        "text": "불편을 드려 죄송합니다. 신분증 촬영 부분 개선 의견으로 접수하겠습니다. 그 외 영웅문S 앱 사용은 어떠셨나요?"
+      },
+      {
+        "speaker": "customer",
+        "time": "0:59",
+        "text": "전반적으로 만족해요. 화면이 좀 복잡한 느낌은 있지만 익숙해지면 괜찮네요."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:04",
+        "text": "네 소중한 의견 감사합니다. 마지막으로 ECS증권을 지인에게 추천 의향이 있으시다면 0~10점 중 어느 정도이신가요?"
+      },
+      {
+        "speaker": "customer",
+        "time": "1:13",
+        "text": "8점이요."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:22",
+        "text": "네 감사합니다. 더 나은 서비스로 보답드리겠습니다. 좋은 하루 되세요, ECS증권 해피콜팀 백시영이었습니다."
+      }
     ],
+    "coaching_plan": "1) 고령투자자 응대 가이드라인 학습\n2) 컴플라이언스 부서 합동 코칭 1회\n3) 재평가 후 결과 본부 보고",
     "manual_review": {
-      "reviewed_at": "2025-01-28 14:10",
-      "reviewer": "김팀장",
+      "reviewed_at": "2025-01-26 14:30",
+      "reviewer": "박팀장",
       "modified_items": [],
-      "comment": "전반적으로 양호"
+      "comment": "수동평가 사유: 샘플링 10%. 통화 청취 결과 해피콜 카테고리 시나리오로 분류되며, AI 자동평가(89점)와 수동평가 결과의 편차는 미미한 수…"
     }
   },
   {
     "id": "ME-2025-00005",
     "date": "2025-01-25",
-    "call_time": "11:42",
-    "center": "서울센터",
-    "center_id": "ct-seoul",
-    "team": "기술지원팀",
-    "team_id": "team-tech",
-    "agent_name": "최수진",
-    "call_type": "I/B",
-    "duration": "18:25",
-    "total_score": 0,
-    "eval_form": "기술지원 전문 평가표",
-    "consultation_type": "HTS·MTS 오류 > 시스템오류 > 앱오류 > 로그인실패",
-    "manual_plan": "특정 상담사 집중 모니터링",
-    "manual_plan_criteria": "특정 상담사 지정",
-    "eval_status": "pending",
-    "issues": [],
-    "ai_feedback": "AI 자동 평가 점수: 58점. 특정 상담사 모니터링 대상입니다.",
-    "scores": {
-      "item-greeting": { "type": "NLP", "score": 6, "max": 10, "status": "warn", "confidence": 80 },
-      "item-empathy": { "type": "AI", "score": 5, "max": 10, "status": "warn", "confidence": 60 },
-      "item-solution": { "type": "AI", "score": 7, "max": 15, "status": "warn", "confidence": 55 },
-      "item-closing": { "type": "NLP", "score": 6, "max": 10, "status": "warn", "confidence": 78 },
-      "item-forbidden": { "type": "NLP", "score": 10, "max": 10, "status": "pass", "confidence": 99 }
-    },
-    "transcript": [
-      { "time": "0:00", "speaker": "agent", "text": "기술지원팀 최수진입니다." },
-      { "time": "0:04", "speaker": "customer", "text": "로그인이 안 돼요. 비밀번호를 몇 번이나 입력했는데..." },
-      { "time": "0:12", "speaker": "agent", "text": "계정 확인해 드릴게요. 가입하신 이메일 주소 알려주세요." }
-    ]
-  },
-  {
-    "id": "ME-2025-00006",
-    "date": "2025-01-25",
-    "call_time": "13:10",
-    "center": "서울센터",
-    "center_id": "ct-seoul",
-    "team": "기술지원팀",
-    "team_id": "team-tech",
-    "agent_name": "박상현",
-    "call_type": "I/B",
-    "duration": "14:50",
-    "total_score": 0,
-    "eval_form": "기술지원 전문 평가표",
-    "consultation_type": "입출금/이체 > 이체오류 > 승인실패 > 예수금",
-    "manual_plan": "특정 상담사 집중 모니터링",
-    "manual_plan_criteria": "특정 상담사 지정",
-    "eval_status": "pending",
-    "issues": [],
-    "ai_feedback": "AI 자동 평가 점수: 62점. 특정 상담사 모니터링 대상입니다.",
-    "scores": {
-      "item-greeting": { "type": "NLP", "score": 7, "max": 10, "status": "warn", "confidence": 82 },
-      "item-empathy": { "type": "AI", "score": 6, "max": 10, "status": "warn", "confidence": 65 },
-      "item-solution": { "type": "AI", "score": 9, "max": 15, "status": "pass", "confidence": 70 },
-      "item-closing": { "type": "NLP", "score": 7, "max": 10, "status": "warn", "confidence": 80 },
-      "item-forbidden": { "type": "NLP", "score": 10, "max": 10, "status": "pass", "confidence": 99 }
-    },
-    "transcript": [
-      { "time": "0:00", "speaker": "agent", "text": "기술지원팀 박상현입니다." },
-      { "time": "0:05", "speaker": "customer", "text": "카드 결제가 계속 실패해요." },
-      { "time": "0:10", "speaker": "agent", "text": "어떤 카드로 시도하셨나요? 결제 오류 코드가 보이시나요?" }
-    ]
-  },
-  {
-    "id": "ME-2025-00007",
-    "date": "2025-01-24",
-    "call_time": "16:30",
-    "center": "서울센터",
-    "center_id": "ct-seoul",
-    "team": "VIP고객팀",
-    "team_id": "team-vip",
-    "agent_name": "정대리",
-    "call_type": "I/B",
-    "duration": "07:12",
-    "total_score": 55,
-    "eval_form": "I/B VIP 평가표 v1.0",
-    "consultation_type": "VIP관리 > 프로모션안내 > 수수료우대",
-    "manual_plan": "2025년 2월 AI 저점수 재평가",
-    "manual_plan_criteria": "AI 점수 60점 미만",
-    "eval_status": "completed",
-    "issues": ["기준 미달"],
-    "ai_feedback": "AI 자동 평가 점수: 52점. AI 저점수로 수동 재평가 대상입니다.",
-    "scores": {
-      "item-greeting": { "type": "NLP", "score": 5, "max": 10, "status": "warn", "confidence": 75 },
-      "item-empathy": { "type": "AI", "score": 4, "max": 10, "status": "fail", "confidence": 55 },
-      "item-solution": { "type": "AI", "score": 6, "max": 15, "status": "warn", "confidence": 50 },
-      "item-closing": { "type": "NLP", "score": 5, "max": 10, "status": "warn", "confidence": 72 },
-      "item-forbidden": { "type": "NLP", "score": 10, "max": 10, "status": "pass", "confidence": 99 }
-    },
-    "transcript": [
-      { "time": "0:00", "speaker": "agent", "text": "안녕하세요, 정대리입니다." },
-      { "time": "0:04", "speaker": "customer", "text": "시즌 할인 언제까지인가요?" },
-      { "time": "0:08", "speaker": "agent", "text": "이번 달 말까지입니다." }
-    ],
-    "manual_review": {
-      "reviewed_at": "2025-01-26 09:00",
-      "reviewer": "이평가",
-      "modified_items": [
-        { "item_id": "item-empathy", "original_score": 4, "new_score": 5 },
-        { "item_id": "item-solution", "original_score": 6, "new_score": 7 }
-      ],
-      "comment": "AI 점수보다 실제 상담 품질이 약간 나음. 다만 인사 멘트 개선 필요."
-    }
-  },
-  {
-    "id": "ME-2025-00008",
-    "date": "2025-01-24",
-    "call_time": "09:50",
+    "call_time": "11:15",
     "center": "서울센터",
     "center_id": "ct-seoul",
     "team": "주식상담팀",
     "team_id": "team-general",
-    "agent_name": "한과장",
+    "agent_id": "agent201",
+    "agent_name": "이도현",
     "call_type": "I/B",
-    "duration": "10:05",
-    "total_score": 0,
+    "duration": "1:40",
+    "total_score": 38,
     "eval_form": "I/B 일반 상담 평가표 v2.1",
-    "consultation_type": "환매/정정 > 환매정산 > 정산지연 > 환매지연",
-    "manual_plan": "2025년 2월 AI 저점수 재평가",
-    "manual_plan_criteria": "AI 점수 60점 미만",
-    "eval_status": "pending",
-    "issues": ["기준 미달"],
-    "ai_feedback": "AI 자동 평가 점수: 48점. AI 저점수로 수동 재평가 대상입니다.",
+    "consultation_type": "계좌관리 > 일반문의 > 잔고조회 > 예수금",
+    "scenario_id": "qa-18-newbie",
+    "scenario_category": "신입",
+    "products": [
+      "ECS증권 계좌"
+    ],
+    "manual_plan": "2025년 1분기 신입 상담사 수동 평가",
+    "manual_plan_criteria": "근무일수 30일 미만",
+    "eval_status": "completed",
+    "issues": [
+      "신입 시나리오 감점 항목 다수"
+    ],
+    "ai_feedback": "AI 자동 평가 점수: 79점. 근무일수 30일 미만 기준으로 수동 평가 대상에 포함되었습니다. 시나리오 카테고리: 신입, 결과: 수동평가 필요.",
+    "qa_comment": "수동평가 사유: 근무일수 30일 미만. 통화 청취 결과 신입 카테고리 시나리오로 분류되며, AI 자동평가(79점)와 수동평가 결과의 편차는 미미한 수준입니다. 코칭 권장 사항: 2025년 1분기 신입 상담사 수동 평가 가이드라인 준수.",
     "scores": {
-      "item-greeting": { "type": "NLP", "score": 4, "max": 10, "status": "fail", "confidence": 70 },
-      "item-empathy": { "type": "AI", "score": 3, "max": 10, "status": "fail", "confidence": 50 },
-      "item-solution": { "type": "AI", "score": 5, "max": 15, "status": "fail", "confidence": 45 },
-      "item-closing": { "type": "NLP", "score": 5, "max": 10, "status": "warn", "confidence": 68 },
-      "item-forbidden": { "type": "NLP", "score": 10, "max": 10, "status": "pass", "confidence": 99 }
+      "item-greeting": {
+        "type": "NLP",
+        "score": 7,
+        "max": 10,
+        "status": "warn",
+        "confidence": 83,
+        "reason": "인사·도입 영역에서 기준점 대비 부족"
+      },
+      "item-empathy": {
+        "type": "AI",
+        "score": 6,
+        "max": 10,
+        "status": "warn",
+        "confidence": 85,
+        "reason": "공감·경청 영역에서 기준점 대비 부족"
+      },
+      "item-solution": {
+        "type": "AI",
+        "score": 10,
+        "max": 15,
+        "status": "warn",
+        "confidence": 79,
+        "reason": "문제 해결 영역에서 기준점 대비 부족"
+      },
+      "item-closing": {
+        "type": "NLP",
+        "score": 5,
+        "max": 10,
+        "status": "fail",
+        "confidence": 93,
+        "reason": "종결·마무리 영역에서 기준점 대비 부족"
+      },
+      "item-forbidden": {
+        "type": "NLP",
+        "score": 10,
+        "max": 10,
+        "status": "pass",
+        "confidence": 99
+      }
     },
     "transcript": [
-      { "time": "0:00", "speaker": "agent", "text": "네, 말씀하세요." },
-      { "time": "0:03", "speaker": "customer", "text": "환불 신청한 지 2주가 넘었는데 아직 안 들어왔어요." },
-      { "time": "0:10", "speaker": "agent", "text": "확인해 보겠습니다. 주문번호 알려주세요." }
-    ]
+      {
+        "speaker": "agent",
+        "time": "0:00",
+        "text": "여보세요, 이도현입니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:09",
+        "text": "잔고 좀 확인해 보고 싶은데요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:21",
+        "text": "아 네, 어떤 잔고요?"
+      },
+      {
+        "speaker": "customer",
+        "time": "0:28",
+        "text": "예수금이요. 어제 입금한 게 들어왔는지요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:39",
+        "text": "음, 본인 확인이 필요해요. 성함이랑 주민번호 앞자리..."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:47",
+        "text": "주민번호요? 보안에 안 좋을 것 같은데요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:56",
+        "text": "어, 죄송합니다. 생년월일만 알려주세요."
+      },
+      {
+        "speaker": "customer",
+        "time": "1:01",
+        "text": "신영주, 1995년 1월 30일이요."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:11",
+        "text": "잠시만요... 예수금 500만원 정상 입금됐어요."
+      },
+      {
+        "speaker": "customer",
+        "time": "1:20",
+        "text": "감사합니다."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:28",
+        "text": "네 끊을게요."
+      }
+    ],
+    "coaching_plan": "1) 금융 상품 설명 의무 핵심 5개 항목 재교육 이수\n2) ELS·신용거래 시나리오 모의 콜 평가\n3) 멘토 1:1 코칭 주 1회 (4주)",
+    "manual_review": {
+      "reviewed_at": "2025-01-25 13:30",
+      "reviewer": "박팀장",
+      "modified_items": [],
+      "comment": "수동평가 사유: 근무일수 30일 미만. 통화 청취 결과 신입 카테고리 시나리오로 분류되며, AI 자동평가(79점)와 수동평가 결과의 편차는 미미…"
+    }
   },
   {
-    "id": "ME-2025-00009",
-    "date": "2025-01-23",
-    "call_time": "11:20",
-    "center": "부산센터",
-    "center_id": "ct-busan",
-    "team": "펀드상담팀",
-    "team_id": "team-general2",
-    "agent_name": "강신입",
+    "id": "ME-2025-00002",
+    "date": "2025-01-25",
+    "call_time": "10:50",
+    "center": "서울센터",
+    "center_id": "ct-seoul",
+    "team": "주식상담팀",
+    "team_id": "team-general",
+    "agent_id": "agent202",
+    "agent_name": "박서연",
     "call_type": "I/B",
-    "duration": "08:33",
+    "duration": "1:56",
     "total_score": 0,
     "eval_form": "I/B 일반 상담 평가표 v2.1",
-    "consultation_type": "상품문의 > 종목문의 > 신규상장 > 공모청약",
+    "consultation_type": "계좌관리 > 일반문의 > 잔고조회 > 예수금",
+    "scenario_id": "qa-18-newbie",
+    "scenario_category": "신입",
+    "products": [
+      "ECS증권 계좌"
+    ],
     "manual_plan": "2025년 1분기 신입 상담사 수동 평가",
     "manual_plan_criteria": "근무일수 30일 미만",
     "eval_status": "pending",
     "issues": [],
-    "ai_feedback": "AI 자동 평가 점수: 70점. 신입 상담사로 수동 평가 대상입니다.",
+    "ai_feedback": "AI 자동 평가 점수: 80점. 근무일수 30일 미만 기준으로 수동 평가 대상에 포함되었습니다. 시나리오 카테고리: 신입, 결과: 수동평가 필요.",
+    "qa_comment": "수동평가 사유: 근무일수 30일 미만. 통화 청취 결과 신입 카테고리 시나리오로 분류되며, AI 자동평가(80점)와 수동평가 결과의 편차는 미미한 수준입니다. 코칭 권장 사항: 2025년 1분기 신입 상담사 수동 평가 가이드라인 준수.",
     "scores": {
-      "item-greeting": { "type": "NLP", "score": 8, "max": 10, "status": "pass", "confidence": 90 },
-      "item-empathy": { "type": "AI", "score": 6, "max": 10, "status": "warn", "confidence": 68 },
-      "item-solution": { "type": "AI", "score": 8, "max": 15, "status": "pass", "confidence": 70 },
-      "item-closing": { "type": "NLP", "score": 7, "max": 10, "status": "warn", "confidence": 82 },
-      "item-forbidden": { "type": "NLP", "score": 10, "max": 10, "status": "pass", "confidence": 99 }
+      "item-greeting": {
+        "type": "NLP",
+        "score": 7,
+        "max": 10,
+        "status": "warn",
+        "confidence": 76,
+        "reason": "인사·도입 영역에서 기준점 대비 부족"
+      },
+      "item-empathy": {
+        "type": "AI",
+        "score": 7,
+        "max": 10,
+        "status": "warn",
+        "confidence": 92,
+        "reason": "공감·경청 영역에서 기준점 대비 부족"
+      },
+      "item-solution": {
+        "type": "AI",
+        "score": 11,
+        "max": 15,
+        "status": "warn",
+        "confidence": 94,
+        "reason": "문제 해결 영역에서 기준점 대비 부족"
+      },
+      "item-closing": {
+        "type": "NLP",
+        "score": 7,
+        "max": 10,
+        "status": "warn",
+        "confidence": 86,
+        "reason": "종결·마무리 영역에서 기준점 대비 부족"
+      },
+      "item-forbidden": {
+        "type": "NLP",
+        "score": 10,
+        "max": 10,
+        "status": "pass",
+        "confidence": 99
+      }
     },
     "transcript": [
-      { "time": "0:00", "speaker": "agent", "text": "안녕하세요, 부산센터 강신입입니다." },
-      { "time": "0:05", "speaker": "customer", "text": "재입고 언제 되나요?" },
-      { "time": "0:10", "speaker": "agent", "text": "어떤 상품이신지 알려주시면 확인해 드리겠습니다." }
-    ]
-  },
-  {
-    "id": "ME-2025-00010",
-    "date": "2025-01-23",
-    "call_time": "14:45",
-    "center": "부산센터",
-    "center_id": "ct-busan",
-    "team": "해피콜팀",
-    "team_id": "team-happycall",
-    "agent_name": "윤해피",
-    "call_type": "O/B",
-    "duration": "04:20",
-    "total_score": 90,
-    "eval_form": "O/B 텔레마케팅 평가표 v1.3",
-    "consultation_type": "해피콜 > 만족도조사 > 체결완료",
-    "manual_plan": "2025년 2월 품질 샘플링 검증",
-    "manual_plan_criteria": "샘플링 10%",
-    "eval_status": "completed",
-    "issues": [],
-    "ai_feedback": "AI 자동 평가 점수: 93점. 샘플링에 의해 수동 평가 대상으로 선별되었습니다.",
-    "scores": {
-      "item-greeting": { "type": "NLP", "score": 10, "max": 10, "status": "pass", "confidence": 98 },
-      "item-empathy": { "type": "AI", "score": 9, "max": 10, "status": "pass", "confidence": 90 },
-      "item-solution": { "type": "AI", "score": 13, "max": 15, "status": "pass", "confidence": 85 },
-      "item-closing": { "type": "NLP", "score": 9, "max": 10, "status": "pass", "confidence": 94 },
-      "item-forbidden": { "type": "NLP", "score": 10, "max": 10, "status": "pass", "confidence": 99 }
-    },
-    "transcript": [
-      { "time": "0:00", "speaker": "agent", "text": "안녕하세요, 해피콜팀 윤해피입니다. 최근 체결 처리 만족하셨나요?" },
-      { "time": "0:08", "speaker": "customer", "text": "네, 잘 받았어요. 감사합니다." }
+      {
+        "speaker": "agent",
+        "time": "0:00",
+        "text": "여보세요, 박서연입니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:11",
+        "text": "잔고 좀 확인해 보고 싶은데요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:23",
+        "text": "아 네, 어떤 잔고요?"
+      },
+      {
+        "speaker": "customer",
+        "time": "0:31",
+        "text": "예수금이요. 어제 입금한 게 들어왔는지요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:42",
+        "text": "음, 본인 확인이 필요해요. 성함이랑 주민번호 앞자리..."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:50",
+        "text": "주민번호요? 보안에 안 좋을 것 같은데요."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:02",
+        "text": "어, 죄송합니다. 생년월일만 알려주세요."
+      },
+      {
+        "speaker": "customer",
+        "time": "1:13",
+        "text": "신영주, 1995년 1월 30일이요."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:24",
+        "text": "잠시만요... 예수금 500만원 정상 입금됐어요."
+      },
+      {
+        "speaker": "customer",
+        "time": "1:35",
+        "text": "감사합니다."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:44",
+        "text": "네 끊을게요."
+      }
     ],
-    "manual_review": {
-      "reviewed_at": "2025-01-25 10:20",
-      "reviewer": "김팀장",
-      "modified_items": [],
-      "comment": "매우 우수한 상담"
-    }
+    "coaching_plan": "1) 금융 상품 설명 의무 핵심 5개 항목 재교육 이수\n2) ELS·신용거래 시나리오 모의 콜 평가\n3) 멘토 1:1 코칭 주 1회 (4주)"
   },
   {
-    "id": "ME-2025-00011",
-    "date": "2025-01-22",
-    "call_time": "10:15",
+    "id": "ME-2025-00009",
+    "date": "2025-01-24",
+    "call_time": "17:25",
     "center": "서울센터",
     "center_id": "ct-seoul",
     "team": "VIP고객팀",
     "team_id": "team-vip",
-    "agent_name": "김신입",
+    "agent_id": "agent002",
+    "agent_name": "이영희",
     "call_type": "I/B",
-    "duration": "11:28",
+    "duration": "1:48",
     "total_score": 0,
     "eval_form": "I/B VIP 평가표 v1.0",
-    "consultation_type": "환매/정정 > 취소처리 > 거래체결오류",
+    "consultation_type": "상품권유 > ELS권유 > 설명의무 > 핵심설명누락",
+    "scenario_id": "qa-07-els-explanation-miss",
+    "scenario_category": "설명의무",
+    "products": [
+      "ECS ELS 제1235회"
+    ],
+    "manual_plan": "특정 상담사 집중 모니터링",
+    "manual_plan_criteria": "특정 상담사 지정",
+    "eval_status": "pending",
+    "issues": [],
+    "ai_feedback": "AI 자동 평가 점수: 84점. 특정 상담사 지정 기준으로 수동 평가 대상에 포함되었습니다. 시나리오 카테고리: 설명의무, 결과: 수동평가 필요.",
+    "qa_comment": "수동평가 사유: 특정 상담사 지정. 통화 청취 결과 설명의무 카테고리 시나리오로 분류되며, AI 자동평가(84점)와 수동평가 결과의 편차는 미미한 수준입니다. 코칭 권장 사항: 특정 상담사 집중 모니터링 가이드라인 준수.",
+    "scores": {
+      "item-greeting": {
+        "type": "NLP",
+        "score": 6,
+        "max": 10,
+        "status": "warn",
+        "confidence": 91,
+        "reason": "인사·도입 영역에서 기준점 대비 부족"
+      },
+      "item-empathy": {
+        "type": "AI",
+        "score": 5,
+        "max": 10,
+        "status": "fail",
+        "confidence": 88,
+        "reason": "공감·경청 영역에서 기준점 대비 부족"
+      },
+      "item-solution": {
+        "type": "AI",
+        "score": 8,
+        "max": 15,
+        "status": "fail",
+        "confidence": 80,
+        "reason": "문제 해결 영역에서 기준점 대비 부족"
+      },
+      "item-closing": {
+        "type": "NLP",
+        "score": 5,
+        "max": 10,
+        "status": "fail",
+        "confidence": 94,
+        "reason": "종결·마무리 영역에서 기준점 대비 부족"
+      },
+      "item-forbidden": {
+        "type": "NLP",
+        "score": 10,
+        "max": 10,
+        "status": "pass",
+        "confidence": 99
+      }
+    },
+    "transcript": [
+      {
+        "speaker": "agent",
+        "time": "0:00",
+        "text": "안녕하세요, ECS증권 VIP고객팀 이영희입니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:11",
+        "text": "ELS 1235회 가입하려고 하는데요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:17",
+        "text": "네, 그 상품 좋습니다. 연 8% 수익률 상품이에요."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:29",
+        "text": "원금 보장이 되나요?"
+      },
+      {
+        "speaker": "agent",
+        "time": "0:38",
+        "text": "어, 그건... 조건부 보장이라고 생각하시면 됩니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:43",
+        "text": "조건부가 무슨 뜻인가요?"
+      },
+      {
+        "speaker": "agent",
+        "time": "0:52",
+        "text": "음, 기초자산이 많이 떨어지지 않으면 보장됩니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "1:04",
+        "text": "구체적으로 얼마나 떨어지면 손실인가요?"
+      },
+      {
+        "speaker": "agent",
+        "time": "1:14",
+        "text": "그건 상품설명서 보시면 자세히 나옵니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "1:26",
+        "text": "알겠어요... 일단 자료 보내주세요."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:37",
+        "text": "네 보내드리겠습니다."
+      }
+    ]
+  },
+  {
+    "id": "ME-2025-00020",
+    "date": "2025-01-24",
+    "call_time": "17:05",
+    "center": "서울센터",
+    "center_id": "ct-seoul",
+    "team": "VIP고객팀",
+    "team_id": "team-vip",
+    "agent_id": "agent001",
+    "agent_name": "홍길동",
+    "call_type": "I/B",
+    "duration": "2:05",
+    "total_score": 50,
+    "eval_form": "I/B VIP 평가표 v1.0",
+    "consultation_type": "고객관리 > VIP관리 > 포트폴리오 > 자산배분",
+    "scenario_id": "qa-16-vip-portfolio",
+    "scenario_category": "상품권유",
+    "products": [
+      "ECS 랩어카운트",
+      "삼성전자",
+      "SK하이닉스"
+    ],
+    "manual_plan": "2025년 2월 AI 저점수 재평가",
+    "manual_plan_criteria": "AI 점수 60점 미만",
+    "eval_status": "completed",
+    "issues": [
+      "상품권유 시나리오 감점 항목 다수"
+    ],
+    "ai_feedback": "AI 자동 평가 점수: 86점. AI 점수 60점 미만 기준으로 수동 평가 대상에 포함되었습니다. 시나리오 카테고리: 상품권유, 결과: 정보 안내.",
+    "qa_comment": "수동평가 사유: AI 점수 60점 미만. 통화 청취 결과 상품권유 카테고리 시나리오로 분류되며, AI 자동평가(86점)와 수동평가 결과의 편차는 미미한 수준입니다. 코칭 권장 사항: 2025년 2월 AI 저점수 재평가 가이드라인 준수.",
+    "scores": {
+      "item-greeting": {
+        "type": "NLP",
+        "score": 9,
+        "max": 10,
+        "status": "pass",
+        "confidence": 91
+      },
+      "item-empathy": {
+        "type": "AI",
+        "score": 9,
+        "max": 10,
+        "status": "pass",
+        "confidence": 94
+      },
+      "item-solution": {
+        "type": "AI",
+        "score": 13,
+        "max": 15,
+        "status": "pass",
+        "confidence": 89
+      },
+      "item-closing": {
+        "type": "NLP",
+        "score": 9,
+        "max": 10,
+        "status": "pass",
+        "confidence": 89
+      },
+      "item-forbidden": {
+        "type": "NLP",
+        "score": 10,
+        "max": 10,
+        "status": "pass",
+        "confidence": 99
+      }
+    },
+    "transcript": [
+      {
+        "speaker": "agent",
+        "time": "0:00",
+        "text": "안녕하세요, VIP 고객님. ECS증권 VIP고객팀 홍길동입니다. 무엇을 도와드릴까요?"
+      },
+      {
+        "speaker": "customer",
+        "time": "0:09",
+        "text": "현재 포트폴리오 리밸런싱 좀 상담받고 싶어요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:17",
+        "text": "네 자세히 안내드리겠습니다. 본인 확인 부탁드립니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:27",
+        "text": "조현우, 1968년 9월 14일이요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:36",
+        "text": "확인되었습니다. 현재 고객님 포트폴리오는 국내주식 65%, 해외주식 20%, 채권 10%, 현금 5%로 구성되어 있습니다. 작년 대비 국내주식 비중이 높아진 상태입니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:42",
+        "text": "비중이 너무 높은 것 같아요. 조정이 필요할까요?"
+      },
+      {
+        "speaker": "agent",
+        "time": "0:53",
+        "text": "고객님 투자성향(적극투자형)과 시장 상황 고려할 때, 국내주식 비중을 55~60% 수준으로 낮추고 해외주식과 채권 비중을 확대하는 방안 권장드립니다. 다만 최종 결정은 고객님 판단입니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "1:05",
+        "text": "랩어카운트로 일임 운용 받는 것도 고려 중인데 어떤가요?"
+      },
+      {
+        "speaker": "agent",
+        "time": "1:16",
+        "text": "ECS 랩어카운트는 가입 한도 1억원 이상, 일임수수료 연 1.5% 수준입니다. 운용 전략에 따라 가치주형/성장주형/배당형 등 6종이 있습니다. 최근 1년 수익률은 모델 포트폴리오 기준 8~14% 수준이나 과거 성과가 미래를 보장하지는 않습니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "1:26",
+        "text": "자세한 안내자료 좀 받아볼 수 있을까요?"
+      },
+      {
+        "speaker": "agent",
+        "time": "1:36",
+        "text": "네 카카오톡과 이메일로 발송드리겠습니다. 검토 후 추가 문의 주시면 영업점 방문 상담 일정 잡아드리겠습니다. 추가 문의 있으신가요?"
+      },
+      {
+        "speaker": "customer",
+        "time": "1:44",
+        "text": "충분합니다. 감사합니다."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:53",
+        "text": "감사합니다. 좋은 하루 되세요, ECS증권 VIP고객팀 홍길동이었습니다."
+      }
+    ],
+    "coaching_plan": "1) 표준 스크립트 재숙지 (1주 내)\n2) 시나리오별 롤플레잉 3회 진행\n3) 재평가 일정: 2주 후",
+    "manual_review": {
+      "reviewed_at": "2025-01-24 19:30",
+      "reviewer": "이평가",
+      "modified_items": [],
+      "comment": "수동평가 사유: AI 점수 60점 미만. 통화 청취 결과 상품권유 카테고리 시나리오로 분류되며, AI 자동평가(86점)와 수동평가 결과의 편차는…"
+    }
+  },
+  {
+    "id": "ME-2025-00022",
+    "date": "2025-01-24",
+    "call_time": "14:50",
+    "center": "서울센터",
+    "center_id": "ct-seoul",
+    "team": "주식상담팀",
+    "team_id": "team-general",
+    "agent_id": "agent203",
+    "agent_name": "정하늘",
+    "call_type": "I/B",
+    "duration": "1:48",
+    "total_score": 0,
+    "eval_form": "I/B 일반 상담 평가표 v2.1",
+    "consultation_type": "민원관리 > 금감원민원 > 수수료분쟁 > 법무이관",
+    "scenario_id": "qa-14-fss-complaint",
+    "scenario_category": "민원",
+    "products": [
+      "수수료"
+    ],
+    "manual_plan": "2025년 2월 AI 저점수 재평가",
+    "manual_plan_criteria": "AI 점수 60점 미만",
+    "eval_status": "pending",
+    "issues": [],
+    "ai_feedback": "AI 자동 평가 점수: 66점. AI 점수 60점 미만 기준으로 수동 평가 대상에 포함되었습니다. 시나리오 카테고리: 민원, 결과: 이관 (법무팀).",
+    "qa_comment": "수동평가 사유: AI 점수 60점 미만. 통화 청취 결과 민원 카테고리 시나리오로 분류되며, AI 자동평가(66점)와 수동평가 결과의 편차는 미미한 수준입니다. 코칭 권장 사항: 2025년 2월 AI 저점수 재평가 가이드라인 준수.",
+    "scores": {
+      "item-greeting": {
+        "type": "NLP",
+        "score": 4,
+        "max": 10,
+        "status": "fail",
+        "confidence": 90,
+        "reason": "인사·도입 영역에서 기준점 대비 부족"
+      },
+      "item-empathy": {
+        "type": "AI",
+        "score": 6,
+        "max": 10,
+        "status": "warn",
+        "confidence": 76,
+        "reason": "공감·경청 영역에서 기준점 대비 부족"
+      },
+      "item-solution": {
+        "type": "AI",
+        "score": 6,
+        "max": 15,
+        "status": "fail",
+        "confidence": 94,
+        "reason": "문제 해결 영역에서 기준점 대비 부족"
+      },
+      "item-closing": {
+        "type": "NLP",
+        "score": 6,
+        "max": 10,
+        "status": "warn",
+        "confidence": 80,
+        "reason": "종결·마무리 영역에서 기준점 대비 부족"
+      },
+      "item-forbidden": {
+        "type": "NLP",
+        "score": 10,
+        "max": 10,
+        "status": "pass",
+        "confidence": 99
+      }
+    },
+    "transcript": [
+      {
+        "speaker": "customer",
+        "time": "0:00",
+        "text": "어제 금감원에 민원 접수했어요. 접수번호 2025-0345-금감원입니다."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:12",
+        "text": "네 ECS증권 주식상담팀 정하늘입니다. 금감원 민원 건 안내 부탁드립니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:23",
+        "text": "지난달 거래 수수료가 평소보다 두 배로 부과됐어요. 확인해 봤더니 우대수수료 조건 변경됐다고 하던데 사전 안내가 전혀 없었어요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:29",
+        "text": "확인하겠습니다. 본인 확인 부탁드립니다. 성함과 생년월일이요."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:38",
+        "text": "강미라, 1981년 5월 27일이요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:44",
+        "text": "확인되었습니다. 우대수수료율 변경은 작년 11월 홈페이지 공지사항과 가입자 이메일로 안내된 사항입니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:52",
+        "text": "이메일 받은 적 없어요. 그리고 공지사항을 누가 매일 봐요?"
+      },
+      {
+        "speaker": "agent",
+        "time": "1:04",
+        "text": "고객님 입장 이해됩니다. 다만 약관상 공지로 갈음 가능한 사항입니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "1:10",
+        "text": "그러니까 금감원에 신고했죠. 법적으로 다투겠어요."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:17",
+        "text": "네 본 건은 금감원 분쟁조정 진행 중인 사안으로, 법무팀으로 이관해 회신드리겠습니다. 회신 시한은 금감원 가이드에 따라 14일 이내입니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "1:28",
+        "text": "녹취 사본도 요청합니다."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:37",
+        "text": "네 녹취 사본은 정보공개 청구 절차로 진행되며, 법무팀에서 안내드리겠습니다. 민원 접수번호 FS-2025-00022입니다."
+      }
+    ],
+    "coaching_plan": "1) 공감 표현·고객 감정 응대 워크숍 참여\n2) 민원 응대 시나리오 5건 청취·분석\n3) 1개월 후 재평가"
+  },
+  {
+    "id": "ME-2025-00026",
+    "date": "2025-01-24",
+    "call_time": "12:40",
+    "center": "서울센터",
+    "center_id": "ct-seoul",
+    "team": "주식상담팀",
+    "team_id": "team-general",
+    "agent_id": "agent003",
+    "agent_name": "김철수",
+    "call_type": "I/B",
+    "duration": "1:39",
+    "total_score": 0,
+    "eval_form": "I/B 일반 상담 평가표 v2.1",
+    "consultation_type": "거래지원 > 신용거래 > 위험고지 > 반대매매",
+    "scenario_id": "qa-08-credit-trade-risk",
+    "scenario_category": "설명의무",
+    "products": [
+      "신용거래"
+    ],
     "manual_plan": "2025년 1분기 신입 상담사 수동 평가",
     "manual_plan_criteria": "근무일수 30일 미만",
     "eval_status": "pending",
     "issues": [],
-    "ai_feedback": "AI 자동 평가 점수: 68점. 신입 상담사로 수동 평가 대상입니다.",
+    "ai_feedback": "AI 자동 평가 점수: 76점. 근무일수 30일 미만 기준으로 수동 평가 대상에 포함되었습니다. 시나리오 카테고리: 설명의무, 결과: 정보 안내.",
+    "qa_comment": "수동평가 사유: 근무일수 30일 미만. 통화 청취 결과 설명의무 카테고리 시나리오로 분류되며, AI 자동평가(76점)와 수동평가 결과의 편차는 미미한 수준입니다. 코칭 권장 사항: 2025년 1분기 신입 상담사 수동 평가 가이드라인 준수.",
     "scores": {
-      "item-greeting": { "type": "NLP", "score": 7, "max": 10, "status": "warn", "confidence": 85 },
-      "item-empathy": { "type": "AI", "score": 6, "max": 10, "status": "warn", "confidence": 72 },
-      "item-solution": { "type": "AI", "score": 7, "max": 15, "status": "warn", "confidence": 60 },
-      "item-closing": { "type": "NLP", "score": 8, "max": 10, "status": "pass", "confidence": 88 },
-      "item-forbidden": { "type": "NLP", "score": 10, "max": 10, "status": "pass", "confidence": 99 }
+      "item-greeting": {
+        "type": "NLP",
+        "score": 7,
+        "max": 10,
+        "status": "warn",
+        "confidence": 79,
+        "reason": "인사·도입 영역에서 기준점 대비 부족"
+      },
+      "item-empathy": {
+        "type": "AI",
+        "score": 9,
+        "max": 10,
+        "status": "pass",
+        "confidence": 78
+      },
+      "item-solution": {
+        "type": "AI",
+        "score": 11,
+        "max": 15,
+        "status": "warn",
+        "confidence": 94,
+        "reason": "문제 해결 영역에서 기준점 대비 부족"
+      },
+      "item-closing": {
+        "type": "NLP",
+        "score": 7,
+        "max": 10,
+        "status": "warn",
+        "confidence": 93,
+        "reason": "종결·마무리 영역에서 기준점 대비 부족"
+      },
+      "item-forbidden": {
+        "type": "NLP",
+        "score": 10,
+        "max": 10,
+        "status": "pass",
+        "confidence": 99
+      }
     },
     "transcript": [
-      { "time": "0:00", "speaker": "agent", "text": "안녕하세요, VIP고객팀 김신입입니다." },
-      { "time": "0:05", "speaker": "customer", "text": "체결가가 잘못된 것 같아서 정정하고 싶어요." },
-      { "time": "0:12", "speaker": "agent", "text": "불편을 드려 죄송합니다. 정정 접수 도와드리겠습니다." }
+      {
+        "speaker": "agent",
+        "time": "0:00",
+        "text": "안녕하세요, ECS증권 주식상담팀 김철수입니다. 무엇을 도와드릴까요?"
+      },
+      {
+        "speaker": "customer",
+        "time": "0:10",
+        "text": "신용거래 한도를 늘리고 싶은데 어떻게 해야 하나요?"
+      },
+      {
+        "speaker": "agent",
+        "time": "0:18",
+        "text": "네 안내 드리겠습니다. 본인 확인 부탁드립니다. 성함과 생년월일 말씀해 주시겠어요?"
+      },
+      {
+        "speaker": "customer",
+        "time": "0:27",
+        "text": "정태경, 1985년 2월 14일이요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:38",
+        "text": "확인되었습니다. 신용거래는 증거금률에 따라 한도가 산정되며, 종목별로 40%/45%/100% 등으로 차등 적용됩니다. 한도 상향 신청은 영웅문S 앱 또는 영업점에서 가능합니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:46",
+        "text": "한도가 늘어나면 좋은 거 아닌가요?"
+      },
+      {
+        "speaker": "agent",
+        "time": "0:56",
+        "text": "신용거래는 레버리지가 활용되어 수익도 커지지만 손실도 커집니다. 특히 보유 종목 가격이 하락해 담보 유지비율이 140% 미만이 되면 반대매매가 발생합니다. 반대매매는 영업일 D+2일 동시호가에 매도되어 추가 손실로 이어질 수 있습니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "1:01",
+        "text": "반대매매 막을 방법은 없나요?"
+      },
+      {
+        "speaker": "agent",
+        "time": "1:10",
+        "text": "추가 담보 입금 또는 일부 보유 종목 매도로 담보 유지비율을 회복하면 됩니다. 반대매매 발생 전날 오후 영웅문S로 알림이 발송됩니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "1:16",
+        "text": "이해했어요. 일단 한도 상향은 보류할게요."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:21",
+        "text": "네, 충분히 검토하시는 것 권장드립니다. 추가 문의 있으신가요?"
+      },
+      {
+        "speaker": "customer",
+        "time": "1:28",
+        "text": "없어요, 감사합니다."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:34",
+        "text": "감사합니다. 좋은 하루 되세요, ECS증권 주식상담팀 김철수이었습니다."
+      }
     ]
   },
   {
-    "id": "ME-2025-00012",
-    "date": "2025-01-22",
-    "call_time": "15:40",
+    "id": "ME-2025-00001",
+    "date": "2025-01-24",
+    "call_time": "12:35",
     "center": "서울센터",
     "center_id": "ct-seoul",
-    "team": "기술지원팀",
-    "team_id": "team-tech",
-    "agent_name": "최수진",
+    "team": "주식상담팀",
+    "team_id": "team-general",
+    "agent_id": "agent201",
+    "agent_name": "이도현",
     "call_type": "I/B",
-    "duration": "22:10",
-    "total_score": 60,
-    "eval_form": "기술지원 전문 평가표",
-    "consultation_type": "HTS·MTS 오류 > 앱오류 > 주문화면",
-    "manual_plan": "특정 상담사 집중 모니터링",
-    "manual_plan_criteria": "특정 상담사 지정",
-    "eval_status": "completed",
+    "duration": "1:46",
+    "total_score": 0,
+    "eval_form": "I/B 일반 상담 평가표 v2.1",
+    "consultation_type": "계좌관리 > 일반문의 > 잔고조회 > 예수금",
+    "scenario_id": "qa-18-newbie",
+    "scenario_category": "신입",
+    "products": [
+      "ECS증권 계좌"
+    ],
+    "manual_plan": "2025년 1분기 신입 상담사 수동 평가",
+    "manual_plan_criteria": "근무일수 30일 미만",
+    "eval_status": "pending",
     "issues": [],
-    "ai_feedback": "AI 자동 평가 점수: 55점. 특정 상담사 모니터링 대상입니다.",
+    "ai_feedback": "AI 자동 평가 점수: 79점. 근무일수 30일 미만 기준으로 수동 평가 대상에 포함되었습니다. 시나리오 카테고리: 신입, 결과: 수동평가 필요.",
+    "qa_comment": "수동평가 사유: 근무일수 30일 미만. 통화 청취 결과 신입 카테고리 시나리오로 분류되며, AI 자동평가(79점)와 수동평가 결과의 편차는 미미한 수준입니다. 코칭 권장 사항: 2025년 1분기 신입 상담사 수동 평가 가이드라인 준수.",
     "scores": {
-      "item-greeting": { "type": "NLP", "score": 6, "max": 10, "status": "warn", "confidence": 78 },
-      "item-empathy": { "type": "AI", "score": 5, "max": 10, "status": "warn", "confidence": 58 },
-      "item-solution": { "type": "AI", "score": 8, "max": 15, "status": "pass", "confidence": 62 },
-      "item-closing": { "type": "NLP", "score": 7, "max": 10, "status": "warn", "confidence": 80 },
-      "item-forbidden": { "type": "NLP", "score": 10, "max": 10, "status": "pass", "confidence": 99 }
+      "item-greeting": {
+        "type": "NLP",
+        "score": 7,
+        "max": 10,
+        "status": "warn",
+        "confidence": 75,
+        "reason": "인사·도입 영역에서 기준점 대비 부족"
+      },
+      "item-empathy": {
+        "type": "AI",
+        "score": 5,
+        "max": 10,
+        "status": "fail",
+        "confidence": 89,
+        "reason": "공감·경청 영역에서 기준점 대비 부족"
+      },
+      "item-solution": {
+        "type": "AI",
+        "score": 9,
+        "max": 15,
+        "status": "warn",
+        "confidence": 92,
+        "reason": "문제 해결 영역에서 기준점 대비 부족"
+      },
+      "item-closing": {
+        "type": "NLP",
+        "score": 5,
+        "max": 10,
+        "status": "fail",
+        "confidence": 91,
+        "reason": "종결·마무리 영역에서 기준점 대비 부족"
+      },
+      "item-forbidden": {
+        "type": "NLP",
+        "score": 10,
+        "max": 10,
+        "status": "pass",
+        "confidence": 99
+      }
     },
     "transcript": [
-      { "time": "0:00", "speaker": "agent", "text": "기술지원팀 최수진입니다." },
-      { "time": "0:04", "speaker": "customer", "text": "결제 화면에서 자꾸 오류가 나요." },
-      { "time": "0:10", "speaker": "agent", "text": "어떤 브라우저를 사용하고 계신가요?" }
+      {
+        "speaker": "agent",
+        "time": "0:00",
+        "text": "여보세요, 이도현입니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:05",
+        "text": "잔고 좀 확인해 보고 싶은데요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:16",
+        "text": "아 네, 어떤 잔고요?"
+      },
+      {
+        "speaker": "customer",
+        "time": "0:28",
+        "text": "예수금이요. 어제 입금한 게 들어왔는지요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:35",
+        "text": "음, 본인 확인이 필요해요. 성함이랑 주민번호 앞자리..."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:43",
+        "text": "주민번호요? 보안에 안 좋을 것 같은데요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:53",
+        "text": "어, 죄송합니다. 생년월일만 알려주세요."
+      },
+      {
+        "speaker": "customer",
+        "time": "1:05",
+        "text": "신영주, 1995년 1월 30일이요."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:16",
+        "text": "잠시만요... 예수금 500만원 정상 입금됐어요."
+      },
+      {
+        "speaker": "customer",
+        "time": "1:27",
+        "text": "감사합니다."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:37",
+        "text": "네 끊을게요."
+      }
     ],
+    "coaching_plan": "1) 공감 표현·고객 감정 응대 워크숍 참여\n2) 민원 응대 시나리오 5건 청취·분석\n3) 1개월 후 재평가"
+  },
+  {
+    "id": "ME-2025-00010",
+    "date": "2025-01-23",
+    "call_time": "13:50",
+    "center": "부산센터",
+    "center_id": "ct-busan",
+    "team": "펀드상담팀",
+    "team_id": "team-general2",
+    "agent_id": "agent007",
+    "agent_name": "강현우",
+    "call_type": "I/B",
+    "duration": "1:33",
+    "total_score": 0,
+    "eval_form": "I/B 일반 상담 평가표 v2.1",
+    "consultation_type": "계좌관리 > 계좌개설 > 비대면개설 > 일반계좌",
+    "scenario_id": "qa-02-account-open-privacy-miss",
+    "scenario_category": "계좌개설",
+    "products": [
+      "ECS증권 비대면 계좌"
+    ],
+    "manual_plan": "2025년 1분기 신입 상담사 수동 평가",
+    "manual_plan_criteria": "근무일수 30일 미만",
+    "eval_status": "pending",
+    "issues": [],
+    "ai_feedback": "AI 자동 평가 점수: 91점. 근무일수 30일 미만 기준으로 수동 평가 대상에 포함되었습니다. 시나리오 카테고리: 계좌개설, 결과: 즉시 해결 (감점).",
+    "qa_comment": "수동평가 사유: 근무일수 30일 미만. 통화 청취 결과 계좌개설 카테고리 시나리오로 분류되며, AI 자동평가(91점)와 수동평가 결과의 편차는 미미한 수준입니다. 코칭 권장 사항: 2025년 1분기 신입 상담사 수동 평가 가이드라인 준수.",
+    "scores": {
+      "item-greeting": {
+        "type": "NLP",
+        "score": 5,
+        "max": 10,
+        "status": "fail",
+        "confidence": 77,
+        "reason": "인사·도입 영역에서 기준점 대비 부족"
+      },
+      "item-empathy": {
+        "type": "AI",
+        "score": 5,
+        "max": 10,
+        "status": "fail",
+        "confidence": 91,
+        "reason": "공감·경청 영역에서 기준점 대비 부족"
+      },
+      "item-solution": {
+        "type": "AI",
+        "score": 11,
+        "max": 15,
+        "status": "warn",
+        "confidence": 90,
+        "reason": "문제 해결 영역에서 기준점 대비 부족"
+      },
+      "item-closing": {
+        "type": "NLP",
+        "score": 5,
+        "max": 10,
+        "status": "fail",
+        "confidence": 78,
+        "reason": "종결·마무리 영역에서 기준점 대비 부족"
+      },
+      "item-forbidden": {
+        "type": "NLP",
+        "score": 10,
+        "max": 10,
+        "status": "pass",
+        "confidence": 99
+      }
+    },
+    "transcript": [
+      {
+        "speaker": "agent",
+        "time": "0:00",
+        "text": "안녕하세요, ECS증권 펀드상담팀 강현우입니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:08",
+        "text": "비대면 계좌 만들려고요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:20",
+        "text": "네, 영웅문S 앱에서 신분증이랑 1원 인증으로 진행하시면 됩니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:30",
+        "text": "신분증 사진은 어떻게 찍어요?"
+      },
+      {
+        "speaker": "agent",
+        "time": "0:40",
+        "text": "앱 가이드 따라서 찍으시면 됩니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:47",
+        "text": "그럼 인증 끝나면 바로 거래 가능한가요?"
+      },
+      {
+        "speaker": "agent",
+        "time": "0:57",
+        "text": "네, 입금 확인 후 바로 가능합니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "1:05",
+        "text": "알겠습니다."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:16",
+        "text": "네, 추가 문의 있으시면 다시 연락 주세요."
+      },
+      {
+        "speaker": "customer",
+        "time": "1:27",
+        "text": "감사합니다."
+      }
+    ]
+  },
+  {
+    "id": "ME-2025-00017",
+    "date": "2025-01-23",
+    "call_time": "12:05",
+    "center": "부산센터",
+    "center_id": "ct-busan",
+    "team": "해피콜팀",
+    "team_id": "team-happycall",
+    "agent_id": "agent008",
+    "agent_name": "윤서연",
+    "call_type": "O/B",
+    "duration": "1:23",
+    "total_score": 0,
+    "eval_form": "O/B 텔레마케팅 평가표 v1.3",
+    "consultation_type": "고객관리 > 해피콜 > 만족도조사 > 신규가입",
+    "scenario_id": "qa-15-happy-call",
+    "scenario_category": "해피콜",
+    "products": [
+      "ECS증권 서비스"
+    ],
+    "manual_plan": "2025년 1분기 신입 상담사 수동 평가",
+    "manual_plan_criteria": "근무일수 30일 미만",
+    "eval_status": "pending",
+    "issues": [],
+    "ai_feedback": "AI 자동 평가 점수: 75점. 근무일수 30일 미만 기준으로 수동 평가 대상에 포함되었습니다. 시나리오 카테고리: 해피콜, 결과: 정보 안내.",
+    "qa_comment": "수동평가 사유: 근무일수 30일 미만. 통화 청취 결과 해피콜 카테고리 시나리오로 분류되며, AI 자동평가(75점)와 수동평가 결과의 편차는 미미한 수준입니다. 코칭 권장 사항: 2025년 1분기 신입 상담사 수동 평가 가이드라인 준수.",
+    "scores": {
+      "item-greeting": {
+        "type": "NLP",
+        "score": 9,
+        "max": 10,
+        "status": "pass",
+        "confidence": 83
+      },
+      "item-empathy": {
+        "type": "AI",
+        "score": 8,
+        "max": 10,
+        "status": "warn",
+        "confidence": 77,
+        "reason": "공감·경청 영역에서 기준점 대비 부족"
+      },
+      "item-solution": {
+        "type": "AI",
+        "score": 14,
+        "max": 15,
+        "status": "pass",
+        "confidence": 76
+      },
+      "item-closing": {
+        "type": "NLP",
+        "score": 8,
+        "max": 10,
+        "status": "warn",
+        "confidence": 94,
+        "reason": "종결·마무리 영역에서 기준점 대비 부족"
+      },
+      "item-forbidden": {
+        "type": "NLP",
+        "score": 10,
+        "max": 10,
+        "status": "pass",
+        "confidence": 99
+      }
+    },
+    "transcript": [
+      {
+        "speaker": "agent",
+        "time": "0:00",
+        "text": "안녕하세요, ECS증권 해피콜팀 윤서연입니다. 김지원 고객님 되시죠? 통화 가능하신가요?"
+      },
+      {
+        "speaker": "customer",
+        "time": "0:08",
+        "text": "네, 잠깐이면 괜찮아요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:13",
+        "text": "감사합니다. 지난주 신규 계좌 개설하신 것 관련해 간단한 만족도 조사 진행드리려고 연락드렸습니다. 5분 이내 소요됩니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:19",
+        "text": "네, 진행하세요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:28",
+        "text": "먼저 계좌 개설 과정에서 불편한 점이나 어려운 점은 없으셨나요?"
+      },
+      {
+        "speaker": "customer",
+        "time": "0:37",
+        "text": "신분증 인식이 한 번에 안 돼서 두 번 정도 다시 찍었어요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:42",
+        "text": "불편을 드려 죄송합니다. 신분증 촬영 부분 개선 의견으로 접수하겠습니다. 그 외 영웅문S 앱 사용은 어떠셨나요?"
+      },
+      {
+        "speaker": "customer",
+        "time": "0:51",
+        "text": "전반적으로 만족해요. 화면이 좀 복잡한 느낌은 있지만 익숙해지면 괜찮네요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:57",
+        "text": "네 소중한 의견 감사합니다. 마지막으로 ECS증권을 지인에게 추천 의향이 있으시다면 0~10점 중 어느 정도이신가요?"
+      },
+      {
+        "speaker": "customer",
+        "time": "1:02",
+        "text": "8점이요."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:12",
+        "text": "네 감사합니다. 더 나은 서비스로 보답드리겠습니다. 좋은 하루 되세요, ECS증권 해피콜팀 윤서연이었습니다."
+      }
+    ]
+  },
+  {
+    "id": "ME-2025-00014",
+    "date": "2025-01-23",
+    "call_time": "11:15",
+    "center": "서울센터",
+    "center_id": "ct-seoul",
+    "team": "주식상담팀",
+    "team_id": "team-general",
+    "agent_id": "agent004",
+    "agent_name": "박지민",
+    "call_type": "I/B",
+    "duration": "1:47",
+    "total_score": 0,
+    "eval_form": "I/B 일반 상담 평가표 v2.1",
+    "consultation_type": "민원관리 > 시스템장애 > 손실분쟁 > 보상요청",
+    "scenario_id": "qa-13-system-claim",
+    "scenario_category": "민원",
+    "products": [
+      "영웅문S",
+      "삼성전자"
+    ],
+    "manual_plan": "2025년 1분기 신입 상담사 수동 평가",
+    "manual_plan_criteria": "근무일수 30일 미만",
+    "eval_status": "pending",
+    "issues": [],
+    "ai_feedback": "AI 자동 평가 점수: 76점. 근무일수 30일 미만 기준으로 수동 평가 대상에 포함되었습니다. 시나리오 카테고리: 민원, 결과: 이관 (민원처리팀).",
+    "qa_comment": "수동평가 사유: 근무일수 30일 미만. 통화 청취 결과 민원 카테고리 시나리오로 분류되며, AI 자동평가(76점)와 수동평가 결과의 편차는 미미한 수준입니다. 코칭 권장 사항: 2025년 1분기 신입 상담사 수동 평가 가이드라인 준수.",
+    "scores": {
+      "item-greeting": {
+        "type": "NLP",
+        "score": 6,
+        "max": 10,
+        "status": "warn",
+        "confidence": 86,
+        "reason": "인사·도입 영역에서 기준점 대비 부족"
+      },
+      "item-empathy": {
+        "type": "AI",
+        "score": 6,
+        "max": 10,
+        "status": "warn",
+        "confidence": 78,
+        "reason": "공감·경청 영역에서 기준점 대비 부족"
+      },
+      "item-solution": {
+        "type": "AI",
+        "score": 9,
+        "max": 15,
+        "status": "warn",
+        "confidence": 91,
+        "reason": "문제 해결 영역에서 기준점 대비 부족"
+      },
+      "item-closing": {
+        "type": "NLP",
+        "score": 6,
+        "max": 10,
+        "status": "warn",
+        "confidence": 95,
+        "reason": "종결·마무리 영역에서 기준점 대비 부족"
+      },
+      "item-forbidden": {
+        "type": "NLP",
+        "score": 10,
+        "max": 10,
+        "status": "pass",
+        "confidence": 99
+      }
+    },
+    "transcript": [
+      {
+        "speaker": "customer",
+        "time": "0:00",
+        "text": "여보세요! 오늘 아침에 영웅문 먹통이어서 매도 못 했어요. 손실이 800만원이라고요!"
+      },
+      {
+        "speaker": "agent",
+        "time": "0:10",
+        "text": "네, ECS증권 주식상담팀 박지민입니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:19",
+        "text": "아니 사과부터 해야 하는 거 아니에요? 시스템 장애로 손실 본 게 한두 번이 아니에요!"
+      },
+      {
+        "speaker": "agent",
+        "time": "0:29",
+        "text": "네, 확인해 드리겠습니다. 본인 확인 부탁드립니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:36",
+        "text": "박성철, 1972년 8월 19일이요. 빨리 해결해 주세요!"
+      },
+      {
+        "speaker": "agent",
+        "time": "0:42",
+        "text": "오늘 9시 14분부터 9시 47분까지 영웅문S에서 일부 주문 모듈 지연이 있었던 점 확인됩니다. 정확한 손실 규모는 거래내역 분석 후 안내드리겠습니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:53",
+        "text": "분석은 무슨, 지금 당장 보상해 주세요!"
+      },
+      {
+        "speaker": "agent",
+        "time": "1:00",
+        "text": "고객님 죄송합니다. 다만 보상 여부는 시스템 장애와 손실의 인과관계 검토 후 결정되며, 민원처리팀으로 이관 처리됩니다. 영업일 기준 3일 내 회신드리겠습니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "1:12",
+        "text": "3일이요? 너무 늦어요. 금감원에 신고할 거예요."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:20",
+        "text": "네 고객님 의사 존중하며, 민원 이관과 별개로 금감원 분쟁조정 접수도 가능하십니다. 접수번호 안내 드리겠습니다. 민원 접수번호 CL-2025-00014입니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "1:27",
+        "text": "...알겠어요. 빨리 처리해 주세요."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:39",
+        "text": "네 최선을 다하겠습니다. 추가 자료 필요 시 다시 연락드리겠습니다."
+      }
+    ],
+    "coaching_plan": "1) 표준 스크립트 재숙지 (1주 내)\n2) 시나리오별 롤플레잉 3회 진행\n3) 재평가 일정: 2주 후"
+  },
+  {
+    "id": "ME-2025-00021",
+    "date": "2025-01-22",
+    "call_time": "16:25",
+    "center": "서울센터",
+    "center_id": "ct-seoul",
+    "team": "VIP고객팀",
+    "team_id": "team-vip",
+    "agent_id": "agent002",
+    "agent_name": "이영희",
+    "call_type": "I/B",
+    "duration": "1:57",
+    "total_score": 0,
+    "eval_form": "I/B VIP 평가표 v1.0",
+    "consultation_type": "고객관리 > VIP관리 > 포트폴리오 > 자산배분",
+    "scenario_id": "qa-16-vip-portfolio",
+    "scenario_category": "상품권유",
+    "products": [
+      "ECS 랩어카운트",
+      "삼성전자",
+      "SK하이닉스"
+    ],
+    "manual_plan": "2025년 1분기 신입 상담사 수동 평가",
+    "manual_plan_criteria": "근무일수 30일 미만",
+    "eval_status": "pending",
+    "issues": [],
+    "ai_feedback": "AI 자동 평가 점수: 84점. 근무일수 30일 미만 기준으로 수동 평가 대상에 포함되었습니다. 시나리오 카테고리: 상품권유, 결과: 정보 안내.",
+    "qa_comment": "수동평가 사유: 근무일수 30일 미만. 통화 청취 결과 상품권유 카테고리 시나리오로 분류되며, AI 자동평가(84점)와 수동평가 결과의 편차는 미미한 수준입니다. 코칭 권장 사항: 2025년 1분기 신입 상담사 수동 평가 가이드라인 준수.",
+    "scores": {
+      "item-greeting": {
+        "type": "NLP",
+        "score": 8,
+        "max": 10,
+        "status": "warn",
+        "confidence": 81,
+        "reason": "인사·도입 영역에서 기준점 대비 부족"
+      },
+      "item-empathy": {
+        "type": "AI",
+        "score": 10,
+        "max": 10,
+        "status": "pass",
+        "confidence": 79
+      },
+      "item-solution": {
+        "type": "AI",
+        "score": 15,
+        "max": 15,
+        "status": "pass",
+        "confidence": 83
+      },
+      "item-closing": {
+        "type": "NLP",
+        "score": 8,
+        "max": 10,
+        "status": "warn",
+        "confidence": 79,
+        "reason": "종결·마무리 영역에서 기준점 대비 부족"
+      },
+      "item-forbidden": {
+        "type": "NLP",
+        "score": 10,
+        "max": 10,
+        "status": "pass",
+        "confidence": 99
+      }
+    },
+    "transcript": [
+      {
+        "speaker": "agent",
+        "time": "0:00",
+        "text": "안녕하세요, VIP 고객님. ECS증권 VIP고객팀 이영희입니다. 무엇을 도와드릴까요?"
+      },
+      {
+        "speaker": "customer",
+        "time": "0:10",
+        "text": "현재 포트폴리오 리밸런싱 좀 상담받고 싶어요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:20",
+        "text": "네 자세히 안내드리겠습니다. 본인 확인 부탁드립니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:29",
+        "text": "조현우, 1968년 9월 14일이요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:41",
+        "text": "확인되었습니다. 현재 고객님 포트폴리오는 국내주식 65%, 해외주식 20%, 채권 10%, 현금 5%로 구성되어 있습니다. 작년 대비 국내주식 비중이 높아진 상태입니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:49",
+        "text": "비중이 너무 높은 것 같아요. 조정이 필요할까요?"
+      },
+      {
+        "speaker": "agent",
+        "time": "1:01",
+        "text": "고객님 투자성향(적극투자형)과 시장 상황 고려할 때, 국내주식 비중을 55~60% 수준으로 낮추고 해외주식과 채권 비중을 확대하는 방안 권장드립니다. 다만 최종 결정은 고객님 판단입니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "1:11",
+        "text": "랩어카운트로 일임 운용 받는 것도 고려 중인데 어떤가요?"
+      },
+      {
+        "speaker": "agent",
+        "time": "1:17",
+        "text": "ECS 랩어카운트는 가입 한도 1억원 이상, 일임수수료 연 1.5% 수준입니다. 운용 전략에 따라 가치주형/성장주형/배당형 등 6종이 있습니다. 최근 1년 수익률은 모델 포트폴리오 기준 8~14% 수준이나 과거 성과가 미래를 보장하지는 않습니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "1:26",
+        "text": "자세한 안내자료 좀 받아볼 수 있을까요?"
+      },
+      {
+        "speaker": "agent",
+        "time": "1:34",
+        "text": "네 카카오톡과 이메일로 발송드리겠습니다. 검토 후 추가 문의 주시면 영업점 방문 상담 일정 잡아드리겠습니다. 추가 문의 있으신가요?"
+      },
+      {
+        "speaker": "customer",
+        "time": "1:41",
+        "text": "충분합니다. 감사합니다."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:52",
+        "text": "감사합니다. 좋은 하루 되세요, ECS증권 VIP고객팀 이영희이었습니다."
+      }
+    ]
+  },
+  {
+    "id": "ME-2025-00007",
+    "date": "2025-01-22",
+    "call_time": "15:35",
+    "center": "서울센터",
+    "center_id": "ct-seoul",
+    "team": "VIP고객팀",
+    "team_id": "team-vip",
+    "agent_id": "agent101",
+    "agent_name": "김유진",
+    "call_type": "I/B",
+    "duration": "1:36",
+    "total_score": 0,
+    "eval_form": "I/B VIP 평가표 v1.0",
+    "consultation_type": "상품권유 > ELS권유 > 설명의무 > 핵심설명누락",
+    "scenario_id": "qa-07-els-explanation-miss",
+    "scenario_category": "설명의무",
+    "products": [
+      "ECS ELS 제1235회"
+    ],
+    "manual_plan": "2025년 2월 품질 샘플링 검증",
+    "manual_plan_criteria": "샘플링 10%",
+    "eval_status": "pending",
+    "issues": [],
+    "ai_feedback": "AI 자동 평가 점수: 95점. 샘플링 10% 기준으로 수동 평가 대상에 포함되었습니다. 시나리오 카테고리: 설명의무, 결과: 수동평가 필요.",
+    "qa_comment": "수동평가 사유: 샘플링 10%. 통화 청취 결과 설명의무 카테고리 시나리오로 분류되며, AI 자동평가(95점)와 수동평가 결과의 편차는 미미한 수준입니다. 코칭 권장 사항: 2025년 2월 품질 샘플링 검증 가이드라인 준수.",
+    "scores": {
+      "item-greeting": {
+        "type": "NLP",
+        "score": 7,
+        "max": 10,
+        "status": "warn",
+        "confidence": 88,
+        "reason": "인사·도입 영역에서 기준점 대비 부족"
+      },
+      "item-empathy": {
+        "type": "AI",
+        "score": 6,
+        "max": 10,
+        "status": "warn",
+        "confidence": 77,
+        "reason": "공감·경청 영역에서 기준점 대비 부족"
+      },
+      "item-solution": {
+        "type": "AI",
+        "score": 9,
+        "max": 15,
+        "status": "warn",
+        "confidence": 83,
+        "reason": "문제 해결 영역에서 기준점 대비 부족"
+      },
+      "item-closing": {
+        "type": "NLP",
+        "score": 6,
+        "max": 10,
+        "status": "warn",
+        "confidence": 85,
+        "reason": "종결·마무리 영역에서 기준점 대비 부족"
+      },
+      "item-forbidden": {
+        "type": "NLP",
+        "score": 10,
+        "max": 10,
+        "status": "pass",
+        "confidence": 99
+      }
+    },
+    "transcript": [
+      {
+        "speaker": "agent",
+        "time": "0:00",
+        "text": "안녕하세요, ECS증권 VIP고객팀 김유진입니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:06",
+        "text": "ELS 1235회 가입하려고 하는데요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:11",
+        "text": "네, 그 상품 좋습니다. 연 8% 수익률 상품이에요."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:21",
+        "text": "원금 보장이 되나요?"
+      },
+      {
+        "speaker": "agent",
+        "time": "0:32",
+        "text": "어, 그건... 조건부 보장이라고 생각하시면 됩니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:42",
+        "text": "조건부가 무슨 뜻인가요?"
+      },
+      {
+        "speaker": "agent",
+        "time": "0:48",
+        "text": "음, 기초자산이 많이 떨어지지 않으면 보장됩니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:57",
+        "text": "구체적으로 얼마나 떨어지면 손실인가요?"
+      },
+      {
+        "speaker": "agent",
+        "time": "1:07",
+        "text": "그건 상품설명서 보시면 자세히 나옵니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "1:17",
+        "text": "알겠어요... 일단 자료 보내주세요."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:24",
+        "text": "네 보내드리겠습니다."
+      }
+    ]
+  },
+  {
+    "id": "ME-2025-00023",
+    "date": "2025-01-22",
+    "call_time": "11:45",
+    "center": "서울센터",
+    "center_id": "ct-seoul",
+    "team": "주식상담팀",
+    "team_id": "team-general",
+    "agent_id": "agent003",
+    "agent_name": "김철수",
+    "call_type": "I/B",
+    "duration": "1:43",
+    "total_score": 0,
+    "eval_form": "I/B 일반 상담 평가표 v2.1",
+    "consultation_type": "민원관리 > 금감원민원 > 수수료분쟁 > 법무이관",
+    "scenario_id": "qa-14-fss-complaint",
+    "scenario_category": "민원",
+    "products": [
+      "수수료"
+    ],
+    "manual_plan": "2025년 2월 AI 저점수 재평가",
+    "manual_plan_criteria": "AI 점수 60점 미만",
+    "eval_status": "pending",
+    "issues": [],
+    "ai_feedback": "AI 자동 평가 점수: 76점. AI 점수 60점 미만 기준으로 수동 평가 대상에 포함되었습니다. 시나리오 카테고리: 민원, 결과: 이관 (법무팀).",
+    "qa_comment": "수동평가 사유: AI 점수 60점 미만. 통화 청취 결과 민원 카테고리 시나리오로 분류되며, AI 자동평가(76점)와 수동평가 결과의 편차는 미미한 수준입니다. 코칭 권장 사항: 2025년 2월 AI 저점수 재평가 가이드라인 준수.",
+    "scores": {
+      "item-greeting": {
+        "type": "NLP",
+        "score": 4,
+        "max": 10,
+        "status": "fail",
+        "confidence": 91,
+        "reason": "인사·도입 영역에서 기준점 대비 부족"
+      },
+      "item-empathy": {
+        "type": "AI",
+        "score": 5,
+        "max": 10,
+        "status": "fail",
+        "confidence": 78,
+        "reason": "공감·경청 영역에서 기준점 대비 부족"
+      },
+      "item-solution": {
+        "type": "AI",
+        "score": 7,
+        "max": 15,
+        "status": "fail",
+        "confidence": 77,
+        "reason": "문제 해결 영역에서 기준점 대비 부족"
+      },
+      "item-closing": {
+        "type": "NLP",
+        "score": 5,
+        "max": 10,
+        "status": "fail",
+        "confidence": 83,
+        "reason": "종결·마무리 영역에서 기준점 대비 부족"
+      },
+      "item-forbidden": {
+        "type": "NLP",
+        "score": 10,
+        "max": 10,
+        "status": "pass",
+        "confidence": 99
+      }
+    },
+    "transcript": [
+      {
+        "speaker": "customer",
+        "time": "0:00",
+        "text": "어제 금감원에 민원 접수했어요. 접수번호 2025-0345-금감원입니다."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:07",
+        "text": "네 ECS증권 주식상담팀 김철수입니다. 금감원 민원 건 안내 부탁드립니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:13",
+        "text": "지난달 거래 수수료가 평소보다 두 배로 부과됐어요. 확인해 봤더니 우대수수료 조건 변경됐다고 하던데 사전 안내가 전혀 없었어요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:22",
+        "text": "확인하겠습니다. 본인 확인 부탁드립니다. 성함과 생년월일이요."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:30",
+        "text": "강미라, 1981년 5월 27일이요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:39",
+        "text": "확인되었습니다. 우대수수료율 변경은 작년 11월 홈페이지 공지사항과 가입자 이메일로 안내된 사항입니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:45",
+        "text": "이메일 받은 적 없어요. 그리고 공지사항을 누가 매일 봐요?"
+      },
+      {
+        "speaker": "agent",
+        "time": "0:57",
+        "text": "고객님 입장 이해됩니다. 다만 약관상 공지로 갈음 가능한 사항입니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "1:03",
+        "text": "그러니까 금감원에 신고했죠. 법적으로 다투겠어요."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:14",
+        "text": "네 본 건은 금감원 분쟁조정 진행 중인 사안으로, 법무팀으로 이관해 회신드리겠습니다. 회신 시한은 금감원 가이드에 따라 14일 이내입니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "1:25",
+        "text": "녹취 사본도 요청합니다."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:36",
+        "text": "네 녹취 사본은 정보공개 청구 절차로 진행되며, 법무팀에서 안내드리겠습니다. 민원 접수번호 FS-2025-00023입니다."
+      }
+    ],
+    "coaching_plan": "1) 금융 상품 설명 의무 핵심 5개 항목 재교육 이수\n2) ELS·신용거래 시나리오 모의 콜 평가\n3) 멘토 1:1 코칭 주 1회 (4주)"
+  },
+  {
+    "id": "ME-2025-00024",
+    "date": "2025-01-22",
+    "call_time": "09:45",
+    "center": "서울센터",
+    "center_id": "ct-seoul",
+    "team": "주식상담팀",
+    "team_id": "team-general",
+    "agent_id": "agent202",
+    "agent_name": "박서연",
+    "call_type": "I/B",
+    "duration": "1:47",
+    "total_score": 0,
+    "eval_form": "I/B 일반 상담 평가표 v2.1",
+    "consultation_type": "거래지원 > 신용거래 > 위험고지 > 반대매매",
+    "scenario_id": "qa-08-credit-trade-risk",
+    "scenario_category": "설명의무",
+    "products": [
+      "신용거래"
+    ],
+    "manual_plan": "특정 상담사 집중 모니터링",
+    "manual_plan_criteria": "특정 상담사 지정",
+    "eval_status": "pending",
+    "issues": [],
+    "ai_feedback": "AI 자동 평가 점수: 80점. 특정 상담사 지정 기준으로 수동 평가 대상에 포함되었습니다. 시나리오 카테고리: 설명의무, 결과: 정보 안내.",
+    "qa_comment": "수동평가 사유: 특정 상담사 지정. 통화 청취 결과 설명의무 카테고리 시나리오로 분류되며, AI 자동평가(80점)와 수동평가 결과의 편차는 미미한 수준입니다. 코칭 권장 사항: 특정 상담사 집중 모니터링 가이드라인 준수.",
+    "scores": {
+      "item-greeting": {
+        "type": "NLP",
+        "score": 8,
+        "max": 10,
+        "status": "warn",
+        "confidence": 88,
+        "reason": "인사·도입 영역에서 기준점 대비 부족"
+      },
+      "item-empathy": {
+        "type": "AI",
+        "score": 7,
+        "max": 10,
+        "status": "warn",
+        "confidence": 78,
+        "reason": "공감·경청 영역에서 기준점 대비 부족"
+      },
+      "item-solution": {
+        "type": "AI",
+        "score": 12,
+        "max": 15,
+        "status": "warn",
+        "confidence": 78,
+        "reason": "문제 해결 영역에서 기준점 대비 부족"
+      },
+      "item-closing": {
+        "type": "NLP",
+        "score": 7,
+        "max": 10,
+        "status": "warn",
+        "confidence": 78,
+        "reason": "종결·마무리 영역에서 기준점 대비 부족"
+      },
+      "item-forbidden": {
+        "type": "NLP",
+        "score": 10,
+        "max": 10,
+        "status": "pass",
+        "confidence": 99
+      }
+    },
+    "transcript": [
+      {
+        "speaker": "agent",
+        "time": "0:00",
+        "text": "안녕하세요, ECS증권 주식상담팀 박서연입니다. 무엇을 도와드릴까요?"
+      },
+      {
+        "speaker": "customer",
+        "time": "0:05",
+        "text": "신용거래 한도를 늘리고 싶은데 어떻게 해야 하나요?"
+      },
+      {
+        "speaker": "agent",
+        "time": "0:12",
+        "text": "네 안내 드리겠습니다. 본인 확인 부탁드립니다. 성함과 생년월일 말씀해 주시겠어요?"
+      },
+      {
+        "speaker": "customer",
+        "time": "0:22",
+        "text": "정태경, 1985년 2월 14일이요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:30",
+        "text": "확인되었습니다. 신용거래는 증거금률에 따라 한도가 산정되며, 종목별로 40%/45%/100% 등으로 차등 적용됩니다. 한도 상향 신청은 영웅문S 앱 또는 영업점에서 가능합니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:38",
+        "text": "한도가 늘어나면 좋은 거 아닌가요?"
+      },
+      {
+        "speaker": "agent",
+        "time": "0:44",
+        "text": "신용거래는 레버리지가 활용되어 수익도 커지지만 손실도 커집니다. 특히 보유 종목 가격이 하락해 담보 유지비율이 140% 미만이 되면 반대매매가 발생합니다. 반대매매는 영업일 D+2일 동시호가에 매도되어 추가 손실로 이어질 수 있습니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:52",
+        "text": "반대매매 막을 방법은 없나요?"
+      },
+      {
+        "speaker": "agent",
+        "time": "1:00",
+        "text": "추가 담보 입금 또는 일부 보유 종목 매도로 담보 유지비율을 회복하면 됩니다. 반대매매 발생 전날 오후 영웅문S로 알림이 발송됩니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "1:12",
+        "text": "이해했어요. 일단 한도 상향은 보류할게요."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:20",
+        "text": "네, 충분히 검토하시는 것 권장드립니다. 추가 문의 있으신가요?"
+      },
+      {
+        "speaker": "customer",
+        "time": "1:26",
+        "text": "없어요, 감사합니다."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:35",
+        "text": "감사합니다. 좋은 하루 되세요, ECS증권 주식상담팀 박서연이었습니다."
+      }
+    ]
+  },
+  {
+    "id": "ME-2025-00013",
+    "date": "2025-01-21",
+    "call_time": "13:20",
+    "center": "서울센터",
+    "center_id": "ct-seoul",
+    "team": "주식상담팀",
+    "team_id": "team-general",
+    "agent_id": "agent204",
+    "agent_name": "한지석",
+    "call_type": "I/B",
+    "duration": "2:00",
+    "total_score": 0,
+    "eval_form": "I/B 일반 상담 평가표 v2.1",
+    "consultation_type": "민원관리 > 시스템장애 > 손실분쟁 > 보상요청",
+    "scenario_id": "qa-13-system-claim",
+    "scenario_category": "민원",
+    "products": [
+      "영웅문S",
+      "삼성전자"
+    ],
+    "manual_plan": "2025년 2월 AI 저점수 재평가",
+    "manual_plan_criteria": "AI 점수 60점 미만",
+    "eval_status": "pending",
+    "issues": [],
+    "ai_feedback": "AI 자동 평가 점수: 82점. AI 점수 60점 미만 기준으로 수동 평가 대상에 포함되었습니다. 시나리오 카테고리: 민원, 결과: 이관 (민원처리팀).",
+    "qa_comment": "수동평가 사유: AI 점수 60점 미만. 통화 청취 결과 민원 카테고리 시나리오로 분류되며, AI 자동평가(82점)와 수동평가 결과의 편차는 미미한 수준입니다. 코칭 권장 사항: 2025년 2월 AI 저점수 재평가 가이드라인 준수.",
+    "scores": {
+      "item-greeting": {
+        "type": "NLP",
+        "score": 7,
+        "max": 10,
+        "status": "warn",
+        "confidence": 78,
+        "reason": "인사·도입 영역에서 기준점 대비 부족"
+      },
+      "item-empathy": {
+        "type": "AI",
+        "score": 8,
+        "max": 10,
+        "status": "warn",
+        "confidence": 94,
+        "reason": "공감·경청 영역에서 기준점 대비 부족"
+      },
+      "item-solution": {
+        "type": "AI",
+        "score": 9,
+        "max": 15,
+        "status": "warn",
+        "confidence": 94,
+        "reason": "문제 해결 영역에서 기준점 대비 부족"
+      },
+      "item-closing": {
+        "type": "NLP",
+        "score": 8,
+        "max": 10,
+        "status": "warn",
+        "confidence": 85,
+        "reason": "종결·마무리 영역에서 기준점 대비 부족"
+      },
+      "item-forbidden": {
+        "type": "NLP",
+        "score": 10,
+        "max": 10,
+        "status": "pass",
+        "confidence": 99
+      }
+    },
+    "transcript": [
+      {
+        "speaker": "customer",
+        "time": "0:00",
+        "text": "여보세요! 오늘 아침에 영웅문 먹통이어서 매도 못 했어요. 손실이 800만원이라고요!"
+      },
+      {
+        "speaker": "agent",
+        "time": "0:06",
+        "text": "네, ECS증권 주식상담팀 한지석입니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:17",
+        "text": "아니 사과부터 해야 하는 거 아니에요? 시스템 장애로 손실 본 게 한두 번이 아니에요!"
+      },
+      {
+        "speaker": "agent",
+        "time": "0:27",
+        "text": "네, 확인해 드리겠습니다. 본인 확인 부탁드립니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:38",
+        "text": "박성철, 1972년 8월 19일이요. 빨리 해결해 주세요!"
+      },
+      {
+        "speaker": "agent",
+        "time": "0:49",
+        "text": "오늘 9시 14분부터 9시 47분까지 영웅문S에서 일부 주문 모듈 지연이 있었던 점 확인됩니다. 정확한 손실 규모는 거래내역 분석 후 안내드리겠습니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "1:00",
+        "text": "분석은 무슨, 지금 당장 보상해 주세요!"
+      },
+      {
+        "speaker": "agent",
+        "time": "1:12",
+        "text": "고객님 죄송합니다. 다만 보상 여부는 시스템 장애와 손실의 인과관계 검토 후 결정되며, 민원처리팀으로 이관 처리됩니다. 영업일 기준 3일 내 회신드리겠습니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "1:20",
+        "text": "3일이요? 너무 늦어요. 금감원에 신고할 거예요."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:29",
+        "text": "네 고객님 의사 존중하며, 민원 이관과 별개로 금감원 분쟁조정 접수도 가능하십니다. 접수번호 안내 드리겠습니다. 민원 접수번호 CL-2025-00013입니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "1:41",
+        "text": "...알겠어요. 빨리 처리해 주세요."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:52",
+        "text": "네 최선을 다하겠습니다. 추가 자료 필요 시 다시 연락드리겠습니다."
+      }
+    ],
+    "coaching_plan": "1) 고령투자자 응대 가이드라인 학습\n2) 컴플라이언스 부서 합동 코칭 1회\n3) 재평가 후 결과 본부 보고"
+  },
+  {
+    "id": "ME-2025-00004",
+    "date": "2025-01-20",
+    "call_time": "12:00",
+    "center": "서울센터",
+    "center_id": "ct-seoul",
+    "team": "주식상담팀",
+    "team_id": "team-general",
+    "agent_id": "agent004",
+    "agent_name": "박지민",
+    "call_type": "I/B",
+    "duration": "1:29",
+    "total_score": 44,
+    "eval_form": "I/B 일반 상담 평가표 v2.1",
+    "consultation_type": "계좌관리 > 일반문의 > 잔고조회 > 예수금",
+    "scenario_id": "qa-18-newbie",
+    "scenario_category": "신입",
+    "products": [
+      "ECS증권 계좌"
+    ],
+    "manual_plan": "2025년 1분기 신입 상담사 수동 평가",
+    "manual_plan_criteria": "근무일수 30일 미만",
+    "eval_status": "completed",
+    "issues": [
+      "신입 시나리오 감점 항목 다수"
+    ],
+    "ai_feedback": "AI 자동 평가 점수: 76점. 근무일수 30일 미만 기준으로 수동 평가 대상에 포함되었습니다. 시나리오 카테고리: 신입, 결과: 수동평가 필요.",
+    "qa_comment": "수동평가 사유: 근무일수 30일 미만. 통화 청취 결과 신입 카테고리 시나리오로 분류되며, AI 자동평가(76점)와 수동평가 결과의 편차는 미미한 수준입니다. 코칭 권장 사항: 2025년 1분기 신입 상담사 수동 평가 가이드라인 준수.",
+    "scores": {
+      "item-greeting": {
+        "type": "NLP",
+        "score": 6,
+        "max": 10,
+        "status": "warn",
+        "confidence": 78,
+        "reason": "인사·도입 영역에서 기준점 대비 부족"
+      },
+      "item-empathy": {
+        "type": "AI",
+        "score": 8,
+        "max": 10,
+        "status": "warn",
+        "confidence": 82,
+        "reason": "공감·경청 영역에서 기준점 대비 부족"
+      },
+      "item-solution": {
+        "type": "AI",
+        "score": 12,
+        "max": 15,
+        "status": "warn",
+        "confidence": 81,
+        "reason": "문제 해결 영역에서 기준점 대비 부족"
+      },
+      "item-closing": {
+        "type": "NLP",
+        "score": 8,
+        "max": 10,
+        "status": "warn",
+        "confidence": 95,
+        "reason": "종결·마무리 영역에서 기준점 대비 부족"
+      },
+      "item-forbidden": {
+        "type": "NLP",
+        "score": 10,
+        "max": 10,
+        "status": "pass",
+        "confidence": 99
+      }
+    },
+    "transcript": [
+      {
+        "speaker": "agent",
+        "time": "0:00",
+        "text": "여보세요, 박지민입니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:05",
+        "text": "잔고 좀 확인해 보고 싶은데요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:12",
+        "text": "아 네, 어떤 잔고요?"
+      },
+      {
+        "speaker": "customer",
+        "time": "0:24",
+        "text": "예수금이요. 어제 입금한 게 들어왔는지요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:34",
+        "text": "음, 본인 확인이 필요해요. 성함이랑 주민번호 앞자리..."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:45",
+        "text": "주민번호요? 보안에 안 좋을 것 같은데요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:51",
+        "text": "어, 죄송합니다. 생년월일만 알려주세요."
+      },
+      {
+        "speaker": "customer",
+        "time": "1:01",
+        "text": "신영주, 1995년 1월 30일이요."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:07",
+        "text": "잠시만요... 예수금 500만원 정상 입금됐어요."
+      },
+      {
+        "speaker": "customer",
+        "time": "1:15",
+        "text": "감사합니다."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:22",
+        "text": "네 끊을게요."
+      }
+    ],
+    "coaching_plan": "1) 표준 스크립트 재숙지 (1주 내)\n2) 시나리오별 롤플레잉 3회 진행\n3) 재평가 일정: 2주 후",
     "manual_review": {
-      "reviewed_at": "2025-01-24 16:00",
-      "reviewer": "박관리자",
-      "modified_items": [{ "item_id": "item-solution", "original_score": 8, "new_score": 9 }],
-      "comment": "기술적 해결 과정은 양호. 인사 및 공감 표현 개선 필요."
+      "reviewed_at": "2025-01-20 14:30",
+      "reviewer": "박팀장",
+      "modified_items": [],
+      "comment": "수동평가 사유: 근무일수 30일 미만. 통화 청취 결과 신입 카테고리 시나리오로 분류되며, AI 자동평가(76점)와 수동평가 결과의 편차는 미미…"
     }
+  },
+  {
+    "id": "ME-2025-00008",
+    "date": "2025-01-19",
+    "call_time": "12:00",
+    "center": "서울센터",
+    "center_id": "ct-seoul",
+    "team": "VIP고객팀",
+    "team_id": "team-vip",
+    "agent_id": "agent002",
+    "agent_name": "이영희",
+    "call_type": "I/B",
+    "duration": "1:24",
+    "total_score": 37,
+    "eval_form": "I/B VIP 평가표 v1.0",
+    "consultation_type": "상품권유 > ELS권유 > 설명의무 > 핵심설명누락",
+    "scenario_id": "qa-07-els-explanation-miss",
+    "scenario_category": "설명의무",
+    "products": [
+      "ECS ELS 제1235회"
+    ],
+    "manual_plan": "2025년 2월 AI 저점수 재평가",
+    "manual_plan_criteria": "AI 점수 60점 미만",
+    "eval_status": "completed",
+    "issues": [
+      "설명의무 시나리오 감점 항목 다수"
+    ],
+    "ai_feedback": "AI 자동 평가 점수: 84점. AI 점수 60점 미만 기준으로 수동 평가 대상에 포함되었습니다. 시나리오 카테고리: 설명의무, 결과: 수동평가 필요.",
+    "qa_comment": "수동평가 사유: AI 점수 60점 미만. 통화 청취 결과 설명의무 카테고리 시나리오로 분류되며, AI 자동평가(84점)와 수동평가 결과의 편차는 미미한 수준입니다. 코칭 권장 사항: 2025년 2월 AI 저점수 재평가 가이드라인 준수.",
+    "scores": {
+      "item-greeting": {
+        "type": "NLP",
+        "score": 5,
+        "max": 10,
+        "status": "fail",
+        "confidence": 77,
+        "reason": "인사·도입 영역에서 기준점 대비 부족"
+      },
+      "item-empathy": {
+        "type": "AI",
+        "score": 5,
+        "max": 10,
+        "status": "fail",
+        "confidence": 83,
+        "reason": "공감·경청 영역에서 기준점 대비 부족"
+      },
+      "item-solution": {
+        "type": "AI",
+        "score": 11,
+        "max": 15,
+        "status": "warn",
+        "confidence": 80,
+        "reason": "문제 해결 영역에서 기준점 대비 부족"
+      },
+      "item-closing": {
+        "type": "NLP",
+        "score": 6,
+        "max": 10,
+        "status": "warn",
+        "confidence": 81,
+        "reason": "종결·마무리 영역에서 기준점 대비 부족"
+      },
+      "item-forbidden": {
+        "type": "NLP",
+        "score": 10,
+        "max": 10,
+        "status": "pass",
+        "confidence": 99
+      }
+    },
+    "transcript": [
+      {
+        "speaker": "agent",
+        "time": "0:00",
+        "text": "안녕하세요, ECS증권 VIP고객팀 이영희입니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:07",
+        "text": "ELS 1235회 가입하려고 하는데요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:15",
+        "text": "네, 그 상품 좋습니다. 연 8% 수익률 상품이에요."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:22",
+        "text": "원금 보장이 되나요?"
+      },
+      {
+        "speaker": "agent",
+        "time": "0:27",
+        "text": "어, 그건... 조건부 보장이라고 생각하시면 됩니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:39",
+        "text": "조건부가 무슨 뜻인가요?"
+      },
+      {
+        "speaker": "agent",
+        "time": "0:44",
+        "text": "음, 기초자산이 많이 떨어지지 않으면 보장됩니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:54",
+        "text": "구체적으로 얼마나 떨어지면 손실인가요?"
+      },
+      {
+        "speaker": "agent",
+        "time": "1:01",
+        "text": "그건 상품설명서 보시면 자세히 나옵니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "1:08",
+        "text": "알겠어요... 일단 자료 보내주세요."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:16",
+        "text": "네 보내드리겠습니다."
+      }
+    ],
+    "coaching_plan": "1) 공감 표현·고객 감정 응대 워크숍 참여\n2) 민원 응대 시나리오 5건 청취·분석\n3) 1개월 후 재평가",
+    "manual_review": {
+      "reviewed_at": "2025-01-19 14:30",
+      "reviewer": "이평가",
+      "modified_items": [],
+      "comment": "수동평가 사유: AI 점수 60점 미만. 통화 청취 결과 설명의무 카테고리 시나리오로 분류되며, AI 자동평가(84점)와 수동평가 결과의 편차는…"
+    }
+  },
+  {
+    "id": "ME-2025-00025",
+    "date": "2025-01-18",
+    "call_time": "16:30",
+    "center": "서울센터",
+    "center_id": "ct-seoul",
+    "team": "주식상담팀",
+    "team_id": "team-general",
+    "agent_id": "agent004",
+    "agent_name": "박지민",
+    "call_type": "I/B",
+    "duration": "1:52",
+    "total_score": 0,
+    "eval_form": "I/B 일반 상담 평가표 v2.1",
+    "consultation_type": "거래지원 > 신용거래 > 위험고지 > 반대매매",
+    "scenario_id": "qa-08-credit-trade-risk",
+    "scenario_category": "설명의무",
+    "products": [
+      "신용거래"
+    ],
+    "manual_plan": "2025년 2월 AI 저점수 재평가",
+    "manual_plan_criteria": "AI 점수 60점 미만",
+    "eval_status": "pending",
+    "issues": [],
+    "ai_feedback": "AI 자동 평가 점수: 76점. AI 점수 60점 미만 기준으로 수동 평가 대상에 포함되었습니다. 시나리오 카테고리: 설명의무, 결과: 정보 안내.",
+    "qa_comment": "수동평가 사유: AI 점수 60점 미만. 통화 청취 결과 설명의무 카테고리 시나리오로 분류되며, AI 자동평가(76점)와 수동평가 결과의 편차는 미미한 수준입니다. 코칭 권장 사항: 2025년 2월 AI 저점수 재평가 가이드라인 준수.",
+    "scores": {
+      "item-greeting": {
+        "type": "NLP",
+        "score": 8,
+        "max": 10,
+        "status": "warn",
+        "confidence": 95,
+        "reason": "인사·도입 영역에서 기준점 대비 부족"
+      },
+      "item-empathy": {
+        "type": "AI",
+        "score": 7,
+        "max": 10,
+        "status": "warn",
+        "confidence": 87,
+        "reason": "공감·경청 영역에서 기준점 대비 부족"
+      },
+      "item-solution": {
+        "type": "AI",
+        "score": 11,
+        "max": 15,
+        "status": "warn",
+        "confidence": 76,
+        "reason": "문제 해결 영역에서 기준점 대비 부족"
+      },
+      "item-closing": {
+        "type": "NLP",
+        "score": 9,
+        "max": 10,
+        "status": "pass",
+        "confidence": 83
+      },
+      "item-forbidden": {
+        "type": "NLP",
+        "score": 10,
+        "max": 10,
+        "status": "pass",
+        "confidence": 99
+      }
+    },
+    "transcript": [
+      {
+        "speaker": "agent",
+        "time": "0:00",
+        "text": "안녕하세요, ECS증권 주식상담팀 박지민입니다. 무엇을 도와드릴까요?"
+      },
+      {
+        "speaker": "customer",
+        "time": "0:06",
+        "text": "신용거래 한도를 늘리고 싶은데 어떻게 해야 하나요?"
+      },
+      {
+        "speaker": "agent",
+        "time": "0:18",
+        "text": "네 안내 드리겠습니다. 본인 확인 부탁드립니다. 성함과 생년월일 말씀해 주시겠어요?"
+      },
+      {
+        "speaker": "customer",
+        "time": "0:24",
+        "text": "정태경, 1985년 2월 14일이요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:35",
+        "text": "확인되었습니다. 신용거래는 증거금률에 따라 한도가 산정되며, 종목별로 40%/45%/100% 등으로 차등 적용됩니다. 한도 상향 신청은 영웅문S 앱 또는 영업점에서 가능합니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:46",
+        "text": "한도가 늘어나면 좋은 거 아닌가요?"
+      },
+      {
+        "speaker": "agent",
+        "time": "0:54",
+        "text": "신용거래는 레버리지가 활용되어 수익도 커지지만 손실도 커집니다. 특히 보유 종목 가격이 하락해 담보 유지비율이 140% 미만이 되면 반대매매가 발생합니다. 반대매매는 영업일 D+2일 동시호가에 매도되어 추가 손실로 이어질 수 있습니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "1:00",
+        "text": "반대매매 막을 방법은 없나요?"
+      },
+      {
+        "speaker": "agent",
+        "time": "1:09",
+        "text": "추가 담보 입금 또는 일부 보유 종목 매도로 담보 유지비율을 회복하면 됩니다. 반대매매 발생 전날 오후 영웅문S로 알림이 발송됩니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "1:15",
+        "text": "이해했어요. 일단 한도 상향은 보류할게요."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:24",
+        "text": "네, 충분히 검토하시는 것 권장드립니다. 추가 문의 있으신가요?"
+      },
+      {
+        "speaker": "customer",
+        "time": "1:34",
+        "text": "없어요, 감사합니다."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:42",
+        "text": "감사합니다. 좋은 하루 되세요, ECS증권 주식상담팀 박지민이었습니다."
+      }
+    ]
+  },
+  {
+    "id": "ME-2025-00018",
+    "date": "2025-01-17",
+    "call_time": "17:10",
+    "center": "부산센터",
+    "center_id": "ct-busan",
+    "team": "해피콜팀",
+    "team_id": "team-happycall",
+    "agent_id": "agent008",
+    "agent_name": "윤서연",
+    "call_type": "O/B",
+    "duration": "1:37",
+    "total_score": 51,
+    "eval_form": "O/B 텔레마케팅 평가표 v1.3",
+    "consultation_type": "고객관리 > 해피콜 > 만족도조사 > 신규가입",
+    "scenario_id": "qa-15-happy-call",
+    "scenario_category": "해피콜",
+    "products": [
+      "ECS증권 서비스"
+    ],
+    "manual_plan": "2025년 2월 품질 샘플링 검증",
+    "manual_plan_criteria": "샘플링 10%",
+    "eval_status": "completed",
+    "issues": [
+      "해피콜 시나리오 감점 항목 다수"
+    ],
+    "ai_feedback": "AI 자동 평가 점수: 75점. 샘플링 10% 기준으로 수동 평가 대상에 포함되었습니다. 시나리오 카테고리: 해피콜, 결과: 정보 안내.",
+    "qa_comment": "수동평가 사유: 샘플링 10%. 통화 청취 결과 해피콜 카테고리 시나리오로 분류되며, AI 자동평가(75점)와 수동평가 결과의 편차는 미미한 수준입니다. 코칭 권장 사항: 2025년 2월 품질 샘플링 검증 가이드라인 준수.",
+    "scores": {
+      "item-greeting": {
+        "type": "NLP",
+        "score": 9,
+        "max": 10,
+        "status": "pass",
+        "confidence": 85
+      },
+      "item-empathy": {
+        "type": "AI",
+        "score": 8,
+        "max": 10,
+        "status": "warn",
+        "confidence": 93,
+        "reason": "공감·경청 영역에서 기준점 대비 부족"
+      },
+      "item-solution": {
+        "type": "AI",
+        "score": 14,
+        "max": 15,
+        "status": "pass",
+        "confidence": 86
+      },
+      "item-closing": {
+        "type": "NLP",
+        "score": 10,
+        "max": 10,
+        "status": "pass",
+        "confidence": 81
+      },
+      "item-forbidden": {
+        "type": "NLP",
+        "score": 10,
+        "max": 10,
+        "status": "pass",
+        "confidence": 99
+      }
+    },
+    "transcript": [
+      {
+        "speaker": "agent",
+        "time": "0:00",
+        "text": "안녕하세요, ECS증권 해피콜팀 윤서연입니다. 김지원 고객님 되시죠? 통화 가능하신가요?"
+      },
+      {
+        "speaker": "customer",
+        "time": "0:10",
+        "text": "네, 잠깐이면 괜찮아요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:17",
+        "text": "감사합니다. 지난주 신규 계좌 개설하신 것 관련해 간단한 만족도 조사 진행드리려고 연락드렸습니다. 5분 이내 소요됩니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:24",
+        "text": "네, 진행하세요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:34",
+        "text": "먼저 계좌 개설 과정에서 불편한 점이나 어려운 점은 없으셨나요?"
+      },
+      {
+        "speaker": "customer",
+        "time": "0:39",
+        "text": "신분증 인식이 한 번에 안 돼서 두 번 정도 다시 찍었어요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:51",
+        "text": "불편을 드려 죄송합니다. 신분증 촬영 부분 개선 의견으로 접수하겠습니다. 그 외 영웅문S 앱 사용은 어떠셨나요?"
+      },
+      {
+        "speaker": "customer",
+        "time": "0:59",
+        "text": "전반적으로 만족해요. 화면이 좀 복잡한 느낌은 있지만 익숙해지면 괜찮네요."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:09",
+        "text": "네 소중한 의견 감사합니다. 마지막으로 ECS증권을 지인에게 추천 의향이 있으시다면 0~10점 중 어느 정도이신가요?"
+      },
+      {
+        "speaker": "customer",
+        "time": "1:21",
+        "text": "8점이요."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:26",
+        "text": "네 감사합니다. 더 나은 서비스로 보답드리겠습니다. 좋은 하루 되세요, ECS증권 해피콜팀 윤서연이었습니다."
+      }
+    ],
+    "coaching_plan": "1) 고령투자자 응대 가이드라인 학습\n2) 컴플라이언스 부서 합동 코칭 1회\n3) 재평가 후 결과 본부 보고",
+    "manual_review": {
+      "reviewed_at": "2025-01-17 19:30",
+      "reviewer": "박팀장",
+      "modified_items": [],
+      "comment": "수동평가 사유: 샘플링 10%. 통화 청취 결과 해피콜 카테고리 시나리오로 분류되며, AI 자동평가(75점)와 수동평가 결과의 편차는 미미한 수…"
+    }
+  },
+  {
+    "id": "ME-2025-00006",
+    "date": "2025-01-15",
+    "call_time": "10:25",
+    "center": "서울센터",
+    "center_id": "ct-seoul",
+    "team": "주식상담팀",
+    "team_id": "team-general",
+    "agent_id": "agent004",
+    "agent_name": "박지민",
+    "call_type": "I/B",
+    "duration": "1:25",
+    "total_score": 0,
+    "eval_form": "I/B 일반 상담 평가표 v2.1",
+    "consultation_type": "계좌관리 > 일반문의 > 잔고조회 > 예수금",
+    "scenario_id": "qa-18-newbie",
+    "scenario_category": "신입",
+    "products": [
+      "ECS증권 계좌"
+    ],
+    "manual_plan": "2025년 1분기 신입 상담사 수동 평가",
+    "manual_plan_criteria": "근무일수 30일 미만",
+    "eval_status": "pending",
+    "issues": [],
+    "ai_feedback": "AI 자동 평가 점수: 76점. 근무일수 30일 미만 기준으로 수동 평가 대상에 포함되었습니다. 시나리오 카테고리: 신입, 결과: 수동평가 필요.",
+    "qa_comment": "수동평가 사유: 근무일수 30일 미만. 통화 청취 결과 신입 카테고리 시나리오로 분류되며, AI 자동평가(76점)와 수동평가 결과의 편차는 미미한 수준입니다. 코칭 권장 사항: 2025년 1분기 신입 상담사 수동 평가 가이드라인 준수.",
+    "scores": {
+      "item-greeting": {
+        "type": "NLP",
+        "score": 7,
+        "max": 10,
+        "status": "warn",
+        "confidence": 77,
+        "reason": "인사·도입 영역에서 기준점 대비 부족"
+      },
+      "item-empathy": {
+        "type": "AI",
+        "score": 8,
+        "max": 10,
+        "status": "warn",
+        "confidence": 79,
+        "reason": "공감·경청 영역에서 기준점 대비 부족"
+      },
+      "item-solution": {
+        "type": "AI",
+        "score": 10,
+        "max": 15,
+        "status": "warn",
+        "confidence": 80,
+        "reason": "문제 해결 영역에서 기준점 대비 부족"
+      },
+      "item-closing": {
+        "type": "NLP",
+        "score": 8,
+        "max": 10,
+        "status": "warn",
+        "confidence": 78,
+        "reason": "종결·마무리 영역에서 기준점 대비 부족"
+      },
+      "item-forbidden": {
+        "type": "NLP",
+        "score": 10,
+        "max": 10,
+        "status": "pass",
+        "confidence": 99
+      }
+    },
+    "transcript": [
+      {
+        "speaker": "agent",
+        "time": "0:00",
+        "text": "여보세요, 박지민입니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:06",
+        "text": "잔고 좀 확인해 보고 싶은데요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:16",
+        "text": "아 네, 어떤 잔고요?"
+      },
+      {
+        "speaker": "customer",
+        "time": "0:24",
+        "text": "예수금이요. 어제 입금한 게 들어왔는지요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:31",
+        "text": "음, 본인 확인이 필요해요. 성함이랑 주민번호 앞자리..."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:40",
+        "text": "주민번호요? 보안에 안 좋을 것 같은데요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:48",
+        "text": "어, 죄송합니다. 생년월일만 알려주세요."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:56",
+        "text": "신영주, 1995년 1월 30일이요."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:03",
+        "text": "잠시만요... 예수금 500만원 정상 입금됐어요."
+      },
+      {
+        "speaker": "customer",
+        "time": "1:11",
+        "text": "감사합니다."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:18",
+        "text": "네 끊을게요."
+      }
+    ],
+    "coaching_plan": "1) 공감 표현·고객 감정 응대 워크숍 참여\n2) 민원 응대 시나리오 5건 청취·분석\n3) 1개월 후 재평가"
+  },
+  {
+    "id": "ME-2025-00011",
+    "date": "2025-01-15",
+    "call_time": "10:25",
+    "center": "대구센터",
+    "center_id": "ct-daegu",
+    "team": "CS상담팀",
+    "team_id": "team-cs",
+    "agent_id": "agent603",
+    "agent_name": "표지원",
+    "call_type": "I/B",
+    "duration": "1:27",
+    "total_score": 0,
+    "eval_form": "I/B 일반 상담 평가표 v2.1",
+    "consultation_type": "계좌관리 > 계좌개설 > 비대면개설 > 일반계좌",
+    "scenario_id": "qa-02-account-open-privacy-miss",
+    "scenario_category": "계좌개설",
+    "products": [
+      "ECS증권 비대면 계좌"
+    ],
+    "manual_plan": "2025년 1분기 신입 상담사 수동 평가",
+    "manual_plan_criteria": "근무일수 30일 미만",
+    "eval_status": "pending",
+    "issues": [],
+    "ai_feedback": "AI 자동 평가 점수: 80점. 근무일수 30일 미만 기준으로 수동 평가 대상에 포함되었습니다. 시나리오 카테고리: 계좌개설, 결과: 즉시 해결 (감점).",
+    "qa_comment": "수동평가 사유: 근무일수 30일 미만. 통화 청취 결과 계좌개설 카테고리 시나리오로 분류되며, AI 자동평가(80점)와 수동평가 결과의 편차는 미미한 수준입니다. 코칭 권장 사항: 2025년 1분기 신입 상담사 수동 평가 가이드라인 준수.",
+    "scores": {
+      "item-greeting": {
+        "type": "NLP",
+        "score": 5,
+        "max": 10,
+        "status": "fail",
+        "confidence": 77,
+        "reason": "인사·도입 영역에서 기준점 대비 부족"
+      },
+      "item-empathy": {
+        "type": "AI",
+        "score": 7,
+        "max": 10,
+        "status": "warn",
+        "confidence": 89,
+        "reason": "공감·경청 영역에서 기준점 대비 부족"
+      },
+      "item-solution": {
+        "type": "AI",
+        "score": 8,
+        "max": 15,
+        "status": "fail",
+        "confidence": 75,
+        "reason": "문제 해결 영역에서 기준점 대비 부족"
+      },
+      "item-closing": {
+        "type": "NLP",
+        "score": 7,
+        "max": 10,
+        "status": "warn",
+        "confidence": 91,
+        "reason": "종결·마무리 영역에서 기준점 대비 부족"
+      },
+      "item-forbidden": {
+        "type": "NLP",
+        "score": 10,
+        "max": 10,
+        "status": "pass",
+        "confidence": 99
+      }
+    },
+    "transcript": [
+      {
+        "speaker": "agent",
+        "time": "0:00",
+        "text": "안녕하세요, ECS증권 CS상담팀 표지원입니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:11",
+        "text": "비대면 계좌 만들려고요."
+      },
+      {
+        "speaker": "agent",
+        "time": "0:16",
+        "text": "네, 영웅문S 앱에서 신분증이랑 1원 인증으로 진행하시면 됩니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:24",
+        "text": "신분증 사진은 어떻게 찍어요?"
+      },
+      {
+        "speaker": "agent",
+        "time": "0:34",
+        "text": "앱 가이드 따라서 찍으시면 됩니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:39",
+        "text": "그럼 인증 끝나면 바로 거래 가능한가요?"
+      },
+      {
+        "speaker": "agent",
+        "time": "0:47",
+        "text": "네, 입금 확인 후 바로 가능합니다."
+      },
+      {
+        "speaker": "customer",
+        "time": "0:56",
+        "text": "알겠습니다."
+      },
+      {
+        "speaker": "agent",
+        "time": "1:08",
+        "text": "네, 추가 문의 있으시면 다시 연락 주세요."
+      },
+      {
+        "speaker": "customer",
+        "time": "1:16",
+        "text": "감사합니다."
+      }
+    ]
   }
 ]
