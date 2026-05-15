@@ -1445,18 +1445,22 @@
     let _iframePollTimer = null;
 
     function adjustIframeHeight(iframe) {
-      // body / documentElement 중 큰 값으로 측정 + 8px 여유 버퍼로 내부 스크롤 발생 차단
+      // 정합성 주의: documentElement.scrollHeight 는 iframe 뷰포트 높이를 그대로 반환하여
+      // 부모가 iframe 높이를 늘리면 measure 값도 함께 커지는 무한 확장 루프 유발.
+      // → page-content 의 offsetHeight + offsetTop 으로 viewport 와 무관한 콘텐츠 크기만 측정.
       function measureAndApply() {
         if (_iframeModalActive) return;
         try {
           const doc = iframe.contentDocument;
           if (!doc) return;
-          const h = Math.max(
-            doc.body ? doc.body.scrollHeight : 0,
-            doc.documentElement ? doc.documentElement.scrollHeight : 0,
-            doc.body ? doc.body.offsetHeight : 0,
-            doc.documentElement ? doc.documentElement.offsetHeight : 0
-          );
+          const pc = doc.getElementById('page-content');
+          let h = 0;
+          if (pc) {
+            // 콘텐츠 박스의 절대 끝점 — viewport 영향 없음
+            h = pc.offsetTop + pc.offsetHeight;
+          } else if (doc.body) {
+            h = doc.body.offsetHeight;
+          }
           if (h > 0) {
             iframe.style.height = Math.max(h, 600) + 16 + 'px';
             // 초기 노출용 min-height 해제 — 큰 모니터에서 iframe 이 콘텐츠보다 길어지는 현상 차단
@@ -1476,12 +1480,9 @@
 
       try {
         const doc = iframe.contentDocument;
-        if (doc && window.ResizeObserver) {
-          _iframeRO = new ResizeObserver(measureAndApply);
-          if (doc.body) _iframeRO.observe(doc.body);
-          if (doc.documentElement) _iframeRO.observe(doc.documentElement);
-        }
-        // DOM 변경(드릴다운/렌더 갱신) 감지
+        // ResizeObserver on body/documentElement triggers infinite expand loop
+        // (자식 viewport 크기 = iframe height → 부모가 iframe 키우면 자식 RO 발화 → 더 큰 값 보고)
+        // → DOM 변경만 감지하고 크기 변경은 polling 으로만 대응
         if (doc && window.MutationObserver && doc.body) {
           _iframeMO = new MutationObserver(measureAndApply);
           _iframeMO.observe(doc.body, { childList: true, subtree: true, attributes: false });

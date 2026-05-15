@@ -48039,15 +48039,15 @@
         document.body.style.background = 'transparent';
 
         // 자기 콘텐츠 높이를 부모에 보고 — file:// 환경에서 부모가 contentDocument 직접 접근 불가하므로 postMessage 사용
-        // 주의: documentElement.scrollHeight는 뷰포트 크기 영향을 받아 무한 확장 루프 유발 → #page-content의 getBoundingClientRect로만 측정
+        // 정합성 주의: offsetTop + offsetHeight 만 사용 (viewport 무관). documentElement.scrollHeight /
+        // ResizeObserver(body/html) 사용 시 iframe 뷰포트 크기가 측정값에 흡수되어 무한 확장 루프 발생.
         var _daLastH = 0;
         function _daReportHeight() {
           try {
             var pc = document.getElementById('page-content');
             if (!pc) return;
-            var rect = pc.getBoundingClientRect();
-            // 콘텐츠 박스 높이 + 상하 마진 — 뷰포트 의존 없는 순수 콘텐츠 크기
-            var h = Math.ceil(rect.bottom + window.scrollY);
+            // 콘텐츠 박스의 절대 끝점 — viewport 영향 없음
+            var h = pc.offsetTop + pc.offsetHeight;
             if (h > 0 && Math.abs(h - _daLastH) > 4 && window.parent && window.parent !== window) {
               _daLastH = h;
               window.parent.postMessage({ type: 'da-height', height: h }, '*');
@@ -48065,17 +48065,12 @@
           _daReportHeight();
           if (++_daPolls >= 10) { clearInterval(_daPollTimer); _daPollTimer = null; }
         }, 500);
-        // DOM 변경(드릴다운/렌더 갱신) 시 즉시 갱신
+        // DOM 변경(드릴다운/렌더 갱신) 시 즉시 갱신 — MutationObserver 만 사용.
+        // ResizeObserver(body/html) 는 iframe 부모 리사이즈에 의해서도 발화하여 무한 확장 루프 유발하므로 제거.
         if (window.MutationObserver) {
           new MutationObserver(_daReportHeight).observe(document.body, { childList: true, subtree: true });
         }
-        if (window.ResizeObserver) {
-          var _daRO = new ResizeObserver(_daReportHeight);
-          _daRO.observe(document.body);
-          _daRO.observe(document.documentElement);
-        }
         window.addEventListener('load', _daReportHeight);
-        window.addEventListener('resize', _daReportHeight);
       }
 
       AICC_PeriodPicker.create('period-picker-container', {

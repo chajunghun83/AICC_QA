@@ -490,3 +490,11 @@
   - 원인: iframe 인라인 스타일의 `min-height:calc(100vh - 200px)` 가 초기 노출용으로 박혀 있으나, 실제 콘텐츠 높이 측정 후 `height`만 갱신되고 `min-height`는 그대로 남아 큰 뷰포트에서 iframe이 콘텐츠보다 길게 강제 확장됨
   - 작은 창에서는 `100vh-200px`이 실제 콘텐츠 높이와 비슷해 시각적 문제가 드러나지 않다가, 풀스크린 / 대형 모니터에서만 발현
 - `adjustIframeHeight()` 측정 직후, `da-height` postMessage 수신 직후 두 지점에서 `iframe.style.minHeight = '0'` 명시 해제 → 측정값이 콘텐츠에 딱 맞춰짐
+- 추가 발견: 위 fix 적용 후에도 페이지 스크롤이 점점 길어지며 하단 카드가 계속 밀려나는 무한 확장 루프 잔존
+  - 원인:
+    - 부모 `measureAndApply()` 가 `documentElement.scrollHeight` / `documentElement.offsetHeight` 를 사용 — 이 값은 콘텐츠가 짧을 때 iframe 자신의 뷰포트 높이를 그대로 반환
+    - 부모 ResizeObserver 가 iframe `body` / `documentElement` 의 크기 변동을 감시 — 부모가 iframe 을 키우면 자식 viewport 가 커져 RO 재발화 → 다시 측정 → 또 키움 (16px 씩 누적)
+    - 자식 `_daReportHeight()` 도 `getBoundingClientRect().bottom + scrollY` 사용 + `body` / `documentElement` 에 ResizeObserver 부착되어 동일 루프 가담
+  - 해결:
+    - 부모: 측정값을 `pc.offsetTop + pc.offsetHeight` 로 통일 (viewport 무관 콘텐츠 크기). 부모쪽 ResizeObserver 제거 — DOM 변경은 MutationObserver 가 담당
+    - 자식: `getBoundingClientRect` → `offsetTop + offsetHeight` 로 교체. ResizeObserver(body/html) 제거. MutationObserver + 폴링만으로 갱신 감지
