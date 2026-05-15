@@ -1459,6 +1459,8 @@
           );
           if (h > 0) {
             iframe.style.height = Math.max(h, 600) + 16 + 'px';
+            // 초기 노출용 min-height 해제 — 큰 모니터에서 iframe 이 콘텐츠보다 길어지는 현상 차단
+            iframe.style.minHeight = '0';
           }
         } catch(e) {}
       }
@@ -2142,6 +2144,8 @@
       if (e.data.type === 'da-height' && typeof e.data.height === 'number') {
         if (_iframeModalActive) return;
         iframe.style.height = Math.max(e.data.height, 600) + 16 + 'px';
+        // 초기 노출용 min-height 해제 — 큰 모니터에서 iframe 이 콘텐츠보다 길어지는 현상 차단
+        iframe.style.minHeight = '0';
         return;
       }
 
