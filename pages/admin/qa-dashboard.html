@@ -257,7 +257,7 @@
       renderTrendChart(dashboardData.quality_trend_monthly);
       renderTeamChart(dashboardData.team_scores);
       renderIssues(dashboardData.urgent_issues);
-      renderDistribution();
+      renderDistribution(computeDistribution());
       renderDeductionItems(dashboardData.improvement_needed_top5);
       renderDeductionCalls(dashboardData.fail_agents);
       renderTeamTable(dashboardData.teams);
@@ -309,9 +309,9 @@
         if (card.isCallBreakdown) {
           const pct = (done, total) => total > 0 ? Math.round(done / total * 100) : 0;
           const bd = [
-            { label: '자동/IB', total: card.autoIB, done: card.autoIB_done, totalPrev: card.autoIB_prev, donePrev: card.autoIB_done_prev, url: 'integrated-evaluation.html?method=auto&type=IB' },
-            { label: '자동/OB', total: card.autoOB, done: card.autoOB_done, totalPrev: card.autoOB_prev, donePrev: card.autoOB_done_prev, url: 'integrated-evaluation.html?method=auto&type=OB' },
-            { label: '수동',    total: card.manual,  done: card.manual_done, totalPrev: card.manual_prev, donePrev: card.manual_done_prev, url: 'manual-evaluation-status.html' }
+            { label: '자동/IB', total: card.autoIB, done: card.autoIB_done, totalPrev: card.autoIB_prev, donePrev: card.autoIB_done_prev, url: `integrated-evaluation.html?tab=detail&method=auto&type=IB${getWsParam()}` },
+            { label: '자동/OB', total: card.autoOB, done: card.autoOB_done, totalPrev: card.autoOB_prev, donePrev: card.autoOB_done_prev, url: `integrated-evaluation.html?tab=detail&method=auto&type=OB${getWsParam()}` },
+            { label: '수동',    total: card.manual,  done: card.manual_done, totalPrev: card.manual_prev, donePrev: card.manual_done_prev, url: `integrated-evaluation.html?tab=detail&method=manual${getWsParam()}` }
           ];
           const maxNum = Math.max(...bd.map(b => Math.max(b.total, b.done)));
           const curFs = maxNum >= 100000 ? 9 : maxNum >= 10000 ? 10 : 12;
@@ -350,9 +350,9 @@
         if (card.isScoreBreakdown) {
           const scoreToRange = (s) => s >= 90 ? 'excellent' : s >= 80 ? 'good' : s >= 70 ? 'caution' : 'low';
           const sb = [
-            { label: '자동/IB', score: card.scoreIB, scorePrev: card.scoreIB_prev, url: `integrated-evaluation.html?method=auto&type=IB&score_range=${scoreToRange(card.scoreIB)}` },
-            { label: '자동/OB', score: card.scoreOB, scorePrev: card.scoreOB_prev, url: `integrated-evaluation.html?method=auto&type=OB&score_range=${scoreToRange(card.scoreOB)}` },
-            { label: '수동',    score: card.scoreManual, scorePrev: card.scoreManual_prev, url: `manual-evaluation-status.html?score_range=${scoreToRange(card.scoreManual)}` }
+            { label: '자동/IB', score: card.scoreIB, scorePrev: card.scoreIB_prev, url: `integrated-evaluation.html?tab=detail&method=auto&type=IB&score_range=${scoreToRange(card.scoreIB)}${getWsParam()}` },
+            { label: '자동/OB', score: card.scoreOB, scorePrev: card.scoreOB_prev, url: `integrated-evaluation.html?tab=detail&method=auto&type=OB&score_range=${scoreToRange(card.scoreOB)}${getWsParam()}` },
+            { label: '수동',    score: card.scoreManual, scorePrev: card.scoreManual_prev, url: `integrated-evaluation.html?tab=detail&method=manual&score_range=${scoreToRange(card.scoreManual)}${getWsParam()}` }
           ];
           const sCols = sb.map(s => `<div onclick="window.location.href='${s.url}'" style="cursor:pointer;text-align:center;padding:4px 2px;border-radius:4px;transition:background 0.15s;" onmouseenter="this.style.background='#F5F5F5'" onmouseleave="this.style.background=''">
             <div style="font-size:11px;color:#9E9E9E;margin-bottom:4px;">${s.label}</div>
@@ -588,9 +588,26 @@
     }
 
     let distChart = null;
+    // allEvals(실 평가 데이터)에서 점수 구간별 건수를 집계 — 통합평가현황 필터 로직과 동일한 임계값 사용
+    // (excellent: >=90, good: 80~89, caution: 70~79, poor: 0<s<70 — total_score=0 인 미완료 평가는 제외)
+    function computeDistribution(wsId) {
+      const ws = wsId || (document.getElementById('ws-filter') && document.getElementById('ws-filter').value) || 'all';
+      const dist = { excellent: 0, good: 0, caution: 0, poor: 0 };
+      allEvals.forEach(e => {
+        if (ws !== 'all' && e.center_id !== ws) return;
+        const s = Number(e.total_score) || 0;
+        if (s <= 0) return; // 미평가/미완료 제외
+        if (s >= 90) dist.excellent += 1;
+        else if (s >= 80) dist.good += 1;
+        else if (s >= 70) dist.caution += 1;
+        else dist.poor += 1;
+      });
+      return dist;
+    }
+
     // 외부에서 분포 데이터를 주입할 수 있게 하여 기간 전환 시에도 차트를 갱신할 수 있게 설계
     function renderDistribution(customDist) {
-      const dist = customDist || { excellent: 32, good: 41, caution: 18, poor: 9 };
+      const dist = customDist || computeDistribution();
       const total = dist.excellent + dist.good + dist.caution + dist.poor;
 
       const segments = [
@@ -628,7 +645,7 @@
       const scoreRangeMap = { '우수': 'excellent', '양호': 'good', '주의': 'caution', '미달': 'low' };
       document.getElementById('distribution-legend').innerHTML = segments.map(s => {
         const rangeKey = Object.keys(scoreRangeMap).find(k => s.label.includes(k)) || '';
-        const linkUrl = `integrated-evaluation.html?score_range=${scoreRangeMap[rangeKey] || ''}${getWsParam()}`;
+        const linkUrl = `integrated-evaluation.html?tab=detail&score_range=${scoreRangeMap[rangeKey] || ''}${getWsParam()}`;
         return `
         <div onclick="window.location.href='${linkUrl}'" style="display:flex;align-items:center;gap:10px;padding:3px 0;cursor:pointer;transition:background 0.15s;" onmouseenter="this.style.background='#FAFAFA'" onmouseleave="this.style.background=''">
           <span style="width:8px;height:8px;border-radius:2px;background:${s.color};flex-shrink:0;"></span>
@@ -643,7 +660,7 @@
       distChart.options.onClick = (evt, elements) => {
         if (elements.length > 0) {
           const idx = elements[0].index;
-          window.location.href = `integrated-evaluation.html?score_range=${rangeKeys[idx]}${getWsParam()}`;
+          window.location.href = `integrated-evaluation.html?tab=detail&score_range=${rangeKeys[idx]}${getWsParam()}`;
         }
       };
     }
@@ -805,14 +822,7 @@
     }
 
 
-    // 기간 전환 시 분포 변화를 표현하기 위해 랜덤 데이터를 생성
-    function generateDistribution() {
-      const e = () => Math.round(10 + Math.random() * 40);
-      const dist = { excellent: e(), good: e(), caution: Math.round(5 + Math.random() * 25), poor: Math.round(2 + Math.random() * 12) };
-      return dist;
-    }
-
-    /* 현재 선택된 센터의 URL 파라미터 문자열 반환 */
+/* 현재 선택된 센터의 URL 파라미터 문자열 반환 */
     function getWsParam() {
       const wsId = document.getElementById('ws-filter').value;
       return wsId !== 'all' ? `&ws=${encodeURIComponent(wsId)}` : '';
@@ -830,7 +840,7 @@
       const trendData = generateTrendData(period, info);
       renderTrendChart(trendData);
 
-      renderDistribution(generateDistribution());
+      renderDistribution(computeDistribution());
 
       AICC_Toast.show(`${cfg.kpiPrefix} 데이터로 전환되었습니다.`);
     }
@@ -872,7 +882,7 @@
             return !!teamData;
           });
       renderTeamChart(filteredScores.length > 0 ? filteredScores : dashboardData.team_scores);
-      renderDistribution(generateDistribution());
+      renderDistribution(computeDistribution(wsId));
 
       AICC_Toast.show('필터가 적용되었습니다.');
     }

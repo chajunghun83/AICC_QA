@@ -498,3 +498,45 @@
   - 해결:
     - 부모: 측정값을 `pc.offsetTop + pc.offsetHeight` 로 통일 (viewport 무관 콘텐츠 크기). 부모쪽 ResizeObserver 제거 — DOM 변경은 MutationObserver 가 담당
     - 자식: `getBoundingClientRect` → `offsetTop + offsetHeight` 로 교체. ResizeObserver(body/html) 제거. MutationObserver + 폴링만으로 갱신 감지
+
+**수정 리스트 (26/05/18)**
+
+[QA 대시보드 — 점수 분포 정합성]
+
+- 점수 분포 차트가 하드코딩된 더미값(우수32/양호41/주의18/미달9 = 총 100건)을 사용해 KPI 카드의 금월 평가 건수(완료 2,561건)와 불일치하던 문제 해소
+- `computeDistribution()` 신설 — `allEvals`(evaluations.json + manual-evaluations.json, 총 2,790건) 에서 실시간 집계
+- 통합평가현황의 score_range 필터와 **완전히 동일한 임계값** 사용 (우수 ≥90 / 양호 80~89 / 주의 70~79 / 미달 0<s<70, `total_score=0` 미평가 제외)
+- 센터 필터(`ws-filter`) 적용 시 `center_id` 기준 분포도 함께 필터링 → 클릭 이동 시 통합평가현황 카운트와 일치 보장
+- 기간 전환·필터 변경 시에도 항상 실 데이터 기준 재집계 (랜덤 더미값 함수 `generateDistribution()` 제거)
+
+[QA 대시보드 → 통합평가현황 진입 동작 — 상세 분석 탭 + 외부 필터]
+
+- 금일 평가 건수 sub-cell(자동/IB·자동/OB·수동), 평균 평가 점수 sub-cell, 점수 분포 항목 클릭 시 기존 "전체 탭"이 아닌 **상세 분석 탭**으로 진입하도록 변경
+- URL 파라미터에 `tab=detail` + 필터 조건(`score_range/method/type/ws`) 부착
+- 수동 sub-cell 도 일관성 위해 `manual-evaluation-status.html` → `tab=detail&method=manual` 로 통일
+- 통합평가현황 `applyUrlParams()` 에서 외부 필터 파라미터를 iframe URL 로 forward + 부모의 `detailExternalFilter` 상태에 저장
+- 통합평가현황 하단 "통합 평가 결과" 테이블 `buildDetailFilteredList()` 에 외부 필터 합산 로직 추가 — 노드 변경·sub-cell 클릭과 무관하게 항상 score_range/method/type/ws 추가 적용
+- `updateDetailFilterBadge()` 가 외부 필터 라벨(센터명·자동/수동·I/B/O/B·점수 구간) 도 함께 노출
+
+[QA 대시보드 → 통합평가현황 — 미완료(0점) 평가 집계 정합성]
+
+- 자동/IB 1,830건 표기 vs 필터 진입 후 1,800건 표시 불일치 (30건 차이) 원인 분석 — `total_score = 0` 인 profanity FAIL 30건이 필터에서 제외되고 있었음
+- 정책 정리:
+  - **건수 집계**: score_range 필터가 없으면 미평가(s=0, FAIL 포함) 포함 — 대시보드 표기와 일치
+  - **평균 점수**: 항상 s>0 인 평가만 사용 — 0점이 평균을 끌어내리지 않게
+  - **70점 이하 콜**: 0 < s < 70 (FAIL 0점은 70점 이하에서 제외)
+  - **score_range 필터** 적용 시 s>0 은 자동 보장 (각 구간 임계값이 모두 양수)
+- 통합평가현황 하단 테이블의 외부 필터에서도 `s≤0 return false` 가드 제거 → 동일 정책 일치
+
+[통합평가현황 — 상세 분석 iframe 필터 모드 (보존)]
+
+- 대시보드 진입 시 iframe(detail-analysis) 내부도 한차례 "필터 모드"로 KPI 카드 재집계 + 센터별 현황 테이블 재구성 + 필터 배지 + AI 개선 제안 필터 인식까지 구현했으나, 사용자 피드백 반영 후 **iframe 자체는 기존 일반 화면 그대로 유지**하기로 정책 결정
+- 관련 헬퍼·렌더러 함수(`daComputeStatsFromEvals`, `daBuildKpiRowsFromStats`, `renderLevel0~3Filtered`, `drillToCenterFiltered/drillToTeamFiltered/drillToAgentFilteredById`, `daParseExternalFilters`, `daApplyEvalFilter`, `daLoadFilterData`, `daRenderFilterBadge`, `daClearExternalFilter`) 는 dormant 코드로 보존
+- DOMContentLoaded 의 외부 필터 자동 진입 분기만 제거 — 기존 `renderLevel0()` 로 폴백
+- 추후 정책 변경 시 진입 분기 1줄 복구만으로 재활성화 가능
+
+[통합평가현황 — 사이드 정리]
+
+- `activeFilter` / `FILTER_LABELS` 두 모듈 변수가 선언 없이 implicit global 로 사용되던 미선언 참조 버그 정리 — 모듈 스코프에 `var activeFilter = null;`, `var FILTER_LABELS = { urgentIssue: '긴급 이슈', ... };` 명시 선언
+  - 기존 정상 흐름에서는 다른 함수가 먼저 할당해 우연히 동작하던 코드. 필터 모드 진입 경로에서 `daBuildSuggestions` 첫 줄 `activeFilter && FILTER_LABELS[activeFilter]` 평가 시 ReferenceError 발생해 AI 개선 제안 바가 렌더 중단되던 부작용 함께 해소
+- 하단 통합 평가 결과 배지에 외부 필터 ✕ 아이콘 추가 — 클릭 시 `clearDetailExternalFilter()` 가 외부 필터만 해제하고 드릴다운 스코프(센터/팀/상담사 이름)는 보존

@@ -520,6 +520,22 @@
         if (ct) iframeSrc += '&ct=' + encodeURIComponent(ct);
         if (tm) iframeSrc += '&team=' + encodeURIComponent(tm);
         if (ag) iframeSrc += '&agent=' + encodeURIComponent(ag);
+        // 대시보드 클릭 시 카드뷰·테이블이 모두 같은 조건으로 필터링되도록 필터 파라미터를 iframe에 전달
+        const ef = { scoreRange: null, method: null, type: null, ws: null };
+        ['score_range', 'method', 'type', 'ws'].forEach(k => {
+          const v = params.get(k);
+          if (v) {
+            iframeSrc += '&' + k + '=' + encodeURIComponent(v);
+            if (k === 'score_range') ef.scoreRange = v;
+            else ef[k] = v;
+          }
+        });
+        // 하단 통합 평가 결과 테이블도 동일 조건으로 필터링되도록 외부 필터 등록
+        if (ef.scoreRange || ef.method || ef.type || ef.ws) {
+          detailExternalFilter = ef;
+          // 하단 테이블 즉시 갱신 — applyDetailFilter 는 외부 필터를 buildDetailFilteredList 내부에서 합산
+          applyDetailFilter({ level: 0 });
+        }
         iframe.onload = function() { adjustIframeHeight(iframe); };
         iframe.src = iframeSrc;
         detailIframeLoaded = true;
@@ -731,6 +747,8 @@
       level: 0, center_name: null, team_name: null, agent_name: null,
       kind: null, deduction_item: null, label: null
     };
+    // 대시보드 진입 외부 필터 — score_range / method / type / ws (모든 sub-cell·노드 변경에도 항상 적용)
+    let detailExternalFilter = null;
 
     // postMessage 로 받은 base 노드 + kind 로 allEvals 필터링
     function buildDetailFilteredList() {
@@ -829,6 +847,24 @@
         // 정보성 카드(agentScope/callScope/scoreScope/durationScope/rankScope/disputeScope)는 Base만
         default:
           break;
+      }
+      // 대시보드 진입 외부 필터 — 상위 레벨 카드/노드 변경과 무관하게 항상 추가 적용
+      // (점수분포·평가건수 sub-cell·평균점수 sub-cell 클릭으로 진입한 score_range/method/type/ws)
+      // 정합성 정책: 평가 건수 = 전체(미평가 0점 포함, 예: profanity FAIL) — 대시보드 표기와 동일
+      if (detailExternalFilter) {
+        const ef = detailExternalFilter;
+        const typeMap = { 'IB': 'I/B', 'OB': 'O/B' };
+        arr = arr.filter(e => {
+          const s = Number(e.total_score) || 0;
+          if (ef.ws && e.center_id !== ef.ws) return false;
+          if (ef.method && e.eval_method !== ef.method) return false;
+          if (ef.type && e.call_type !== (typeMap[ef.type] || ef.type)) return false;
+          if (ef.scoreRange === 'excellent' && !(s >= 90)) return false;
+          if (ef.scoreRange === 'good' && !(s >= 80 && s < 90)) return false;
+          if (ef.scoreRange === 'caution' && !(s >= 70 && s < 80)) return false;
+          if (ef.scoreRange === 'low' && !(s > 0 && s < 70)) return false;
+          return true;
+        });
       }
       return arr;
     }
@@ -975,13 +1011,54 @@
                     : '1분 미만';
         parts.push(range);
       }
+      // 대시보드 진입 외부 필터 — 배지에 함께 노출
+      if (detailExternalFilter) {
+        const ef = detailExternalFilter;
+        if (ef.ws) {
+          const centers = allData['centers.json'] || [];
+          const c = centers.find(x => x.id === ef.ws);
+          if (c) parts.push(c.name);
+        }
+        if (ef.method) parts.push(ef.method === 'auto' ? '자동 평가' : '수동 평가');
+        if (ef.type) parts.push(ef.type === 'IB' ? 'I/B' : ef.type === 'OB' ? 'O/B' : ef.type);
+        if (ef.scoreRange) {
+          const m = { excellent: '우수 (90점 이상)', good: '양호 (80~89점)', caution: '주의 (70~79점)', low: '미달 (70점 미만)' };
+          parts.push(m[ef.scoreRange] || ef.scoreRange);
+        }
+      }
+      // 외부 필터 활성 시 ✕ 아이콘 노출 — 클릭하면 대시보드 진입 외부 필터(score_range/method/type/ws) 해제
+      // (iframe 드릴다운 스코프는 유지 — 사용자가 직접 navigate 한 결과라 보존)
+      const hasExt = !!detailExternalFilter;
       if (parts.length > 0) {
-        badge.textContent = parts.join(' · ');
+        const textHtml = `<span>${parts.join(' · ')}</span>`;
+        const clearIcon = hasExt
+          ? `<span onclick="clearDetailExternalFilter(event)" title="대시보드 필터 해제" style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;margin-left:12px;border-radius:50%;background:#1976D2;color:white;font-size:10px;font-weight:700;cursor:pointer;vertical-align:middle;">✕</span>`
+          : '';
+        badge.innerHTML = `<span style="display:inline-flex;align-items:center;">${textHtml}${clearIcon}</span>`;
         badge.style.display = '';
       } else {
         badge.textContent = '전체';
         badge.style.display = '';
       }
+    }
+
+    // 배지 ✕ 아이콘 클릭 — 대시보드 진입 외부 필터만 해제 (드릴다운 스코프는 유지)
+    function clearDetailExternalFilter(ev) {
+      if (ev) ev.stopPropagation();
+      detailExternalFilter = null;
+      // 현재 스코프(detailActiveFilter)는 유지한 채 재필터링
+      const f = detailActiveFilter || {};
+      applyDetailFilter({
+        level: f.level || 0,
+        center_name: f.center_name,
+        team_name: f.team_name,
+        agent_name: f.agent_name,
+        kind: f.kind,
+        deduction_item: f.deduction_item,
+        score: f.score,
+        duration: f.duration,
+        label: f.label
+      });
     }
 
     function detailCompareByKey(a, b, key, dir) {
@@ -2200,6 +2277,11 @@
       }
       if (e.data.type === 'da-card-filter') {
         applyDetailFilter(e.data);
+      }
+      // 상세 분석 iframe 에서 외부 필터 해제 요청 — 하단 통합 평가 결과 테이블도 동기 해제
+      if (e.data.type === 'da-clear-external-filter') {
+        detailExternalFilter = null;
+        applyDetailFilter({ level: 0 });
       }
     });
   </script>

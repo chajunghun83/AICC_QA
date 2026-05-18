@@ -48029,6 +48029,655 @@
     }
     let dashboardSummary = null;
 
+    /* ==================== 대시보드 진입 필터 (외부 필터 모드) ====================
+       대시보드의 점수분포 / 평가건수 sub-cell / 평균점수 sub-cell 을 클릭해 진입할 때
+       (?score_range=…, ?method=…, ?type=…) 카드뷰와 테이블을 같은 조건으로 필터링.
+       데이터 원천 = allEvals(evaluations.json + manual-evaluations.json) — 대시보드의
+       점수 분포 차트와 100% 동일한 단일 진실의 원천을 사용해 정합성 보장.                    */
+    let daExternalFilter = null;
+    let daAllEvalsRaw = null;
+    let daCentersRaw = null;
+    let daFilteredStats = null; // 필터 모드 KPI 통계 캐시 — daBuildSuggestions 가 참조
+
+    // activeFilter 는 filterByCard / goToLevel 에서 implicit global 로 사용되지만 선언이 없어
+    // 외부 필터 모드 첫 진입 시 daBuildSuggestions 의 `activeFilter && …` 평가에서 ReferenceError 발생.
+    // 모듈 스코프에 명시적으로 선언하여 미정의 참조를 방지 (기존 implicit global 흐름은 그대로 호환).
+    var activeFilter = null;
+
+    // KPI 카드 kind → 한국어 라벨 (filterByCard 활성 필터 표시·daGetFilterSummary 에서 사용)
+    // 이전에는 미선언 상태로 filterByCard 진입 시 ReferenceError 였음.
+    var FILTER_LABELS = {
+      urgentIssue: '긴급 이슈',
+      topDeduction: '최다 감점 항목',
+      lowScore: '70점 이하 콜',
+      excluded: '평가 제외 상담사',
+      durationScope: '평균 통화시간 구간',
+      'autoIB-call': '자동/IB',
+      'autoOB-call': '자동/OB',
+      'manualOnly-call': '수동',
+      'autoIB-score': '자동/IB 점수 구간',
+      'autoOB-score': '자동/OB 점수 구간',
+      'manualOnly-score': '수동 점수 구간'
+    };
+
+    function daParseExternalFilters() {
+      const params = new URLSearchParams(window.location.search);
+      const ws = params.get('ws');
+      // ct/team/agent 가 있으면 기존 드릴다운 진입이 우선 — 외부 필터 모드 비활성화
+      if (params.get('ct') || params.get('team') || params.get('agent')) return null;
+      const f = {
+        scoreRange: params.get('score_range') || null,
+        method: params.get('method') || null,
+        type: params.get('type') || null,
+        ws: ws || null
+      };
+      if (!f.scoreRange && !f.method && !f.type && !f.ws) return null;
+      return f;
+    }
+
+    function daApplyEvalFilter(evals, f) {
+      const typeMap = { 'IB': 'I/B', 'OB': 'O/B' };
+      return evals.filter(e => {
+        const s = Number(e.total_score) || 0;
+        if (f.ws && e.center_id !== f.ws) return false;
+        if (f.method && e.eval_method !== f.method) return false;
+        if (f.type && e.call_type !== (typeMap[f.type] || f.type)) return false;
+        // 점수 구간 필터가 있으면 자동으로 s>0 만 통과(우수/양호/주의/미달 모두 s>0 정의)
+        // 점수 구간 필터가 없을 때는 미평가(s=0, 예: profanity FAIL)도 평가 건수에 포함하여
+        // 대시보드 표기(자동/IB 1,830건 = FAIL 30건 포함)와 정합 유지
+        if (f.scoreRange === 'excellent' && !(s >= 90)) return false;
+        if (f.scoreRange === 'good' && !(s >= 80 && s < 90)) return false;
+        if (f.scoreRange === 'caution' && !(s >= 70 && s < 80)) return false;
+        if (f.scoreRange === 'low' && !(s > 0 && s < 70)) return false;
+        return true;
+      });
+    }
+
+    function daParseDuration(d) {
+      if (!d) return 0;
+      const p = String(d).split(':');
+      return parseInt(p[0]) * 60 + parseInt(p[1] || 0);
+    }
+    function daFmtDuration(sec) {
+      if (!sec || isNaN(sec)) return '00:00';
+      return `${String(Math.floor(sec/60)).padStart(2,'0')}:${String(Math.round(sec%60)).padStart(2,'0')}`;
+    }
+
+    let daItemNameMap = null;
+    async function daLoadFilterData() {
+      if (daAllEvalsRaw && daCentersRaw && daItemNameMap) return;
+      const data = await AICC_DataLoader.loadAll(['evaluations.json', 'manual-evaluations.json', 'centers.json', 'evaluation-items.json']);
+      const autos = (data['evaluations.json'] || []).map(e => ({ ...e, eval_method: 'auto' }));
+      const manuals = (data['manual-evaluations.json'] || []).map(e => ({ ...e, eval_method: 'manual' }));
+      daAllEvalsRaw = [...autos, ...manuals];
+      daCentersRaw = data['centers.json'] || [];
+      // 감점 항목 id → 한국어 이름 매핑
+      const map = {
+        'item-greeting': '첫인사', 'item-empathy': '공감 표현', 'item-solution': '문제 해결',
+        'item-closing': '끝인사', 'item-forbidden': '욕설/금지어'
+      };
+      const items = data['evaluation-items.json'];
+      if (items && items.categories) {
+        items.categories.forEach(cat => {
+          (cat.children || []).forEach(child => {
+            (child.items || []).forEach(it => { if (it.id && it.name) map[it.id] = it.name; });
+          });
+        });
+      }
+      daItemNameMap = map;
+    }
+
+    function daBuildFilterLabel(f) {
+      const parts = [];
+      if (f.ws) {
+        const c = (daCentersRaw || []).find(x => x.id === f.ws);
+        if (c) parts.push(c.name);
+      }
+      if (f.method) parts.push(f.method === 'auto' ? '자동 평가' : '수동 평가');
+      if (f.type) parts.push(f.type === 'IB' ? 'I/B' : f.type === 'OB' ? 'O/B' : f.type);
+      if (f.scoreRange) {
+        const m = { excellent: '우수 (90점 이상)', good: '양호 (80~89점)', caution: '주의 (70~79점)', low: '미달 (70점 미만)' };
+        parts.push(m[f.scoreRange] || f.scoreRange);
+      }
+      return parts.join(' · ');
+    }
+
+    function daRenderFilterBadge(f, count) {
+      let bar = document.getElementById('da-external-filter-bar');
+      if (!bar) {
+        bar = document.createElement('div');
+        bar.id = 'da-external-filter-bar';
+        // 배지 전체가 클릭 영역 — 어디를 눌러도 필터 해제 (우측 버튼과 동일 동작)
+        bar.style.cssText = 'margin-bottom:16px;padding:10px 16px;background:#E3F2FD;border:1px solid #90CAF9;border-radius:8px;display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer;transition:background 0.15s;';
+        bar.title = '클릭하면 필터가 해제됩니다';
+        bar.onclick = function() { daClearExternalFilter(); };
+        bar.onmouseenter = function() { bar.style.background = '#BBDEFB'; };
+        bar.onmouseleave = function() { bar.style.background = '#E3F2FD'; };
+        const kpi = document.getElementById('kpi-cards');
+        kpi.parentNode.insertBefore(bar, kpi);
+      }
+      const label = daBuildFilterLabel(f);
+      bar.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1976D2" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        <span style="color:#1976D2;font-weight:600;">대시보드 필터 적용</span>
+        <span style="color:#424242;">${label || '전체'}</span>
+        <span style="color:#757575;">· 평가 건수 <b>${AICC_Fmt.number(count)}</b>건</span>
+        <span style="flex:1;"></span>
+        <span style="font-size:11px;color:#757575;">배지 클릭 또는</span>
+        <button onclick="event.stopPropagation(); daClearExternalFilter();" style="background:white;border:1px solid #90CAF9;color:#1976D2;border-radius:4px;padding:3px 10px;font-size:12px;cursor:pointer;font-weight:600;">✕ 필터 해제</button>
+      `;
+    }
+
+    function daClearExternalFilter() {
+      daExternalFilter = null;
+      daFilteredStats = null;
+      const bar = document.getElementById('da-external-filter-bar');
+      if (bar) bar.remove();
+      // 부모의 하단 통합 평가 결과 테이블도 외부 필터 해제하도록 알림
+      try {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: 'da-clear-external-filter' }, '*');
+        }
+      } catch(e) {}
+      renderLevel0();
+    }
+
+    // 필터 모드 level 0 렌더링 — KPI 카드 + 센터 테이블을 동일 조건으로 재집계
+    function renderLevel0Filtered(f) {
+      currentLevel = 0;
+      navStack = [];
+      updateBreadcrumb();
+
+      const filtered = daApplyEvalFilter(daAllEvalsRaw, f);
+
+      const totalEvals = filtered.length;
+      // 평균 점수는 s>0(실제 평가 완료) 기준 — FAIL(0점) 포함 시 평균 왜곡 방지
+      const scored = filtered.filter(e => (Number(e.total_score) || 0) > 0);
+      const sumScore = scored.reduce((s, e) => s + (Number(e.total_score) || 0), 0);
+      const avgScore = scored.length > 0 ? sumScore / scored.length : 0;
+      const uniqueAgents = new Set(filtered.map(e => e.agent_id || e.agent_name)).size;
+      const sumDur = filtered.reduce((s, e) => s + daParseDuration(e.duration), 0);
+      const avgDurSec = totalEvals > 0 ? sumDur / totalEvals : 0;
+
+      // 채널별 분해 — 건수는 전체(미평가 포함), 평균은 s>0만
+      const ib = filtered.filter(e => e.eval_method === 'auto' && e.call_type === 'I/B');
+      const ob = filtered.filter(e => e.eval_method === 'auto' && e.call_type === 'O/B');
+      const mn = filtered.filter(e => e.eval_method === 'manual');
+      const ibDone = ib.filter(e => (Number(e.total_score) || 0) > 0).length;
+      const obDone = ob.filter(e => (Number(e.total_score) || 0) > 0).length;
+      const mnDone = mn.filter(e => (Number(e.total_score) || 0) > 0).length;
+      const avgOfScored = arr => {
+        const a = arr.filter(e => (Number(e.total_score) || 0) > 0);
+        return a.length > 0 ? a.reduce((s, e) => s + (Number(e.total_score) || 0), 0) / a.length : 0;
+      };
+
+      // 70점 이하 = 0 < s < 70 (FAIL의 0점은 미평가로 보고 70점 이하에서 제외)
+      const lowCalls = filtered.filter(e => { const s = Number(e.total_score) || 0; return s > 0 && s < 70; }).length;
+      const lowPct = totalEvals > 0 ? Math.round(lowCalls / totalEvals * 100) : 0;
+
+      // 긴급 이슈 = profanity FAIL — 하단 통합 평가 결과 테이블의 urgentIssue 필터와 동일 로직
+      const urgentCalls = filtered.filter(e => !!(e.scores && e.scores.profanity && e.scores.profanity.is_fail)).length;
+
+      // 최다 감점 항목 — scores 중 status≠'pass' 발생 횟수 집계
+      const deductCount = {};
+      filtered.forEach(e => {
+        if (!e.scores) return;
+        Object.entries(e.scores).forEach(([k, v]) => {
+          if (!v || v.status === 'pass') return;
+          const name = (daItemNameMap && daItemNameMap[k]) || k;
+          deductCount[name] = (deductCount[name] || 0) + 1;
+        });
+      });
+      let topItem = '-', topCalls = 0;
+      Object.entries(deductCount).forEach(([k, v]) => { if (v > topCalls) { topItem = k; topCalls = v; } });
+      const topPct = totalEvals > 0 ? Math.round(topCalls / totalEvals * 100) : 0;
+      daCurrentTopItem = topItem !== '-' ? topItem : null;
+
+      // 센터 수
+      const distinctCenters = new Set(filtered.map(e => e.center_id).filter(Boolean));
+
+      const row1 = [
+        { label: '평가 상담사', value: AICC_Fmt.number(uniqueAgents), current: uniqueAgents, prev: uniqueAgents, unit: '명', prevLabel: '필터 적용', sub: `${distinctCenters.size}개 센터` },
+        { label: '평가 건수', value: AICC_Fmt.number(totalEvals), current: totalEvals, prev: totalEvals, unit: '건', prevLabel: '필터 적용',
+          isCallBreakdown: true,
+          autoIB: ib.length, autoIB_done: ibDone,
+          autoOB: ob.length, autoOB_done: obDone,
+          manual: mn.length, manual_done: mnDone,
+          autoIB_prev: ib.length, autoIB_done_prev: ibDone,
+          autoOB_prev: ob.length, autoOB_done_prev: obDone,
+          manual_prev: mn.length, manual_done_prev: mnDone },
+        { label: '긴급 이슈', kind: 'urgentIssue', value: AICC_Fmt.number(urgentCalls), current: urgentCalls, prev: urgentCalls, unit: '건', prevLabel: '필터 적용' },
+        { label: '평균 통화시간', value: daFmtDuration(avgDurSec), isDuration: true, current: daFmtDuration(avgDurSec), prev: daFmtDuration(avgDurSec), unit: '', prevLabel: '필터 적용' }
+      ];
+      const row2 = [
+        { label: '평가 제외 상담사', value: '-', current: 0, prev: 0, unit: '명', prevLabel: '필터 적용' },
+        { label: '평균 평가 점수', value: AICC_Fmt.score(avgScore), current: avgScore, prev: avgScore, unit: '점', prevLabel: '필터 적용',
+          isScoreBreakdown: true,
+          scoreIB: avgOfScored(ib), scoreIB_prev: avgOfScored(ib),
+          scoreOB: avgOfScored(ob), scoreOB_prev: avgOfScored(ob),
+          scoreManual: avgOfScored(mn), scoreManual_prev: avgOfScored(mn) },
+        { label: '최다 감점 항목', kind: 'topDeduction', isTopDeduction: true, deductionData: { item: topItem, calls: topCalls, pct: topPct } },
+        { label: '70점 이하 콜', kind: 'lowScore', isLowScore: true, lowCalls: lowCalls, lowPct: lowPct }
+      ];
+
+      renderKpiTwoRows(row1, row2);
+      daRenderFilterBadge(f, totalEvals);
+
+      // 센터별 테이블 (필터 적용 후)
+      const byCenter = {};
+      filtered.forEach(e => {
+        const cid = e.center_id || 'unknown';
+        if (!byCenter[cid]) byCenter[cid] = { id: cid, name: e.center || cid, evals: [] };
+        byCenter[cid].evals.push(e);
+      });
+      (daCentersRaw || []).forEach(c => { if (byCenter[c.id]) byCenter[c.id].name = c.name; });
+      const rows = Object.values(byCenter).map(c => {
+        const cnt = c.evals.length;
+        // 평균은 점수 있는 평가만 사용 (FAIL 0점이 평균을 왜곡하지 않게)
+        const scoredEv = c.evals.filter(e => (Number(e.total_score) || 0) > 0);
+        const avg = scoredEv.length > 0 ? scoredEv.reduce((s, e) => s + (Number(e.total_score) || 0), 0) / scoredEv.length : 0;
+        const uAgents = new Set(c.evals.map(e => e.agent_id || e.agent_name)).size;
+        const dSum = c.evals.reduce((s, e) => s + daParseDuration(e.duration), 0);
+        const dAvg = cnt > 0 ? dSum / cnt : 0;
+        return { ...c, cnt, avg, uAgents, dAvg };
+      }).sort((a, b) => b.cnt - a.cnt);
+
+      document.getElementById('table-title').textContent = '센터별 현황 (필터 적용)';
+      document.getElementById('table-count').textContent = `총 ${rows.length}개 센터 / ${AICC_Fmt.number(totalEvals)}건`;
+
+      const table = document.querySelector('.data-table');
+      table.style.tableLayout = 'fixed';
+      document.getElementById('table-head').innerHTML = `
+        <tr>
+          <th style="text-align:center;width:5%;">NO.</th>
+          <th style="text-align:center;width:40%;">센터</th>
+          <th style="text-align:center;width:15%;">상담사 수</th>
+          <th style="text-align:center;width:15%;">평가 건수</th>
+          <th style="text-align:center;width:15%;">평균 점수</th>
+          <th style="text-align:center;width:10%;">평균 통화시간</th>
+        </tr>
+      `;
+      document.getElementById('table-body').innerHTML = rows.length > 0 ? rows.map((c, idx) => `
+        <tr class="fade-in" style="cursor:pointer;" onclick="drillToCenterFiltered('${c.id}')">
+          <td style="text-align:center;">${idx + 1}</td>
+          <td style="font-weight:500;text-align:center;">${c.name}</td>
+          <td style="text-align:center;">${AICC_Fmt.number(c.uAgents)}명</td>
+          <td style="text-align:center;">${AICC_Fmt.number(c.cnt)}</td>
+          <td style="text-align:center;">${AICC_Fmt.scoreHtml(c.avg)}</td>
+          <td style="text-align:center;">${daFmtDuration(c.dAvg)}</td>
+        </tr>
+      `).join('') : `<tr><td colspan="6" style="text-align:center;padding:40px;color:#9E9E9E;">필터 조건에 해당하는 평가가 없습니다.</td></tr>`;
+
+      renderPagination(rows.length, 1, 10);
+
+      // 필터 모드 전용 통계 보존 — daBuildSuggestions 가 참조
+      daFilteredStats = {
+        filter: f,
+        totalEvals, avgScore, uniqueAgents, avgDurSec,
+        ibCnt: ib.length, obCnt: ob.length, mnCnt: mn.length,
+        lowCalls, lowPct, urgentCalls,
+        topItem, topCalls, topPct,
+        centerRows: rows
+      };
+      daShowSuggestionBar();
+      notifyNodeChange();
+
+      // 필터 배지 + 제안 바 추가로 인한 iframe 콘텐츠 높이 변화를 부모에 즉시 반영
+      // (style 속성 변경은 MutationObserver(childList)에 잡히지 않으므로 명시적 재보고 필요)
+      daReportFilterHeight();
+    }
+
+    function daReportFilterHeight() {
+      try {
+        if (window.parent && window.parent !== window) {
+          const pc = document.getElementById('page-content');
+          if (pc) {
+            const h = pc.offsetTop + pc.offsetHeight;
+            window.parent.postMessage({ type: 'da-height', height: h }, '*');
+          }
+        }
+      } catch(e) {}
+    }
+
+    /* ==================== 필터 모드 공용 헬퍼 ====================
+       모든 레벨(0/1/2/3)의 KPI 카드를 동일 통계 계산 함수로 생성하여 정합성 100% 보장.
+       센터별/팀별/상담사별 어느 단위로 좁히든 동일한 평가 건수·평균·긴급/감점 정의를 사용. */
+
+    function daComputeStatsFromEvals(filtered) {
+      const totalEvals = filtered.length;
+      const scored = filtered.filter(e => (Number(e.total_score) || 0) > 0);
+      const sumScore = scored.reduce((s, e) => s + (Number(e.total_score) || 0), 0);
+      const avgScore = scored.length > 0 ? sumScore / scored.length : 0;
+      const uniqueAgents = new Set(filtered.map(e => e.agent_id || e.agent_name)).size;
+      const sumDur = filtered.reduce((s, e) => s + daParseDuration(e.duration), 0);
+      const avgDurSec = totalEvals > 0 ? sumDur / totalEvals : 0;
+
+      // 채널별 분해 — 건수는 전체(미평가 포함), 평균은 s>0
+      const ib = filtered.filter(e => e.eval_method === 'auto' && e.call_type === 'I/B');
+      const ob = filtered.filter(e => e.eval_method === 'auto' && e.call_type === 'O/B');
+      const mn = filtered.filter(e => e.eval_method === 'manual');
+      const doneOf = arr => arr.filter(e => (Number(e.total_score) || 0) > 0).length;
+      const avgOfScored = arr => {
+        const a = arr.filter(e => (Number(e.total_score) || 0) > 0);
+        return a.length > 0 ? a.reduce((s, e) => s + (Number(e.total_score) || 0), 0) / a.length : 0;
+      };
+
+      const lowCalls = filtered.filter(e => { const s = Number(e.total_score) || 0; return s > 0 && s < 70; }).length;
+      const lowPct = totalEvals > 0 ? Math.round(lowCalls / totalEvals * 100) : 0;
+      const urgentCalls = filtered.filter(e => !!(e.scores && e.scores.profanity && e.scores.profanity.is_fail)).length;
+
+      // 최다 감점 항목
+      const deductCount = {};
+      filtered.forEach(e => {
+        if (!e.scores) return;
+        Object.entries(e.scores).forEach(([k, v]) => {
+          if (!v || v.status === 'pass') return;
+          const name = (daItemNameMap && daItemNameMap[k]) || k;
+          deductCount[name] = (deductCount[name] || 0) + 1;
+        });
+      });
+      let topItem = '-', topCalls = 0;
+      Object.entries(deductCount).forEach(([k, v]) => { if (v > topCalls) { topItem = k; topCalls = v; } });
+      const topPct = totalEvals > 0 ? Math.round(topCalls / totalEvals * 100) : 0;
+
+      return {
+        totalEvals, scoredCount: scored.length, avgScore, uniqueAgents, avgDurSec,
+        ibCnt: ib.length, ibDone: doneOf(ib), avgIB: avgOfScored(ib),
+        obCnt: ob.length, obDone: doneOf(ob), avgOB: avgOfScored(ob),
+        mnCnt: mn.length, mnDone: doneOf(mn), avgManual: avgOfScored(mn),
+        lowCalls, lowPct, urgentCalls,
+        topItem, topCalls, topPct
+      };
+    }
+
+    function daBuildKpiRowsFromStats(stats, subText) {
+      const row1 = [
+        { label: '평가 상담사', value: AICC_Fmt.number(stats.uniqueAgents), current: stats.uniqueAgents, prev: stats.uniqueAgents, unit: '명', prevLabel: '필터 적용', sub: subText || '' },
+        { label: '평가 건수', value: AICC_Fmt.number(stats.totalEvals), current: stats.totalEvals, prev: stats.totalEvals, unit: '건', prevLabel: '필터 적용',
+          isCallBreakdown: true,
+          autoIB: stats.ibCnt, autoIB_done: stats.ibDone,
+          autoOB: stats.obCnt, autoOB_done: stats.obDone,
+          manual: stats.mnCnt, manual_done: stats.mnDone,
+          autoIB_prev: stats.ibCnt, autoIB_done_prev: stats.ibDone,
+          autoOB_prev: stats.obCnt, autoOB_done_prev: stats.obDone,
+          manual_prev: stats.mnCnt, manual_done_prev: stats.mnDone },
+        { label: '긴급 이슈', kind: 'urgentIssue', value: AICC_Fmt.number(stats.urgentCalls), current: stats.urgentCalls, prev: stats.urgentCalls, unit: '건', prevLabel: '필터 적용' },
+        { label: '평균 통화시간', value: daFmtDuration(stats.avgDurSec), isDuration: true, current: daFmtDuration(stats.avgDurSec), prev: daFmtDuration(stats.avgDurSec), unit: '', prevLabel: '필터 적용' }
+      ];
+      const row2 = [
+        { label: '평가 제외 상담사', value: '-', current: 0, prev: 0, unit: '명', prevLabel: '필터 적용' },
+        { label: '평균 평가 점수', value: AICC_Fmt.score(stats.avgScore), current: stats.avgScore, prev: stats.avgScore, unit: '점', prevLabel: '필터 적용',
+          isScoreBreakdown: true,
+          scoreIB: stats.avgIB, scoreIB_prev: stats.avgIB,
+          scoreOB: stats.avgOB, scoreOB_prev: stats.avgOB,
+          scoreManual: stats.avgManual, scoreManual_prev: stats.avgManual },
+        { label: '최다 감점 항목', kind: 'topDeduction', isTopDeduction: true, deductionData: { item: stats.topItem, calls: stats.topCalls, pct: stats.topPct } },
+        { label: '70점 이하 콜', kind: 'lowScore', isLowScore: true, lowCalls: stats.lowCalls, lowPct: stats.lowPct }
+      ];
+      return { row1, row2 };
+    }
+
+    // 외부 필터 + 추가 스코프(센터/팀/상담사)를 합쳐서 allEvals 필터링
+    function daFilterByScope(f, scope) {
+      const merged = Object.assign({}, f);
+      if (scope && scope.centerId) merged.ws = scope.centerId;
+      return daApplyEvalFilter(daAllEvalsRaw, merged).filter(e => {
+        if (scope && scope.teamId && e.team_id !== scope.teamId) return false;
+        if (scope && scope.agentId && (e.agent_id || e.agent_name) !== scope.agentId) return false;
+        return true;
+      });
+    }
+
+    /* ==================== Level 1 (필터): 센터 내 팀별 비교 ==================== */
+    function renderLevel1Filtered(data, f) {
+      currentLevel = 1;
+      updateBreadcrumb();
+
+      const filtered = daFilterByScope(f, { centerId: data.centerId });
+      const stats = daComputeStatsFromEvals(filtered);
+      daCurrentTopItem = stats.topItem !== '-' ? stats.topItem : null;
+
+      // 팀별 집계
+      const byTeam = {};
+      filtered.forEach(e => {
+        const tid = e.team_id || 'unknown';
+        if (!byTeam[tid]) byTeam[tid] = { id: tid, name: e.team || tid, evals: [] };
+        byTeam[tid].evals.push(e);
+      });
+      // 센터 정보로 팀명 보강
+      const centerInfo = (daCentersRaw || []).find(c => c.id === data.centerId);
+      if (centerInfo && centerInfo.teams) {
+        centerInfo.teams.forEach(t => { if (byTeam[t.id]) byTeam[t.id].name = t.name; });
+      }
+      const teamRows = Object.values(byTeam).map(t => {
+        const cnt = t.evals.length;
+        const scoredEv = t.evals.filter(e => (Number(e.total_score) || 0) > 0);
+        const avg = scoredEv.length > 0 ? scoredEv.reduce((s, e) => s + (Number(e.total_score) || 0), 0) / scoredEv.length : 0;
+        const uAgents = new Set(t.evals.map(e => e.agent_id || e.agent_name)).size;
+        const dSum = t.evals.reduce((s, e) => s + daParseDuration(e.duration), 0);
+        const dAvg = cnt > 0 ? dSum / cnt : 0;
+        return { ...t, cnt, avg, uAgents, dAvg };
+      }).sort((a, b) => b.cnt - a.cnt);
+
+      const subText = `${teamRows.length}개 팀`;
+      const { row1, row2 } = daBuildKpiRowsFromStats(stats, subText);
+      renderKpiTwoRows(row1, row2);
+      daRenderFilterBadge(f, stats.totalEvals);
+
+      document.getElementById('table-title').textContent = `${data.centerName} - 팀별 현황 (필터 적용)`;
+      document.getElementById('table-count').textContent = `총 ${teamRows.length}개 팀 / ${AICC_Fmt.number(stats.totalEvals)}건`;
+
+      const table = document.querySelector('.data-table');
+      table.style.tableLayout = 'fixed';
+      document.getElementById('table-head').innerHTML = `
+        <tr>
+          <th style="text-align:center;width:5%;">NO.</th>
+          <th style="text-align:center;width:40%;">팀명</th>
+          <th style="text-align:center;width:15%;">상담사 수</th>
+          <th style="text-align:center;width:15%;">평가 건수</th>
+          <th style="text-align:center;width:15%;">평균 점수</th>
+          <th style="text-align:center;width:10%;">평균 통화시간</th>
+        </tr>
+      `;
+      document.getElementById('table-body').innerHTML = teamRows.length > 0 ? teamRows.map((t, idx) => `
+        <tr class="fade-in" style="cursor:pointer;" onclick="drillToTeamFiltered('${data.centerId}','${t.id}')">
+          <td style="text-align:center;">${idx + 1}</td>
+          <td style="font-weight:500;text-align:center;">${t.name}</td>
+          <td style="text-align:center;">${AICC_Fmt.number(t.uAgents)}명</td>
+          <td style="text-align:center;">${AICC_Fmt.number(t.cnt)}</td>
+          <td style="text-align:center;">${AICC_Fmt.scoreHtml(t.avg)}</td>
+          <td style="text-align:center;">${daFmtDuration(t.dAvg)}</td>
+        </tr>
+      `).join('') : `<tr><td colspan="6" style="text-align:center;padding:40px;color:#9E9E9E;">필터 조건에 해당하는 평가가 없습니다.</td></tr>`;
+
+      renderPagination(teamRows.length, 1, 10);
+
+      daFilteredStats = { ...stats, filter: f, scopeLabel: data.centerName, scopeLevel: 1, rows: teamRows };
+      daShowSuggestionBar();
+      notifyNodeChange();
+      daReportFilterHeight();
+    }
+
+    function drillToCenterFiltered(centerId) {
+      const center = (daCentersRaw || []).find(c => c.id === centerId);
+      if (!center) return;
+      currentLevel = 1;
+      navStack = [{ level: 1, label: center.name, data: { filtered: true, centerId: center.id, centerName: center.name } }];
+      renderLevel1Filtered(navStack[0].data, daExternalFilter);
+    }
+
+    /* ==================== Level 2 (필터): 팀 내 상담사별 비교 ==================== */
+    function renderLevel2Filtered(data, f) {
+      currentLevel = 2;
+      updateBreadcrumb();
+
+      const filtered = daFilterByScope(f, { centerId: data.centerId, teamId: data.teamId });
+      const stats = daComputeStatsFromEvals(filtered);
+      daCurrentTopItem = stats.topItem !== '-' ? stats.topItem : null;
+
+      // 상담사별 집계 — agent_id 우선, 없으면 agent_name 으로 대체
+      const byAgent = {};
+      filtered.forEach(e => {
+        const aid = e.agent_id || e.agent_name || 'unknown';
+        if (!byAgent[aid]) byAgent[aid] = { id: aid, name: e.agent_name || aid, employeeId: e.employee_id || '-', evals: [] };
+        byAgent[aid].evals.push(e);
+      });
+      const agentRows = Object.values(byAgent).map(a => {
+        const cnt = a.evals.length;
+        const scoredEv = a.evals.filter(e => (Number(e.total_score) || 0) > 0);
+        const avg = scoredEv.length > 0 ? scoredEv.reduce((s, e) => s + (Number(e.total_score) || 0), 0) / scoredEv.length : 0;
+        const dSum = a.evals.reduce((s, e) => s + daParseDuration(e.duration), 0);
+        const dAvg = cnt > 0 ? dSum / cnt : 0;
+        const lowCnt = a.evals.filter(e => { const s = Number(e.total_score) || 0; return s > 0 && s < 70; }).length;
+        return { ...a, cnt, avg, dAvg, lowCnt };
+      }).sort((a, b) => a.avg - b.avg); // 평균 낮은 순(코칭 우선 노출)
+
+      const subText = `${agentRows.length}명 상담사`;
+      const { row1, row2 } = daBuildKpiRowsFromStats(stats, subText);
+      renderKpiTwoRows(row1, row2);
+      daRenderFilterBadge(f, stats.totalEvals);
+
+      document.getElementById('table-title').textContent = `${data.teamName} - 상담사별 현황 (필터 적용)`;
+      document.getElementById('table-count').textContent = `총 ${agentRows.length}명 / ${AICC_Fmt.number(stats.totalEvals)}건`;
+
+      const table = document.querySelector('.data-table');
+      table.style.tableLayout = 'fixed';
+      document.getElementById('table-head').innerHTML = `
+        <tr>
+          <th style="text-align:center;width:5%;">NO.</th>
+          <th style="text-align:center;width:18%;">상담사</th>
+          <th style="text-align:center;width:12%;">사번</th>
+          <th style="text-align:center;width:15%;">평가 건수</th>
+          <th style="text-align:center;width:15%;">평균 점수</th>
+          <th style="text-align:center;width:15%;">70점 이하</th>
+          <th style="text-align:center;width:20%;">평균 통화시간</th>
+        </tr>
+      `;
+      document.getElementById('table-body').innerHTML = agentRows.length > 0 ? agentRows.map((a, idx) => `
+        <tr class="fade-in" style="cursor:pointer;" onclick="drillToAgentFilteredById('${data.centerId}','${data.teamId}','${a.id.replace(/'/g, '&#39;')}')">
+          <td style="text-align:center;">${idx + 1}</td>
+          <td style="font-weight:500;text-align:center;">${a.name}</td>
+          <td style="text-align:center;font-size:12px;color:#757575;">${a.employeeId}</td>
+          <td style="text-align:center;">${AICC_Fmt.number(a.cnt)}건</td>
+          <td style="text-align:center;">${AICC_Fmt.scoreHtml(a.avg)}</td>
+          <td style="text-align:center;color:${a.lowCnt > 0 ? '#F44336' : '#9E9E9E'};">${a.lowCnt}건</td>
+          <td style="text-align:center;">${daFmtDuration(a.dAvg)}</td>
+        </tr>
+      `).join('') : `<tr><td colspan="7" style="text-align:center;padding:40px;color:#9E9E9E;">필터 조건에 해당하는 평가가 없습니다.</td></tr>`;
+
+      renderPagination(agentRows.length, 1, 10);
+
+      daFilteredStats = { ...stats, filter: f, scopeLabel: `${data.centerName} / ${data.teamName}`, scopeLevel: 2, rows: agentRows };
+      daShowSuggestionBar();
+      notifyNodeChange();
+      daReportFilterHeight();
+    }
+
+    function drillToTeamFiltered(centerId, teamId) {
+      const center = (daCentersRaw || []).find(c => c.id === centerId);
+      if (!center) return;
+      const team = (center.teams || []).find(t => t.id === teamId);
+      const teamName = team ? team.name : teamId;
+      currentLevel = 2;
+      navStack = [
+        { level: 1, label: center.name, data: { filtered: true, centerId: center.id, centerName: center.name } },
+        { level: 2, label: teamName, data: { filtered: true, centerId: center.id, centerName: center.name, teamId, teamName } }
+      ];
+      renderLevel2Filtered(navStack[1].data, daExternalFilter);
+    }
+
+    /* ==================== Level 3 (필터): 상담사 평가 이력 ==================== */
+    function renderLevel3Filtered(data, f) {
+      currentLevel = 3;
+      updateBreadcrumb();
+
+      const filtered = daFilterByScope(f, { centerId: data.centerId, teamId: data.teamId, agentId: data.agentId });
+      const stats = daComputeStatsFromEvals(filtered);
+      daCurrentTopItem = stats.topItem !== '-' ? stats.topItem : null;
+
+      const subText = `${stats.uniqueAgents > 0 ? data.agentName : '데이터 없음'}`;
+      const { row1, row2 } = daBuildKpiRowsFromStats(stats, subText);
+      renderKpiTwoRows(row1, row2);
+      daRenderFilterBadge(f, stats.totalEvals);
+
+      document.getElementById('table-title').textContent = `${data.agentName} - 평가 이력 (필터 적용)`;
+      document.getElementById('table-count').textContent = `총 ${AICC_Fmt.number(stats.totalEvals)}건`;
+
+      const table = document.querySelector('.data-table');
+      table.style.tableLayout = 'fixed';
+      document.getElementById('table-head').innerHTML = `
+        <tr>
+          <th style="text-align:center;width:11%;">평가 ID</th>
+          <th style="text-align:center;width:11%;">일시</th>
+          <th style="text-align:center;width:9%;">평가방식</th>
+          <th style="text-align:center;width:7%;">유형</th>
+          <th style="text-align:center;width:9%;">통화시간</th>
+          <th style="text-align:center;width:7%;">점수</th>
+          <th style="text-align:left;width:46%;">상담 유형 / 이슈</th>
+        </tr>
+      `;
+      // 최신 일자 우선 정렬
+      const evRows = [...filtered].sort((a, b) => {
+        const da = (a.date || '') + ' ' + (a.call_time || '');
+        const db = (b.date || '') + ' ' + (b.call_time || '');
+        return db.localeCompare(da);
+      });
+      document.getElementById('table-body').innerHTML = evRows.length > 0 ? evRows.map(ev => {
+        const s = Number(ev.total_score) || 0;
+        const isFail = !!(ev.scores && ev.scores.profanity && ev.scores.profanity.is_fail);
+        const methodBadge = ev.eval_method === 'manual'
+          ? '<span style="display:inline-block;padding:2px 8px;background:#FFF3E0;color:#E65100;border-radius:4px;font-size:11px;font-weight:600;">수동</span>'
+          : '<span style="display:inline-block;padding:2px 8px;background:#E3F2FD;color:#1565C0;border-radius:4px;font-size:11px;font-weight:600;">자동</span>';
+        const typeBadge = ev.call_type === 'I/B'
+          ? '<span style="display:inline-block;padding:2px 8px;background:#E8F5E9;color:#2E7D32;border-radius:4px;font-size:11px;font-weight:600;">I/B</span>'
+          : ev.call_type === 'O/B'
+            ? '<span style="display:inline-block;padding:2px 8px;background:#FFF3E0;color:#E65100;border-radius:4px;font-size:11px;font-weight:600;">O/B</span>'
+            : '-';
+        const issueParts = [];
+        if (isFail) issueParts.push('<span style="display:inline-block;padding:2px 8px;background:#FFEBEE;color:#C62828;border-radius:4px;font-size:11px;font-weight:600;">FAIL</span>');
+        if (ev.consultation_type) issueParts.push(`<span style="font-size:11px;color:#757575;">${ev.consultation_type}</span>`);
+        const issueHtml = issueParts.length > 0 ? issueParts.join(' ') : '<span style="color:#9E9E9E;font-size:11px;">-</span>';
+        return `
+          <tr class="fade-in" style="cursor:default;">
+            <td style="text-align:center;font-size:12px;font-family:monospace;">${ev.id || '-'}</td>
+            <td style="text-align:center;font-size:12px;white-space:nowrap;">${ev.date || ''} ${ev.call_time || ''}</td>
+            <td style="text-align:center;">${methodBadge}</td>
+            <td style="text-align:center;">${typeBadge}</td>
+            <td style="text-align:center;font-size:12px;">${ev.duration || '-'}</td>
+            <td style="text-align:center;">${s > 0 ? AICC_Fmt.scoreHtml(s) : '<span style="color:#9E9E9E;">-</span>'}</td>
+            <td style="text-align:left;font-size:12px;">${issueHtml}</td>
+          </tr>
+        `;
+      }).join('') : `<tr><td colspan="7" style="text-align:center;padding:40px;color:#9E9E9E;">필터 조건에 해당하는 평가가 없습니다.</td></tr>`;
+
+      renderPagination(evRows.length, 1, 10);
+
+      daFilteredStats = { ...stats, filter: f, scopeLabel: `${data.centerName} / ${data.teamName} / ${data.agentName}`, scopeLevel: 3, rows: evRows };
+      daShowSuggestionBar();
+      notifyNodeChange();
+      daReportFilterHeight();
+    }
+
+    function drillToAgentFilteredById(centerId, teamId, agentId) {
+      // agentId 는 e.agent_id 또는 e.agent_name (둘 다 가능한 키) — 첫 일치 평가에서 이름 추출
+      const sample = (daAllEvalsRaw || []).find(e =>
+        e.center_id === centerId && e.team_id === teamId &&
+        ((e.agent_id || e.agent_name) === agentId)
+      );
+      const agentName = sample ? (sample.agent_name || agentId) : agentId;
+      const center = (daCentersRaw || []).find(c => c.id === centerId);
+      const centerName = center ? center.name : centerId;
+      const team = center && (center.teams || []).find(t => t.id === teamId);
+      const teamName = team ? team.name : teamId;
+      currentLevel = 3;
+      navStack = [
+        { level: 1, label: centerName, data: { filtered: true, centerId, centerName } },
+        { level: 2, label: teamName, data: { filtered: true, centerId, centerName, teamId, teamName } },
+        { level: 3, label: agentName, data: { filtered: true, centerId, centerName, teamId, teamName, agentId, agentName } }
+      ];
+      renderLevel3Filtered(navStack[2].data, daExternalFilter);
+    }
+
     // URL 파라미터(?ct=&team=) 기반 딥링크를 지원하여, 다른 페이지에서 특정 팀으로 바로 진입 가능
     document.addEventListener('DOMContentLoaded', async () => {
       const params = new URLSearchParams(window.location.search);
@@ -48080,6 +48729,11 @@
 
       const dsData = await AICC_DataLoader.load('dashboard-stats.json');
       if (dsData) dashboardSummary = dsData.summary;
+
+      // 필터는 부모(integrated-evaluation)의 하단 통합 평가 결과 테이블에만 적용한다는 정책에 따라
+      // iframe(상세 분석) 자체는 기존 DUMMY 기반 일반 화면을 그대로 유지 — score_range/method/type/ws
+      // URL 파라미터가 있어도 별도 필터 모드 진입을 하지 않음. (관련 헬퍼는 dormant)
+
       const wsName = params.get('ct');
       const teamName = params.get('team');
 
@@ -48131,6 +48785,26 @@
 
     // navStack을 slice하여 원하는 레벨로 점프 — 브레드크럼 클릭 시 중간 레벨 복원에 사용
     function goToLevel(level) {
+      // 필터 모드일 때는 필터된 렌더러로 분기 (단, navStack 항목이 filtered:true 인 경우)
+      if (daExternalFilter) {
+        if (level === 0) {
+          currentLevel = 0;
+          navStack = [];
+          renderLevel0Filtered(daExternalFilter);
+          updateBreadcrumb();
+          return;
+        } else if (level <= navStack.length) {
+          navStack = navStack.slice(0, level);
+          currentLevel = level;
+          const item = navStack[level - 1];
+          if (item.data && item.data.filtered) {
+            if (level === 1) renderLevel1Filtered(item.data, daExternalFilter);
+            else if (level === 2) renderLevel2Filtered(item.data, daExternalFilter);
+            else if (level === 3) renderLevel3Filtered(item.data, daExternalFilter);
+            return;
+          }
+        }
+      }
       if (level === 0) {
         currentLevel = 0;
         navStack = [];
@@ -49451,6 +50125,39 @@
     function daBuildSuggestions() {
       const out = [];
       const filterLabel = activeFilter && FILTER_LABELS[activeFilter] ? ` (필터: ${FILTER_LABELS[activeFilter]})` : '';
+
+      // 대시보드 진입 외부 필터 모드 — 필터된 실 데이터 기반 제안 생성 (모든 레벨)
+      if (daExternalFilter && daFilteredStats) {
+        const s = daFilteredStats;
+        const fLabel = daBuildFilterLabel(s.filter);
+        const scopeLabel = s.scopeLabel ? ` · ${s.scopeLabel}` : '';
+        const tag = (fLabel ? `${fLabel} 조건` : '필터 조건') + scopeLabel;
+        const levelUnit = s.scopeLevel === 3 ? '평가' : (s.scopeLevel === 2 ? '상담사' : (s.scopeLevel === 1 ? '팀' : '센터'));
+
+        out.push(`${tag} 평가 ${AICC_Fmt.number(s.totalEvals)}건 · 상담사 ${s.uniqueAgents}명 · 평균 ${AICC_Fmt.score(s.avgScore)}점 — 범위 내 동질성 점검을 권장합니다.`);
+        if (s.urgentCalls > 0) {
+          const pct = s.totalEvals > 0 ? (s.urgentCalls / s.totalEvals * 100).toFixed(1) : 0;
+          out.push(`긴급 이슈(FAIL) ${s.urgentCalls}건 (${pct}%) — 해당 ${levelUnit} 대상 금지어/욕설 코칭이 시급합니다.`);
+        }
+        if (s.lowCalls > 0) {
+          out.push(`70점 미만 콜 ${s.lowCalls}건 (${s.lowPct}%) — 재교육 풀 우선 등록 대상으로 검토하세요.`);
+        }
+        if (s.topItem && s.topItem !== '-') {
+          out.push(`최다 감점 항목 "${s.topItem}" ${s.topCalls}건 (${s.topPct}%) — 항목 단위 표준 매뉴얼 재배포가 효과적입니다.`);
+        }
+        // 레벨별 비교 제안 (rows: 센터/팀/상담사 행)
+        const rows = s.centerRows || s.rows;
+        if (rows && rows.length >= 2 && s.scopeLevel !== 3) {
+          const sortedByAvg = [...rows].filter(r => r.avg > 0).sort((a, b) => a.avg - b.avg);
+          if (sortedByAvg.length >= 2) {
+            const lo = sortedByAvg[0], hi = sortedByAvg[sortedByAvg.length - 1];
+            const gap = (hi.avg - lo.avg).toFixed(1);
+            out.push(`${levelUnit} 격차 ${gap}점 — 최저 ${lo.name} ${AICC_Fmt.score(lo.avg)}점 vs 최고 ${hi.name} ${AICC_Fmt.score(hi.avg)}점, 우수 사례 공유 권장.`);
+          }
+        }
+        if (!out.length) out.push(`${tag}에 해당하는 평가가 없습니다.`);
+        return out.slice(0, 8);
+      }
 
       if (currentLevel === 0) {
         // 전체 센터 비교
