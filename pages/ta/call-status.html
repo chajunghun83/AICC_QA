@@ -79,7 +79,7 @@
           </select>
         </div>
         <div style="flex:1 1 0;min-width:0;">
-          <label class="form-label">이슈 키워드</label>
+          <label class="form-label">리스크 키워드</label>
           <input type="text" class="form-input" id="issue-search" placeholder="키워드 검색" style="width:100%;">
         </div>
         <div style="flex:0 0 auto;">
@@ -163,7 +163,7 @@
               <th style="text-align:center;cursor:pointer;user-select:none;" onclick="toggleSort('silence')">묵음시간 <span id="sort-icon-silence" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
               <th style="text-align:center;cursor:pointer;user-select:none;" onclick="toggleSort('reentry')">재인입 <span id="sort-icon-reentry" style="font-size:10px;color:#BDBDBD;">⇅</span></th>
               <th style="text-align:center;">상담 키워드</th>
-              <th style="text-align:center;">이슈 키워드</th>
+              <th style="text-align:center;">리스크 키워드</th>
             </tr>
           </thead>
           <tbody id="call-tbody"></tbody>
@@ -213,6 +213,19 @@
     /* 축소 패널 텍스트 말줄임 */
     .narrow .ai-dp-item span:nth-child(2) { white-space:nowrap !important; overflow:hidden !important; text-overflow:ellipsis !important; }
     .narrow div[style*="font-weight:700"] { white-space:nowrap !important; overflow:hidden !important; text-overflow:ellipsis !important; }
+    /* ── 드롭다운 sub-item (세로 미니 리스트) ── */
+    /* subItems를 가진 인사이트 항목: 헤더(클릭=펼침 토글) 아래 sub-item 행을 세로로 쌓는다.
+     *  rootCause 등 값이 긴 문장이어도 한 행에 안정적으로 표시(라벨 말줄임 + 우측 건수). */
+    .ai-dp-item--with-sub { flex-direction:column !important; align-items:stretch !important; }
+    .ai-dp-sub-header { display:flex; align-items:center; gap:8px; width:100%; cursor:pointer; min-width:0; }
+    .ai-dp-sub-chevron { flex-shrink:0; transition:transform .2s ease; opacity:0.55; }
+    .ai-dp-sub-container { display:flex; flex-direction:column; gap:2px; margin-top:6px; padding-left:18px; }
+    .ai-dp-sub-chip { display:flex; align-items:center; gap:6px; cursor:pointer; padding:3px 8px; background:#fff; border:1px solid #EEEEEE; border-radius:5px; font-size:12px; color:#616161; transition:background .15s, border-color .15s; }
+    .ai-dp-sub-chip:hover { background:#F5F7FA; }
+    .ai-dp-sub-chip .sub-label { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; line-height:1.4; font-weight:400; }
+    .ai-dp-sub-chip .sub-count { font-size:12px; font-weight:700; flex-shrink:0; }
+    .ai-dp-sub-chip.chip-active { background:#E3F2FD !important; border-color:#1565C0 !important; color:#1565C0; }
+    .ai-dp-sub-chip.chip-active .sub-label { font-weight:600; }
   </style>
   <script src="../../js/components/modal.js"></script>
   <script src="../../js/components/toast.js"></script>
@@ -252,8 +265,8 @@
     /* ── 상담유형 목록 (3~4뎁스) ──────────────────────────────────
      *  [정책] 상담유형은 대분류(D1) > 중분류(D2) > (소분류(D3) >) 세분류 구조.
      *   - 최대 4뎁스이며, 자연스럽게 3뎁스로 끝나는 항목도 존재한다.
-     *   - 대시보드 소분류 도넛 차트 항목은 **마지막 뎁스**에 위치한다.
-     *     "소분류"는 소분류·세분류를 아울러 부르는 명칭이므로
+     *   - 대시보드 세분류 도넛 차트 항목은 **마지막 뎁스**에 위치한다.
+     *     "세분류"는 마지막 뎁스 항목을 가리키므로
      *     3뎁스(D3)나 4뎁스(D4) 모두 해당된다.
      *   - matchesSpecialFilter의 consult_type 분기는 마지막 뎁스를 체크한다.
      *     예) value='카드결제' → '결제 > 결제오류 > 승인실패 > 카드결제' 매칭
@@ -322,10 +335,10 @@
       '민원 > 불만처리 > 응대불만 > 서비스불만',
       '민원 > 불만처리 > 시스템장애 > 시스템불만',
       '민원 > 불만처리 > 배상요구 > 보상요구',
-      /* HTS·MTS 오류 ─ 대시보드 소분류에 없으므로 기존 구조 유지 */
+      /* HTS·MTS 오류 ─ 대시보드 세분류에 없으므로 기존 구조 유지 */
       'HTS·MTS 오류 > 시스템오류 > 앱오류 > 주문오류',
       'HTS·MTS 오류 > 기능관리 > 기능문의 > 검색기능',
-      /* 카탈로그(상품기획) ─ 대시보드 소분류에 없으므로 기존 구조 유지 */
+      /* 카탈로그(상품기획) ─ 대시보드 세분류에 없으므로 기존 구조 유지 */
       '카탈로그 > 상품기획 > 신규종목 > 공모청약'
     ];
 
@@ -1587,7 +1600,7 @@
         silence: '묵음 콜',
         over: '초과 콜 (3분 이상)',
         reentry: '재인입 콜 (2회 이상)',
-        issue_keyword: `이슈 키워드: ${filterObj.value}`,
+        issue_keyword: `리스크 키워드: ${filterObj.value}`,
         keyword: `키워드: ${filterObj.value}`,
         product_keyword: `종목 키워드: ${filterObj.value}`,
         new_keyword: `신규 키워드: ${filterObj.value}`,
@@ -1763,12 +1776,13 @@
       return {
         level1: {
           insights: [
+            /* [핵심 발견] 3개 cap에 맞춰 서로 다른 차원(상태/이슈/흐름)으로 구성.
+             *  - "가장 빈번 이슈"는 아래 "이슈 상위 N종" chip(1·2·3위)에 흡수되어 제거
+             *  - "의도 달성률"은 위험 신호와 성격이 겹쳐 제거 (cap 우선순위) */
             { type:'finding', label:'핵심 발견', color:'#1565C0', items:[
-              { text:`"${topIssue}" 이슈가 ${topIssues.length > 0 ? topIssues[0].count : 0}건으로 가장 빈번 — 전체 이슈의 ${topIssues.length > 0 && issueCalls.length > 0 ? Math.round(topIssues[0].count / issueCalls.length * 100) : 0}% 차지`, keyword:topIssue !== '-' ? topIssue : null, filterFn: topIssue !== '-' ? (c => (c.issueKeywords||[]).includes(topIssue)) : null, filterLabel:topIssue },
               { text:`1차 처리 완료율 ${resolved}% — 후속 조치 필요 ${followupDefault.length}건에 대한 이행 확인 필요`, keyword:'후속 조치 필요', filterFn: c => c.aiAnalysis && c.aiAnalysis.status === 'followup', filterLabel:'후속 조치 필요' },
-              { text:`이슈 상위 3종: ${top3Issues.map(d => `${d.name}(${d.count}건)`).join(', ')}`, keyword:'이슈', filterFn: c => c.issueKeywords && c.issueKeywords.length > 0, filterLabel:'이슈 콜' },
-              { text:`상담 흐름: ${defFlowDetail}`, keyword: defFlowPatterns.length > 0 && defFlowPatterns[0].count >= 2 ? defFlowPatterns[0].name : null, filterFn: defFlowPatterns.length > 0 ? (c => c.aiAnalysis && c.aiAnalysis.flowPattern === defFlowPatterns[0].name) : null, filterLabel: defFlowPatterns.length > 0 ? defFlowPatterns[0].name : null },
-              { text:`고객 의도 달성률 ${defIntentRate.rate}% — 미달성 ${defIntentRate.notAchieved}건 주요 원인: ${defFailCause}`, keyword: defIntentRate.notAchieved >= 2 ? '의도 미달성' : null, filterFn: c => c.aiAnalysis && c.aiAnalysis.intentAchieved === false, filterLabel:'의도 미달성' }
+              ...(top3Issues.length > 0 ? [{ text:`이슈 상위 ${top3Issues.length}종`, keyword:null, filterFn:null, filterLabel:null, subItems: top3Issues.map(d => ({ label:d.name, count:d.count, filterFn: c => (c.issueKeywords||[]).includes(d.name), filterLabel:d.name })) }] : []),
+              ...(defFlowPatterns.length > 0 ? [_mkSubInsight('상담 흐름', defFlowPatterns.slice(0,3).map(f => ({ label:f.name, count:f.count, filterFn: c => c.aiAnalysis && c.aiAnalysis.flowPattern === f.name, filterLabel:f.name })), true, ' / ')] : [])
             ]},
             { type:'warning', label:'위험 신호', color:'#E65100', items:[
               { text:`재인입 비율 ${reentRate}%(${reentCalls.length}건) — 이전 상담 완결 품질 점검 필요`, keyword:'재인입', filterFn: c => c.reentry >= 2, filterLabel:'재인입 콜' },
@@ -1858,17 +1872,21 @@
               { text:`${triggerEvent} → 주문조회 불가/장기 미체결 문의 집중`, keyword:'주문조회 불가', filterFn: c => c.transcript && c.transcript.some(l => l.text.includes('주문번호조회') || l.text.includes('미체결')), filterLabel:'주문조회 불가' }
             ]},
             { type:'finding', label:'핵심 발견', color:'#1565C0', items:[
-              { text:`"주문번호" 관련 콜 ${total}건 중 이슈 콜 ${issueCalls.length}건(${issueRate}%) — 체결지연 ${deliveryCalls.length}건, 주문취소 ${cancelCalls.length}건, 이체오류 ${payCalls.length}건`, keyword:'이슈 콜', filterFn: c => c.issueKeywords && c.issueKeywords.length > 0, filterLabel:'이슈 콜' },
+              { text:`이슈 콜 분포 — 총 ${issueCalls.length}건(${issueRate}%)`, keyword:null, filterFn:null, filterLabel:null, subItems: [
+                  { label:'체결지연', count:deliveryCalls.length, filterFn: c => (c.issueKeywords||[]).includes('체결지연'), filterLabel:'체결지연' },
+                  { label:'주문취소', count:cancelCalls.length, filterFn: c => (c.issueKeywords||[]).includes('주문취소지연'), filterLabel:'주문취소지연' },
+                  { label:'이체오류', count:payCalls.length, filterFn: c => (c.issueKeywords||[]).includes('이체오류'), filterLabel:'이체오류' }
+                ].filter(s => s.count > 0) },
               { text:`1차 처리 완료율 ${resolved}% — 후속 조치 필요 ${followupCalls.length}건 중 콜백/이관 대기 건 즉시 확인 필요`, keyword:'후속 조치 필요', filterFn: c => c.aiAnalysis && c.aiAnalysis.status === 'followup', filterLabel:'후속 조치 필요' },
               { text:`체결지연이 전체 이슈의 ${deliveryIssuePct}%로 최다 — 거래소 호가 지연 집중 모니터링 권장`, keyword:'체결지연', filterFn: c => (c.issueKeywords||[]).includes('체결지연'), filterLabel:'체결지연' },
-              { text:`상담 흐름: ${kwFlowDetail}`, keyword: kwFlowPatterns.length > 0 && kwFlowPatterns[0].count >= 2 ? kwFlowPatterns[0].name : null, filterFn: kwFlowPatterns.length > 0 ? (c => c.aiAnalysis && c.aiAnalysis.flowPattern === kwFlowPatterns[0].name) : null, filterLabel: kwFlowPatterns.length > 0 ? kwFlowPatterns[0].name : null },
+              ...(kwFlowPatterns.length > 0 ? [_mkSubInsight('상담 흐름', kwFlowPatterns.slice(0,3).map(f => ({ label:f.name, count:f.count, filterFn: c => c.aiAnalysis && c.aiAnalysis.flowPattern === f.name, filterLabel:f.name })), true, ' / ')] : []),
               { text:`고객 의도 달성률 ${kwIntentRate.rate}% — 미달성 ${kwIntentRate.notAchieved}건 주 원인: ${kwTopFailCause}`, keyword: kwIntentRate.notAchieved >= 2 ? '의도 미달성' : null, filterFn: c => c.aiAnalysis && c.aiAnalysis.intentAchieved === false, filterLabel:'의도 미달성' }
             ]},
             { type:'warning', label:'위험 신호', color:'#E65100', items:[
               { text:`체결지연 후속 조치 필요 ${deliveryFollowup.length}건 — 장기 미체결 고객 이탈 위험`, keyword:'후속 조치 필요', filterFn: c => (c.issueKeywords||[]).includes('체결지연') && c.aiAnalysis && c.aiAnalysis.status === 'followup', filterLabel:'체결지연 후속 조치' },
               { text:`재인입 비율 ${reentRate}%(${reentCalls.length}건) — 이전 상담 후속 조치 미이행 가능성`, keyword:'재인입', filterFn: c => c.reentry >= 2, filterLabel:'재인입 콜' },
               { text:`콜 집중 시간대 ${kwPeak.hour}시(${kwPeak.count}건) — 주문번호 관련 문의 피크`, keyword:`${kwPeak.hour}시`, filterFn: c => parseInt(c.time.split(':')[0],10) === kwPeak.hour, filterLabel:`${kwPeak.hour}시 콜` },
-              ...(kwRiskFlags.length > 0 ? [{ text:`위험 신호 감지: ${kwRiskFlags.slice(0,3).map(r => `${r.name} ${r.count}건`).join(', ')}`, keyword: kwRiskFlags[0].count >= 2 ? kwRiskFlags[0].name : null, filterFn: c => c.aiAnalysis && (c.aiAnalysis.riskFlags||[]).includes(kwRiskFlags[0].name), filterLabel: kwRiskFlags[0].name }] : [])
+              ...(kwRiskFlags.length > 0 ? [_mkSubInsight('위험 신호 감지', kwRiskFlags.slice(0,3).map(r => ({ label:r.name, count:r.count, filterFn: c => c.aiAnalysis && (c.aiAnalysis.riskFlags||[]).includes(r.name), filterLabel:r.name })), true)] : [])
             ]},
             { type:'action', label:'조치 필요', color:'#6A1B9A', items:[
               { text:`거래소 SLA 점검 요청 — 체결지연 ${deliveryCalls.length}건의 주원인이 거래소 호가 지연으로, 체결 처리 시간 준수율 확인 및 시정 요구 필요`, keyword:'체결지연', filterFn: c => (c.issueKeywords||[]).includes('체결지연'), filterLabel:'체결지연' },
@@ -2094,18 +2112,14 @@
         });
       }
 
-      /* 1) rootCause 분석 — 이미 rootCause 필터 적용 시 생략 */
+      /* 1) rootCause 분석 — 이미 rootCause 필터 적용 시 생략 (멀티 → chip 드롭다운) */
       if (!isRootCauseFiltered && rootCauses.length > 1) {
-        const rcDetail = rootCauses.slice(0,3).map(r => {
-          const pct = withAi.length > 0 ? Math.round(r.count / withAi.length * 100) : 0;
-          return `${r.name} ${r.count}건(${pct}%)`;
-        }).join(', ');
-        findingItems.push({
-          text:`원인 분석: ${rcDetail}`,
-          keyword: canInteract ? rootCauses[0].name : null,
-          filterFn: c => c.aiAnalysis && c.aiAnalysis.rootCause === rootCauses[0].name,
-          filterLabel: rootCauses[0].name
-        });
+        findingItems.push(_mkSubInsight('원인 분석',
+          rootCauses.slice(0,3).map(r => ({
+            label: r.name, count: r.count,
+            filterFn: c => c.aiAnalysis && c.aiAnalysis.rootCause === r.name,
+            filterLabel: r.name
+          })), canInteract));
       } else if (!isRootCauseFiltered && rootCauses.length === 1) {
         findingItems.push({
           text:`공통 원인: "${rootCauses[0].name}" — 전체 ${rootCauses[0].count}건 동일`,
@@ -2145,13 +2159,12 @@
       if (!isSpecificIssueFiltered) {
         const topIssues = _aggIssueDistribution(calls);
         if (topIssues.length > 1) {
-          const issueDetail = topIssues.slice(0,3).map(d => `${d.name} ${d.count}건`).join(', ');
-          findingItems.push({
-            text:`이슈 분포: ${issueDetail}`,
-            keyword: canInteract ? topIssues[0].name : null,
-            filterFn: c => (c.issueKeywords||[]).includes(topIssues[0].name),
-            filterLabel: topIssues[0].name
-          });
+          findingItems.push(_mkSubInsight('이슈 분포',
+            topIssues.slice(0,3).map(d => ({
+              label: d.name, count: d.count,
+              filterFn: c => (c.issueKeywords||[]).includes(d.name),
+              filterLabel: d.name
+            })), canInteract));
         }
       }
 
@@ -2160,18 +2173,12 @@
        *  [실제 운영] LLM이 다수 콜의 스크립트 흐름을 교차 분석하여
        *   공통 패턴과 이탈 패턴을 도출하고, 패턴별 해결률 차이를 분석한다. */
       if (!isFlowFiltered && flowPatterns.length > 0) {
-        const topFlow = flowPatterns[0];
-        const flowDetail = flowPatterns.slice(0,3).map(f => `${f.name} ${f.count}건`).join(' / ');
-        const immediateCount = flowPatterns.find(f => f.name === '즉시해결');
-        const immediateRate = immediateCount && withAi.length > 0
-          ? Math.round(immediateCount.count / withAi.length * 100) : 0;
-        const suffix = immediateRate < 50 ? ' — 즉시 해결 비율 낮음' : '';
-        findingItems.push({
-          text:`상담 흐름: ${flowDetail}${suffix}`,
-          keyword: canInteract && topFlow.count >= 2 ? topFlow.name : null,
-          filterFn: c => c.aiAnalysis && c.aiAnalysis.flowPattern === topFlow.name,
-          filterLabel: topFlow.name
-        });
+        findingItems.push(_mkSubInsight('상담 흐름',
+          flowPatterns.slice(0,3).map(f => ({
+            label: f.name, count: f.count,
+            filterFn: c => c.aiAnalysis && c.aiAnalysis.flowPattern === f.name,
+            filterLabel: f.name
+          })), canInteract && flowPatterns[0].count >= 2, ' / '));
       }
 
       /* [Phase 2] 3-b) 고객 의도 달성률
@@ -2234,14 +2241,17 @@
           '환매지연':'고객 불만 확대 위험'
         };
         const riskTagNames = Object.keys(riskMap);
-        allTags.filter(t => riskTagNames.includes(t.name)).forEach(t => {
-          warningItems.push({
-            text:`"${t.name}" 패턴 ${t.count}건 — ${riskMap[t.name]}`,
-            keyword: canInteract && t.count >= 2 ? t.name : null,
-            filterFn: c => c.aiAnalysis && (c.aiAnalysis.tags||[]).includes(t.name),
-            filterLabel: t.name
-          });
-        });
+        /* [사용자 결정 A안] 위험 태그가 여러 개여도 개별 항목으로 나열하지 않고
+         *  "위험 패턴 감지" 단일 헤더 + chip(태그별)으로 묶는다 */
+        const riskTags = allTags.filter(t => riskTagNames.includes(t.name));
+        if (riskTags.length > 0) {
+          warningItems.push(_mkSubInsight('위험 패턴 감지',
+            riskTags.slice(0,3).map(t => ({
+              label: t.name, count: t.count,
+              filterFn: c => c.aiAnalysis && (c.aiAnalysis.tags||[]).includes(t.name),
+              filterLabel: t.name
+            })), canInteract));
+        }
       }
 
       /* [Phase 2] riskFlags 기반 위험 집계 — tags와 별도로 직접적인 위험 신호 표시
@@ -2249,14 +2259,12 @@
        *  [실제 운영] LLM이 스크립트에서 불만/이탈/재인입 위험 신호를 감지하여
        *   riskFlags를 생성한다. 여기서는 그 결과를 집계만 한다. */
       if (!isRiskFlagFiltered && riskFlagAgg.length > 0) {
-        const rfDetail = riskFlagAgg.slice(0,3).map(r => `${r.name} ${r.count}건`).join(', ');
-        const topRf = riskFlagAgg[0];
-        warningItems.push({
-          text:`위험 신호 감지: ${rfDetail}`,
-          keyword: canInteract && topRf.count >= 2 ? topRf.name : null,
-          filterFn: c => c.aiAnalysis && (c.aiAnalysis.riskFlags||[]).includes(topRf.name),
-          filterLabel: topRf.name
-        });
+        warningItems.push(_mkSubInsight('위험 신호 감지',
+          riskFlagAgg.slice(0,3).map(r => ({
+            label: r.name, count: r.count,
+            filterFn: c => c.aiAnalysis && (c.aiAnalysis.riskFlags||[]).includes(r.name),
+            filterLabel: r.name
+          })), canInteract && riskFlagAgg[0].count >= 2));
       }
 
       /* [Phase 2] 복합 위험: 의도 미달성 + 후속 조치 필요 — 재인입 가능성 최고 수준 */
@@ -2332,7 +2340,8 @@
 
       /* ─── 조치 필요: suggestedAction 기반 구체적 제안 ─── */
       const actionItems = [];
-      suggestedActions.filter(sa => sa.name).forEach(sa => {
+      /* [3개 cap] 제안 조치가 많아도 상위 3개만 표시 */
+      suggestedActions.filter(sa => sa.name).slice(0, 3).forEach(sa => {
         actionItems.push({
           text:`${sa.name} — 관련 콜 ${sa.count}건`,
           keyword: canInteract && sa.count >= 2 ? sa.name : null,
@@ -2431,6 +2440,88 @@
     let _regL1 = [], _regL2 = [], _regL3 = [];
     let _l3FilterLabel = null;
 
+    /* ── 드롭다운 sub-item(chip) 상태/핸들러 ─────────────────────────
+     *  [개요] 멀티-항목 인사이트(여러 값이 콤마로 나열되던 평문)를
+     *   "헤더 ▼ + chip 목록" 구조로 바꿔, 개별 chip을 선택해
+     *   해당 값으로 드릴다운(또는 L3 테이블 필터)할 수 있게 한다.
+     *
+     *  [_subItemOpen] 레벨별 펼친 부모 항목의 registry 인덱스 Set.
+     *   - 같은 레벨 내 필터 갱신 시에는 펼침 상태 유지
+     *   - L1↔L2↔L3 레벨 전환 시 하위 레벨 Set을 clear (사용자 정책) */
+    const _subItemOpen = { l1: new Set(), l2: new Set(), l3: new Set() };
+
+    /* 헤더 클릭 → chip 목록 펼침/접힘 토글 (전체 재렌더 없이 DOM 직접 조작 → 깜빡임 방지) */
+    function _toggleSubItems(levelKey, idx) {
+      const set = _subItemOpen[levelKey];
+      const willOpen = !set.has(idx);
+      if (willOpen) set.add(idx); else set.delete(idx);
+      const cont = document.getElementById(`_sub-${levelKey}-${idx}`);
+      const chev = document.getElementById(`_chev-${levelKey}-${idx}`);
+      if (cont) cont.style.display = willOpen ? 'flex' : 'none';
+      if (chev) chev.style.transform = willOpen ? 'rotate(90deg)' : 'rotate(0deg)';
+    }
+
+    /* chip 클릭 → 해당 sub-item 기준 드릴다운/필터.
+     *  L1 chip → L2 진입, L2 chip → L3 진입, L3 chip → 테이블 필터 토글 */
+    function _onSubItemClick(levelKey, parentIdx, subIdx) {
+      const reg = { l1: _regL1, l2: _regL2, l3: _regL3 }[levelKey];
+      const parent = reg && reg[parentIdx];
+      if (!parent || !parent.subItems) return;
+      const sub = parent.subItems[subIdx];
+      if (!sub) return;
+
+      if (levelKey === 'l1') {
+        _aiHistory = [{ label: sub.filterLabel, filterFn: sub.filterFn }];
+        _aiLevel = 2;
+        _drillDataL2 = null; _drillDataL3 = null;
+        _l3FilterLabel = null; _renderL3FilterBadge();
+        _subItemOpen.l2.clear(); _subItemOpen.l3.clear();  // 레벨 전환 시 하위 초기화
+      } else if (levelKey === 'l2') {
+        if (_aiHistory.length < 1) return;
+        _aiHistory = [_aiHistory[0], { label: sub.filterLabel, filterFn: sub.filterFn }];
+        _aiLevel = 3;
+        _drillDataL3 = null;
+        _l3FilterLabel = null; _renderL3FilterBadge();
+        _subItemOpen.l3.clear();
+      } else { // l3: 더 깊은 드릴 없음 — 테이블 필터 토글
+        if (_l3FilterLabel === sub.filterLabel) { _resetL3Filter(); return; }
+        let data = [..._aiFilteredCalls];
+        _aiHistory.forEach(h => { data = data.filter(h.filterFn); });
+        filteredData = data.filter(sub.filterFn);
+        _l3FilterLabel = sub.filterLabel;
+        currentPage = 1;
+        renderTable();
+        _renderL3FilterBadge();
+        _refreshL3ChipActive();  // 재렌더 없이 chip 활성 표시만 갱신
+        return;
+      }
+      _applyAiTableFilter();
+      _renderAiCard();
+    }
+
+    /* L3 패널의 chip 활성(선택됨) 표시를 _l3FilterLabel 기준으로 동기화 */
+    function _refreshL3ChipActive() {
+      document.querySelectorAll('#ai-panel-l3-body .ai-dp-sub-chip').forEach(chip => {
+        chip.classList.toggle('chip-active', chip.getAttribute('data-label') === _l3FilterLabel);
+      });
+    }
+
+    /* ── 멀티-항목 인사이트 빌더 헬퍼 ─────────────────────────────
+     *  [동작] rows(개별 값 배열)를 받아 인사이트 item을 생성한다.
+     *   - canInteract=true: 헤더 + subItems(chip) 구조 (chip 클릭으로 드릴다운)
+     *   - canInteract=false: 콤마 평문으로 fallback (1건 등 드릴 의미 없을 때)
+     *  @param headerText  헤더 텍스트 (예: '원인 분석', '이슈 분포')
+     *  @param rows        [{label, count, filterFn, filterLabel}] — slice(0,3) 적용
+     *  @param canInteract 드릴 가능 여부
+     *  @param joiner      평문 fallback 시 구분자 (기본 ', ') */
+    function _mkSubInsight(headerText, rows, canInteract, joiner) {
+      if (canInteract && rows.length > 0) {
+        return { text: headerText, keyword: null, filterFn: null, filterLabel: null, subItems: rows.slice(0, 3) };
+      }
+      const detail = rows.map(r => `${r.label} ${r.count}건`).join(joiner || ', ');
+      return { text: `${headerText}: ${detail}`, keyword: null, filterFn: null, filterLabel: null };
+    }
+
     /** Level 3 필터 뱃지: 적용된 필터 라벨 + 초기화 버튼 표시 */
     function _renderL3FilterBadge() {
       const badge = document.getElementById('l3-filter-badge');
@@ -2460,6 +2551,8 @@
         e.style.background = '#FAFAFA';
         e.style.borderLeftWidth = '3px';
       });
+      /* L3 sub-chip 활성 표시도 해제 */
+      document.querySelectorAll('#ai-panel-l3-body .ai-dp-sub-chip').forEach(c => c.classList.remove('chip-active'));
     }
 
     /* 상담유형 Top5 클릭 → L2 진입 (Top5에서 직접 드릴다운) */
@@ -2501,11 +2594,11 @@
       renderTable();
     }
 
-    /* ── consult_type 시나리오 (소분류 진입용) ──────────────────────
-     *  [정책] 대시보드 소분류 도넛에서 클릭하여 진입한 경우.
+    /* ── consult_type 시나리오 (세분류 진입용) ──────────────────────
+     *  [정책] 대시보드 세분류 도넛에서 클릭하여 진입한 경우.
      *   - 키워드 Top5를 집계하여 오른쪽 패널에 표시한다.
      *   - extractedKeywords 전 카테고리에서 빈도순 Top5를 추출한다.
-     *   - 인사이트는 해당 소분류 콜에 대한 이슈/트렌드 분석을 제공한다.
+     *   - 인사이트는 해당 세분류 콜에 대한 이슈/트렌드 분석을 제공한다.
      * ─────────────────────────────────────────────────────────── */
     function _buildConsultTypeScenario(calls) {
       const total = calls.length;
@@ -2521,7 +2614,7 @@
 
       const curFilter = urlFilter ? urlFilter.filter : null;
       /* [정책] Top5 표시 분기
-       *   - consult_type(소분류) → 키워드 Top5 (이미 상담유형으로 진입했으므로 키워드를 보여준다)
+       *   - consult_type(세분류) → 키워드 Top5 (이미 상담유형으로 진입했으므로 키워드를 보여준다)
        *   - keyword(주요 키워드) / product_keyword / issue_keyword / new_keyword
        *     → 상담유형 Top5 (키워드로 진입했으므로 상담유형을 보여준다) */
       const showCtTop5 = ['keyword','product_keyword','issue_keyword','new_keyword'].includes(curFilter);
@@ -2577,7 +2670,7 @@
               { text:`${filterValue} 관련 콜 ${total}건 중 이슈 콜 ${issueCalls.length}건(${total > 0 ? Math.round(issueCalls.length/total*100) : 0}%)`, keyword: issueCalls.length > 0 ? '이슈 콜' : null, filterFn: issueCalls.length > 0 ? (c => c.issueKeywords && c.issueKeywords.length > 0) : null, filterLabel:'이슈 콜' },
               { text:`1차 처리 완료율 ${resolved}% — 후속 조치 필요 ${followupCalls.length}건`, keyword: followupCalls.length > 0 ? '후속 조치 필요' : null, filterFn: followupCalls.length > 0 ? (c => c.aiAnalysis && c.aiAnalysis.status === 'followup') : null, filterLabel:'후속 조치 필요' },
               ...(topIssues.length > 0 ? [{ text:`최다 이슈: ${topIssue} ${topIssues[0].count}건 — 전체 이슈의 ${issueCalls.length > 0 ? Math.round(topIssues[0].count/issueCalls.length*100) : 0}%`, keyword:topIssue !== '-' ? topIssue : null, filterFn: topIssue !== '-' ? (c => (c.issueKeywords||[]).includes(topIssue)) : null, filterLabel:topIssue }] : []),
-              { text:`상담 흐름: ${ctFlowDetail}`, keyword: ctFlowPatterns.length > 0 && ctFlowPatterns[0].count >= 2 ? ctFlowPatterns[0].name : null, filterFn: ctFlowPatterns.length > 0 ? (c => c.aiAnalysis && c.aiAnalysis.flowPattern === ctFlowPatterns[0].name) : null, filterLabel: ctFlowPatterns.length > 0 ? ctFlowPatterns[0].name : null }
+              ...(ctFlowPatterns.length > 0 ? [_mkSubInsight('상담 흐름', ctFlowPatterns.slice(0,3).map(f => ({ label:f.name, count:f.count, filterFn: c => c.aiAnalysis && c.aiAnalysis.flowPattern === f.name, filterLabel:f.name })), ctFlowPatterns[0].count >= 2, ' / ')] : [])
             ]},
             { type:'warning', label:'위험 신호', color:'#E65100', items:[
               { text:`재인입 비율 ${reentRate}%(${reentCalls.length}건) — 이전 상담 완결 품질 점검 필요`, keyword: reentCalls.length > 0 ? '재인입' : null, filterFn: reentCalls.length > 0 ? (c => c.reentry >= 2) : null, filterLabel:'재인입 콜' },
@@ -2651,7 +2744,7 @@
     /* ── 시나리오 분기 + 캐싱 ──────────────────────────────────────
      *  [정책] URL 파라미터(urlFilter)에 따라 시나리오를 자동 분기한다.
      *   - keyword (주문번호 포함) → _buildKeywordScenario (상담유형 Top5)
-     *   - consult_type(소분류) → _buildConsultTypeScenario (키워드 Top5)
+     *   - consult_type(세분류) → _buildConsultTypeScenario (키워드 Top5)
      *   - product_keyword / issue_keyword / new_keyword
      *     → _buildConsultTypeScenario (상담유형 Top5)
      *   - hour → _buildHourScenario (키워드 Top5 + 상담유형 Top5 상하 배치)
@@ -2700,18 +2793,61 @@
       cause: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 6l-9.5 9.5-5-5L1 18"/><polyline points="17 6 23 6 23 12"/></svg>'
     };
 
-    /* 인사이트 그룹 → HTML, 지정한 registry 배열에 핸들러 등록 */
+    /* 인사이트 그룹 → HTML, 지정한 registry 배열에 핸들러 등록
+     *  [정책]
+     *   - 각 섹션은 최대 3개 항목만 표시 (group.items.slice(0,3))
+     *   - registry 슬롯은 "클릭 가능 항목(filterFn)" 또는 "subItems 보유 항목" 모두에 배정.
+     *     컨테이너 id를 `${clickFn}-${idx}`로 통일하여 _applyDrillHighlight 등과 호환.
+     *   - subItems가 있으면 헤더(클릭=펼침 토글) + chip 목록(최대 3개) 렌더 */
     function _renderInsightsToHtml(insights, registry, clickFn, isL3) {
+      /* clickFn → 레벨 키 도출 (_onL1Click→l1 …) */
+      const levelKey = clickFn === '_onL2Click' ? 'l2' : clickFn === '_onL3Click' ? 'l3' : 'l1';
       return insights.map(group => {
-        const itemsHtml = group.items.map(item => {
-          const hasFilter = item.keyword && item.filterFn;
+        const cappedItems = group.items.slice(0, 3);
+        const itemsHtml = cappedItems.map(item => {
+          const hasSub = item.subItems && item.subItems.length > 0;
+          const hasFilter = !hasSub && item.keyword && item.filterFn;
+          const baseStyle = `display:flex !important;align-items:center;gap:8px;padding:5px 10px;background:#FAFAFA;border-radius:6px;margin-bottom:2px;border-left:3px solid ${group.color};transition:background .15s;overflow:hidden;`;
+
+          /* ── subItems(드롭다운) 항목 ──
+           *  헤더(라벨 + 우측 chevron) 클릭 → 아래로 세로 목록 펼침/접힘.
+           *  레이아웃은 CSS 우선순위 충돌을 피하려 인라인으로 column을 강제한다. */
+          if (hasSub) {
+            const idx = registry.length;
+            registry.push({ subItems: item.subItems });
+            const open = _subItemOpen[levelKey].has(idx);
+            const chipsHtml = item.subItems.slice(0, 3).map((sub, sIdx) => {
+              const active = isL3 && _l3FilterLabel === sub.filterLabel;
+              /* L1/L2: 드릴 진입(꺾쇠) / L3: 테이블 필터(깔때기) — 단일 클릭 항목과 동일한 의미 부여 */
+              const icon = isL3
+                ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="${group.color}" stroke-width="2" style="flex-shrink:0;opacity:0.5;margin-left:auto;"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>`
+                : `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="${group.color}" stroke-width="2" style="flex-shrink:0;opacity:0.5;margin-left:auto;"><path d="m9 18 6-6-6-6"/></svg>`;
+              return `<div class="ai-dp-sub-chip${active ? ' chip-active' : ''}" id="_subchip-${levelKey}-${idx}-${sIdx}" data-label="${sub.filterLabel}" title="${sub.label}"
+                onclick="event.stopPropagation();_onSubItemClick('${levelKey}',${idx},${sIdx})"
+                style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;">
+                <span style="color:${group.color};font-size:7px;flex-shrink:0;line-height:1;">●</span>
+                <span class="sub-label" style="flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:400;color:#616161;">${sub.label}</span>
+                <span class="sub-count" style="font-size:12px;color:${group.color};margin-left:10px;">${sub.count}건</span>
+                ${icon}
+              </div>`;
+            }).join('');
+            return `<div class="ai-dp-item ai-dp-item--with-sub" id="${clickFn}-${idx}" style="display:flex;flex-direction:column;align-items:stretch;padding:6px 10px;background:#FAFAFA;border-radius:6px;margin-bottom:2px;border-left:3px solid ${group.color};">
+              <div class="ai-dp-sub-header" onclick="_toggleSubItems('${levelKey}',${idx})" style="display:flex;align-items:center;gap:8px;width:100%;cursor:pointer;min-width:0;">
+                <span style="color:${group.color};font-size:10px;flex-shrink:0;line-height:1;">■</span>
+                <span class="ai-dp-sub-header-label" style="font-size:13px;color:#424242;font-weight:600;line-height:1.45;min-width:0;">${item.text}</span>
+                <svg class="ai-dp-sub-chevron" id="_chev-${levelKey}-${idx}" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${group.color}" stroke-width="2" style="flex-shrink:0;opacity:0.55;transition:transform .2s ease;transform:rotate(${open ? '90deg' : '0deg'});"><path d="m9 18 6-6-6-6"/></svg>
+              </div>
+              <div class="ai-dp-sub-container" id="_sub-${levelKey}-${idx}" style="flex-direction:column;gap:3px;margin-top:7px;padding-left:18px;display:${open ? 'flex' : 'none'};">${chipsHtml}</div>
+            </div>`;
+          }
+
+          /* ── 단일 클릭형 / 평문 항목 (기존 동작) ── */
           let displayText = item.text;
           if (hasFilter) {
             displayText = item.text.replace(new RegExp(`(${item.keyword.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'g'),
               `<span style="color:${group.color};font-weight:700;">$1</span>`);
           }
           let idAttr = '', evtAttr = '', arrowSvg = '';
-          const baseStyle = `display:flex !important;align-items:center;gap:8px;padding:5px 10px;background:#FAFAFA;border-radius:6px;margin-bottom:2px;border-left:3px solid ${group.color};transition:background .15s;overflow:hidden;`;
           if (hasFilter) {
             const fnIdx = registry.length;
             registry.push({ filterFn: item.filterFn, filterLabel: item.filterLabel });
@@ -2788,6 +2924,22 @@
         if (!panel) return;
         const isNarrow = panel.classList.contains('narrow');
         panel.querySelectorAll('.ai-dp-item').forEach(item => {
+          /* subItem 항목은 구조가 [헤더div, chip컨테이너]라 children[1]이 텍스트가 아님.
+           *  헤더 라벨에만 말줄임 적용 (chip 컨테이너 column 전환은 CSS .narrow가 처리) */
+          if (item.classList.contains('ai-dp-item--with-sub')) {
+            const headerLabel = item.querySelector('.ai-dp-sub-header-label');
+            if (!headerLabel) return;
+            if (isNarrow) {
+              headerLabel.style.whiteSpace = 'nowrap';
+              headerLabel.style.overflow = 'hidden';
+              headerLabel.style.textOverflow = 'ellipsis';
+            } else {
+              headerLabel.style.whiteSpace = '';
+              headerLabel.style.overflow = '';
+              headerLabel.style.textOverflow = '';
+            }
+            return;
+          }
           const textSpan = item.children[1];
           if (!textSpan) return;
           if (isNarrow) {
@@ -2910,7 +3062,7 @@
             + '<div style="margin:16px 0;border-top:1px solid #E0E0E0;"></div>'
             + _renderCtTop5Html(s.consultTypeTop5, s.maxCtCount);
         } else if (hasKwTop5) {
-          /* consult_type(소분류) 시나리오: 키워드 Top5만 */
+          /* consult_type(세분류) 시나리오: 키워드 Top5만 */
           top5Html = _renderKwTop5Html(s.keywordTop5, s.maxKwCount);
         } else {
           /* keyword / product_keyword / issue_keyword / new_keyword 시나리오: 상담유형 Top5만 */
@@ -2970,23 +3122,34 @@
         el.style.borderLeftWidth = '4px';
         el.style.fontWeight = '600';
       };
-      if (_aiLevel >= 2 && _aiHistory.length >= 1) {
-        for (let i = 0; i < _regL1.length; i++) {
-          if (_regL1[i].filterLabel === _aiHistory[0].label) {
-            const el = document.getElementById(`_onL1Click-${i}`);
-            if (el) highlightStyle(el, '#1565C0');
-            break;
+      /* registry 항목이 (a) 직접 클릭형이면 filterLabel 일치로, (b) subItems 보유면
+       *  하위 chip의 filterLabel 일치로 부모 컨테이너를 하이라이트하고 활성 chip을 표시한다. */
+      const highlightDrill = (reg, clickFn, histLabel, color) => {
+        for (let i = 0; i < reg.length; i++) {
+          const r = reg[i];
+          if (r.filterLabel === histLabel) {
+            const el = document.getElementById(`${clickFn}-${i}`);
+            if (el) highlightStyle(el, color);
+            return;
+          }
+          if (r.subItems) {
+            const ci = r.subItems.findIndex(s => s.filterLabel === histLabel);
+            if (ci >= 0) {
+              const el = document.getElementById(`${clickFn}-${i}`);
+              if (el) highlightStyle(el, color);
+              /* 펼친 상태일 때만 존재하는 활성 chip 표시 */
+              const chip = document.getElementById(`_subchip-${clickFn === '_onL2Click' ? 'l2' : 'l1'}-${i}-${ci}`);
+              if (chip) chip.classList.add('chip-active');
+              return;
+            }
           }
         }
+      };
+      if (_aiLevel >= 2 && _aiHistory.length >= 1) {
+        highlightDrill(_regL1, '_onL1Click', _aiHistory[0].label, '#1565C0');
       }
       if (_aiLevel >= 3 && _aiHistory.length >= 2) {
-        for (let i = 0; i < _regL2.length; i++) {
-          if (_regL2[i].filterLabel === _aiHistory[1].label) {
-            const el = document.getElementById(`_onL2Click-${i}`);
-            if (el) highlightStyle(el, '#00897B');
-            break;
-          }
-        }
+        highlightDrill(_regL2, '_onL2Click', _aiHistory[1].label, '#00897B');
       }
     }
 
@@ -3068,7 +3231,7 @@
       }
 
       const issueQ = (document.getElementById('issue-search').value || '').trim();
-      if (issueQ) lines.push({ label: '이슈 키워드', value: issueQ });
+      if (issueQ) lines.push({ label: '리스크 키워드', value: issueQ });
 
       if (urlFilter) lines.push({ label: '대시보드 조건', value: getFilterLabel(urlFilter) });
       if (kpiFilter) lines.push({ label: 'KPI 조건', value: getFilterLabel(kpiFilter) });
@@ -3551,7 +3714,7 @@
       }).join('');
 
       const kwCategories = [
-        { key:'issue', label:'이슈 키워드', bg:'#FFF3F3', color:'#E53935', border:'#FFCDD2' },
+        { key:'issue', label:'리스크 키워드', bg:'#FFF3F3', color:'#E53935', border:'#FFCDD2' },
         { key:'consult', label:'상담 키워드', bg:'#E3F2FD', color:'#1565C0', border:'#BBDEFB' },
         { key:'product', label:'종목 키워드', bg:'#F3E5F5', color:'#7B1FA2', border:'#E1BEE7' }
       ];

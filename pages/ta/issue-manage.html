@@ -68,7 +68,7 @@
           <input type="text" class="form-input" id="f-agent" placeholder="상담사명 검색" style="min-width:110px;">
         </div>
         <div>
-          <label class="form-label">이슈 키워드</label>
+          <label class="form-label">리스크 키워드</label>
           <input type="text" class="form-input" id="f-keyword" placeholder="키워드 검색" style="min-width:110px;">
         </div>
         <div>
@@ -115,7 +115,7 @@
               <tr>
                 <th>콜 ID</th><th>일시</th><th>센터/팀</th><th>상담사</th>
                 <th>상담유형</th><th>유형</th><th>재인입</th><th>통화시간</th>
-                <th>이슈 키워드</th><th>관리자</th><th>처리 완료일</th><th>상태</th>
+                <th>리스크 키워드</th><th>관리자</th><th>처리 완료일</th><th>상태</th>
                 <th>처리내역</th>
               </tr>
             </thead>
@@ -450,7 +450,7 @@
       }).join('');
 
       const kwCategories = [
-        { key:'issue', label:'이슈 키워드', bg:'#FFF3F3', color:'#E53935', border:'#FFCDD2' },
+        { key:'issue', label:'리스크 키워드', bg:'#FFF3F3', color:'#E53935', border:'#FFCDD2' },
         { key:'consult', label:'상담 키워드', bg:'#E3F2FD', color:'#1565C0', border:'#BBDEFB' },
         { key:'product', label:'종목 키워드', bg:'#F3E5F5', color:'#7B1FA2', border:'#E1BEE7' }
       ];
@@ -651,7 +651,7 @@
           : '<span style="display:inline-block;padding:2px 8px;background:#fff3e0;color:#e65100;border-radius:4px;font-size:11px;font-weight:600;">O/B</span>' },
         { label:'재인입', value: d.reentry >= 2 ? `${d.reentry}회차` : '-' },
         { label:'통화시간', value:d.duration },
-        { label:'이슈 키워드', value: d.issueKeywords.map(k =>
+        { label:'리스크 키워드', value: d.issueKeywords.map(k =>
           `<span style="display:inline-block;padding:2px 8px;margin:1px;border-radius:10px;font-size:11px;background:#FFF3F3;color:#E53935;border:1px solid #FFCDD2;">${k}</span>`
         ).join(' ') }
       ];

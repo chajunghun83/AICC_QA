@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/png" href="/image/faviconV2.png">
-  <title>상담 유형 - AICC Quality Hub</title>
+  <title>키워드 - AICC Quality Hub</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="../../css/styles.css">
   <style>
@@ -35,61 +35,74 @@
     <!-- 헤더 -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
       <div>
-        <h1 style="font-size:20px;font-weight:700;margin:0;">상담 유형</h1>
-        <p style="font-size:12px;color:#757575;margin:4px 0 0;">대분류 → 중분류 → 소분류 → 세분류 드릴다운 분석</p>
+        <h1 style="font-size:20px;font-weight:700;margin:0;">키워드</h1>
+        <p style="font-size:12px;color:#757575;margin:4px 0 0;">키워드 분석 결과</p>
+      </div>
+      <!-- 상단 필터 (표시용 — 기능은 후속) -->
+      <div style="display:flex;align-items:center;gap:8px;">
+        <select class="form-select" disabled><option>월간 · 2026년 5월</option></select>
+        <select class="form-select" disabled><option>전체 센터</option></select>
+        <select class="form-select" disabled><option>전체 팀</option></select>
       </div>
     </div>
 
-    <!-- 상단: 분류 4패널 + 키워드 패널 -->
-    <div style="display:flex;gap:12px;margin-bottom:12px;align-items:stretch;">
-      <!-- 분류 패널 그룹 -->
-      <div style="flex:1;display:flex;gap:8px;align-items:stretch;min-width:0;height:250px;">
-        <!-- 패널 4개 + 사이 화살표는 JS 구조와 1:1 매칭 (cat-panel-0~3) -->
+    <!-- 상단: 키워드 흐름(검색▶연관1▶연관2) + 유형(대분류Top▶세분류) + 리스크
+         그룹 사이 간격(32px)을 넓혀 3개 묶음이 시각적으로 구분되도록 한다 -->
+    <div style="display:flex;gap:32px;margin-bottom:12px;align-items:stretch;">
+      <!-- 키워드 그룹 -->
+      <div style="flex:1.5;display:flex;gap:8px;align-items:stretch;min-width:0;height:250px;">
+        <!-- 검색된 키워드 (검색창 + 결과 리스트) -->
         <div class="content-card cat-panel">
-          <div class="content-card-header" style="padding:9px 14px;display:flex;align-items:center;justify-content:space-between;">
-            <span style="font-size:13px;font-weight:700;">대분류</span>
-            <span class="cat-cnt" id="cat-count-0"></span>
+          <div class="content-card-header" style="padding:9px 14px;">
+            <span style="font-size:13px;font-weight:700;">검색된 키워드</span>
           </div>
-          <div class="cat-panel-body" id="cat-panel-0"></div>
+          <div style="padding:8px 10px;border-bottom:1px solid #EEEEEE;">
+            <input type="text" id="kw-search-input" placeholder="키워드 검색..." oninput="onKwSearch(this.value)"
+              style="width:100%;padding:6px 10px;border:1px solid #E0E0E0;border-radius:6px;font-size:12px;outline:none;">
+          </div>
+          <div class="cat-panel-body" id="kw-search-list"></div>
         </div>
         <div class="cat-arrow-sep"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></div>
+        <!-- 연관 키워드 1 -->
         <div class="content-card cat-panel">
           <div class="content-card-header" style="padding:9px 14px;display:flex;align-items:center;justify-content:space-between;">
-            <span style="font-size:13px;font-weight:700;">중분류</span>
-            <span class="cat-cnt" id="cat-count-1"></span>
+            <span style="font-size:13px;font-weight:700;">연관 키워드 1</span>
+            <span class="cat-cnt" id="rel1-count"></span>
           </div>
-          <div class="cat-panel-body" id="cat-panel-1"></div>
+          <div class="cat-panel-body" id="rel1-body"></div>
         </div>
         <div class="cat-arrow-sep"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></div>
+        <!-- 연관 키워드 2 -->
         <div class="content-card cat-panel">
           <div class="content-card-header" style="padding:9px 14px;display:flex;align-items:center;justify-content:space-between;">
-            <span style="font-size:13px;font-weight:700;">소분류</span>
-            <span class="cat-cnt" id="cat-count-2"></span>
+            <span style="font-size:13px;font-weight:700;">연관 키워드 2</span>
+            <span class="cat-cnt" id="rel2-count"></span>
           </div>
-          <div class="cat-panel-body" id="cat-panel-2"></div>
-        </div>
-        <div class="cat-arrow-sep"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></div>
-        <div class="content-card cat-panel">
-          <div class="content-card-header" style="padding:9px 14px;display:flex;align-items:center;justify-content:space-between;">
-            <span style="font-size:13px;font-weight:700;">세분류</span>
-            <span class="cat-cnt" id="cat-count-3"></span>
-          </div>
-          <div style="padding:6px 10px;border-bottom:1px solid #EEEEEE;">
-            <input type="text" id="leaf-search-input" placeholder="세분류 역검색..." oninput="onLeafSearch(this.value)"
-              style="width:100%;padding:5px 9px;border:1px solid #E0E0E0;border-radius:6px;font-size:12px;outline:none;">
-          </div>
-          <div class="cat-panel-body" id="cat-panel-3"></div>
+          <div class="cat-panel-body" id="rel2-body"></div>
         </div>
       </div>
 
-      <!-- 키워드 패널 (대시보드 데이터 고정) -->
-      <div style="flex:0 0 440px;display:flex;gap:12px;height:250px;">
-        <div class="content-card" style="flex:1;display:flex;flex-direction:column;min-width:0;">
-          <div class="content-card-header" style="padding:9px 14px;">
-            <span style="font-size:13px;font-weight:700;">주요 키워드 Top5</span>
+      <!-- 문의유형 그룹 -->
+      <div style="flex:1;display:flex;gap:8px;align-items:stretch;min-width:0;height:250px;">
+        <div class="content-card cat-panel">
+          <div class="content-card-header" style="padding:9px 14px;display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:13px;font-weight:700;">상담 유형 대분류</span>
+            <span class="cat-cnt" id="type-d1-count"></span>
           </div>
-          <div style="flex:1;overflow-y:auto;" id="kw-top-list"></div>
+          <div class="cat-panel-body" id="type-d1-body"></div>
         </div>
+        <div class="cat-arrow-sep"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></div>
+        <div class="content-card cat-panel">
+          <div class="content-card-header" style="padding:9px 14px;display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:13px;font-weight:700;">상담 유형 세분류</span>
+            <span class="cat-cnt" id="type-leaf-count"></span>
+          </div>
+          <div class="cat-panel-body" id="type-leaf-body"></div>
+        </div>
+      </div>
+
+      <!-- 리스크 키워드 (전체 고정) -->
+      <div style="flex:0 0 210px;display:flex;height:250px;">
         <div class="content-card" style="flex:1;display:flex;flex-direction:column;min-width:0;">
           <div class="content-card-header" style="padding:9px 14px;">
             <span style="font-size:13px;font-weight:700;">리스크 키워드</span>
@@ -160,22 +173,27 @@
   <script src="../../js/components/toast.js"></script>
   <script>
     /* ════════════════════════════════════════════════════════════════
-     *  상담 유형 페이지
+     *  키워드 페이지 — 키워드 연관 네트워크 + 상담유형 분류
      *
-     *  [상단 분류 패널] 대→중→소→세 4단계. 콜 데이터에서 동적 집계하므로
-     *   패널 건수 = 실제 콜 수 = 하단 테이블 "총 N건"과 1:1 정합.
+     *  [검색 → 연관 키워드 2단계]
+     *   - [검색된 키워드] 패널: 검색창에 입력 → 매칭 키워드(상담+이슈, 종목 제외) 후보.
+     *   - 키워드 선택 → [연관 키워드 1] 노출 → 그 중 선택 → [연관 키워드 2] 노출.
+     *   - 연관 키워드 = 같은 콜에 함께 등장(공출현, co-occurrence)하는 키워드.
+     *     공출현으로 "연관 후보"를 고르고, 표시 숫자는 그 키워드 단독 보유 콜 수(_kwCount)로
+     *     통일 → 패널 숫자 = 클릭 시 테이블 "총 N건"과 정합. (relatedKeywords 참조)
+     *   - 의미 클러스터(KEYWORD_CLUSTERS)를 콜 생성 시 주입해 공출현이 도메인상 의미를 가짐.
      *
-     *  [세분류 역검색] 세분류 패널 상단 검색창에 세분류(마지막 뎁스)명을 입력하면,
-     *   그 세분류로 끝나는 모든 경로의 대/중/소분류를 한꺼번에 노출한다(역방향).
-     *   - revSel[대,중,소]로 각 레벨을 자유롭게(상위 미선택이어도) 토글해 테이블을 좁힌다.
-     *   - 3뎁스(소분류가 마지막)는 _parts4()로 [대,중,'',세]로 정규화 → 소분류 칸을
-     *     건너뛰고 마지막 값을 세분류로 통일 표시(사용자 정책).
+     *  [키워드 → 상담유형 분류] 선택 키워드 보유 콜의 consultationType을 집계.
+     *   - 상담유형 대분류: parts[0] 분포(목록은 키워드 맥락, 숫자는 분류 전체 = 테이블 정합).
+     *   - 대분류 클릭 → 그 대분류의 세분류(마지막 뎁스, 3뎁스면 소분류) 노출.
+     *   - 세분류 클릭 → 테이블을 (대분류+세분류)로 필터(키워드 빠짐, 중·소분류 자유).
+     *     (classifyKeyword / leafByD1 참조)
      *
-     *  [키워드 → 상담유형 분류] 주요/리스크 키워드(콜에서 실제 집계)를 클릭하면,
-     *   그 키워드 보유 콜 기준으로 대→중→소→세 분류가 드릴다운으로 표시되고
-     *   테이블도 키워드+경로로 필터된다(_callHasActiveKw로 키워드 조건 부여).
+     *  [리스크 키워드] 전체 콜 issueKeywords 집계 Top5 고정. 클릭 시 그 키워드를
+     *   "검색된 키워드"로 인식하여 연관 키워드 흐름을 시작한다(onSelectRisk).
      *
-     *  [필터 우선순위] 세분류 역검색(searchLeaf) > 키워드(activeKeyword) > 순방향 분류(selPath)
+     *  [선택 정책] selectedKw = 마지막으로 선택한 키워드(누적 아님). 하단 테이블은
+     *   selectedKw 보유 콜이며, 상담유형 대분류/세분류 선택 시 그 분류 기준으로 좁힌다.
      *  [재사용] 콜 생성기·스크립트 템플릿·콜 상세 모달·테이블은 call-status.html에서 차용.
      * ════════════════════════════════════════════════════════════════ */
 
@@ -569,6 +587,32 @@
     };
     const TPL_FALLBACK = ['일반문의','일반문의2'];
 
+    /* ── 키워드 의미 클러스터 ──────────────────────────────────────
+     *  [목적] 콜 생성 시 도메인상 연관된 상담 키워드끼리 함께 부여하여,
+     *   "같은 콜에 함께 등장(공출현)"이 의미를 갖게 한다.
+     *   → 연관 키워드(공출현 집계)가 도메인상 의미있는 묶음으로 도출된다.
+     *  [실제 운영] 키워드 임베딩/실제 콜 로그의 공출현 통계로 대체. */
+    const KEYWORD_CLUSTERS = {
+      체결:   ['주문번호','체결조회','체결지연','체결일정','호가오류','미체결안내누락'],
+      주문:   ['주문정정','주문취소','수량불일치','정정접수','주문조회불가','주문번호'],
+      이체:   ['이체확인','간편이체','예수금이체','이체오류','수수료확인'],
+      환매:   ['환매접수','환매지연','정정지연','환불방법','정정접수'],
+      계좌:   ['계좌정보변경','계좌해지','비밀번호변경','수령계좌변경'],
+      신규:   ['공모청약','신규상장','배당락','주식분할'],
+      이벤트: ['이벤트적용','수수료','수수료확인','이벤트적용오류'],
+      민원:   ['금감원민원','규정위반우려','응대불만','대기시간'],
+      시스템: ['시스템장애','호가오류','잔고불일치','거래재개알림','주문이력누락'],
+      기타:   ['주문번호','체결조회','수수료','계좌정보변경','이체확인']
+    };
+    /* 상담유형 대분류 → 키워드 클러스터 매핑 */
+    const CLUSTER_BY_CATEGORY = {
+      '주식거래':'주문','체결관리':'체결','입출금/이체':'이체','환매/정정':'환매',
+      '계좌관리':'계좌','상품문의':'신규','이벤트/혜택':'이벤트','민원':'민원',
+      '시스템지원':'시스템','HTS·MTS 오류':'시스템','카탈로그':'신규','해외주식':'이체',
+      'IRP/연금':'계좌','세무':'기타','멤버십':'이벤트','선물/증여':'기타',
+      '관심종목':'기타','지점안내':'기타','증명서/세금':'기타','챗봇/AI상담':'시스템'
+    };
+
     /* ── 4뎁스 상담유형 트리 (분류 패널의 구조 소스) ──
      *  콜은 이 트리의 리프 경로에 가중(리프 count 비례) 분산 생성되고,
      *  분류 패널/건수는 생성된 콜에서 재집계되어 테이블 필터와 정확히 일치한다. */
@@ -867,7 +911,15 @@
           extractedKeywords: {
             issue: (issues.length > 0 ? issues.map(k => ({name:k, count:Math.floor(rng()*3)+1, transcriptIdx:[Math.floor(rng()*transcript.length)]})) : [])
               .concat(mkKw(extractedKeywordPool.issue, 3, transcript.length)),
-            consult: mkKw(extractedKeywordPool.consult, 4, transcript.length),
+            /* [의미 클러스터] 대분류에 맞는 클러스터에서 상담 키워드 3~5개 부여
+             *  → 같은 클러스터 키워드가 자주 공출현 → 연관 키워드가 의미를 가짐 */
+            consult: (() => {
+              const cl = KEYWORD_CLUSTERS[CLUSTER_BY_CATEGORY[leaf.depth1] || '기타'] || KEYWORD_CLUSTERS['기타'];
+              const n = Math.floor(rng() * 3) + 3;   // 3~5개
+              return [...cl].sort(() => 0.5 - rng()).slice(0, n).map(name => ({
+                name, count: Math.floor(rng() * 4) + 1, transcriptIdx: [Math.floor(rng() * transcript.length)]
+              }));
+            })(),
             product: (scenario.products || []).map(name => {
               const idxs = transcript.map((line, ix) => line.text.includes(name) ? ix : -1).filter(ix => ix >= 0);
               const cnt = transcript.reduce((s, line) => s + (line.text.split(name).length - 1), 0);
@@ -883,310 +935,258 @@
 
     const callData = generateConsultCallData(1500);
 
-    // [[CATEGORY]] — 분류 트리 집계·패널 렌더·드릴다운 필터
-    /* 선택 경로 (0~4단계). 예: ['주식거래','주문조회'] → 중분류까지 선택 */
-    let selPath = [];
-    /* 키워드 필터 (주요/리스크 키워드 클릭 시). 분류 필터와 상호 배타. */
-    let activeKeyword = null;
-    let activeKwRisk = false;   // 활성 키워드가 리스크(이슈) 키워드인지 — 주요/리스크 동명 구분
-
-    const CAT_LABELS = ['대분류','중분류','소분류','세분류'];
+    // [[KEYWORD-LOGIC]] — 검색 / 연관 키워드(2단계) / 상담유형 분류 / 테이블 연동
     function _escq(s) { return String(s).replace(/'/g, "\\'"); }
 
-    /* ── 세분류 역검색 ──────────────────────────────────────────────
-     *  searchLeaf: 검색·선택된 세분류(마지막 뎁스). null이면 순방향(대→세) 모드.
-     *  검색 시: 마지막 뎁스(세분류)가 searchLeaf인 콜만 대상으로 대/중/소를 역방향 노출. */
-    let searchLeaf = null;
-    /* 콜의 상담유형을 [대,중,소,세] 4칸으로 정규화.
-     *  - 4뎁스: [d1,d2,d3,d4]
-     *  - 3뎁스(소분류가 마지막): 소분류 칸을 비우고('') 마지막 값을 세분류 칸에 둔다.
-     *    (사용자 정책: 3뎁스는 소분류 건너뛰고 세분류로 표시 → 세분류 통일) */
-    function _parts4(c) {
-      const p = c.consultationType.split(' > ');
-      if (p.length >= 4) return [p[0], p[1], p[2], p[3]];
-      if (p.length === 3) return [p[0], p[1], '', p[2]];
-      return [p[0] || '', p[1] || '', '', p[2] || p[1] || p[0] || ''];
-    }
-    function _leafOf(c) { const p = c.consultationType.split(' > '); return p[p.length - 1]; }
-    /* 검색어를 포함하는 세분류(마지막 뎁스) 후보 — 빈도순 */
-    function _leafCandidates(q) {
-      const m = {};
-      callData.forEach(c => { const lf = _leafOf(c); if (lf.includes(q)) m[lf] = (m[lf] || 0) + 1; });
-      return Object.entries(m).sort((a, b) => b[1] - a[1]).map(([name, count]) => ({ name, count }));
-    }
+    /* 선택 상태
+     *  searchSel : 검색 패널에서 선택한 키워드
+     *  rel1Sel   : 연관 키워드1에서 선택
+     *  rel2Sel   : 연관 키워드2에서 선택
+     *  selectedKw: 마지막으로 선택한 키워드(어느 패널이든) — 테이블·문의유형 패널의 기준 */
+    let searchSel = null, rel1Sel = null, rel2Sel = null, selectedKw = null;
+    let selectedD1 = null, selectedLeaf = null;   // 상담유형 대분류·세분류 선택(세분류 클릭 시 테이블 필터)
 
-    /* 역검색 모드의 대/중/소 선택 상태 [대,중,소]. 순방향 selPath와 별개.
-     *  세분류(searchLeaf)는 고정, 대/중/소는 자유롭게 각각 토글하여 테이블을 좁힌다. */
-    let revSel = [null, null, null];
-    /* 역검색 모드 L레벨(0대/1중/2소) 노드 분포.
-     *  세분류=searchLeaf + "다른 레벨"의 현재 선택(revSel)을 AND한 콜의 L레벨 값 집계.
-     *  → 어느 레벨이든 미선택이면 그 레벨은 전체 노출되고, 다른 레벨 선택 시 그에 맞게 좁혀진다. */
-    function revNodes(L) {
+    /* 콜이 보유한 "상담+이슈" 키워드 집합(종목명 product 제외).
+     *  - 상담 키워드(consult): 의미 클러스터로 주입됨
+     *  - 이슈 키워드(issueKeywords): 템플릿 category
+     *  연관 키워드 공출현·검색·테이블 필터 모두 이 집합 기준 → 정합 */
+    function _kwOf(c) {
+      const s = new Set();
+      (c.issueKeywords || []).forEach(k => s.add(k));
+      ((c.extractedKeywords && c.extractedKeywords.consult) || []).forEach(it => s.add(it.name));
+      return s;
+    }
+    /* 키워드 보유 콜 수 (검색 리스트 건수 = 테이블 "총 N건"과 1:1 정합) */
+    function _kwCount(kw) { return callData.filter(c => _kwOf(c).has(kw)).length; }
+
+    /* 전체 고유 키워드(검색 대상) — 상담+이슈 키워드, 빈도 내림차순 */
+    const KW_UNIVERSE = (() => {
       const m = {};
+      callData.forEach(c => _kwOf(c).forEach(k => { m[k] = (m[k] || 0) + 1; }));
+      return Object.entries(m).sort((a, b) => b[1] - a[1]).map(([name, count]) => ({ name, count }));
+    })();
+
+    /* ── 연관 키워드 추출 (공출현, co-occurrence) ───────────────────────
+     *  [원리] 연관 키워드는 **같은 콜에 함께 등장하는 키워드(공출현)** 로 찾는다.
+     *   키워드 A를 보유한 콜들을 모아, 그 콜들에 함께 나타나는 다른 키워드 B를
+     *   "연관 후보"로 수집한다(= A와 한 번이라도 공출현한 키워드). 이를 2단계로
+     *   반복한다(A→연관1, 연관1→연관2).
+     *  [표시·정렬 기준] 각 연관 키워드의 숫자는 **그 키워드 단독 보유 콜 수**(_kwCount)로
+     *   표시·정렬한다. → 패널에 보이는 숫자가 그 키워드를 선택했을 때의 하단
+     *   테이블 "총 N건"과 정확히 일치한다(공출현 횟수가 아니라 보유 콜 수).
+     *  [프로토타입] 콜 생성 시 의미 클러스터(KEYWORD_CLUSTERS)를 주입해
+     *   공출현이 도메인상 의미를 갖도록 했다.
+     *  [실제 운영] 키워드 임베딩 유사도 또는 실제 콜 로그의 공출현 통계로 대체. */
+    function relatedKeywords(kw, topN) {
+      const co = new Set();
       callData.forEach(c => {
-        const p4 = _parts4(c);
-        if (p4[3] !== searchLeaf) return;
-        for (let i = 0; i < 3; i++) { if (i !== L && revSel[i] && p4[i] !== revSel[i]) return; }
-        const name = p4[L];
-        if (!name) return;   // 3뎁스의 빈 소분류 칸 제외
-        m[name] = (m[name] || 0) + 1;
+        const ks = _kwOf(c);
+        if (!ks.has(kw)) return;
+        ks.forEach(k => { if (k !== kw) co.add(k); });   // 공출현 후보 수집
       });
-      return Object.entries(m).sort((a, b) => b[1] - a[1]).map(([name, count]) => ({ name, count }));
-    }
-    /* 역검색 모드 대/중/소 클릭 → 해당 레벨 선택 토글 후 테이블·패널 갱신 */
-    function onRevSelect(L, name) {
-      revSel[L] = (revSel[L] === name) ? null : name;
-      applyCategoryFilter();
-      renderCategoryPanels();
+      return [...co].map(name => ({ name, count: _kwCount(name) }))   // 숫자 = 단독 보유 콜 수
+        .sort((a, b) => b.count - a.count).slice(0, topN || 8);
     }
 
-    /* 콜이 현재 활성 키워드(주요/리스크)를 보유하는지.
-     *  활성 키워드가 없으면 항상 true → 키워드 모드일 때만 분류 집계/필터에 키워드 조건이 더해진다. */
-    function _callHasActiveKw(c) {
-      if (!activeKeyword) return true;
-      return activeKwRisk
-        ? (c.issueKeywords || []).includes(activeKeyword)
-        : ((c.extractedKeywords && c.extractedKeywords.consult) || []).some(it => it.name === activeKeyword);
+    /* ── 키워드 → 상담유형 분류 ─────────────────────────────────────────
+     *  [원리] 키워드를 상담유형으로 분류하는 방법: **해당 키워드를 보유한 콜들의
+     *   consultationType 경로를 집계**한다. 각 콜은 "대분류 > 중분류 > 소분류 > 세분류"
+     *   경로를 가지므로, 키워드 보유 콜을 모아
+     *     - parts[0]      (대분류)
+     *     - parts[last]   (마지막 뎁스 = 세분류, 3뎁스면 소분류)
+     *   를 각각 빈도 집계해 Top을 뽑으면 "이 키워드가 주로 어떤 상담유형에서
+     *   나오는가"가 도출된다.
+     *  [실제 운영] 키워드-분류 매핑 테이블 또는 LLM 분류로 대체 가능. */
+    function classifyKeyword(kw) {
+      /* 목록: selectedKw가 등장하는 대분류(키워드 맥락) */
+      const set = new Set();
+      callData.forEach(c => { if (_kwOf(c).has(kw)) set.add(c.consultationType.split(' > ')[0]); });
+      /* 숫자: 그 대분류로 시작하는 콜 전체 수(키워드 무관) → 대분류 클릭 시 테이블과 정합 */
+      const d1 = [...set].map(name => ({
+        name, count: callData.filter(c => c.consultationType.split(' > ')[0] === name).length
+      })).sort((a, b) => b.count - a.count).slice(0, 8);
+      return { d1 };
     }
 
-    /* level 단계의 노드 목록을 콜에서 집계. prefixArr는 selPath[0..level-1].
-     *  count = prefix 일치 + 해당 level 값이 존재하는 콜 수 (테이블 필터와 1:1). */
-    function getNodesAtLevel(level, prefixArr) {
-      const m = {};
-      callData.forEach(c => {
-        if (searchLeaf) {
-          /* 역검색 모드: 세분류(마지막 뎁스)=searchLeaf 콜만, _parts4 기준 집계(빈 소분류 칸 제외) */
-          const p4 = _parts4(c);
-          if (p4[3] !== searchLeaf) return;
-          const name = p4[level];
-          if (!name) return;
-          if (!prefixArr.every((p, i) => p4[i] === p)) return;
-          m[name] = (m[name] || 0) + 1;
-        } else {
-          if (!_callHasActiveKw(c)) return;   // 키워드 모드: 키워드 보유 콜만
-          const parts = c.consultationType.split(' > ');
-          if (parts.length <= level) return;
-          if (!prefixArr.every((p, i) => parts[i] === p)) return;
-          m[parts[level]] = (m[parts[level]] || 0) + 1;
-        }
-      });
-      return Object.entries(m).sort((a, b) => b[1] - a[1]).map(([name, count]) => ({ name, count }));
+    /* ── 패널 렌더 헬퍼 (cat-item 스타일 재사용) ── */
+    function _kwItemHtml(name, count, onclickAttr, active) {
+      return `<div class="cat-item${active ? ' active' : ''}" ${onclickAttr ? `onclick="${onclickAttr}"` : 'style="cursor:default;"'}>
+        <span class="cat-name">${name}</span>
+        <span class="cat-meta"><span class="cat-cnt">${AICC_Fmt.number(count)}건</span></span>
+      </div>`;
     }
-    /* 해당 노드가 다음 단계 자식을 갖는지 (드릴 화살표 표시용) */
-    function hasChildren(level, prefixArr) {
-      if (level >= 3) return false;
-      return getNodesAtLevel(level + 1, prefixArr).length > 0;
-    }
+    const _placeholder = msg => `<div class="cat-placeholder">${msg}</div>`;
 
-    /* 대/중/소분류 패널(L0~2) 렌더 + 세분류 패널은 renderLeafPanel()이 담당.
-     *  - 순방향: selPath 기반 드릴다운(기존)
-     *  - 역검색(searchLeaf): searchLeaf 콜 기준 역방향 집계, selPath로 좁힘
-     *  - 검색어 입력 중(searchLeaf 미선택): 대/중/소는 안내문 */
-    function renderCategoryPanels() {
-      const q = (document.getElementById('leaf-search-input').value || '').trim();
-      const searching = !!q && !searchLeaf;   // 세분류 검색 중, 아직 미선택
-      for (let L = 0; L <= 2; L++) {
-        const body = document.getElementById('cat-panel-' + L);
-        const cntEl = document.getElementById('cat-count-' + L);
-        if (searching) {
-          body.innerHTML = `<div class="cat-placeholder">세분류를 검색·선택하면<br>역으로 표시됩니다</div>`;
-          cntEl.textContent = '';
-          continue;
-        }
-        /* ── 역검색 모드: 대/중/소를 한꺼번에 전부 노출, 어느 레벨이든 자유 선택 ── */
-        if (searchLeaf) {
-          const nodes = revNodes(L);
-          cntEl.textContent = nodes.length > 0 ? nodes.length + '개' : '';
-          body.innerHTML = nodes.length === 0
-            ? `<div class="cat-placeholder">해당 단계 없음<br>(세분류로 직접 종료)</div>`
-            : nodes.map(n => `<div class="cat-item${revSel[L] === n.name ? ' active' : ''}" onclick="onRevSelect(${L}, '${_escq(n.name)}')">
-                <span class="cat-name">${n.name}</span>
-                <span class="cat-meta"><span class="cat-cnt">${AICC_Fmt.number(n.count)}건</span></span>
-              </div>`).join('');
-          continue;
-        }
-        /* ── 순방향 모드: 상위 선택 단계까지만 노출 ── */
-        if (L > selPath.length) {
-          body.innerHTML = `<div class="cat-placeholder">${L === selPath.length + 1 ? CAT_LABELS[L-1] + '를 선택하면<br>표시됩니다' : ''}</div>`;
-          cntEl.textContent = '';
-          continue;
-        }
-        const prefix = selPath.slice(0, L);
-        const nodes = getNodesAtLevel(L, prefix);
-        cntEl.textContent = nodes.length > 0 ? nodes.length + '개' : '';
-        if (nodes.length === 0) {
-          body.innerHTML = `<div class="cat-placeholder">하위 분류 없음</div>`;
-          continue;
-        }
-        body.innerHTML = nodes.map(n => {
-          const active = selPath[L] === n.name;
-          const child = hasChildren(L, [...prefix, n.name]);
-          return `<div class="cat-item${active ? ' active' : ''}" onclick="onCategorySelect(${L}, '${_escq(n.name)}')">
-            <span class="cat-name">${n.name}</span>
-            <span class="cat-meta">
-              <span class="cat-cnt">${AICC_Fmt.number(n.count)}건</span>
-              ${child ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#BDBDBD" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>' : ''}
-            </span>
-          </div>`;
-        }).join('');
-      }
-      renderLeafPanel();
-    }
-
-    /* 세분류 패널(L3) 렌더 — 3가지 상태
-     *  ① 검색어 입력: 매칭 세분류 후보 리스트(클릭 시 역검색)
-     *  ② 검색어 없음 + 순방향: selPath 기반 세분류(기존 드릴다운)
-     *  검색어가 있으면 후보가 우선이며, searchLeaf 선택 항목은 활성 표시 */
-    function renderLeafPanel() {
-      const body = document.getElementById('cat-panel-3');
-      const cntEl = document.getElementById('cat-count-3');
-      const q = (document.getElementById('leaf-search-input').value || '').trim();
-      if (q) {
-        const cand = _leafCandidates(q);
-        cntEl.textContent = cand.length + '개';
-        body.innerHTML = cand.length === 0
-          ? `<div class="cat-placeholder">검색 결과가 없습니다</div>`
-          : cand.map(x => `<div class="cat-item${searchLeaf === x.name ? ' active' : ''}" onclick="onSelectSearchLeaf('${_escq(x.name)}')">
-              <span class="cat-name">${x.name}</span><span class="cat-meta"><span class="cat-cnt">${AICC_Fmt.number(x.count)}건</span></span></div>`).join('');
-        return;
-      }
-      /* 순방향 세분류 */
-      if (3 > selPath.length) {
-        body.innerHTML = `<div class="cat-placeholder">${3 === selPath.length + 1 ? '소분류를 선택하면<br>표시됩니다' : ''}</div>`;
-        cntEl.textContent = '';
-        return;
-      }
-      const nodes = getNodesAtLevel(3, selPath.slice(0, 3));
-      cntEl.textContent = nodes.length > 0 ? nodes.length + '개' : '';
-      body.innerHTML = nodes.length === 0
-        ? `<div class="cat-placeholder">하위 분류 없음</div>`
-        : nodes.map(n => `<div class="cat-item${selPath[3] === n.name ? ' active' : ''}" onclick="onCategorySelect(3, '${_escq(n.name)}')">
-            <span class="cat-name">${n.name}</span><span class="cat-meta"><span class="cat-cnt">${AICC_Fmt.number(n.count)}건</span></span></div>`).join('');
-    }
-
-    /* 세분류 검색창 입력 핸들러 */
-    function onLeafSearch(q) {
+    /* 검색: 입력어 포함 키워드 리스트(빈도순). 입력 전엔 안내문. */
+    function onKwSearch(q) {
+      const body = document.getElementById('kw-search-list');
       const query = (q || '').trim();
-      if (!query) {                       // 검색 종료 → 순방향 복귀
-        if (searchLeaf) { searchLeaf = null; revSel = [null, null, null]; selPath = []; applyCategoryFilter(); }
-        renderCategoryPanels();
+      if (!query) { body.innerHTML = _placeholder('키워드를 검색하세요'); return; }
+      const hits = KW_UNIVERSE.filter(k => k.name.includes(query));
+      body.innerHTML = hits.length === 0
+        ? _placeholder('검색 결과가 없습니다')
+        : hits.map(k => _kwItemHtml(k.name, k.count, `onSelectKeyword('${_escq(k.name)}','search')`, searchSel === k.name)).join('');
+    }
+
+    /* 키워드 선택 — panel: 'search' | 'rel1' | 'rel2'.
+     *  마지막 선택 키워드(selectedKw)를 기준으로 테이블·상담유형 패널을 갱신한다(누적 아님). */
+    function onSelectKeyword(kw, panel) {
+      if (panel === 'search') { searchSel = kw; rel1Sel = null; rel2Sel = null; }
+      else if (panel === 'rel1') { rel1Sel = kw; rel2Sel = null; }
+      else if (panel === 'rel2') { rel2Sel = kw; }
+      selectedKw = kw;
+      selectedD1 = null; selectedLeaf = null;   // 키워드 바뀌면 대분류·세분류 선택 초기화
+      renderKwFlow();
+      renderTypePanels();
+      renderRiskPanel();
+      applyKwFilter();
+    }
+
+    /* 리스크 키워드 클릭 → 그 키워드를 "검색된 키워드"로 인식.
+     *  검색창에 반영하고 검색 키워드 선택과 동일하게 처리 → 연관 키워드(1·2)가 도출된다. */
+    function onSelectRisk(name) {
+      const input = document.getElementById('kw-search-input');
+      if (input) input.value = name;
+      onSelectKeyword(name, 'search');
+    }
+
+    /* 검색·연관1·연관2 패널 렌더 */
+    function renderKwFlow() {
+      onKwSearch(document.getElementById('kw-search-input').value);   // 검색 리스트 active 갱신
+      const rel1Body = document.getElementById('rel1-body');
+      const rel1Cnt = document.getElementById('rel1-count');
+      if (!searchSel) { rel1Body.innerHTML = _placeholder('검색 키워드를 선택하면\n표시됩니다'); rel1Cnt.textContent = ''; }
+      else {
+        const r1 = relatedKeywords(searchSel);
+        rel1Cnt.textContent = r1.length + '개';
+        rel1Body.innerHTML = r1.length === 0 ? _placeholder('연관 키워드 없음')
+          : r1.map(k => _kwItemHtml(k.name, k.count, `onSelectKeyword('${_escq(k.name)}','rel1')`, rel1Sel === k.name)).join('');
+      }
+      const rel2Body = document.getElementById('rel2-body');
+      const rel2Cnt = document.getElementById('rel2-count');
+      if (!rel1Sel) { rel2Body.innerHTML = _placeholder('연관 키워드 1을 선택하면\n표시됩니다'); rel2Cnt.textContent = ''; }
+      else {
+        const r2 = relatedKeywords(rel1Sel);
+        rel2Cnt.textContent = r2.length + '개';
+        rel2Body.innerHTML = r2.length === 0 ? _placeholder('연관 키워드 없음')
+          : r2.map(k => _kwItemHtml(k.name, k.count, `onSelectKeyword('${_escq(k.name)}','rel2')`, rel2Sel === k.name)).join('');
+      }
+    }
+
+    /* 선택 키워드가 등장하는 (대분류 d1 내) 세분류 목록.
+     *  목록은 키워드 맥락, 표시 숫자는 (대분류+세분류) 전체 콜 수(키워드 무관)
+     *  → 세분류 클릭 시 테이블(키워드 빠지고 대분류+세분류 전체)의 "총 N건"과 정확히 일치. */
+    function leafByD1(kw, d1) {
+      const set = new Set();
+      callData.forEach(c => {
+        if (!_kwOf(c).has(kw)) return;
+        const parts = c.consultationType.split(' > ');
+        if (parts[0] !== d1) return;
+        set.add(parts[parts.length - 1]);
+      });
+      return [...set].map(name => ({
+        name,
+        count: callData.filter(c => { const p = c.consultationType.split(' > '); return p[0] === d1 && p[p.length - 1] === name; }).length
+      })).sort((a, b) => b.count - a.count).slice(0, 10);
+    }
+
+    /* 상담유형 패널 — 키워드 선택 시 대분류만 노출, 대분류 클릭 시 그 대분류의 세분류 노출 */
+    function renderTypePanels() {
+      const d1Body = document.getElementById('type-d1-body');
+      const leafBody = document.getElementById('type-leaf-body');
+      const d1Cnt = document.getElementById('type-d1-count');
+      const leafCnt = document.getElementById('type-leaf-count');
+      if (!selectedKw) {
+        d1Body.innerHTML = _placeholder('키워드를 선택하면\n표시됩니다'); d1Cnt.textContent = '';
+        leafBody.innerHTML = _placeholder('키워드를 선택하면\n표시됩니다'); leafCnt.textContent = '';
         return;
       }
-      renderCategoryPanels();             // 후보 표시(대/중/소는 안내문)
-    }
-
-    /* 세분류 후보 클릭 → 역검색 진입 (대/중/소를 그 세분류 기준으로 노출).
-     *  같은 세분류 재클릭 시 해제. */
-    function onSelectSearchLeaf(leaf) {
-      searchLeaf = (searchLeaf === leaf) ? null : leaf;
-      if (searchLeaf) document.getElementById('leaf-search-input').value = searchLeaf;
-      revSel = [null, null, null];        // 세분류 바뀌면 대/중/소 선택 초기화
-      selPath = [];
-      activeKeyword = null;
-      applyCategoryFilter();
-      renderCategoryPanels();
-    }
-
-    /* 분류 항목 클릭 → 해당 단계까지 경로 갱신(하위 초기화), 같은 항목 재클릭 시 해제.
-     *  키워드 모드(activeKeyword)에서는 키워드를 유지한 채 그 키워드 보유 콜 내에서 드릴다운한다. */
-    function onCategorySelect(level, name) {
-      if (selPath[level] === name && selPath.length === level + 1) {
-        selPath = selPath.slice(0, level);          // 최하 선택 재클릭 → 해제
+      /* 대분류: selectedKw 보유 콜의 parts[0] 집계 (클릭 가능) */
+      const { d1 } = classifyKeyword(selectedKw);
+      d1Cnt.textContent = d1.length + '종';
+      d1Body.innerHTML = d1.length === 0 ? _placeholder('데이터 없음')
+        : d1.map(x => _kwItemHtml(x.name, x.count, `onSelectTypeD1('${_escq(x.name)}')`, selectedD1 === x.name)).join('');
+      /* 세분류: 대분류 선택 시 그 대분류의 마지막 뎁스 집계 (정보 표시) */
+      if (!selectedD1) {
+        leafBody.innerHTML = _placeholder('대분류를 선택하면\n표시됩니다'); leafCnt.textContent = '';
       } else {
-        selPath = selPath.slice(0, level);
-        selPath.push(name);
+        const leaf = leafByD1(selectedKw, selectedD1);
+        leafCnt.textContent = leaf.length + '종';
+        leafBody.innerHTML = leaf.length === 0 ? _placeholder('데이터 없음')
+          : leaf.map(x => _kwItemHtml(x.name, x.count, `onSelectLeaf('${_escq(x.name)}')`, selectedLeaf === x.name)).join('');
       }
-      applyCategoryFilter();
-      renderCategoryPanels();
     }
 
-    /* 콜 테이블 필터
-     *  - 역검색(searchLeaf): 세분류=searchLeaf 콜 + selPath(대/중/소) 좁힘
-     *  - 순방향: selPath prefix 누적 */
-    function applyCategoryFilter() {
-      if (searchLeaf) {
+    /* 상담유형 대분류 클릭 → 세분류 드릴다운 (같은 항목 재클릭 시 접기) */
+    function onSelectTypeD1(d1) {
+      selectedD1 = (selectedD1 === d1) ? null : d1;
+      selectedLeaf = null;            // 대분류 바뀌면 세분류 선택 해제
+      renderTypePanels();
+      applyKwFilter();                // 테이블을 selectedKw 전체로 복원
+    }
+
+    /* 상담유형 세분류 클릭 → 테이블을 (선택키워드 + 대분류 + 세분류)로 필터.
+     *  중분류·소분류는 제한하지 않으므로 동일 대분류·세분류를 가진 모든 경로가 포함된다.
+     *  같은 항목 재클릭 시 해제. */
+    function onSelectLeaf(leaf) {
+      selectedLeaf = (selectedLeaf === leaf) ? null : leaf;
+      renderTypePanels();
+      applyKwFilter();
+    }
+
+    /* 하단 테이블 필터 — 우선순위: 세분류 > 대분류 > 키워드
+     *  [정책] 상담유형 대분류/세분류를 선택하면 키워드 필터는 빠지고 상담유형 기준으로만 필터한다.
+     *   - 세분류 선택: 대분류로 시작 + 마지막 뎁스가 세분류 (중분류·소분류 자유 → 모든 경로 포함)
+     *   - 대분류만 선택: 그 대분류로 시작하는 모든 콜
+     *   - 분류 미선택(키워드만): selectedKw 보유 콜 */
+    function applyKwFilter() {
+      const badge = document.getElementById('sel-path-badge');
+      let label = '';
+      if (selectedD1 && selectedLeaf) {
         filteredData = callData.filter(c => {
-          const p4 = _parts4(c);
-          if (p4[3] !== searchLeaf) return false;
-          for (let i = 0; i < 3; i++) { if (revSel[i] && p4[i] !== revSel[i]) return false; }
-          return true;
-        });
-      } else {
-        /* 순방향(+키워드 모드): 키워드 보유 조건 + selPath prefix 누적 */
-        filteredData = callData.filter(c => {
-          if (!_callHasActiveKw(c)) return false;
-          if (selPath.length === 0) return true;
           const parts = c.consultationType.split(' > ');
-          return selPath.every((p, i) => parts[i] === p);
+          return parts[0] === selectedD1 && parts[parts.length - 1] === selectedLeaf;
         });
+        label = `상담 유형: ${selectedD1} > ${selectedLeaf}`;
+      } else if (selectedD1) {
+        filteredData = callData.filter(c => c.consultationType.split(' > ')[0] === selectedD1);
+        label = `상담 유형: ${selectedD1}`;
+      } else if (selectedKw) {
+        filteredData = callData.filter(c => _kwOf(c).has(selectedKw));
+        label = `키워드: ${selectedKw}`;
+      } else {
+        filteredData = [];
+      }
+      if (badge) {
+        if (label) { badge.style.display = ''; badge.textContent = label; }
+        else { badge.style.display = 'none'; }
       }
       currentPage = 1;
-      _renderSelPathBadge();
       renderTable();
     }
 
-    function _renderSelPathBadge() {
-      const badge = document.getElementById('sel-path-badge');
-      if (!badge) return;
-      if (activeKeyword) { badge.style.display = ''; badge.textContent = '키워드: ' + activeKeyword + (selPath.length ? ` (${selPath.join(' > ')})` : ''); }
-      else if (searchLeaf) {
-        const sub = revSel.filter(Boolean);
-        badge.style.display = ''; badge.textContent = `세분류: ${searchLeaf}` + (sub.length ? ` (${sub.join(' · ')})` : '');
-      }
-      else if (selPath.length > 0) { badge.style.display = ''; badge.textContent = selPath.join(' > '); }
-      else { badge.style.display = 'none'; badge.textContent = ''; }
-    }
-
-    // [[KEYWORDS]] — 키워드 패널 데이터·렌더 (대시보드 데이터 고정)
-    /* 키워드 패널 데이터 — 콜 데이터에서 실제 집계 (패널 숫자 = 클릭 필터 결과와 정합).
-     *  주요 키워드: 상담(consult) 추출 키워드를 보유한 콜 수
-     *  리스크 키워드: 이슈 키워드를 보유한 콜 수
-     *  → 콜에 실제 존재하는 키워드만 표시되어 허위/중복 항목이 발생하지 않는다. */
+    // [[KEYWORDS]] — 리스크 키워드 패널 (전체 고정 Top5, 클릭 시 테이블 필터)
     function _aggKw(getNames) {
       const m = {};
       callData.forEach(c => { new Set(getNames(c)).forEach(n => { if (n) m[n] = (m[n] || 0) + 1; }); });
       return Object.entries(m).sort((a, b) => b[1] - a[1]).map(([name, count]) => ({ name, count }));
     }
-    const MAIN_KEYWORDS = _aggKw(c => ((c.extractedKeywords && c.extractedKeywords.consult) || []).map(it => it.name));
-    const RISK_KEYWORDS = _aggKw(c => c.issueKeywords || []);
+    /* 리스크 키워드 후보 = issueKeywords(리스크 성격) 등장 키워드.
+     *  표시·정렬 숫자는 _kwCount(보유 콜 수)로 통일 → 클릭 시 하단 테이블 "총 N건"과 정합. */
+    const RISK_KEYWORDS = _aggKw(c => c.issueKeywords || [])
+      .map(k => ({ name: k.name, count: _kwCount(k.name) }))
+      .sort((a, b) => b.count - a.count);
 
-    function _kwRankRow(item, idx, isRisk) {
-      const top = idx < 3;
-      const bg = isRisk ? (top ? '#E53935' : '#EF9A9A') : (top ? '#00A3FF' : '#BDBDBD');
-      const active = activeKeyword === item.name && activeKwRisk === isRisk;
-      return `<div class="kw-rank-row${active ? ' active' : ''}" style="cursor:pointer;" onclick="filterByKeyword('${_escq(item.name)}', ${isRisk})">
-        <span class="kw-rank-no" style="background:${bg};">${idx + 1}</span>
-        <span class="kw-rank-name">${item.name}</span>
-        <span class="kw-rank-cnt">${AICC_Fmt.number(item.count)}</span>
-      </div>`;
-    }
-    function renderKeywordPanels() {
-      document.getElementById('kw-top-list').innerHTML = MAIN_KEYWORDS.slice(0, 5).map((k, i) => _kwRankRow(k, i, false)).join('');
-      document.getElementById('risk-list').innerHTML = RISK_KEYWORDS.slice(0, 5).map((k, i) => _kwRankRow(k, i, true)).join('');
-    }
-
-    /* 키워드 클릭 → 분류 선택 해제 후 해당 키워드로 테이블 필터.
-     *  대시보드 키워드명(예: '주문 번호')과 콜 키워드('주문번호')의 띄어쓰기 차이를
-     *  무시하고, 콜의 상담유형·추출 키워드·이슈 키워드 전체에서 부분 매칭한다.
-     *  같은 키워드 재클릭 시 해제. */
-    function filterByKeyword(name, isRisk) {
-      /* 키워드 모드 진입 → 세분류 역검색 해제 (상호 배타) */
-      if (searchLeaf) { searchLeaf = null; revSel = [null, null, null]; const li = document.getElementById('leaf-search-input'); if (li) li.value = ''; }
-      if (activeKeyword === name && activeKwRisk === isRisk) {   // 재클릭 → 해제 (전체 복원)
-        activeKeyword = null;
-        selPath = [];
-        applyCategoryFilter();
-        renderCategoryPanels();
-        renderKeywordPanels();
-        return;
-      }
-      activeKeyword = name;
-      activeKwRisk = isRisk;
-      selPath = [];
-      /* 키워드 보유 콜 기준으로 대→중→소→세 드릴다운(상담유형 분류 표시) + 테이블 필터 */
-      applyCategoryFilter();
-      renderCategoryPanels();   // 분류 패널 = 키워드 기준
-      renderKeywordPanels();    // 활성 키워드 하이라이트
+    function renderRiskPanel() {
+      document.getElementById('risk-list').innerHTML = RISK_KEYWORDS.slice(0, 5).map((k, i) => {
+        const bg = i < 3 ? '#E53935' : '#EF9A9A';
+        /* 클릭 시 검색된 키워드로 이동하므로(검색 패널에 활성 표시) 리스크 패널 자체 활성은 두지 않음 */
+        return `<div class="kw-rank-row" style="cursor:pointer;" onclick="onSelectRisk('${_escq(k.name)}')">
+          <span class="kw-rank-no" style="background:${bg};">${i + 1}</span>
+          <span class="kw-rank-name">${k.name}</span>
+          <span class="kw-rank-cnt">${AICC_Fmt.number(k.count)}</span>
+        </div>`;
+      }).join('');
     }
 
     // [[TABLE]] — 콜 목록 테이블 렌더·정렬·페이지네이션 (call-status.html 차용)
@@ -1244,7 +1244,7 @@
       const pageData = filteredData.slice(start, start + pageSize);
       const tbody = document.getElementById('call-tbody');
       if (pageData.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="13" style="text-align:center;padding:48px 0;color:#BDBDBD;font-size:13px;">해당 분류의 콜이 없습니다.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="13" style="text-align:center;padding:48px 0;color:#BDBDBD;font-size:13px;">${selectedKw ? '해당 키워드의 콜이 없습니다.' : '키워드를 검색·선택하면 콜이 표시됩니다.'}</td></tr>`;
         renderPagination();
         return;
       }
@@ -1493,10 +1493,11 @@
     /* layout.js가 DOMContentLoaded에서 body를 재구성하므로(page-content 유지),
      *  이 스크립트는 그 이후 실행되도록 동일 이벤트에 등록한다. */
     document.addEventListener('DOMContentLoaded', () => {
-      renderKeywordPanels();
-      selPath = [];
-      renderCategoryPanels();
-      applyCategoryFilter();   // 초기: 전체 콜 표시
+      renderRiskPanel();          // 리스크 키워드(전체 고정)
+      onKwSearch('');             // 검색 패널: 입력 전 안내문
+      renderKwFlow();             // 연관1·2 패널: placeholder
+      renderTypePanels();         // 문의유형 패널: placeholder
+      applyKwFilter();            // 테이블: 초기 빈 상태(키워드 미선택)
       updateSortIcons();
     });
   </script>

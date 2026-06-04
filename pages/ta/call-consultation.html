@@ -10,6 +10,89 @@
   <link rel="stylesheet" href="../../css/styles.css">
   <style>
     .kpi-card:hover .kpi-search-icon { color: #424242 !important; }
+
+    /* 인포 아이콘 + 툴팁 */
+    .info-tip {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 14px;
+      height: 14px;
+      margin-left: 4px;
+      color: #BDBDBD;
+      cursor: help;
+      vertical-align: middle;
+    }
+    .info-tip:hover { color: #616161; }
+    .info-tip .tip-text {
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      width: max-content;
+      max-width: 260px;
+      background: #424242;
+      color: #fff;
+      padding: 7px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 400;
+      line-height: 1.5;
+      white-space: normal;
+      text-align: left;
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+      z-index: 50;
+      pointer-events: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .info-tip .tip-text::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-top-color: #424242;
+    }
+    .info-tip:hover .tip-text { visibility: visible; opacity: 1; }
+
+    /* KPI 카드 내부 요소 */
+    .kpi-main-row {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 6px;
+    }
+    .kpi-sub-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #757575;
+      padding: 2px 0;
+    }
+    .kpi-sub-row .ch-label { color: #9E9E9E; font-weight: 500; margin-right: 6px; }
+    .kpi-sub-row .ch-value { color: #424242; font-weight: 600; }
+
+    /* 비교 요약 바 */
+    .summary-bar {
+      background: #EFF6FF;
+      border: 1px solid #BBDEFB;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 12px;
+      font-size: 12px;
+      color: #1565C0;
+      line-height: 1.6;
+    }
+    .summary-bar .sep { color: #90CAF9; margin: 0 8px; font-weight: 300; }
+    .summary-bar .up { color: #D32F2F; font-weight: 600; }
+    .summary-bar .down { color: #2E7D32; font-weight: 600; }
+    .summary-bar .neutral { color: #616161; font-weight: 600; }
   </style>
 </head>
 <body class="bg-[#F5F5F5] text-[#212121]">
@@ -31,8 +114,11 @@
       </div>
     </div>
 
-    <!-- KPI 카드 -->
-    <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:12px;" id="kpi-cards"></div>
+    <!-- KPI 카드 (6열) -->
+    <div style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:12px;" id="kpi-cards"></div>
+
+    <!-- 전기 대비 비교 요약 바 -->
+    <div class="summary-bar" id="kpi-summary"></div>
 
     <!-- 전체 콜 건수 차트 -->
     <div class="content-card" style="margin-bottom:12px;">
@@ -42,7 +128,7 @@
           <span style="display:flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;background:rgba(0,163,255,0.7);border-radius:2px;"></span><span id="legend-current">현재 기간</span></span>
         </div>
       </div>
-      <div class="content-card-body" style="padding:8px;"><div style="height:260px;"><canvas id="chart-total"></canvas></div></div>
+      <div class="content-card-body" style="padding:8px;"><div style="height:230px;"><canvas id="chart-total"></canvas></div></div>
     </div>
 
     <!-- 하단 3개 차트 -->
@@ -55,7 +141,7 @@
             <span style="display:flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;background:rgba(255,143,0,0.8);border-radius:2px;"></span>현재 기간</span>
           </div>
         </div>
-        <div class="content-card-body" style="padding:8px;"><div style="height:240px;"><canvas id="chart-reentry"></canvas></div></div>
+        <div class="content-card-body" style="padding:8px;"><div style="height:200px;"><canvas id="chart-reentry"></canvas></div></div>
       </div>
 
       <!-- 통화 시간 대비 묵음 시간 -->
@@ -67,7 +153,7 @@
             <span style="display:flex;align-items:center;gap:3px;"><span style="width:8px;height:8px;background:#EF5350;border-radius:50%;"></span>평균 묵음 시간</span>
           </div>
         </div>
-        <div class="content-card-body" style="padding:8px;"><div style="height:240px;"><canvas id="chart-silence"></canvas></div></div>
+        <div class="content-card-body" style="padding:8px;"><div style="height:200px;"><canvas id="chart-silence"></canvas></div></div>
       </div>
 
       <!-- 이슈 콜 건수 -->
@@ -78,7 +164,7 @@
             <span style="display:flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;background:rgba(229,57,53,0.75);border-radius:2px;"></span>현재 기간</span>
           </div>
         </div>
-        <div class="content-card-body" style="padding:8px;"><div style="height:240px;"><canvas id="chart-issue"></canvas></div></div>
+        <div class="content-card-body" style="padding:8px;"><div style="height:200px;"><canvas id="chart-issue"></canvas></div></div>
       </div>
     </div>
   </div>
@@ -114,14 +200,70 @@
 
     /* ══════════════════════════ KPI 데이터 ══════════════════════════ */
 
+    /* [정책] type
+     *  - 'count'  : 콜 건수 단위. 기간이 바뀌면 비례 스케일링.
+     *  - 'time'   : 초(sec) 단위 평균값. 기간이 바뀌어도 평균이므로 스케일링하지 않음. */
     const kpiOrig = {
-      totalCalls:   { current:12161, prev:11465, ib:7892, ob:4269, ibPrev:7456, obPrev:4009 },
-      issueCalls:   { current:8974, prev:8977, ib:5840, ob:3134, ibPrev:5843, obPrev:3134 },
-      overCalls:    { current:2185, prev:1876, ib:1420, ob:765, ibPrev:1220, obPrev:656 },
-      reEntryCalls: { current:8675, prev:8371, ib:5639, ob:3036, ibPrev:5436, obPrev:2935 }
+      totalCalls:     { current:25318, prev:24487, ib:14820, ob:10498, ibPrev:14180, obPrev:10307, type:'count' },
+      issueCalls:     { current:8974,  prev:8977,  ib:5840,  ob:3134,  ibPrev:5843,  obPrev:3134,  type:'count' },
+      overCalls:      { current:2185,  prev:1876,  ib:1420,  ob:765,   ibPrev:1220,  obPrev:656,   type:'count' },
+      reEntryCalls:   { current:8675,  prev:8371,  ib:5639,  ob:3036,  ibPrev:5436,  obPrev:2935,  type:'count' },
+      avgTalkTime:    { current:312,   prev:298,   ib:325,  ob:285,  ibPrev:310,  obPrev:275,  type:'time'  },
+      avgSilenceTime: { current:48,    prev:52,    ib:51,   ob:42,   ibPrev:55,   obPrev:46,   type:'time'  }
     };
 
     const kpiBase = JSON.parse(JSON.stringify(kpiOrig));
+
+    /* 카드 정의 + 페이지 설명 */
+    const cardDefs = [
+      { label:'총 콜수',       key:'totalCalls',     filter:'total',    unit:'',
+        desc:'기간 내 인입된 전체 콜 건수입니다. I/B(인바운드)와 O/B(아웃바운드)의 합계입니다.' },
+      { label:'이슈 콜',       key:'issueCalls',     filter:'issue',    unit:'',
+        desc:'리스크 키워드가 감지된 콜 건수입니다. 본부 이관·추가 확인 등 후속 조치가 필요한 콜을 나타냅니다.' },
+      { label:'초과 콜',       key:'overCalls',      filter:'over',     unit:'',
+        desc:'기준 통화 시간을 초과한 콜 건수입니다. 응대 효율성 점검이 필요한 콜을 식별합니다.' },
+      { label:'재인입 콜',     key:'reEntryCalls',   filter:'reentry',  unit:'',
+        desc:'동일 고객이 일정 기간 내 다시 인입한 콜 건수입니다. 1차 응대 미흡 가능성을 보여줍니다.' },
+      { label:'평균 통화시간', key:'avgTalkTime',    filter:'talktime', unit:'time',
+        desc:'기간 내 전체 콜의 평균 통화 시간입니다. 너무 길거나 짧으면 응대 표준 검토가 필요합니다.' },
+      { label:'평균 묵음시간', key:'avgSilenceTime', filter:'silence',  unit:'time',
+        desc:'통화 중 상담사·고객 양쪽이 모두 발화하지 않은 평균 시간입니다. 응대 흐름과 시스템 지연 분석에 사용됩니다.' }
+    ];
+
+    /* ── 포매팅 헬퍼 ───────────────────────────────────────────── */
+    function formatTime(sec) {
+      sec = Math.max(0, Math.round(sec));
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return m > 0 ? `${m}분 ${s}초` : `${s}초`;
+    }
+    function formatValue(val, unit) {
+      if (unit === 'time') return formatTime(val);
+      return AICC_Fmt.number(val) + unit;
+    }
+    function formatDiff(diff, unit) {
+      const abs = Math.abs(diff);
+      if (unit === 'time') return `${Math.round(abs)}초`;
+      return `${AICC_Fmt.number(abs)}${unit}`;
+    }
+    function pctChange(cur, prev) {
+      if (!prev) return 0;
+      return (cur - prev) / prev * 100;
+    }
+    /* 변화율 표시 — |값| < 1%면 소수 한 자리, 그 이상은 정수 */
+    function formatPct(p) {
+      const abs = Math.abs(p);
+      if (abs === 0) return '0%';
+      if (abs < 1)  return abs.toFixed(1) + '%';
+      return Math.round(abs) + '%';
+    }
+    function arrowOf(v) { return v > 0 ? '▲' : v < 0 ? '▼' : ''; }
+    function colorOf(v, invert) {
+      /* invert=true 이면 감소가 좋은 지표 (이슈·재인입·묵음시간 등). 그러나 정책 단순화를 위해 기본 상승=빨강/하락=초록만 사용. */
+      if (v > 0) return '#F44336';
+      if (v < 0) return '#4CAF50';
+      return '#757575';
+    }
 
     /* ══════════════════════════ 차트 더미데이터 ══════════════════════════ */
 
@@ -178,35 +320,89 @@
 
     /* ══════════════════════════ KPI 카드 렌더 ══════════════════════════ */
 
-    function renderKPICards(cfg) {
-      const prevLabel = cfg ? cfg.prevLabel : '전월';
-      const cards = [
-        { label:'총 콜수', key:'totalCalls', color:'', filter:'total' },
-        { label:'이슈 콜', key:'issueCalls', color:'', filter:'issue' },
-        { label:'초과 콜', key:'overCalls', color:'', filter:'over' },
-        { label:'재인입 콜', key:'reEntryCalls', color:'', filter:'reentry' }
-      ];
+    const infoIconSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
 
-      document.getElementById('kpi-cards').innerHTML = cards.map(card => {
+    function renderKPICards(cfg) {
+      document.getElementById('kpi-cards').innerHTML = cardDefs.map(card => {
         const d = kpiBase[card.key];
+        const unit = card.unit;
+        const isTime = unit === 'time';
+
+        /* 메인 값 + 전기 대비 변화 (변화는 있으나 %가 0으로 반올림되면 "<1%"로 표기) */
         const diff = d.current - (d.prev || 0);
-        const arrow = diff > 0 ? '&#9650;' : diff < 0 ? '&#9660;' : '';
-        const trendColor = diff > 0 ? '#F44336' : diff < 0 ? '#4CAF50' : '#757575';
-        const trendText = diff !== 0 ? `<span style="font-size:12px;color:${trendColor};">${arrow} ${AICC_Fmt.number(Math.abs(diff))}</span>` : '';
-        const prevLine = `<div style="font-size:10px;color:#BDBDBD;margin-top:4px;">${prevLabel}: ${AICC_Fmt.number(d.prev)}건</div>`;
+        const pct = pctChange(d.current, d.prev);
+        const arrow = arrowOf(diff);
+        const trendColor = colorOf(diff);
+        let trendText;
+        if (diff === 0) {
+          trendText = `<span style="font-size:12px;color:#9E9E9E;font-weight:600;">변동 없음</span>`;
+        } else {
+          trendText = `<span style="font-size:12px;color:${trendColor};white-space:nowrap;">${arrow} ${formatDiff(diff, unit)} (${formatPct(pct)})</span>`;
+        }
+
+        /* I/B, O/B 비율 (시간 지표는 비율 무의미하므로 표시 안 함) */
+        const ibRatio = (!isTime && d.current) ? Math.round(d.ib / d.current * 100) : null;
+        const obRatio = (!isTime && d.current) ? Math.round(d.ob / d.current * 100) : null;
+
+        const channelRow = (label, val, prevVal, ratio) => {
+          const chDiff = val - (prevVal || 0);
+          const chPct = pctChange(val, prevVal);
+          const a = arrowOf(chDiff);
+          const c = colorOf(chDiff);
+          const ratioTxt = ratio !== null ? `<span style="font-size:10px;color:#9E9E9E;">(${ratio}%)</span>` : '';
+          /* 변화량 자체가 0이면 "-", 변화가 있지만 %가 0으로 반올림되면 "<1%" 표기 */
+          let pctTxt;
+          if (chDiff === 0) {
+            pctTxt = `<span style="color:#9E9E9E;font-weight:600;">변동 없음</span>`;
+          } else {
+            pctTxt = `<span style="color:${c};font-weight:600;">${a} ${formatPct(chPct)}</span>`;
+          }
+          return `
+            <div class="kpi-sub-row">
+              <span><span class="ch-label">${label}</span> <span class="ch-value">${formatValue(val, unit)}</span> ${ratioTxt}</span>
+              ${pctTxt}
+            </div>`;
+        };
 
         return `
-        <div class="kpi-card" style="padding:12px 16px;cursor:pointer;position:relative;" onclick="goCallStatus('${card.filter}')">
+        <div class="kpi-card" style="padding:12px 14px;cursor:pointer;position:relative;" onclick="goCallStatus('${card.filter}')">
           <span style="position:absolute;top:10px;right:12px;color:#BDBDBD;" class="kpi-search-icon">${searchIconSvg}</span>
-          <div style="font-size:12px;color:#757575;margin-bottom:4px;">${card.label}</div>
-          <div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;">
-            <span style="font-size:28px;font-weight:700;white-space:nowrap;${card.color}">${AICC_Fmt.number(d.current)}</span>
-            ${trendText}
-            <span style="margin-left:auto;font-size:11px;white-space:nowrap;color:#9E9E9E;">I/B <span style="color:#616161;font-weight:600;">${AICC_Fmt.number(d.ib)}</span>건<span style="font-size:10px;">(${Math.round(d.ib / d.current * 100)}%)</span>&ensp;O/B <span style="color:#616161;font-weight:600;">${AICC_Fmt.number(d.ob)}</span>건<span style="font-size:10px;">(${Math.round(d.ob / d.current * 100)}%)</span></span>
+          <div style="font-size:12px;color:#757575;margin-bottom:6px;display:flex;align-items:center;">
+            ${card.label}
+            <span class="info-tip" onclick="event.stopPropagation();">
+              ${infoIconSvg}
+              <span class="tip-text">${card.desc.replace(/\. /g, '.<br>')}</span>
+            </span>
           </div>
-          ${prevLine}
+          <div class="kpi-main-row">
+            <span style="font-size:24px;font-weight:700;white-space:nowrap;">${formatValue(d.current, unit)}</span>
+            ${trendText}
+          </div>
+          ${channelRow('I/B', d.ib, d.ibPrev, ibRatio)}
+          ${channelRow('O/B', d.ob, d.obPrev, obRatio)}
         </div>`;
       }).join('');
+
+      renderSummaryBar(cfg);
+    }
+
+    /* ── 전기 대비 비교 요약 바 ─────────────────────────────────── */
+    function renderSummaryBar(cfg) {
+      const prevLabel = (cfg && cfg.prevLabel) || '전월';
+      const parts = cardDefs.map(card => {
+        const d = kpiBase[card.key];
+        const diff = d.current - (d.prev || 0);
+        const pct = pctChange(d.current, d.prev);
+        const verb = diff > 0 ? '증가' : diff < 0 ? '감소' : '동일';
+        const cls = diff > 0 ? 'up' : diff < 0 ? 'down' : 'neutral';
+        if (diff === 0) {
+          return `${card.label} <span class="${cls}">변동 없음</span>`;
+        }
+        return `${card.label} <span class="${cls}">${formatDiff(diff, card.unit)}(${formatPct(pct)}) ${verb}</span>`;
+      });
+      const html = `${prevLabel} 대비, ` + parts.join('<span class="sep">‖</span>') + ' 했습니다.';
+      const bar = document.getElementById('kpi-summary');
+      if (bar) bar.innerHTML = html;
     }
 
     /* ══════════════════════════ 차트 렌더 ══════════════════════════ */
@@ -366,8 +562,16 @@
       const scale = (val) => Math.round(val * ratio * (0.9 + _scaleRng() * 0.2));
 
       Object.keys(kpiBase).forEach(key => {
+        const isTime = kpiOrig[key].type === 'time';
         Object.keys(kpiBase[key]).forEach(prop => {
-          kpiBase[key][prop] = scale(kpiOrig[key][prop]);
+          if (prop === 'type') return;
+          /* 평균 시간 지표는 기간이 바뀌어도 평균이므로 스케일링하지 않고 ±5% 변동만 부여 */
+          if (isTime) {
+            const orig = kpiOrig[key][prop];
+            kpiBase[key][prop] = Math.round(orig * (0.95 + _scaleRng() * 0.1));
+          } else {
+            kpiBase[key][prop] = scale(kpiOrig[key][prop]);
+          }
         });
       });
 

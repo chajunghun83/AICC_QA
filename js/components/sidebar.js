@@ -68,7 +68,8 @@ window.AICC_Sidebar = {
           { id: 'ta-dashboard', label: 'TA 대시보드', href: '/pages/ta/ta-dashboard.html' },
           { id: 'call-status', label: '전체 콜 현황', href: '/pages/ta/call-status.html' },
           { id: 'call-consultation', label: '콜 상담', href: '/pages/ta/call-consultation.html' },
-          { id: 'consultation-type', label: '상담 유형', href: '/pages/ta/consultation-type.html' }
+          { id: 'consultation-type', label: '상담 유형', href: '/pages/ta/consultation-type.html' },
+          { id: 'keyword-analysis', label: '키워드', href: '/pages/ta/keyword-analysis.html' }
         ]
       },
       {
