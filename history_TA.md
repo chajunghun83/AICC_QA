@@ -737,3 +737,20 @@
 [QA-TA 공유 자산 정합화]
 - `assets/dummy-data/all-data.js` 인라인 데이터 동기화 — QA evaluations/manual-evaluations/dashboard-stats 변경분 반영, TA가 공유하는 centers/users 구조는 보존
 - centers.json / users.json 의 조직 구조는 변경하지 않음 — TA 페이지의 키워드·필터·차트가 의존하므로 영향 없음을 검증
+
+---
+
+**수정 리스트 (26/06/05)**
+
+[AI 현황분석 항목 선택·테이블 필터 + 칩 강조/정렬 (call-status.html)]
+- 상담 흐름 등 하위 칩 선택 시 부모 박스 전체가 강조되던 문제 수정
+  → 클릭한 개별 칩만 강조(인라인 스타일 직접 적용으로 CSS 우선순위 무관 확실히 표시)
+- 좁은 패널에서 건수 "12건"이 "12"/"건" 두 줄로 깨지던 문제 수정
+  → .sub-count에 white-space:nowrap; flex-shrink:0; (한글 글자 사이 줄바꿈 방지)
+- 드릴(하위 뎁스)되지 않는 항목도 선택 가능하게 — 클릭 시 하단 테이블만 필터(토글)
+  · hasTableFilter 분기: filterFn은 있으나 keyword 없는 항목을 '필터 전용'(깔때기 아이콘)으로 렌더
+  · _itemFilter 상태 + _onItemFilter/_refreshItemFilterActive 추가
+  · _applyAiTableFilter에 _itemFilter 적용, 드릴/닫기/초기화 시 자동 해제
+  · L3 드릴 필터(_l3FilterLabel)와 상호 배타 처리
+  · 빌더 보강: I/B 비중·개별 콜 요약·컨텍스트 헤더에 filterFn 부여
+  · 전체 요약/통계 항목(공통 원인 동일, 평균 통화시간 등)은 비활성 유지
