@@ -2380,7 +2380,7 @@
     function _onL1Click(fnIdx) {
       const entry = _regL1[fnIdx];
       if (!entry) return;
-      _aiHistory = [{ label: entry.filterLabel, filterFn: entry.filterFn }];
+      _aiHistory = [{ label: entry.filterLabel, filterFn: entry.filterFn, src: { type:'item', regIdx: fnIdx } }];
       _aiLevel = 2;
       _drillDataL2 = null; _drillDataL3 = null;
       _l3FilterLabel = null; _renderL3FilterBadge();
@@ -2393,7 +2393,7 @@
       const entry = _regL2[fnIdx];
       if (!entry) return;
       if (_aiHistory.length < 1) return;
-      _aiHistory = [_aiHistory[0], { label: entry.filterLabel, filterFn: entry.filterFn }];
+      _aiHistory = [_aiHistory[0], { label: entry.filterLabel, filterFn: entry.filterFn, src: { type:'item', regIdx: fnIdx } }];
       _aiLevel = 3;
       _drillDataL3 = null;
       _l3FilterLabel = null; _renderL3FilterBadge();
@@ -2486,7 +2486,7 @@
       if (!sub) return;
 
       if (levelKey === 'l1') {
-        _aiHistory = [{ label: sub.filterLabel, filterFn: sub.filterFn }];
+        _aiHistory = [{ label: sub.filterLabel, filterFn: sub.filterFn, src: { type:'chip', regIdx: parentIdx, subIdx } }];
         _aiLevel = 2;
         _drillDataL2 = null; _drillDataL3 = null;
         _l3FilterLabel = null; _renderL3FilterBadge();
@@ -2494,7 +2494,7 @@
         _subItemOpen.l2.clear(); _subItemOpen.l3.clear();  // 레벨 전환 시 하위 초기화
       } else if (levelKey === 'l2') {
         if (_aiHistory.length < 1) return;
-        _aiHistory = [_aiHistory[0], { label: sub.filterLabel, filterFn: sub.filterFn }];
+        _aiHistory = [_aiHistory[0], { label: sub.filterLabel, filterFn: sub.filterFn, src: { type:'chip', regIdx: parentIdx, subIdx } }];
         _aiLevel = 3;
         _drillDataL3 = null;
         _l3FilterLabel = null; _renderL3FilterBadge();
@@ -3193,9 +3193,38 @@
         el.style.borderLeftWidth = '4px';
         el.style.fontWeight = '600';
       };
-      /* registry 항목이 (a) 직접 클릭형이면 filterLabel 일치로, (b) subItems 보유면
-       *  하위 chip의 filterLabel 일치로 부모 컨테이너를 하이라이트하고 활성 chip을 표시한다. */
-      const highlightDrill = (reg, clickFn, histLabel, color) => {
+      /* 개별 chip 강조 (내부 span 인라인 색상까지 덮어씀) */
+      const highlightChip = (lvl, regIdx, subIdx, color) => {
+        const chip = document.getElementById(`_subchip-${lvl}-${regIdx}-${subIdx}`);
+        if (!chip) return;
+        chip.classList.add('chip-active');
+        chip.style.background = '#BBDEFB';
+        chip.style.borderColor = color;
+        chip.style.boxShadow = `inset 3px 0 0 ${color}`;
+        const bullet = chip.querySelector('span');
+        if (bullet) bullet.style.color = color;
+        const lbl = chip.querySelector('.sub-label');
+        if (lbl) { lbl.style.color = '#0D47A1'; lbl.style.fontWeight = '700'; }
+        const cnt = chip.querySelector('.sub-count');
+        if (cnt) cnt.style.color = '#0D47A1';
+      };
+      /* [정책] 동일 filterLabel을 가진 항목이 여러 개일 수 있으므로(예: 드릴 항목 "체결지연 이슈"와
+       *  "이슈 콜 분포"의 체결지연 chip), 라벨 매칭이 아니라 클릭 당시 기록한 src(정확한 위치)로
+       *  강조 대상을 특정한다. src가 없을 때만(Top5 클릭 등) 라벨 매칭으로 폴백한다. */
+      const highlightDrill = (reg, clickFn, hist, color) => {
+        const lvl = clickFn === '_onL2Click' ? 'l2' : 'l1';
+        const src = hist && hist.src;
+        if (src) {
+          if (src.type === 'chip') {
+            highlightChip(lvl, src.regIdx, src.subIdx, color);
+          } else {
+            const el = document.getElementById(`${clickFn}-${src.regIdx}`);
+            if (el) highlightStyle(el, color);
+          }
+          return;
+        }
+        /* ── 폴백: 라벨 매칭 ── */
+        const histLabel = hist && hist.label;
         for (let i = 0; i < reg.length; i++) {
           const r = reg[i];
           if (r.filterLabel === histLabel) {
@@ -3205,35 +3234,15 @@
           }
           if (r.subItems) {
             const ci = r.subItems.findIndex(s => s.filterLabel === histLabel);
-            if (ci >= 0) {
-              /* [수정] 부모 박스 전체를 강조하면 그룹 전체가 선택된 것처럼 보이므로
-               *  부모 컨테이너 강조는 생략하고, 클릭한 개별 chip만 활성 표시한다.
-               *  내부 span들에 인라인 색상이 박혀 있어 CSS 클래스만으로는 색이 덮이지 않으므로
-               *  chip 본체와 내부 span에 인라인 스타일을 직접 적용해 확실히 강조한다. */
-              const lvl = clickFn === '_onL2Click' ? 'l2' : 'l1';
-              const chip = document.getElementById(`_subchip-${lvl}-${i}-${ci}`);
-              if (chip) {
-                chip.classList.add('chip-active');
-                chip.style.background = '#BBDEFB';
-                chip.style.borderColor = color;
-                chip.style.boxShadow = `inset 3px 0 0 ${color}`;
-                const bullet = chip.querySelector('span');
-                if (bullet) bullet.style.color = color;
-                const lbl = chip.querySelector('.sub-label');
-                if (lbl) { lbl.style.color = '#0D47A1'; lbl.style.fontWeight = '700'; }
-                const cnt = chip.querySelector('.sub-count');
-                if (cnt) cnt.style.color = '#0D47A1';
-              }
-              return;
-            }
+            if (ci >= 0) { highlightChip(lvl, i, ci, color); return; }
           }
         }
       };
       if (_aiLevel >= 2 && _aiHistory.length >= 1) {
-        highlightDrill(_regL1, '_onL1Click', _aiHistory[0].label, '#1565C0');
+        highlightDrill(_regL1, '_onL1Click', _aiHistory[0], '#1565C0');
       }
       if (_aiLevel >= 3 && _aiHistory.length >= 2) {
-        highlightDrill(_regL2, '_onL2Click', _aiHistory[1].label, '#00897B');
+        highlightDrill(_regL2, '_onL2Click', _aiHistory[1], '#00897B');
       }
     }
 
