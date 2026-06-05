@@ -85,7 +85,7 @@
       </div>
       <div class="content-card" id="variant-v1-right" style="display:none;flex-direction:column;">
         <div class="content-card-header" style="min-height:62px;">
-          <span style="font-size:14px;font-weight:600;">소분류 히트맵</span>
+          <span style="font-size:14px;font-weight:600;">세분류 히트맵</span>
           <span style="font-size:12px;color:#757575;" id="heatmap-right-label">전체</span>
         </div>
         <div class="content-card-body" id="heatmap-right" style="height:520px;position:relative;border-radius:10px;overflow:hidden;">
@@ -133,7 +133,7 @@
       </div>
       <div class="content-card" id="variant-v3-right" style="display:flex;flex-direction:column;">
         <div class="content-card-header">
-          <span style="font-size:14px;font-weight:600;">소분류</span>
+          <span style="font-size:14px;font-weight:600;">세분류</span>
           <span style="font-size:12px;color:#757575;cursor:pointer;" id="v3-donut-label" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'" onclick="window.location.href='consultation-type.html'">전체</span>
         </div>
         <div class="content-card-body" style="display:flex;flex-direction:column;gap:0;padding:12px;height:440px;overflow:hidden;">
@@ -1069,7 +1069,7 @@
       v3LeftBody.style.flex = '1';
       v3LeftBody.style.minHeight = '0';
 
-      // 소분류: cols 4-5, row 1
+      // 세분류: cols 4-5, row 1
       _dbBackup.v3RightGridCol = v3Right.style.gridColumn;
       _dbBackup.v3RightGridRow = v3Right.style.gridRow;
       _dbBackup.v3RightOverflow = v3Right.style.overflow;
@@ -1164,7 +1164,7 @@
       v3LeftBody.style.flex = _dbBackup.v3LeftBodyFlex || '';
       v3LeftBody.style.minHeight = _dbBackup.v3LeftBodyMinH || '';
 
-      // 소분류 복원
+      // 세분류 복원
       v3Right.style.gridColumn = _dbBackup.v3RightGridCol || '';
       v3Right.style.gridRow = _dbBackup.v3RightGridRow || '';
       v3Right.style.overflow = _dbBackup.v3RightOverflow || '';

@@ -224,8 +224,13 @@
     .ai-dp-sub-chip:hover { background:#F5F7FA; }
     .ai-dp-sub-chip .sub-label { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; line-height:1.4; font-weight:400; }
     .ai-dp-sub-chip .sub-count { font-size:12px; font-weight:700; flex-shrink:0; }
-    .ai-dp-sub-chip.chip-active { background:#E3F2FD !important; border-color:#1565C0 !important; color:#1565C0; }
-    .ai-dp-sub-chip.chip-active .sub-label { font-weight:600; }
+    /* 선택된 칩: 진한 배경 + 왼쪽 강조 바 + 파란 굵은 글자 (인라인 색상 덮어쓰기 위해 !important) */
+    .ai-dp-sub-chip.chip-active { background:#BBDEFB !important; border-color:#1565C0 !important; box-shadow:inset 3px 0 0 #1565C0; }
+    .ai-dp-sub-chip.chip-active .sub-label { font-weight:700 !important; color:#0D47A1 !important; }
+    .ai-dp-sub-chip.chip-active .sub-count { color:#0D47A1 !important; }
+    .ai-dp-sub-chip.chip-active > span:first-child { color:#1565C0 !important; }
+    /* 필터 전용 항목(드릴 없이 테이블만 필터)이 선택된 상태 */
+    .ai-dp-item.itemfilter-active { background:#E3F2FD !important; border-left-color:#1565C0 !important; border-left-width:4px !important; font-weight:600; }
   </style>
   <script src="../../js/components/modal.js"></script>
   <script src="../../js/components/toast.js"></script>
@@ -1791,7 +1796,7 @@
             ]},
             { type:'trend', label:'운영 트렌드', color:'#2E7D32', items:[
               { text:`콜 집중 시간대: ${peak.hour}시(${peak.count}건) — 피크 타임 인력 배치 점검`, keyword:`${peak.hour}시`, filterFn: c => parseInt(c.time.split(':')[0],10) === peak.hour, filterLabel:`${peak.hour}시 콜` },
-              { text:`I/B 비중 ${total > 0 ? Math.round(calls.filter(c=>c.callType==='I/B').length / total * 100) : 0}% — 인바운드 이슈 선제 대응 체계 필요`, keyword:null, filterFn:null, filterLabel:null },
+              { text:`I/B 비중 ${total > 0 ? Math.round(calls.filter(c=>c.callType==='I/B').length / total * 100) : 0}% — 인바운드 이슈 선제 대응 체계 필요`, keyword:null, filterFn: c => c.callType === 'I/B', filterLabel:'인바운드(I/B) 콜' },
               ...(defRiskCallCount > 0 ? [{ text:`위험 신호 감지 콜 ${defRiskCallCount}건(${defRiskRate}%) — 선제 모니터링 권장`, keyword: defRiskFlags.length > 0 && defRiskFlags[0].count >= 2 ? defRiskFlags[0].name : null, filterFn: defRiskFlags.length > 0 ? (c => c.aiAnalysis && (c.aiAnalysis.riskFlags||[]).includes(defRiskFlags[0].name)) : null, filterLabel: defRiskFlags.length > 0 ? defRiskFlags[0].name : null }] : [])
             ]}
           ]
@@ -2107,8 +2112,10 @@
           : '상위 필터';
         const fromPct = Math.round(total / parentCalls.length * 100);
         findingItems.push({
+          /* 현재 패널 전체 스코프를 가리키는 헤더 — 클릭 시 선택 표시만 되고
+           *  테이블은 현재 드릴 스코프 그대로 유지 (filterFn:()=>true) */
           text:`"${parentLabel}" ${parentCalls.length}건 중 "${contextLabel}" ${total}건(${fromPct}%) 추출`,
-          keyword: null, filterFn: null, filterLabel: null
+          keyword: null, filterFn: () => true, filterLabel: contextLabel
         });
       }
 
@@ -2219,7 +2226,7 @@
         withAi.slice(0, 3).forEach(c => {
           findingItems.push({
             text:`[${c.id}] ${c.aiAnalysis.summary}`,
-            keyword: null, filterFn: null, filterLabel: null
+            keyword: null, filterFn: cc => cc.id === c.id, filterLabel: c.id
           });
         });
       }
@@ -2377,6 +2384,7 @@
       _aiLevel = 2;
       _drillDataL2 = null; _drillDataL3 = null;
       _l3FilterLabel = null; _renderL3FilterBadge();
+      _itemFilter = null;  // 드릴 전환 시 필터 전용 선택 해제
       _applyAiTableFilter();
       _renderAiCard();
     }
@@ -2389,6 +2397,7 @@
       _aiLevel = 3;
       _drillDataL3 = null;
       _l3FilterLabel = null; _renderL3FilterBadge();
+      _itemFilter = null;  // 드릴 전환 시 필터 전용 선택 해제
       _applyAiTableFilter();
       _renderAiCard();
     }
@@ -2396,6 +2405,8 @@
     function _onL3Click(fnIdx) {
       const entry = _regL3[fnIdx];
       if (!entry) return;
+      /* 필터 전용 선택과 상호 배타: L3 드릴 항목 클릭 시 해제 */
+      if (_itemFilter) { _itemFilter = null; _refreshItemFilterActive(); }
       /* 동일 항목 재클릭 → 토글 해제 */
       if (_l3FilterLabel === entry.filterLabel) { _resetL3Filter(); return; }
       /* 테이블만 필터 */
@@ -2426,6 +2437,7 @@
       _aiLevel = 1;
       _drillDataL2 = null; _drillDataL3 = null;
       _l3FilterLabel = null; _renderL3FilterBadge();
+      _itemFilter = null;
       _applyAiTableFilter();
       _renderAiCard();
     }
@@ -2434,11 +2446,14 @@
       _aiLevel = 2;
       _drillDataL3 = null;
       _l3FilterLabel = null; _renderL3FilterBadge();
+      _itemFilter = null;
       _applyAiTableFilter();
       _renderAiCard();
     }
     let _regL1 = [], _regL2 = [], _regL3 = [];
     let _l3FilterLabel = null;
+    /* 필터 전용 항목 선택 상태 (드릴 없이 테이블만 필터). {levelKey, fnIdx, filterFn, filterLabel} */
+    let _itemFilter = null;
 
     /* ── 드롭다운 sub-item(chip) 상태/핸들러 ─────────────────────────
      *  [개요] 멀티-항목 인사이트(여러 값이 콤마로 나열되던 평문)를
@@ -2475,6 +2490,7 @@
         _aiLevel = 2;
         _drillDataL2 = null; _drillDataL3 = null;
         _l3FilterLabel = null; _renderL3FilterBadge();
+        _itemFilter = null;
         _subItemOpen.l2.clear(); _subItemOpen.l3.clear();  // 레벨 전환 시 하위 초기화
       } else if (levelKey === 'l2') {
         if (_aiHistory.length < 1) return;
@@ -2482,6 +2498,7 @@
         _aiLevel = 3;
         _drillDataL3 = null;
         _l3FilterLabel = null; _renderL3FilterBadge();
+        _itemFilter = null;
         _subItemOpen.l3.clear();
       } else { // l3: 더 깊은 드릴 없음 — 테이블 필터 토글
         if (_l3FilterLabel === sub.filterLabel) { _resetL3Filter(); return; }
@@ -2555,6 +2572,46 @@
       document.querySelectorAll('#ai-panel-l3-body .ai-dp-sub-chip').forEach(c => c.classList.remove('chip-active'));
     }
 
+    /* ── 필터 전용 항목 클릭 → 드릴 없이 하단 테이블만 필터 (토글) ──────
+     *  드릴되지 않는(하위 뎁스가 없는) 항목도 선택해서 해당 콜 집합을
+     *  하단 테이블에 노출하기 위한 핸들러. 같은 항목 재클릭 시 해제한다. */
+    function _onItemFilter(levelKey, fnIdx) {
+      const reg = { l1: _regL1, l2: _regL2, l3: _regL3 }[levelKey];
+      const entry = reg && reg[fnIdx];
+      if (!entry || !entry.filterFn) return;
+      /* L3 드릴 필터와 상호 배타: 기존 L3 선택 해제 (테이블은 _applyAiTableFilter가 재구성) */
+      if (_l3FilterLabel) {
+        _l3FilterLabel = null; _renderL3FilterBadge();
+        document.querySelectorAll('#ai-panel-l3-body .ai-dp-item').forEach(e => {
+          e.classList.remove('l3-active'); e.style.background = '#FAFAFA'; e.style.borderLeftWidth = '3px';
+        });
+      }
+      const same = _itemFilter && _itemFilter.levelKey === levelKey && _itemFilter.fnIdx === fnIdx;
+      _itemFilter = same ? null : { levelKey, fnIdx, filterFn: entry.filterFn, filterLabel: entry.filterLabel };
+      _applyAiTableFilter();
+      _refreshItemFilterActive();
+    }
+
+    /* 필터 전용 항목 활성 표시 동기화 (재렌더 없이 인라인 토글) */
+    function _refreshItemFilterActive() {
+      document.querySelectorAll('[id^="_itemfilter-"]').forEach(el => {
+        el.classList.remove('itemfilter-active');
+        el.style.background = '#FAFAFA';
+        el.style.borderLeftWidth = '3px';
+        el.style.fontWeight = '';
+      });
+      if (_itemFilter) {
+        const el = document.getElementById(`_itemfilter-${_itemFilter.levelKey}-${_itemFilter.fnIdx}`);
+        if (el) {
+          el.classList.add('itemfilter-active');
+          el.style.background = '#E3F2FD';
+          el.style.borderLeftColor = '#1565C0';
+          el.style.borderLeftWidth = '4px';
+          el.style.fontWeight = '600';
+        }
+      }
+    }
+
     /* 상담유형 Top5 클릭 → L2 진입 (Top5에서 직접 드릴다운) */
     function _onConsultTypeClick(ctName) {
       _aiHistory = [{ label: ctName, filterFn: c => c.consultationType === ctName }];
@@ -2589,6 +2646,8 @@
     function _applyAiTableFilter() {
       let data = [..._aiFilteredCalls];
       _aiHistory.forEach(h => { data = data.filter(h.filterFn); });
+      /* 필터 전용 항목이 선택돼 있으면 드릴 스코프에 더해 적용 */
+      if (_itemFilter && _itemFilter.filterFn) data = data.filter(_itemFilter.filterFn);
       filteredData = data;
       currentPage = 1;
       renderTable();
@@ -2807,6 +2866,8 @@
         const itemsHtml = cappedItems.map(item => {
           const hasSub = item.subItems && item.subItems.length > 0;
           const hasFilter = !hasSub && item.keyword && item.filterFn;
+          /* filterFn은 있으나 keyword가 없는 항목 = 드릴 대상은 아니지만 테이블 필터는 가능한 "필터 전용" 항목 */
+          const hasTableFilter = !hasSub && !hasFilter && !!item.filterFn;
           const baseStyle = `display:flex !important;align-items:center;gap:8px;padding:5px 10px;background:#FAFAFA;border-radius:6px;margin-bottom:2px;border-left:3px solid ${group.color};transition:background .15s;overflow:hidden;`;
 
           /* ── subItems(드롭다운) 항목 ──
@@ -2827,7 +2888,7 @@
                 style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;">
                 <span style="color:${group.color};font-size:7px;flex-shrink:0;line-height:1;">●</span>
                 <span class="sub-label" style="flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:400;color:#616161;">${sub.label}</span>
-                <span class="sub-count" style="font-size:12px;color:${group.color};margin-left:10px;">${sub.count}건</span>
+                <span class="sub-count" style="font-size:12px;color:${group.color};margin-left:10px;white-space:nowrap;flex-shrink:0;">${sub.count}건</span>
                 ${icon}
               </div>`;
             }).join('');
@@ -2847,18 +2908,28 @@
             displayText = item.text.replace(new RegExp(`(${item.keyword.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'g'),
               `<span style="color:${group.color};font-weight:700;">$1</span>`);
           }
-          let idAttr = '', evtAttr = '', arrowSvg = '';
+          const funnelSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${group.color}" stroke-width="2" style="flex-shrink:0;margin-left:auto;opacity:0.5;"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>`;
+          const chevronSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${group.color}" stroke-width="2" style="flex-shrink:0;margin-left:auto;opacity:0.5;"><path d="m9 18 6-6-6-6"/></svg>`;
+          let idAttr = '', evtAttr = '', arrowSvg = '', extraClass = '', activeInline = '';
           if (hasFilter) {
             const fnIdx = registry.length;
             registry.push({ filterFn: item.filterFn, filterLabel: item.filterLabel });
             idAttr = `id="${clickFn}-${fnIdx}"`;
             evtAttr = `onclick="${clickFn}(${fnIdx})" onmouseenter="this.style.background='#E8EAF6'" onmouseleave="if(this.classList.contains('drill-active'))this.style.background='#DCEEFB';else if(this.classList.contains('l3-active'))this.style.background='#E3F2FD';else this.style.background='#FAFAFA'"`;
-            arrowSvg = isL3
-              ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${group.color}" stroke-width="2" style="flex-shrink:0;margin-left:auto;opacity:0.5;"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>`
-              : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${group.color}" stroke-width="2" style="flex-shrink:0;margin-left:auto;opacity:0.5;"><path d="m9 18 6-6-6-6"/></svg>`;
+            arrowSvg = isL3 ? funnelSvg : chevronSvg;
+          } else if (hasTableFilter) {
+            /* 필터 전용 항목: 깔때기 아이콘 + 클릭 시 테이블만 필터(_onItemFilter, 토글) */
+            const fnIdx = registry.length;
+            registry.push({ filterFn: item.filterFn, filterLabel: item.filterLabel });
+            const isActive = !!(_itemFilter && _itemFilter.levelKey === levelKey && _itemFilter.fnIdx === fnIdx);
+            idAttr = `id="_itemfilter-${levelKey}-${fnIdx}"`;
+            evtAttr = `onclick="_onItemFilter('${levelKey}',${fnIdx})" onmouseenter="if(!this.classList.contains('itemfilter-active'))this.style.background='#E8EAF6'" onmouseleave="this.style.background=this.classList.contains('itemfilter-active')?'#E3F2FD':'#FAFAFA'"`;
+            arrowSvg = funnelSvg;
+            if (isActive) { extraClass = ' itemfilter-active'; activeInline = 'background:#E3F2FD;border-left-color:#1565C0;border-left-width:4px;font-weight:600;'; }
           }
-          const cursorStyle = hasFilter ? 'cursor:pointer;' : '';
-          return `<div class="ai-dp-item${hasFilter ? ' clickable' : ''}" ${idAttr} ${evtAttr} style="${baseStyle}${cursorStyle}">
+          const clickable = hasFilter || hasTableFilter;
+          const cursorStyle = clickable ? 'cursor:pointer;' : '';
+          return `<div class="ai-dp-item${hasFilter ? ' clickable' : ''}${extraClass}" ${idAttr} ${evtAttr} style="${baseStyle}${cursorStyle}${activeInline}">
             <span style="color:${group.color};font-size:10px;flex-shrink:0;line-height:1;">■</span>
             <span style="font-size:13px;color:#424242;line-height:1.45;flex:1;min-width:0;">${displayText}</span>
             ${arrowSvg}
@@ -3135,11 +3206,24 @@
           if (r.subItems) {
             const ci = r.subItems.findIndex(s => s.filterLabel === histLabel);
             if (ci >= 0) {
-              const el = document.getElementById(`${clickFn}-${i}`);
-              if (el) highlightStyle(el, color);
-              /* 펼친 상태일 때만 존재하는 활성 chip 표시 */
-              const chip = document.getElementById(`_subchip-${clickFn === '_onL2Click' ? 'l2' : 'l1'}-${i}-${ci}`);
-              if (chip) chip.classList.add('chip-active');
+              /* [수정] 부모 박스 전체를 강조하면 그룹 전체가 선택된 것처럼 보이므로
+               *  부모 컨테이너 강조는 생략하고, 클릭한 개별 chip만 활성 표시한다.
+               *  내부 span들에 인라인 색상이 박혀 있어 CSS 클래스만으로는 색이 덮이지 않으므로
+               *  chip 본체와 내부 span에 인라인 스타일을 직접 적용해 확실히 강조한다. */
+              const lvl = clickFn === '_onL2Click' ? 'l2' : 'l1';
+              const chip = document.getElementById(`_subchip-${lvl}-${i}-${ci}`);
+              if (chip) {
+                chip.classList.add('chip-active');
+                chip.style.background = '#BBDEFB';
+                chip.style.borderColor = color;
+                chip.style.boxShadow = `inset 3px 0 0 ${color}`;
+                const bullet = chip.querySelector('span');
+                if (bullet) bullet.style.color = color;
+                const lbl = chip.querySelector('.sub-label');
+                if (lbl) { lbl.style.color = '#0D47A1'; lbl.style.fontWeight = '700'; }
+                const cnt = chip.querySelector('.sub-count');
+                if (cnt) cnt.style.color = '#0D47A1';
+              }
               return;
             }
           }
@@ -3165,6 +3249,7 @@
       _drillDataL2 = null;
       _drillDataL3 = null;
       _l3FilterLabel = null;
+      _itemFilter = null;
       _renderL3FilterBadge();
       _aiFilteredCalls = [...filteredData];
       _renderAiCard();

@@ -155,24 +155,24 @@
   - 선택된 항목 L1/L2에서 배경 하이라이트 유지 (drill-active 클래스)
 - 상담유형 데이터 구조 (consultationTypes)
   - 대분류(D1) > 중분류(D2) > (소분류(D3) >) 세분류 구조, 최대 4뎁스
-  - [핵심 정책] 대시보드 소분류 도넛 차트 항목은 **마지막 뎁스**에 위치한다.
-  "소분류"는 소분류·세분류를 아울러 부르는 명칭이므로 3뎁스(D3)나 4뎁스(D4) 모두 해당.
+  - [핵심 정책] 대시보드 세분류 도넛 차트 항목은 **마지막 뎁스**에 위치한다.
+  "세분류"는 마지막 뎁스 항목을 가리키므로 3뎁스(D3)나 4뎁스(D4) 모두 해당.
   예) '결제 > 결제오류 > 승인실패 > 카드결제' → 마지막 뎁스 = 카드결제
   예) '교환/반품 > 교환처리 > 색상교환' → 마지막 뎁스 = 색상교환 (3뎁스)
   - matchesSpecialFilter의 consult_type 분기는 마지막 뎁스를 체크
   `parts[parts.length - 1] === value`
-  - 앱/웹사이트, 카탈로그 등 대시보드 소분류에 없는 항목은 기존 구조 유지
+  - 앱/웹사이트, 카탈로그 등 대시보드 세분류에 없는 항목은 기존 구조 유지
 - 대시보드 → 전체 콜 현황 필터 연동 정책
   - 대시보드 각 위젯 클릭 시 전달되는 필터 타입:
   · 주요 키워드 → filter=keyword
-  · 소분류 도넛 → filter=consult_type
+  · 세분류 도넛 → filter=consult_type
   · 상품 랭킹 → filter=product_keyword
   · 이슈 키워드 → filter=issue_keyword
   · 신규 키워드 → filter=new_keyword
   · 시간대별 콜량 → filter=hour
   - [정책] 각 필터별 전체 콜 현황 AI 현황분석 우측 Top5 표시 규칙:
   · keyword(주요 키워드) → 상담유형 Top5
-  · consult_type(소분류) → 키워드 Top5
+  · consult_type(세분류) → 키워드 Top5
   · product_keyword(상품 랭킹) → 상담유형 Top5
   · issue_keyword(이슈 키워드) → 상담유형 Top5
   · new_keyword(신규 키워드) → 상담유형 Top5
