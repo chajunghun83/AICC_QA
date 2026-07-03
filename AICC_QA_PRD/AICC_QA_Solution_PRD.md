@@ -1898,7 +1898,7 @@ VIP팀:     공감 92점, 절차 58점, 설명 79점, 인사 88점
 ### 5.1 파일 구조
 
 ```
-D:\work\AICC_QA\
+D:\work\AICC_langsa\AICC_QA_TA\
 ├── qa-dashboard.html             # QA 대시보드 (실시간 모니터링 - 6개 카드)
 ├── evaluation-status.html        # 평가 현황 (팀별 상세 테이블)
 ├── evaluation-item-library.html  # 평가 항목 관리 (트리 구조)
@@ -2759,7 +2759,7 @@ function switchRole(role) {
 **문서 버전**: v2.5
 **작성일**: 2026-01-01
 **최종 수정**: 2026-01-14  
-**프로젝트 경로**: D:\work\AICC_QA
+**프로젝트 경로**: D:\work\AICC_langsa\AICC_QA_TA
 **프로젝트 성격**: 화면 프로토타입 (UI/UX 검증용)  
 **디자인 기준**: 기존 AICC 플랫폼 UI/UX 준수
 

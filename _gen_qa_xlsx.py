@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """QA 기능 정의서 엑셀 파일 생성 (페이지 설명 + 주요 기능 형식)"""
+import os
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from openpyxl.utils import get_column_letter
@@ -399,6 +400,7 @@ for group_name, menus in DATA:
 # 헤더 고정
 ws.freeze_panes = "A2"
 
-OUT = r"d:\work\AICC_QA\01_문서\QA_기능정의서.xlsx"
+# 스크립트 파일 위치 기준 상대 경로 (폴더 이동에도 안전)
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "01_문서", "QA_기능정의서.xlsx")
 wb.save(OUT)
 print(f"saved: {OUT}")
