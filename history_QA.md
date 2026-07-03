@@ -540,3 +540,15 @@
 - `activeFilter` / `FILTER_LABELS` 두 모듈 변수가 선언 없이 implicit global 로 사용되던 미선언 참조 버그 정리 — 모듈 스코프에 `var activeFilter = null;`, `var FILTER_LABELS = { urgentIssue: '긴급 이슈', ... };` 명시 선언
   - 기존 정상 흐름에서는 다른 함수가 먼저 할당해 우연히 동작하던 코드. 필터 모드 진입 경로에서 `daBuildSuggestions` 첫 줄 `activeFilter && FILTER_LABELS[activeFilter]` 평가 시 ReferenceError 발생해 AI 개선 제안 바가 렌더 중단되던 부작용 함께 해소
 - 하단 통합 평가 결과 배지에 외부 필터 ✕ 아이콘 추가 — 클릭 시 `clearDetailExternalFilter()` 가 외부 필터만 해제하고 드릴다운 스코프(센터/팀/상담사 이름)는 보존
+
+---
+
+**수정 리스트 (26/07/03)**
+※ 화면 기능 변경 없음 — 프로젝트 폴더명 변경(AICC_QA → AICC_QA_TA)에 따른 경로 정리 (커밋 95cd6ce)
+
+[문서 — 하드코딩 절대경로 갱신]
+- `AICC_QA_PRD/AICC_QA_Solution_PRD.md` : 파일 구조 트리·문서 하단 "프로젝트 경로"의 `D:\work\AICC_langsa\AICC_QA` → `...\AICC_QA_TA` 로 수정
+- `AICC_QA_PRD/03_개발_가이드.md` : 동일 2개소 갱신
+
+[엑셀 생성 스크립트 — 출력 경로 상대화]
+- `_gen_qa_xlsx.py` : QA 기능정의서 출력 경로를 하드코딩(`d:\work\AICC_QA\01_문서\...`)에서 스크립트 위치 기준 상대경로(`os.path.dirname(__file__)/01_문서/...`)로 교체 — 폴더 이동에도 안전
